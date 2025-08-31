@@ -1,13 +1,13 @@
 {
   "name": "gedcom-vscode",
-	"license": "MIT",
+  "license": "MIT",
   "displayName": "Domorium",
   "description": "GEDCOM file language support with real-time validation for VS Code",
   "publisher": "lavich",
   "version": "0.0.8",
   "author": "Andrei Lobanov",
   "repository": "https://github.com/lavich/domorium.git",
-  "icon": "icon.png",
+  "icon": "images/extensionIcon.png",
   "categories": [
     "Programming Languages",
     "Linters"
@@ -37,7 +37,11 @@
         "extensions": [
           ".ged",
           ".gedcom"
-        ]
+        ],
+        "icon": {
+          "light": "images/fileIcon.svg",
+          "dark": "images/fileIcon.svg"
+        }
       }
     ]
   },
@@ -45,15 +49,15 @@
     "dependencies": false
   },
   "browser": "./dist/client/browserClientMain",
-	"scripts": {
-		"vscode:prepublish": "npm run build",
-		"compile": "npm run build",
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "compile": "npm run build",
     "build:libs": "cd ../.. && npm run build -w packages/lsp && cd apps/vscode",
     "build:client": "vite build --config vite.config.client.ts",
     "build:server": "vite build --config vite.config.server.ts",
     "build": "npm run build:libs && npm run build:client && npm run build:server",
-		"open": "npm run build && code --extensionDevelopmentPath=$PWD test-data/simpsons.ged"
-	},
+    "open": "code --extensionDevelopmentPath=$PWD test-data"
+  },
   "dependencies": {
     "@domorium/lsp": "*",
     "vscode-languageserver": "^9.0.1",
@@ -62,6 +66,6 @@
   },
   "devDependencies": {
     "@types/vscode": "^1.100.0",
-		"@vscode/test-web": "^0.0.51"
-	}
+    "@vscode/test-web": "^0.0.51"
+  }
 }
