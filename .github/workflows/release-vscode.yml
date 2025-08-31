@@ -38,6 +38,7 @@ jobs:
           else
             echo "version_exists=false" >> $GITHUB_OUTPUT
           fi
+        working-directory: apps/vscode
 
       - name: Publish extension
         if: steps.check-version.outputs.version_exists == 'false'
