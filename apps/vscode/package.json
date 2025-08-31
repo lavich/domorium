@@ -4,9 +4,9 @@
   "displayName": "Domorium",
   "description": "GEDCOM file language support with real-time validation for VS Code",
   "publisher": "lavich",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "author": "Andrei Lobanov",
-  "repository": "https://github.com/lavich/vscode-extension-gedcom.git",
+  "repository": "https://github.com/lavich/domorium.git",
   "icon": "icon.png",
   "categories": [
     "Programming Languages",
@@ -48,11 +48,10 @@
 	"scripts": {
 		"vscode:prepublish": "npm run build",
 		"compile": "npm run build",
+    "build:libs": "cd ../.. && npm run build -w packages/lsp && cd apps/vscode",
     "build:client": "vite build --config vite.config.client.ts",
     "build:server": "vite build --config vite.config.server.ts",
-    "build": "npm run build:client && npm run build:server",
-		"watch": "vite",
-		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ./test-data",
+    "build": "build:libs && npm run build:client && npm run build:server",
 		"open": "npm run build && code --extensionDevelopmentPath=$PWD test-data/simpsons.ged"
 	},
   "dependencies": {

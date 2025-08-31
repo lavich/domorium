@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'apps/vscode/**'
 
 jobs:
   release:
@@ -33,14 +35,14 @@ jobs:
           echo "Published version: $PUBLISHED_VERSION"
           if [ "$VERSION" = "$PUBLISHED_VERSION" ]; then
             echo "version_exists=true" >> $GITHUB_OUTPUT
-            echo "Version $VERSION already exists on Marketplace"
           else
             echo "version_exists=false" >> $GITHUB_OUTPUT
-            echo "Version $VERSION is not published yet."
           fi
+        working-directory: apps/vscode
 
       - name: Publish extension
         if: steps.check-version.outputs.version_exists == 'false'
         run: npx vsce publish
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        working-directory: apps/vscode
