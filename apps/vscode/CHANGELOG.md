@@ -1,0 +1,10 @@
+### 0.0.3
+
+- Basic validation
+- Folder by level
+
+### 0.0.1
+
+- Initial release
+- Syntax highlighting
+- Basic validation
