@@ -5,7 +5,7 @@
 !package.json
 !README.md
 !LICENSE
-!icon.png
+!images/**
 
 # Include the compiled output
 !dist/**
