@@ -51,7 +51,7 @@
     "build:libs": "cd ../.. && npm run build -w packages/lsp && cd apps/vscode",
     "build:client": "vite build --config vite.config.client.ts",
     "build:server": "vite build --config vite.config.server.ts",
-    "build": "build:libs && npm run build:client && npm run build:server",
+    "build": "npm run build:libs && npm run build:client && npm run build:server",
 		"open": "npm run build && code --extensionDevelopmentPath=$PWD test-data/simpsons.ged"
 	},
   "dependencies": {
