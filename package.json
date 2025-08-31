@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "Apps for working with `.ged` (GEDCOM) files",
   "scripts": {
+    "build:libs": "npm run build -w packages/lsp",
     "build:vscode": "npm run build -w apps/vscode",
     "test": "vitest",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "npm run build:libs"
   },
   "workspaces": [
     "apps/*",
