@@ -1,0 +1,46 @@
+name: Release VS Code Extension
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check if version exists on Marketplace
+        id: check-version
+        run: |
+          PUBLISHER=$(node -p "require('./package.json').publisher")
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $VERSION"
+          PUBLISHED_VERSION=$(npx vsce show $PUBLISHER.$NAME | grep Version: | awk '{print $2}')
+          echo "Published version: $PUBLISHED_VERSION"
+          if [ "$VERSION" = "$PUBLISHED_VERSION" ]; then
+            echo "version_exists=true" >> $GITHUB_OUTPUT
+            echo "Version $VERSION already exists on Marketplace"
+          else
+            echo "version_exists=false" >> $GITHUB_OUTPUT
+            echo "Version $VERSION is not published yet."
+          fi
+
+      - name: Publish extension
+        if: steps.check-version.outputs.version_exists == 'false'
+        run: npx vsce publish
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}

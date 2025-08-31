@@ -1,0 +1,68 @@
+{
+  "name": "gedcom-vscode",
+	"license": "MIT",
+  "displayName": "Domorium",
+  "description": "GEDCOM file language support with real-time validation for VS Code",
+  "publisher": "lavich",
+  "version": "0.0.7",
+  "author": "Andrei Lobanov",
+  "repository": "https://github.com/lavich/vscode-extension-gedcom.git",
+  "icon": "icon.png",
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "gedcom",
+    "genealogy",
+    "family tree",
+    "validation",
+    "syntax",
+    "parser"
+  ],
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "activationEvents": [
+    "onLanguage:gedcom"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "gedcom",
+        "aliases": [
+          "GEDCOM",
+          "gedcom"
+        ],
+        "extensions": [
+          ".ged",
+          ".gedcom"
+        ]
+      }
+    ]
+  },
+  "vsce": {
+    "dependencies": false
+  },
+  "browser": "./dist/client/browserClientMain",
+	"scripts": {
+		"vscode:prepublish": "npm run build",
+		"compile": "npm run build",
+    "build:client": "vite build --config vite.config.client.ts",
+    "build:server": "vite build --config vite.config.server.ts",
+    "build": "npm run build:client && npm run build:server",
+		"watch": "vite",
+		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ./test-data",
+		"open": "npm run build && code --extensionDevelopmentPath=$PWD test-data/simpsons.ged"
+	},
+  "dependencies": {
+    "@domorium/lsp": "*",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.100.0",
+		"@vscode/test-web": "^0.0.51"
+	}
+}

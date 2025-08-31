@@ -1,0 +1,11 @@
+# Ignore everything by default
+**
+
+# Include the extension manifest and docs
+!package.json
+!README.md
+!LICENSE
+!icon.png
+
+# Include the compiled output
+!dist/**

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024", "WebWorker"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "strict": true
+  },
+  "include": ["src", "vite.config.client.ts", "vite.config.server.ts"],
+  "exclude": ["server/node_modules", ".vscode-test-web"]
+}
