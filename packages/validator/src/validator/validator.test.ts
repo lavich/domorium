@@ -11,8 +11,7 @@ const astBuilder = (text: string) => {
   parser.input = lexingResult.tokens;
   const cst = parser.root();
   const visitor = new GedcomVisitor();
-  const res = visitor.root(cst);
-  return { ...res, errors: [] }; // TODO parse lexing and parser errors
+  return visitor.root(cst);
 };
 
 describe("validator", () => {
@@ -96,5 +95,45 @@ describe("validator", () => {
     const errs = validate(nodes);
     expect(errs.length).toBe(1);
     expect(errs[0].code).toBe("VAL006");
+  });
+});
+
+describe("rule Y|NULL", () => {
+  test("should pass MARR with Y", async () => {
+    const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR Y
+0 TRLR
+`);
+    const errs = validate(nodes);
+    expect(errs.length).toBe(0);
+  });
+
+  test("should pass MARR with DATE", async () => {
+    const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR
+2 DATE 1 APR 1911
+0 TRLR
+`);
+    const errs = validate(nodes);
+    expect(errs.length).toBe(0);
+  });
+
+  test("should return error because MARR has not children", async () => {
+    const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR
+0 TRLR
+`);
+    const errs = validate(nodes);
+    expect(errs.length).toBe(1);
+    expect(errs[0].range.start.line).toBe(4);
   });
 });

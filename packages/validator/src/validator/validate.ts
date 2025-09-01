@@ -107,16 +107,7 @@ export function validate(
     }
 
     if (rule.payload.type) {
-      if (rule.payload.type === "Y|<NULL>") {
-        if (node.tokens.VALUE?.value !== "Y") {
-          errors.push({
-            code: ValidationErrorCode.IncorrectValue,
-            message: `Incorrect value ${node.tokens.VALUE?.value} for ${tag}`,
-            range: tagToken?.range || node.range,
-            level: "error",
-          });
-        }
-      } else if (rule.payload.set) {
+      if (rule.payload.set) {
         const mapSet = scheme.set[rule.payload.set];
 
         if (!node.tokens.VALUE?.value || !mapSet[node.tokens.VALUE?.value]) {
@@ -124,6 +115,24 @@ export function validate(
           errors.push({
             code: ValidationErrorCode.ShouldBeSetValue,
             message: `Value for ${tag} should be in set [${values}]`,
+            range: tagToken?.range || node.range,
+            level: "error",
+          });
+        }
+      } else if (rule.payload.type === "Y|<NULL>") {
+        if (!node.children.length && !node.tokens.VALUE?.value) {
+          errors.push({
+            code: ValidationErrorCode.IncorrectValue,
+            message: `Incorrect value ${node.tokens.VALUE?.value} for ${tag}`,
+            range: tagToken?.range || node.range,
+            level: "error",
+          });
+        }
+
+        if (node.tokens.VALUE?.value && node.tokens.VALUE?.value !== "Y") {
+          errors.push({
+            code: ValidationErrorCode.IncorrectValue,
+            message: `Incorrect value ${node.tokens.VALUE?.value} for ${tag}`,
             range: tagToken?.range || node.range,
             level: "error",
           });
