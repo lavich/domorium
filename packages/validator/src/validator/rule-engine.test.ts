@@ -4,7 +4,6 @@ import { ConfigurableLexer, gedcomLexerDefinition } from "../parser/lexer";
 import { GedcomParser } from "../parser/parser";
 import { GedcomVisitor } from "../parser/visitor";
 import g7validationJson from "../schemes/g7validation.json";
-import { GedcomType } from "../schemes/schema-types";
 
 const astBuilder = (text: string) => {
   const gedcomLexer = new ConfigurableLexer({ zeroBased: true });
@@ -29,10 +28,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const MARR = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        MARR,
-        GedcomType("https://gedcom.io/terms/v7/MARR"),
-      );
+      const errs = ruleEngine.validate(MARR);
       expect(errs.length).toBe(0);
     });
 
@@ -46,10 +42,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const MARR = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        MARR,
-        GedcomType("https://gedcom.io/terms/v7/MARR"),
-      );
+      const errs = ruleEngine.validate(MARR);
       expect(errs.length).toBe(0);
     });
 
@@ -63,10 +56,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const MARR = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        MARR,
-        GedcomType("https://gedcom.io/terms/v7/MARR"),
-      );
+      const errs = ruleEngine.validate(MARR);
       expect(errs.length).toBe(0);
     });
 
@@ -80,10 +70,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const MARR = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        MARR,
-        GedcomType("https://gedcom.io/terms/v7/MARR"),
-      );
+      const errs = ruleEngine.validate(MARR);
       expect(errs.length).toBe(1);
       expect(errs[0].range.start.line).toBe(4);
     });
@@ -99,10 +86,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const NAME = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        NAME,
-        GedcomType("https://gedcom.io/terms/v7/INDI-NAME"),
-      );
+      const errs = ruleEngine.validate(NAME);
       expect(errs.length).toBe(0);
     });
 
@@ -115,10 +99,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const NAME = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        NAME,
-        GedcomType("https://gedcom.io/terms/v7/INDI-NAME"),
-      );
+      const errs = ruleEngine.validate(NAME);
       expect(errs.length).toBe(1);
     });
   });
@@ -133,10 +114,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const SEX = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        SEX,
-        GedcomType("https://gedcom.io/terms/v7/SEX"),
-      );
+      const errs = ruleEngine.validate(SEX);
       expect(errs.length).toBe(0);
     });
 
@@ -149,10 +127,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const SEX = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        SEX,
-        GedcomType("https://gedcom.io/terms/v7/SEX"),
-      );
+      const errs = ruleEngine.validate(SEX);
       expect(errs.length).toBe(1);
     });
   });
@@ -167,10 +142,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const RESN = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        RESN,
-        GedcomType("https://gedcom.io/terms/v7/RESN"),
-      );
+      const errs = ruleEngine.validate(RESN);
       expect(errs.length).toBe(0);
     });
 
@@ -183,10 +155,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const RESN = nodes[1].children[0];
-      const errs = ruleEngine.validate(
-        RESN,
-        GedcomType("https://gedcom.io/terms/v7/RESN"),
-      );
+      const errs = ruleEngine.validate(RESN);
       expect(errs.length).toBe(1);
     });
   });
@@ -201,10 +170,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const TIME = nodes[0].children[0].children[0];
-      const errs = ruleEngine.validate(
-        TIME,
-        GedcomType("https://gedcom.io/terms/v7/TIME"),
-      );
+      const errs = ruleEngine.validate(TIME);
       expect(errs.length).toBe(0);
     });
 
@@ -217,10 +183,7 @@ describe("VERS 7", () => {
 0 TRLR
 `);
       const TIME = nodes[0].children[0].children[0];
-      const errs = ruleEngine.validate(
-        TIME,
-        GedcomType("https://gedcom.io/terms/v7/TIME"),
-      );
+      const errs = ruleEngine.validate(TIME);
       expect(errs.length).toBe(1);
     });
   });

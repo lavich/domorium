@@ -1,4 +1,4 @@
-import { GedcomScheme, GedcomType } from "../schemes/schema-types";
+import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { ASTNode } from "../parser";
 import { GedcomError } from "../types/errors";
 
@@ -76,9 +76,30 @@ export class RuleEngine {
     return null;
   }
 
-  validate(node: ASTNode, tagType: GedcomType): GedcomError[] {
+  getNodeType(node: ASTNode): GedcomType {
+    const stack: GedcomTag[] = [];
+
+    let tempNode: ASTNode | undefined = node;
+    while (tempNode) {
+      stack.push(GedcomTag(tempNode.tokens.TAG!.value!));
+      tempNode = tempNode.parent;
+    }
+
+    let type = GedcomType("");
+    let lastElem = stack.pop();
+    while (lastElem) {
+      const substr = this.scheme.substructure[type];
+      type = substr[lastElem].type;
+      lastElem = stack.pop();
+    }
+
+    return type;
+  }
+
+  validate(node: ASTNode, _tagType?: GedcomType): GedcomError[] {
     const errors: GedcomError[] = [];
-    const fieldType = this.getFieldType(tagType);
+    const tagType = _tagType || this.getNodeType(node);
+    const fieldType = this.getFieldType(tagType || this.getNodeType(node));
     const VALUE = node.tokens.VALUE;
     const value = node.tokens.VALUE?.value.trim();
     const TAG = node.tokens.TAG;
