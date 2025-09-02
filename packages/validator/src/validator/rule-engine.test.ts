@@ -190,4 +190,38 @@ describe("VERS 7", () => {
       expect(errs.length).toBe(1);
     });
   });
+
+  describe("rule Time", () => {
+    test("should pass TIME with payload", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 DATE 9 MAR 2007
+2 TIME 15:19:55
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+      const TIME = nodes[0].children[0].children[0];
+      const errs = ruleEngine.validate(
+        TIME,
+        GedcomType("https://gedcom.io/terms/v7/TIME"),
+      );
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because TIME has not correct payload", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 DATE 9 MAR 2007
+2 TIME 15:1
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+      const TIME = nodes[0].children[0].children[0];
+      const errs = ruleEngine.validate(
+        TIME,
+        GedcomType("https://gedcom.io/terms/v7/TIME"),
+      );
+      expect(errs.length).toBe(1);
+    });
+  });
 });
