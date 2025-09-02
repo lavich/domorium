@@ -10,6 +10,7 @@ import g551validationJson from "../schemes/g551validation.json";
 import { ASTNode } from "../parser";
 import { GedcomError } from "../types/errors";
 import { getGedcomVersion } from "./getGedcomVersion";
+import { RuleEngine } from "./rule-engine";
 
 enum ValidationErrorCode {
   UnknownTag = "VAL001",
@@ -34,7 +35,7 @@ function parseCardinality(str: string): { min: number; max: number } | null {
 
 export function validate(
   nodes: ASTNode[],
-  parentType: GedcomType | string = "",
+  parentType: GedcomType = GedcomType(""),
   _version?: string,
 ): GedcomError[] {
   const version = _version || getGedcomVersion(nodes);
@@ -43,7 +44,7 @@ export function validate(
     ? g551validationJson
     : g7validationJson;
 
-  const substructure = scheme.substructure[GedcomType(parentType)];
+  const substructure = scheme.substructure[parentType];
   if (!substructure) {
     return [];
   }
@@ -106,55 +107,11 @@ export function validate(
       rule.min--;
     }
 
-    if (rule.payload.type) {
-      if (rule.payload.set) {
-        const mapSet = scheme.set[rule.payload.set];
+    const substr = scheme.substructure[parentType];
+    const nodeType = substr[GedcomTag(node.tokens.TAG!.value)].type;
 
-        if (!node.tokens.VALUE?.value || !mapSet[node.tokens.VALUE?.value]) {
-          const values = Object.keys(mapSet).join(", ");
-          errors.push({
-            code: ValidationErrorCode.ShouldBeSetValue,
-            message: `Value for ${tag} should be in set [${values}]`,
-            range: tagToken?.range || node.range,
-            level: "error",
-          });
-        }
-      } else if (rule.payload.type === "Y|<NULL>") {
-        if (!node.children.length && !node.tokens.VALUE?.value) {
-          errors.push({
-            code: ValidationErrorCode.IncorrectValue,
-            message: `Incorrect value ${node.tokens.VALUE?.value} for ${tag}`,
-            range: tagToken?.range || node.range,
-            level: "error",
-          });
-        }
-
-        if (node.tokens.VALUE?.value && node.tokens.VALUE?.value !== "Y") {
-          errors.push({
-            code: ValidationErrorCode.IncorrectValue,
-            message: `Incorrect value ${node.tokens.VALUE?.value} for ${tag}`,
-            range: tagToken?.range || node.range,
-            level: "error",
-          });
-        }
-      } else if (rule.payload.type === "pointer") {
-        if (!node.tokens.XREF?.value) {
-          errors.push({
-            code: ValidationErrorCode.MissingRef,
-            message: `Missing ref for ${tag}`,
-            range: tagToken?.range || node.range,
-            level: "error",
-          });
-        }
-      } else if (!node.tokens.VALUE?.value && !node.tokens.XREF?.value) {
-        errors.push({
-          code: ValidationErrorCode.MissingValue,
-          message: `Missing value for ${tag}`,
-          range: tagToken?.range || node.range,
-          level: "error",
-        });
-      }
-    }
+    const ruleEngine = new RuleEngine(scheme);
+    errors.push(...ruleEngine.validate(node, nodeType));
 
     errors.push(...validate(node.children, rule.type, version));
   }
