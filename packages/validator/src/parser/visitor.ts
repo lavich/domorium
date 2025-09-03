@@ -32,7 +32,7 @@ export interface ASTNode {
 
 export interface VisitorResult {
   nodes: ASTNode[];
-  pointers: Map<string, ASTToken[]>;
+  pointers: Map<string, ASTNode[]>;
   xrefs: Map<string, ASTToken[]>;
 }
 
@@ -124,7 +124,7 @@ export class GedcomVisitor extends BaseGedcomVisitor {
   buildHierarchy(nodes: ASTNode[]): VisitorResult {
     const stack: ASTNode[] = [];
     const result: ASTNode[] = [];
-    const pointers = new Map<string, ASTToken[]>();
+    const pointers = new Map<string, ASTNode[]>();
     const xrefs = new Map<string, ASTToken[]>();
 
     for (const node of nodes) {
@@ -133,7 +133,7 @@ export class GedcomVisitor extends BaseGedcomVisitor {
       }
       if (node.tokens.POINTER?.value) {
         const mapArr = pointers.get(node.tokens.POINTER.value) || [];
-        mapArr.push(node.tokens.POINTER);
+        mapArr.push(node);
         pointers.set(node.tokens.POINTER.value, mapArr);
       }
       if (node.tokens.XREF?.value) {

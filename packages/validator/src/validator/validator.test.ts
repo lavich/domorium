@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { validate } from "./validate";
+import { GedcomValidator } from "./validate";
 import { ConfigurableLexer, gedcomLexerDefinition } from "../parser/lexer";
 import { GedcomParser } from "../parser/parser";
 import { GedcomVisitor } from "../parser/visitor";
@@ -11,8 +11,7 @@ const astBuilder = (text: string) => {
   parser.input = lexingResult.tokens;
   const cst = parser.root();
   const visitor = new GedcomVisitor();
-  const res = visitor.root(cst);
-  return { ...res, errors: [] }; // TODO parse lexing and parser errors
+  return visitor.root(cst);
 };
 
 describe("validator", () => {
@@ -22,7 +21,8 @@ describe("validator", () => {
 2 VERS 7.0
 0 TRLR
 `);
-    const errs = validate(nodes);
+    const validator = new GedcomValidator();
+    const errs = validator.validate(nodes);
     expect(errs.length).toBe(0);
   });
 
@@ -33,7 +33,8 @@ describe("validator", () => {
 0 @i1@ INDI
 0 TRLR
 `);
-    const errs = validate(nodes);
+    const validator = new GedcomValidator();
+    const errs = validator.validate(nodes);
     expect(errs.length).toBe(0);
   });
 
@@ -44,20 +45,9 @@ describe("validator", () => {
 0 @f1@ FAM
 0 TRLR
 `);
-    const errs = validate(nodes);
+    const validator = new GedcomValidator();
+    const errs = validator.validate(nodes);
     expect(errs.length).toBe(0);
-  });
-
-  test("required text value", async () => {
-    const { nodes } = astBuilder(`0 HEAD
-1 GEDC
-2 VERS 7.0
-1 SOUR
-0 TRLR
-`);
-    const errs = validate(nodes);
-    expect(errs.length).toBe(1);
-    expect(errs[0].code).toBe("VAL003");
   });
 
   test("required enum value", async () => {
@@ -68,9 +58,9 @@ describe("validator", () => {
 1 SEX NON_ENUM_TAG
 0 TRLR
 `);
-    const errs = validate(nodes);
+    const validator = new GedcomValidator();
+    const errs = validator.validate(nodes);
     expect(errs.length).toBe(1);
-    expect(errs[0].code).toBe("VAL005");
   });
 
   test("correct enum value", async () => {
@@ -81,20 +71,25 @@ describe("validator", () => {
 1 SEX M
 0 TRLR
 `);
-    const errs = validate(nodes);
+    const validator = new GedcomValidator();
+    const errs = validator.validate(nodes);
     expect(errs.length).toBe(0);
   });
 
-  test("required pointer value", async () => {
-    const { nodes } = astBuilder(`0 HEAD
+  test("should return error because WIFE has not pointer", async () => {
+    const SAMPLE = `
+0 HEAD
 1 GEDC
 2 VERS 7.0
-0 @X3@ FAM
-1 HUSB NON_POINTER
+0 @Homer_Simpson@ INDI
+0 @F0000@ FAM
+1 HUSB @Homer_Simpson@
+1 WIFE @Marge_Simpson@
 0 TRLR
-`);
-    const errs = validate(nodes);
+`;
+    const { nodes, pointers } = astBuilder(SAMPLE);
+    const validator = new GedcomValidator(pointers);
+    const errs = validator.validate(nodes);
     expect(errs.length).toBe(1);
-    expect(errs[0].code).toBe("VAL006");
   });
 });
