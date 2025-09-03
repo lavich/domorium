@@ -33,102 +33,114 @@ function parseCardinality(str: string): { min: number; max: number } | null {
   return { min, max };
 }
 
-export function validate(
-  nodes: ASTNode[],
-  parentType: GedcomType = GedcomType(""),
-  _version?: string,
-): GedcomError[] {
-  const version = _version || getGedcomVersion(nodes);
+export class GedcomValidator {
+  constructor(
+    private readonly pointers: Map<string, ASTNode[]> = new Map<
+      string,
+      ASTNode[]
+    >(),
+  ) {}
 
-  const scheme: GedcomScheme = version?.startsWith("5")
-    ? g551validationJson
-    : g7validationJson;
-
-  const substructure = scheme.substructure[parentType];
-  if (!substructure) {
-    return [];
+  setScheme(nodes: ASTNode[]): GedcomScheme {
+    const version = getGedcomVersion(nodes);
+    return version?.startsWith("5") ? g551validationJson : g7validationJson;
   }
 
-  const rules = new Map<
-    GedcomTag,
-    { min: number; max: number; type: GedcomType; payload: Payload }
-  >();
+  validate(
+    nodes: ASTNode[],
+    parentType: GedcomType = GedcomType(""),
+    _scheme?: GedcomScheme,
+  ): GedcomError[] {
+    const scheme = _scheme || this.setScheme(nodes);
 
-  for (const [tagStr, { cardinality, type }] of Object.entries(substructure)) {
-    const tag = GedcomTag(tagStr);
-    const parsed = parseCardinality(cardinality);
-    if (parsed) {
-      rules.set(tag, { ...parsed, type, payload: scheme.payload[type] });
+    const substructure = scheme.substructure[parentType];
+    if (!substructure) {
+      return [];
     }
+
+    const rules = new Map<
+      GedcomTag,
+      { min: number; max: number; type: GedcomType; payload: Payload }
+    >();
+
+    for (const [tagStr, { cardinality, type }] of Object.entries(
+      substructure,
+    )) {
+      const tag = GedcomTag(tagStr);
+      const parsed = parseCardinality(cardinality);
+      if (parsed) {
+        rules.set(tag, { ...parsed, type, payload: scheme.payload[type] });
+      }
+    }
+
+    const errors: GedcomError[] = [];
+    const parentTag = scheme.tag[GedcomType(parentType)];
+
+    for (const node of nodes) {
+      const tag = node.tokens.TAG?.value
+        ? GedcomTag(node.tokens.TAG?.value)
+        : undefined;
+      if (!tag) {
+        errors.push({
+          code: ValidationErrorCode.MissingTag,
+          message: `Missing required tag`,
+          range: { start: node.range.start, end: node.range.start },
+          level: "error",
+        });
+        continue;
+      }
+
+      const tagToken = node.tokens.TAG;
+      const rule = rules.get(tag);
+
+      if (!rule) {
+        errors.push({
+          code: ValidationErrorCode.UnknownTag,
+          message: `Unknown tag ${tag} in parent ${parentTag}`,
+          range: tagToken?.range || node.range,
+          level: "warning",
+        });
+        continue;
+      }
+
+      if (rule.max === 0) {
+        errors.push({
+          code: ValidationErrorCode.ManyOccurrences,
+          message: `Too many occurrences of ${tag} in parent ${parentTag}`,
+          range: tagToken?.range || node.range,
+          level: "error",
+        });
+      } else {
+        rule.max--;
+      }
+
+      if (rule.min > 0) {
+        rule.min--;
+      }
+
+      const substr = scheme.substructure[parentType];
+      const nodeType = substr[GedcomTag(node.tokens.TAG!.value)].type;
+
+      const ruleNode = new RuleNode(scheme, this.pointers);
+      errors.push(...ruleNode.validate(node, nodeType));
+
+      errors.push(...this.validate(node.children, rule.type, scheme));
+    }
+
+    for (const [tag, rule] of rules) {
+      if (rule.min > 0) {
+        errors.push({
+          code: ValidationErrorCode.MissingTag,
+          message: `Missing required tag ${tag} in ${parentTag || "root"}`,
+          range: nodes[0]?.parent?.range ?? {
+            start: { line: 0, character: 0 },
+            end: { line: 0, character: 0 },
+          },
+          level: "error",
+        });
+      }
+    }
+
+    return errors;
   }
-
-  const errors: GedcomError[] = [];
-  const parentTag = scheme.tag[GedcomType(parentType)];
-
-  for (const node of nodes) {
-    const tag = node.tokens.TAG?.value
-      ? GedcomTag(node.tokens.TAG?.value)
-      : undefined;
-    if (!tag) {
-      errors.push({
-        code: ValidationErrorCode.MissingTag,
-        message: `Missing required tag`,
-        range: { start: node.range.start, end: node.range.start },
-        level: "error",
-      });
-      continue;
-    }
-
-    const tagToken = node.tokens.TAG;
-    const rule = rules.get(tag);
-
-    if (!rule) {
-      errors.push({
-        code: ValidationErrorCode.UnknownTag,
-        message: `Unknown tag ${tag} in parent ${parentTag}`,
-        range: tagToken?.range || node.range,
-        level: "warning",
-      });
-      continue;
-    }
-
-    if (rule.max === 0) {
-      errors.push({
-        code: ValidationErrorCode.ManyOccurrences,
-        message: `Too many occurrences of ${tag} in parent ${parentTag}`,
-        range: tagToken?.range || node.range,
-        level: "error",
-      });
-    } else {
-      rule.max--;
-    }
-
-    if (rule.min > 0) {
-      rule.min--;
-    }
-
-    const substr = scheme.substructure[parentType];
-    const nodeType = substr[GedcomTag(node.tokens.TAG!.value)].type;
-
-    const ruleNode = new RuleNode(scheme);
-    errors.push(...ruleNode.validate(node, nodeType));
-
-    errors.push(...validate(node.children, rule.type, version));
-  }
-
-  for (const [tag, rule] of rules) {
-    if (rule.min > 0) {
-      errors.push({
-        code: ValidationErrorCode.MissingTag,
-        message: `Missing required tag ${tag} in ${parentTag || "root"}`,
-        range: nodes[0]?.parent?.range ?? {
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: 0 },
-        },
-        level: "error",
-      });
-    }
-  }
-
-  return errors;
 }

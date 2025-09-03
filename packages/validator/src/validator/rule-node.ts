@@ -17,12 +17,24 @@ type FieldType =
 const TIME_REGEXP = /^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/;
 
 export class RuleNode {
-  constructor(private readonly scheme: GedcomScheme) {}
+  pointers: ASTNode[];
 
-  getFieldType(tagType: GedcomType): { type: FieldType; isList: boolean } {
+  constructor(
+    private readonly scheme: GedcomScheme,
+    pointers: Map<string, ASTNode[]>,
+  ) {
+    this.pointers = Array.from(pointers.values()).flatMap((v) => v);
+  }
+
+  getFieldType(tagType: GedcomType): {
+    type: FieldType;
+    isList: boolean;
+    to: GedcomType | undefined;
+  } {
     const payload = this.scheme.payload[tagType];
     let type: FieldType;
     let isList = false;
+    let to: GedcomType | undefined = undefined;
     switch (payload?.type) {
       case "Y|<NULL>":
         type = "boolean";
@@ -59,6 +71,7 @@ export class RuleNode {
         break;
       case "pointer":
         type = "pointer";
+        to = payload.to;
         break;
       case null:
         type = null;
@@ -66,7 +79,7 @@ export class RuleNode {
       default:
         type = "string";
     }
-    return { type, isList };
+    return { type, isList, to };
   }
 
   getAvailableValues(tagType: GedcomType): string[] | null {
@@ -77,6 +90,13 @@ export class RuleNode {
       payload.set
     ) {
       return Object.keys(this.scheme.set[payload.set]);
+    }
+    if (fieldType.type === "pointer" && fieldType.to) {
+      const pointerTag = this.scheme.tag[fieldType.to];
+      const pointersNode = this.pointers.filter(
+        (pointer) => pointer.tokens.TAG?.value === pointerTag,
+      );
+      return pointersNode.map((node) => node.tokens.POINTER?.value || "");
     }
     return null;
   }
@@ -182,8 +202,26 @@ export class RuleNode {
           });
         }
         break;
-      case "pointer":
+      case "pointer": {
+        const availableValues = this.getAvailableValues(tagType);
+
+        const XREF = node.tokens.XREF;
+        const isXrefExist = !!XREF?.value;
+        const isXrefValid =
+          isXrefExist && availableValues?.includes(XREF?.value);
+        const hasChildren = node.children.length !== 0;
+        if ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren)) {
+          errors.push({
+            code: "VAL",
+            message: hasChildren
+              ? `Value for ${TAG?.value} should be in set [${availableValues}]`
+              : `Value for ${TAG?.value} should be POINTER`,
+            range: XREF?.range || TAG?.range || node.range,
+            level: "error",
+          });
+        }
         break;
+      }
     }
     return errors;
   }

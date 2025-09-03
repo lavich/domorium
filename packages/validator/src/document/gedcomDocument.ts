@@ -3,11 +3,11 @@ import { ASTNode, ASTToken } from "../parser";
 import { ConfigurableLexer, gedcomLexerDefinition } from "../parser/lexer";
 import { GedcomParser } from "../parser/parser";
 import { GedcomVisitor } from "../parser/visitor";
-import { validate } from "../validator";
+import { GedcomValidator } from "../validator";
 
 export class GedcomDocument {
   private nodes: ASTNode[] = [];
-  public pointers = new Map<string, ASTToken[]>();
+  public pointers = new Map<string, ASTNode[]>();
   public xRefs = new Map<string, ASTToken[]>();
   private errors: GedcomError[] = [];
 
@@ -58,7 +58,8 @@ export class GedcomDocument {
     this.nodes = nodes;
     this.pointers = pointers;
     this.xRefs = xrefs;
-    this.errors.push(...validate(this.nodes));
+    const validator = new GedcomValidator(pointers);
+    this.errors.push(...validator.validate(this.nodes));
     return this;
   }
 
