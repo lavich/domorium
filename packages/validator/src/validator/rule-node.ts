@@ -16,7 +16,7 @@ type FieldType =
 
 const TIME_REGEXP = /^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/;
 
-export class RuleEngine {
+export class RuleNode {
   constructor(private readonly scheme: GedcomScheme) {}
 
   getFieldType(tagType: GedcomType): { type: FieldType; isList: boolean } {
@@ -31,6 +31,7 @@ export class RuleEngine {
       case "http://www.w3.org/2001/XMLSchema#Language":
       case "http://www.w3.org/ns/dcat#mediaType":
       case "https://gedcom.io/terms/v7/type-Name":
+      case "https://gedcom.io/terms/v5.5.1/type-NAME_PERSONAL":
         type = "string";
         break;
       case "https://gedcom.io/terms/v7/type-List#Text":
@@ -53,13 +54,17 @@ export class RuleEngine {
         type = "date-period";
         break;
       case "https://gedcom.io/terms/v7/type-Time":
+      case "https://gedcom.io/terms/v5.5.1/type-TIME_VALUE":
         type = "time";
         break;
       case "pointer":
         type = "pointer";
         break;
-      default:
+      case null:
         type = null;
+        break;
+      default:
+        type = "string";
     }
     return { type, isList };
   }

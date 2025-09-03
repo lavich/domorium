@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { RuleEngine } from "./rule-engine";
+import { RuleNode } from "./rule-node";
 import { ConfigurableLexer, gedcomLexerDefinition } from "../parser/lexer";
 import { GedcomParser } from "../parser/parser";
 import { GedcomVisitor } from "../parser/visitor";
 import g7validationJson from "../schemes/g7validation.json";
+import g551validation from "../schemes/g551validation.json";
 
 const astBuilder = (text: string) => {
   const gedcomLexer = new ConfigurableLexer({ zeroBased: true });
@@ -16,7 +17,7 @@ const astBuilder = (text: string) => {
 };
 
 describe("VERS 7", () => {
-  const ruleEngine = new RuleEngine(g7validationJson);
+  const ruleEngine = new RuleNode(g7validationJson);
 
   describe("rule Y|NULL", () => {
     test("should pass MARR with Y", async () => {
@@ -180,6 +181,124 @@ describe("VERS 7", () => {
 2 TIME 15:1
 1 GEDC
 2 VERS 7.0
+0 TRLR
+`);
+      const TIME = nodes[0].children[0].children[0];
+      const errs = ruleEngine.validate(TIME);
+      expect(errs.length).toBe(1);
+    });
+  });
+});
+
+describe("VERS 5.5.1", () => {
+  const ruleEngine = new RuleNode(g551validation);
+
+  describe("rule Y|NULL", () => {
+    test("should pass MARR with Y", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 MARR Y
+0 TRLR
+`);
+      const MARR = nodes[1].children[0];
+      const errs = ruleEngine.validate(MARR);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should pass MARR with children", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 MARR
+2 DATE 1 APR 1911
+0 TRLR
+`);
+      const MARR = nodes[1].children[0];
+      const errs = ruleEngine.validate(MARR);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should pass MARR with children", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 MARR
+2 DATE 1 APR 1911
+0 TRLR
+`);
+      const MARR = nodes[1].children[0];
+      const errs = ruleEngine.validate(MARR);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because value incorrect", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 MARR incorrect_value
+2 DATE 1 APR 1911
+0 TRLR
+`);
+      const MARR = nodes[1].children[0];
+      const errs = ruleEngine.validate(MARR);
+      expect(errs.length).toBe(1);
+      expect(errs[0].range.start.line).toBe(4);
+    });
+  });
+
+  describe("rule String", () => {
+    test("should pass NAME with payload", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Gomer
+0 TRLR
+`);
+      const NAME = nodes[1].children[0];
+      const errs = ruleEngine.validate(NAME);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because Name has not payload", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME
+0 TRLR
+`);
+      const NAME = nodes[1].children[0];
+      const errs = ruleEngine.validate(NAME);
+      expect(errs.length).toBe(1);
+    });
+  });
+
+  describe("rule Time", () => {
+    test("should pass TIME with payload", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 DATE 9 MAR 2007
+2 TIME 15:19:55
+1 GEDC
+2 VERS 5.5.1
+0 TRLR
+`);
+      const TIME = nodes[0].children[0].children[0];
+      const errs = ruleEngine.validate(TIME);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because TIME has not correct payload", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 DATE 9 MAR 2007
+2 TIME 15:1
+1 GEDC
+2 VERS 5.5.1
 0 TRLR
 `);
       const TIME = nodes[0].children[0].children[0];

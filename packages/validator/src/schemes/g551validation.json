@@ -1028,7 +1028,7 @@
       "type": "http://www.w3.org/2001/XMLSchema#string"
     },
     "https://gedcom.io/terms/v5.5.1/REPO": {
-      "to": "https://gedcom.io/terms/v5.5.1/record-REPO>@|<NUL",
+      "to": "https://gedcom.io/terms/v5.5.1/record-REPO",
       "type": "pointer"
     },
     "https://gedcom.io/terms/v5.5.1/REPO-NAME": {

@@ -10,7 +10,7 @@ import g551validationJson from "../schemes/g551validation.json";
 import { ASTNode } from "../parser";
 import { GedcomError } from "../types/errors";
 import { getGedcomVersion } from "./getGedcomVersion";
-import { RuleEngine } from "./rule-engine";
+import { RuleNode } from "./rule-node";
 
 enum ValidationErrorCode {
   UnknownTag = "VAL001",
@@ -110,8 +110,8 @@ export function validate(
     const substr = scheme.substructure[parentType];
     const nodeType = substr[GedcomTag(node.tokens.TAG!.value)].type;
 
-    const ruleEngine = new RuleEngine(scheme);
-    errors.push(...ruleEngine.validate(node, nodeType));
+    const ruleNode = new RuleNode(scheme);
+    errors.push(...ruleNode.validate(node, nodeType));
 
     errors.push(...validate(node.children, rule.type, version));
   }
