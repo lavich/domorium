@@ -1,3 +1,7 @@
+### 0.0.9
+
+- Improved validator
+
 ### 0.0.8
 
 - Make monorepo
