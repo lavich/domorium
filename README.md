@@ -10,6 +10,8 @@ Provides syntax highlighting and validation for genealogical data.
 - GEDCOM syntax highlighting
 - Structural validation of GEDCOM files
 
+<img src="apps/vscode/images/Screenshot.png" width="600" alt="Syntax highlighting and validation" />
+
 ---
 
 ## Planned Features
