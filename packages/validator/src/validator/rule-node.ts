@@ -10,6 +10,7 @@ type FieldType =
   | "multiselect"
   | "date"
   | "date-period"
+  | "date-exact"
   | "time"
   | "pointer"
   | "age"
@@ -53,6 +54,28 @@ const LANGUAGE_TAG_REGEXP = new RegExp(
     ")$",
   "i",
 );
+
+const MONTH_REGEXP_SRC = "(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)";
+const YEAR_REGEXP_SRC = "\\d+(?:/\\d{2})?";
+const DATE_EXACT_REGEXP = new RegExp(
+  `^\\d{1,2}\\s${MONTH_REGEXP_SRC}\\s${YEAR_REGEXP_SRC}$`,
+);
+// Leading calendar escape, e.g. "@#DHEBREW@ 1 TISHREI 5761". Only the
+// Gregorian calendar's grammar is validated (see design doc); any other
+// escape name is accepted with just a non-empty-remainder check, so
+// real-world non-Gregorian files aren't blocked.
+const CALENDAR_ESCAPE_REGEXP = /^@#D([A-Z][A-Z ]*)@\s*/;
+
+function stripCalendarEscape(value: string): {
+  calendar: string | null;
+  rest: string;
+} {
+  const match = value.match(CALENDAR_ESCAPE_REGEXP);
+  if (!match) {
+    return { calendar: null, rest: value };
+  }
+  return { calendar: match[1], rest: value.slice(match[0].length) };
+}
 
 export class RuleNode {
   pointers: ASTNode[];
@@ -108,6 +131,10 @@ export class RuleNode {
         break;
       case "https://gedcom.io/terms/v7/type-Date#period":
         type = "date-period";
+        break;
+      case "https://gedcom.io/terms/v7/type-Date#exact":
+      case "https://gedcom.io/terms/v5.5.1/type-DATE_EXACT":
+        type = "date-exact";
         break;
       case "https://gedcom.io/terms/v7/type-Time":
       case "https://gedcom.io/terms/v5.5.1/type-TIME_VALUE":
@@ -313,6 +340,20 @@ export class RuleNode {
         break;
       case "date-period":
         break;
+      case "date-exact": {
+        const { calendar, rest } = stripCalendarEscape(value);
+        const isNonGregorianCalendar =
+          calendar !== null && calendar !== "GREGORIAN";
+        if (isNonGregorianCalendar ? !rest : !DATE_EXACT_REGEXP.test(rest)) {
+          errors.push({
+            code: "VAL",
+            message: `Value for ${TAG?.value} should be an exact date in day month year order (e.g. "1 APR 1911")`,
+            range: VALUE?.range || node.range,
+            level: "error",
+          });
+        }
+        break;
+      }
       case "time":
         if (!value || !TIME_REGEXP.test(value)) {
           errors.push({

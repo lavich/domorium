@@ -234,6 +234,76 @@ describe("payload for VERS 7", () => {
     });
   });
 
+  describe("rule DateExact", () => {
+    test.each(["9 MAR 2007", "1 JAN 1857/58"])(
+      "should pass DATE with %s",
+      async (date) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE ${date}
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const DATE = nodes[0].children[0];
+        const errs = ruleEngine.validate(DATE);
+        expect(errs.length).toBe(0);
+      },
+    );
+
+    test("should return error because DATE is missing day and month", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE 2007
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+
+    test("should pass DATE with unrecognized calendar escape without format checking", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE @#DHEBREW@ 1 TISHREI 5761
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should pass DATE with explicit Gregorian calendar escape", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE @#DGREGORIAN@ 9 MAR 2007
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because DATE with explicit Gregorian calendar escape is missing day and month", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE @#DGREGORIAN@ 2007
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+  });
+
   describe("rule PersonalName", () => {
     test.each(["Homer /Simpson/", "Homer /Simpson/ Jr.", "Homer Simpson"])(
       "should pass NAME with %s",
