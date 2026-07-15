@@ -26,7 +26,7 @@
 
 - [ ] **LSP: autocomplete** — suggest tags and enum values based on the schema (`completionProvider`).
 
-- [ ] **LSP: go-to-definition** — jump from `@XREF@` to the record definition (`definitionProvider`).
+- [x] **LSP: go-to-definition** — jump from `@XREF@` to the record definition (`definitionProvider`). Implemented in `packages/lsp/src/libs/definition/definition.ts` + wired up in `createServer.ts`.
 
 - [ ] **LSP: hover** — show label/tooltip from the schema when hovering over a TAG (e.g., `BIRT` → "Birth").
 

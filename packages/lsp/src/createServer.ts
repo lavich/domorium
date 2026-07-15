@@ -1,8 +1,10 @@
 import type {
   Connection,
+  DefinitionParams,
   Diagnostic,
   FoldingRange,
   InlayHintParams,
+  Location,
 } from "vscode-languageserver";
 import {
   DiagnosticSeverity,
@@ -21,6 +23,7 @@ import { GedcomDocument } from "@domorium/validator";
 import { levelFolding } from "./libs/folding/levelFolding";
 import { legend, semanticTokens } from "./libs/semantic/semanticTokens";
 import { levelIndent } from "./libs/indent/levelIndent";
+import { findDefinitionRanges } from "./libs/definition/definition";
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
@@ -32,6 +35,7 @@ export const createServer = (connection: Connection) => {
         textDocumentSync: TextDocumentSyncKind.Incremental,
         inlayHintProvider: true,
         foldingRangeProvider: true,
+        definitionProvider: true,
         semanticTokensProvider: {
           legend,
           range: false,
@@ -47,6 +51,19 @@ export const createServer = (connection: Connection) => {
       return [];
     }
     return levelIndent(parsed.getNodes());
+  });
+
+  connection.onDefinition((params: DefinitionParams): Location[] => {
+    const parsed = cache.get(params.textDocument.uri);
+    if (!parsed) {
+      return [];
+    }
+    const ranges = findDefinitionRanges(
+      parsed.getNodes(),
+      parsed.pointers,
+      params.position,
+    );
+    return ranges.map((range) => ({ uri: params.textDocument.uri, range }));
   });
 
   connection.onFoldingRanges((params): FoldingRange[] => {
