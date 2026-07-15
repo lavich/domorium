@@ -1,3 +1,4 @@
+import { SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver";
 import type { ASTNode, ASTToken, TokenNames } from "@domorium/validator";
 
 interface SemanticToken {
@@ -9,15 +10,16 @@ interface SemanticToken {
 }
 
 export const tokenTypes = [
-  "number",
-  "variable",
-  "keyword",
-  "string",
-  "comment",
-  "unknown",
+  SemanticTokenTypes.comment,
+  SemanticTokenTypes.interface,
+  SemanticTokenTypes.keyword,
+  SemanticTokenTypes.parameter,
+  SemanticTokenTypes.string,
+  SemanticTokenTypes.variable,
+  SemanticTokenTypes.function,
 ] as const;
 
-export const tokenModifiers = ["declaration", "readonly", "reference"] as const;
+export const tokenModifiers = [SemanticTokenModifiers.declaration] as const;
 
 export const legend = {
   tokenTypes: [...tokenTypes],
@@ -28,18 +30,18 @@ const tokenTypeMap = new Map(tokenTypes.map((t, i) => [t, i]));
 const tokenModifierMap = new Map(tokenModifiers.map((m, i) => [m, i]));
 
 const tokenMap: Record<TokenNames, (typeof tokenTypes)[number]> = {
-  LEVEL: "number",
-  POINTER: "variable",
-  XREF: "variable",
-  TAG: "keyword",
-  VALUE: "string",
+  LEVEL: SemanticTokenTypes.comment,
+  POINTER: SemanticTokenTypes.function,
+  XREF: SemanticTokenTypes.function,
+  TAG: SemanticTokenTypes.interface,
+  VALUE: SemanticTokenTypes.string,
 };
 
 const tokenModifiersMap: Record<TokenNames, (typeof tokenModifiers)[number][]> =
   {
     LEVEL: [],
-    POINTER: ["declaration"],
-    XREF: ["reference"],
+    POINTER: [SemanticTokenModifiers.declaration],
+    XREF: [],
     TAG: [],
     VALUE: [],
   };
