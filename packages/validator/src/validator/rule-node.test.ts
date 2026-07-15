@@ -304,6 +304,83 @@ describe("payload for VERS 7", () => {
     });
   });
 
+  describe("rule Date", () => {
+    test.each([
+      "9 MAR 2007",
+      "1857/58",
+      "ABT 1950",
+      "CAL 1950",
+      "EST 1950",
+      "BEF 1950",
+      "AFT 1950",
+      "BET 1900 AND 1910",
+      "FROM 1900 TO 1910",
+      "TO 1910",
+      "INT 1950 (around 1950)",
+      "(unknown)",
+      "100 BCE",
+      "@#DGREGORIAN@ 9 MAR 2007",
+    ])("should pass DATE with %s", async (date) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR
+2 DATE ${date}
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because DATE is not a valid date value", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR
+2 DATE not a date
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+
+    test("should return error because explicit Gregorian escape still requires valid grammar", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR
+2 DATE @#DGREGORIAN@ not a date
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+
+    test("should pass DATE with unrecognized calendar escape without format checking", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR
+2 DATE @#DHEBREW@ 1 TISHREI 5761
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(0);
+    });
+  });
+
   describe("rule PersonalName", () => {
     test.each(["Homer /Simpson/", "Homer /Simpson/ Jr.", "Homer Simpson"])(
       "should pass NAME with %s",

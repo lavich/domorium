@@ -77,6 +77,31 @@ function stripCalendarEscape(value: string): {
   return { calendar: match[1], rest: value.slice(match[0].length) };
 }
 
+// Day requires a month: "(?:\d{1,2}\s)?MONTH\s" only ever matches together,
+// so a bare "DAY YEAR" (no month) never matches.
+const GREGORIAN_DATE_SRC = `(?:(?:\\d{1,2}\\s)?${MONTH_REGEXP_SRC}\\s)?${YEAR_REGEXP_SRC}`;
+const GREGORIAN_DATE_WITH_EPOCH_SRC = `${GREGORIAN_DATE_SRC}(?:\\s(?:BCE|B\\.C\\.))?`;
+
+const DATE_VALUE_REGEXP = new RegExp(
+  "^(?:" +
+    `(?:ABT|CAL|EST)\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
+    "|" +
+    `(?:BEF|AFT)\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
+    "|" +
+    `BET\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}\\sAND\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
+    "|" +
+    `FROM\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}(?:\\sTO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC})?` +
+    "|" +
+    `TO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
+    "|" +
+    `INT\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}\\s\\([^()]*\\)` +
+    "|" +
+    `${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
+    "|" +
+    "\\([^()]*\\)" +
+    ")$",
+);
+
 export class RuleNode {
   pointers: ASTNode[];
 
@@ -127,6 +152,7 @@ export class RuleNode {
         type = "multiselect";
         break;
       case "https://gedcom.io/terms/v7/type-Date":
+      case "https://gedcom.io/terms/v5.5.1/type-DATE_VALUE":
         type = "date";
         break;
       case "https://gedcom.io/terms/v7/type-Date#period":
@@ -336,8 +362,20 @@ export class RuleNode {
         }
         break;
       }
-      case "date":
+      case "date": {
+        const { calendar, rest } = stripCalendarEscape(value);
+        const isNonGregorianCalendar =
+          calendar !== null && calendar !== "GREGORIAN";
+        if (isNonGregorianCalendar ? !rest : !DATE_VALUE_REGEXP.test(rest)) {
+          errors.push({
+            code: "VAL",
+            message: `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
+            range: VALUE?.range || node.range,
+            level: "error",
+          });
+        }
         break;
+      }
       case "date-period":
         break;
       case "date-exact": {
