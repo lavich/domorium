@@ -108,7 +108,26 @@ export class RuleNode {
     return null;
   }
 
+  /**
+   * CONT/CONC are universal line-continuation tags: they are deliberately
+   * left out of `substructure` (see validate.ts, which skips them before
+   * doing any substructure lookup), so they never appear on the walk done
+   * by getNodeType below. Resolve their type directly from the flat
+   * type->tag table instead.
+   */
+  private getUniversalType(tag: GedcomTag): GedcomType | undefined {
+    const entry = Object.entries(this.scheme.tag).find(
+      ([, t]) => t === tag,
+    );
+    return entry ? GedcomType(entry[0]) : undefined;
+  }
+
   getNodeType(node: ASTNode): GedcomType {
+    const tag = node.tokens.TAG?.value;
+    if (tag === "CONT" || tag === "CONC") {
+      return this.getUniversalType(GedcomTag(tag)) ?? GedcomType("");
+    }
+
     const stack: GedcomTag[] = [];
 
     let tempNode: ASTNode | undefined = node;
@@ -121,7 +140,11 @@ export class RuleNode {
     let lastElem = stack.pop();
     while (lastElem) {
       const substr = this.scheme.substructure[type];
-      type = substr[lastElem].type;
+      const entry = substr?.[lastElem];
+      if (!entry) {
+        return GedcomType("");
+      }
+      type = entry.type;
       lastElem = stack.pop();
     }
 

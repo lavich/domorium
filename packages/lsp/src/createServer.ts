@@ -3,6 +3,8 @@ import type {
   DefinitionParams,
   Diagnostic,
   FoldingRange,
+  Hover,
+  HoverParams,
   InlayHintParams,
   Location,
 } from "vscode-languageserver";
@@ -24,6 +26,7 @@ import { levelFolding } from "./libs/folding/levelFolding";
 import { legend, semanticTokens } from "./libs/semantic/semanticTokens";
 import { levelIndent } from "./libs/indent/levelIndent";
 import { findDefinitionRanges } from "./libs/definition/definition";
+import { getHover } from "./libs/hover/hover";
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
@@ -36,6 +39,7 @@ export const createServer = (connection: Connection) => {
         inlayHintProvider: true,
         foldingRangeProvider: true,
         definitionProvider: true,
+        hoverProvider: true,
         semanticTokensProvider: {
           legend,
           range: false,
@@ -64,6 +68,14 @@ export const createServer = (connection: Connection) => {
       params.position,
     );
     return ranges.map((range) => ({ uri: params.textDocument.uri, range }));
+  });
+
+  connection.onHover((params: HoverParams): Hover | null => {
+    const parsed = cache.get(params.textDocument.uri);
+    if (!parsed) {
+      return null;
+    }
+    return getHover(parsed, parsed.getNodes(), params.position);
   });
 
   connection.onFoldingRanges((params): FoldingRange[] => {

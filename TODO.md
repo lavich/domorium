@@ -28,7 +28,7 @@
 
 - [x] **LSP: go-to-definition** — jump from `@XREF@` to the record definition (`definitionProvider`). Implemented in `packages/lsp/src/libs/definition/definition.ts` + wired up in `createServer.ts`.
 
-- [ ] **LSP: hover** — show label/tooltip from the schema when hovering over a TAG (e.g., `BIRT` → "Birth").
+- [x] **LSP: hover** — show label/tooltip from the schema when hovering over a TAG (e.g., `BIRT` → "Birth"). Added `GedcomDocument.getLabel()` in the validator plus `packages/lsp/src/libs/hover/hover.ts` wired up in `createServer.ts`.
 
 ## Priority: Low
 

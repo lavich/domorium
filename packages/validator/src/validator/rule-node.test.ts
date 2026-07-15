@@ -426,4 +426,56 @@ describe("payload for VERS 5.5.1", () => {
       expect(errs.length).toBe(1);
     });
   });
+
+  describe("getNodeType", () => {
+    test("should resolve CONT to its universal type instead of throwing", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NOTE hello
+2 CONT world
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const NOTE = nodes[1].children[0];
+      const CONT = NOTE.children[0];
+      expect(() => ruleEngine.getNodeType(CONT)).not.toThrow();
+      expect(ruleEngine.getNodeType(CONT)).toBe(
+        "https://gedcom.io/terms/v7/CONT",
+      );
+    });
+
+    test("should not throw for FORM/FILE under an inline (non-pointer) OBJE", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 OBJE
+2 FORM URL
+2 FILE http://example.com
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      const OBJE = nodes[1].children[0];
+      const FORM = OBJE.children[0];
+      const FILE = OBJE.children[1];
+      expect(() => ruleEngine.getNodeType(FORM)).not.toThrow();
+      expect(() => ruleEngine.getNodeType(FILE)).not.toThrow();
+    });
+
+    test("should not throw for a tag unknown to the schema", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 _CUSTOM foo
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const CUSTOM = nodes[1].children[0];
+      expect(() => ruleEngine.getNodeType(CUSTOM)).not.toThrow();
+      expect(ruleEngine.getNodeType(CUSTOM)).toBe("");
+    });
+  });
 });

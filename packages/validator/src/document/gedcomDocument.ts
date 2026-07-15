@@ -4,12 +4,15 @@ import { ConfigurableLexer, gedcomLexerDefinition } from "../parser/lexer";
 import { GedcomParser } from "../parser/parser";
 import { GedcomVisitor } from "../parser/visitor";
 import { GedcomValidator } from "../validator";
+import { GedcomScheme } from "../schemes/schema-types";
+import { RuleNode } from "../validator/rule-node";
 
 export class GedcomDocument {
   private nodes: ASTNode[] = [];
   public pointers = new Map<string, ASTNode[]>();
   public xRefs = new Map<string, ASTToken[]>();
   private errors: GedcomError[] = [];
+  private scheme: GedcomScheme | undefined;
 
   private parseGedcom(input: string) {
     const gedcomLexer = new ConfigurableLexer({ zeroBased: true });
@@ -59,8 +62,17 @@ export class GedcomDocument {
     this.pointers = pointers;
     this.xRefs = xrefs;
     const validator = new GedcomValidator(pointers);
+    this.scheme = validator.setScheme(this.nodes);
     this.errors.push(...validator.validate(this.nodes));
     return this;
+  }
+
+  getLabel(node: ASTNode): string | undefined {
+    if (!this.scheme) {
+      return undefined;
+    }
+    const type = new RuleNode(this.scheme, this.pointers).getNodeType(node);
+    return this.scheme.label[type]?.["en-US"];
   }
 
   updateDocument(_text: string, _range: Range): GedcomDocument {
