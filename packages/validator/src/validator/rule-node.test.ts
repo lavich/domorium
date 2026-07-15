@@ -314,6 +314,7 @@ describe("payload for VERS 7", () => {
       "BEF 1950",
       "AFT 1950",
       "BET 1900 AND 1910",
+      "BET 9 MAR 1900 AND 10 APR 1910",
       "FROM 1900 TO 1910",
       "TO 1910",
       "INT 1950 (around 1950)",
@@ -376,6 +377,96 @@ describe("payload for VERS 7", () => {
 `);
       const ruleEngine = new RuleNode(g7validationJson, pointers);
       const DATE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(0);
+    });
+
+    test.each([
+      "BET 1900 1910",
+      "FROM 1900 TO",
+      "(a(b)c)",
+    ])("should return error because %s is not a valid date value", async (date) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR
+2 DATE ${date}
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+  });
+
+  describe("rule DatePeriod", () => {
+    test.each([
+      "FROM 1900 TO 1910",
+      "TO 1920",
+      "FROM 1900",
+      "@#DGREGORIAN@ FROM 1900 TO 1910",
+    ])("should pass DATE with %s", async (date) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 DATA
+2 EVEN BIRT
+3 DATE ${date}
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because DATE has no FROM/TO period marker", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 DATA
+2 EVEN BIRT
+3 DATE 1900
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+
+    test("should return error because explicit Gregorian escape still requires a period marker", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 DATA
+2 EVEN BIRT
+3 DATE @#DGREGORIAN@ 1900
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+
+    test("should pass DATE with unrecognized calendar escape without format checking", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 DATA
+2 EVEN BIRT
+3 DATE @#DHEBREW@ FROM 1 TISHREI 5761
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0].children[0];
       const errs = ruleEngine.validate(DATE);
       expect(errs.length).toBe(0);
     });

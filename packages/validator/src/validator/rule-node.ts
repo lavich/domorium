@@ -77,6 +77,12 @@ function stripCalendarEscape(value: string): {
   return { calendar: match[1], rest: value.slice(match[0].length) };
 }
 
+function isValidGregorianDate(value: string, regexp: RegExp): boolean {
+  const { calendar, rest } = stripCalendarEscape(value);
+  const isNonGregorianCalendar = calendar !== null && calendar !== "GREGORIAN";
+  return isNonGregorianCalendar ? !!rest : regexp.test(rest);
+}
+
 // Day requires a month: "(?:\d{1,2}\s)?MONTH\s" only ever matches together,
 // so a bare "DAY YEAR" (no month) never matches.
 const GREGORIAN_DATE_SRC = `(?:(?:\\d{1,2}\\s)?${MONTH_REGEXP_SRC}\\s)?${YEAR_REGEXP_SRC}`;
@@ -99,6 +105,14 @@ const DATE_VALUE_REGEXP = new RegExp(
     `${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
     "|" +
     "\\([^()]*\\)" +
+    ")$",
+);
+
+const DATE_PERIOD_REGEXP = new RegExp(
+  "^(?:" +
+    `FROM\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}(?:\\sTO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC})?` +
+    "|" +
+    `TO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
     ")$",
 );
 
@@ -156,6 +170,7 @@ export class RuleNode {
         type = "date";
         break;
       case "https://gedcom.io/terms/v7/type-Date#period":
+      case "https://gedcom.io/terms/v5.5.1/type-DATE_PERIOD":
         type = "date-period";
         break;
       case "https://gedcom.io/terms/v7/type-Date#exact":
@@ -363,10 +378,7 @@ export class RuleNode {
         break;
       }
       case "date": {
-        const { calendar, rest } = stripCalendarEscape(value);
-        const isNonGregorianCalendar =
-          calendar !== null && calendar !== "GREGORIAN";
-        if (isNonGregorianCalendar ? !rest : !DATE_VALUE_REGEXP.test(rest)) {
+        if (!isValidGregorianDate(value, DATE_VALUE_REGEXP)) {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
@@ -376,13 +388,19 @@ export class RuleNode {
         }
         break;
       }
-      case "date-period":
+      case "date-period": {
+        if (!isValidGregorianDate(value, DATE_PERIOD_REGEXP)) {
+          errors.push({
+            code: "VAL",
+            message: `Value for ${TAG?.value} should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
+            range: VALUE?.range || node.range,
+            level: "error",
+          });
+        }
         break;
+      }
       case "date-exact": {
-        const { calendar, rest } = stripCalendarEscape(value);
-        const isNonGregorianCalendar =
-          calendar !== null && calendar !== "GREGORIAN";
-        if (isNonGregorianCalendar ? !rest : !DATE_EXACT_REGEXP.test(rest)) {
+        if (!isValidGregorianDate(value, DATE_EXACT_REGEXP)) {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be an exact date in day month year order (e.g. "1 APR 1911")`,
