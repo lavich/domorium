@@ -13,11 +13,46 @@ type FieldType =
   | "time"
   | "pointer"
   | "age"
+  | "personal-name"
+  | "media-type"
+  | "language-tag"
   | null;
 
 const TIME_REGEXP = /^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/;
 const AGE_REGEXP =
   /^[<>]\s(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$|^(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$/;
+// A name, with at most one pair of slashes delimiting the surname, e.g.
+// "John /Doe/" or "John /Doe/ Jr.". Zero slashes (unstructured name) is
+// also valid.
+const PERSONAL_NAME_REGEXP = /^[^/]*(?:\/[^/]*\/[^/]*)?$/;
+// type/subtype[; parameter=value ...], per RFC 6838 restricted-name tokens.
+const MEDIA_TYPE_REGEXP =
+  /^[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*\/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*(;\s*[\w-]+=[^;]+)*$/;
+const LATITUDE_REGEXP = /^[NS]\d+(\.\d+)?$/;
+const LONGITUDE_REGEXP = /^[EW]\d+(\.\d+)?$/;
+// RFC 5646 (BCP 47) language tag, adapted from the official ABNF in
+// Appendix B of the RFC: grandfathered tags, or
+// language["-"script]["-"region]*("-"variant)*("-"extension)*["-"privateuse],
+// or a standalone privateuse tag.
+const LANGUAGE_TAG_REGEXP = new RegExp(
+  "^(?:" +
+    // grandfathered
+    "(?:en-GB-oed" +
+    "|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu" +
+    "|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE" +
+    "|art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang)" +
+    "|(?:" +
+    "(?:[A-Za-z]{2,3}(?:-[A-Za-z]{3}){0,3}|[A-Za-z]{4}|[A-Za-z]{5,8})" + // language
+    "(?:-[A-Za-z]{4})?" + // script
+    "(?:-(?:[A-Za-z]{2}|[0-9]{3}))?" + // region
+    "(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*" + // variant
+    "(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*" + // extension
+    "(?:-x(?:-[A-Za-z0-9]{1,8})+)?" + // privateuse
+    ")" +
+    "|(?:x(?:-[A-Za-z0-9]{1,8})+)" + // privateuse-only
+    ")$",
+  "i",
+);
 
 export class RuleNode {
   pointers: ASTNode[];
@@ -43,11 +78,17 @@ export class RuleNode {
         type = "boolean";
         break;
       case "http://www.w3.org/2001/XMLSchema#string":
+        type = "string";
+        break;
       case "http://www.w3.org/2001/XMLSchema#Language":
+        type = "language-tag";
+        break;
       case "http://www.w3.org/ns/dcat#mediaType":
+        type = "media-type";
+        break;
       case "https://gedcom.io/terms/v7/type-Name":
       case "https://gedcom.io/terms/v5.5.1/type-NAME_PERSONAL":
-        type = "string";
+        type = "personal-name";
         break;
       case "https://gedcom.io/terms/v7/type-List#Text":
         type = "string";
@@ -169,12 +210,62 @@ export class RuleNode {
           });
         }
         break;
-      case "string":
+      case "string": {
+        // LATI/LONG share the generic XMLSchema#string payload type in the
+        // schema (there is no dedicated URI for them), so the format check
+        // is keyed off the resolved tag name instead.
+        const rawTag = this.scheme.tag[tagType];
+        if (rawTag === "LATI" || rawTag === "LONG") {
+          const isLati = rawTag === "LATI";
+          const re = isLati ? LATITUDE_REGEXP : LONGITUDE_REGEXP;
+          if (!value || !re.test(value)) {
+            errors.push({
+              code: "VAL",
+              message: `Value for ${TAG?.value} should be correct ${
+                isLati ? "latitude" : "longitude"
+              } (e.g. "${isLati ? "N18.150944" : "W46.6"}")`,
+              range: VALUE?.range || node.range,
+              level: "error",
+            });
+          }
+          break;
+        }
         if (!value) {
           errors.push({
             code: "VAL",
             message: `Missing value for ${TAG?.value}`,
             range: TAG?.range || node.range,
+            level: "error",
+          });
+        }
+        break;
+      }
+      case "personal-name":
+        if (!value || !PERSONAL_NAME_REGEXP.test(value)) {
+          errors.push({
+            code: "VAL",
+            message: `Value for ${TAG?.value} should be a name, with the surname (if any) wrapped in a single pair of slashes (e.g. "John /Doe/")`,
+            range: VALUE?.range || node.range,
+            level: "error",
+          });
+        }
+        break;
+      case "media-type":
+        if (!value || !MEDIA_TYPE_REGEXP.test(value)) {
+          errors.push({
+            code: "VAL",
+            message: `Value for ${TAG?.value} should be a media type in the form "type/subtype" (e.g. "image/jpeg")`,
+            range: VALUE?.range || node.range,
+            level: "error",
+          });
+        }
+        break;
+      case "language-tag":
+        if (!value || !LANGUAGE_TAG_REGEXP.test(value)) {
+          errors.push({
+            code: "VAL",
+            message: `Value for ${TAG?.value} should be a valid RFC 5646 language tag (e.g. "en", "en-US")`,
+            range: VALUE?.range || node.range,
             level: "error",
           });
         }

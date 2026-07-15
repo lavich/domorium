@@ -234,6 +234,166 @@ describe("payload for VERS 7", () => {
     });
   });
 
+  describe("rule PersonalName", () => {
+    test.each(["Homer /Simpson/", "Homer /Simpson/ Jr.", "Homer Simpson"])(
+      "should pass NAME with %s",
+      async (name) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME ${name}
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const NAME = nodes[1].children[0];
+        const errs = ruleEngine.validate(NAME);
+        expect(errs.length).toBe(0);
+      },
+    );
+
+    test("should return error because NAME has unbalanced slashes", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME Homer /Simpson
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const NAME = nodes[1].children[0];
+      const errs = ruleEngine.validate(NAME);
+      expect(errs.length).toBe(1);
+    });
+  });
+
+  describe("rule MediaType", () => {
+    test.each(["image/jpeg", "text/plain", "application/vnd.google-earth.kml+xml"])(
+      "should pass FORM with %s",
+      async (mediaType) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @M1@ OBJE
+1 FILE image.jpg
+2 FORM ${mediaType}
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const FORM = nodes[1].children[0].children[0];
+        const errs = ruleEngine.validate(FORM);
+        expect(errs.length).toBe(0);
+      },
+    );
+
+    test("should return error because FORM is not a media type", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @M1@ OBJE
+1 FILE image.jpg
+2 FORM not_a_media_type
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const FORM = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(FORM);
+      expect(errs.length).toBe(1);
+    });
+  });
+
+  describe("rule Latitude/Longitude", () => {
+    const SAMPLE = `0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 BIRT
+2 PLAC Springfield
+3 MAP
+4 LATI N18.150944
+4 LONG W46.6
+0 TRLR
+`;
+
+    test("should pass correct LATI/LONG", async () => {
+      const { nodes, pointers } = astBuilder(SAMPLE);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const MAP = nodes[1].children[0].children[0].children[0];
+      const errs = [
+        ...ruleEngine.validate(MAP.children[0]),
+        ...ruleEngine.validate(MAP.children[1]),
+      ];
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error for LATI without N/S prefix", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 BIRT
+2 PLAC Springfield
+3 MAP
+4 LATI 18.150944
+4 LONG W46.6
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const MAP = nodes[1].children[0].children[0].children[0];
+      const errs = ruleEngine.validate(MAP.children[0]);
+      expect(errs.length).toBe(1);
+    });
+
+    test("should return error for LONG without E/W prefix", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 BIRT
+2 PLAC Springfield
+3 MAP
+4 LATI N18.150944
+4 LONG 46.6
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const MAP = nodes[1].children[0].children[0].children[0];
+      const errs = ruleEngine.validate(MAP.children[1]);
+      expect(errs.length).toBe(1);
+    });
+  });
+
+  describe("rule LanguageTag", () => {
+    test.each(["en", "en-US", "ru-RU", "zh-Hans", "zh-Hans-CN", "sr-Latn-RS", "i-klingon"])(
+      "should pass LANG with %s",
+      async (lang) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 LANG ${lang}
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const LANG = nodes[0].children[0];
+        const errs = ruleEngine.validate(LANG);
+        expect(errs.length).toBe(0);
+      },
+    );
+
+    test("should return error because LANG is not a valid language tag", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 LANG not_a_lang_tag!
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const LANG = nodes[0].children[0];
+      const errs = ruleEngine.validate(LANG);
+      expect(errs.length).toBe(1);
+    });
+  });
+
   describe("rule Xref", () => {
     const SAMPLE = `
 0 HEAD
