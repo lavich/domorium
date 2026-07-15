@@ -90,6 +90,10 @@ export class GedcomValidator {
         continue;
       }
 
+      if (tag === GedcomTag("CONT") || tag === GedcomTag("CONC")) {
+        continue;
+      }
+
       const tagToken = node.tokens.TAG;
       const rule = rules.get(tag);
 

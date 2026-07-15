@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ASTNode, GedcomVisitor } from "./visitor";
+import { ASTNode, GedcomVisitor, resolveValue } from "./visitor";
 import { ConfigurableLexer, gedcomLexerDefinition } from "./lexer";
 import { GedcomParser } from "./parser";
 
@@ -86,6 +86,30 @@ describe("AstVisitor", () => {
     expect(res.nodes[0].range.end.line).toBe(8); //AssertionError: expected 6 to be 8
     expect(res.pointers.size).toBe(1);
     expect(res.xrefs.size).toBe(1);
+  });
+
+  it("should resolve CONT as a new line and CONC as direct concatenation", () => {
+    const gedcom = `0 @I1@ INDI
+1 NOTE This is a long note
+2 CONC that continues here
+2 CONT and continues on a new line.`;
+    const { nodes } = parseGedcom(gedcom);
+    const note = nodes[0].children[0];
+    expect(note.tokens.TAG?.value).toBe("NOTE");
+    // CONC concatenates directly, with no inserted space.
+    expect(resolveValue(note)).toBe(
+      "This is a long notethat continues here\nand continues on a new line.",
+    );
+  });
+
+  it("should resolve value made only of continuation lines", () => {
+    const gedcom = `0 @I1@ INDI
+1 NOTE
+2 CONT First line
+2 CONT Second line`;
+    const { nodes } = parseGedcom(gedcom);
+    const note = nodes[0].children[0];
+    expect(resolveValue(note)).toBe("\nFirst line\nSecond line");
   });
 
   it("should throw on AST cycles", () => {

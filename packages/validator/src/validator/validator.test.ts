@@ -76,6 +76,21 @@ describe("validator", () => {
     expect(errs.length).toBe(0);
   });
 
+  test("should not report CONT/CONC continuation lines as unknown tags", async () => {
+    const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @i1@ INDI
+1 NOTE This is a long note
+2 CONC that continues here
+2 CONT and continues on a new line.
+0 TRLR
+`);
+    const validator = new GedcomValidator();
+    const errs = validator.validate(nodes);
+    expect(errs.length).toBe(0);
+  });
+
   test("should return error because WIFE has not pointer", async () => {
     const SAMPLE = `
 0 HEAD

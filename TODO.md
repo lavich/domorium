@@ -6,7 +6,7 @@
 
 - [x] **XREF pointer resolution** — verify all `@XREF@` point to existing records (detect dangling pointers). Implemented in `rule-node.ts` (`case "pointer"`).
 
-- [ ] **Continuation (CONC/CONT)** — support multi-line values. ABNF defines `CONT` (new line) and `CONC` (concatenation), the lexer currently only captures `.+/` as `VALUE` without continuation handling.
+- [x] **Continuation (CONC/CONT)** — support multi-line values. Added `resolveValue()` in `visitor.ts` which follows `CONT`/`CONC` children (new line / direct concatenation) and is used by `rule-node.ts` for value validation; `validate.ts` no longer reports `CONT`/`CONC` as unknown tags.
 
 - [ ] **Tests for Date, Age, PersonalName, MediaType, CONC/CONT** — expand coverage.
 

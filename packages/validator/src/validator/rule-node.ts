@@ -1,5 +1,5 @@
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
-import { ASTNode } from "../parser";
+import { ASTNode, resolveValue } from "../parser";
 import { GedcomError } from "../types/errors";
 
 type FieldType =
@@ -133,7 +133,7 @@ export class RuleNode {
     const tagType = _tagType || this.getNodeType(node);
     const fieldType = this.getFieldType(tagType || this.getNodeType(node));
     const VALUE = node.tokens.VALUE;
-    const value = node.tokens.VALUE?.value.trim();
+    const value = resolveValue(node).trim();
     const TAG = node.tokens.TAG;
     switch (fieldType.type) {
       case "boolean":

@@ -39,6 +39,24 @@ export interface VisitorResult {
 const isCstNode = (v: CstElement): v is CstNode => "name" in v;
 const isIToken = (v: CstElement): v is IToken => "image" in v;
 
+/**
+ * Resolves a node's logical value by following CONT (new line) and CONC
+ * (concatenation) continuation children in document order, per the GEDCOM
+ * line-continuation rules.
+ */
+export function resolveValue(node: ASTNode): string {
+  let value = node.tokens.VALUE?.value ?? "";
+  for (const child of node.children) {
+    const tag = child.tokens.TAG?.value;
+    if (tag === "CONT") {
+      value += "\n" + (child.tokens.VALUE?.value ?? "");
+    } else if (tag === "CONC") {
+      value += child.tokens.VALUE?.value ?? "";
+    }
+  }
+  return value;
+}
+
 export class GedcomVisitor extends BaseGedcomVisitor {
   constructor() {
     super();
