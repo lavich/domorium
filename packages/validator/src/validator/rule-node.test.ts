@@ -199,6 +199,41 @@ describe("payload for VERS 7", () => {
     });
   });
 
+  describe("rule Age", () => {
+    test.each(["35y 11m 8w 21d", "9y", "< 1y", "> 25y", "CHILD", "INFANT", "STILLBORN"])(
+      "should pass AGE with %s",
+      async (age) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 DEAT
+2 AGE ${age}
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const AGE = nodes[1].children[0].children[0];
+        const errs = ruleEngine.validate(AGE);
+        expect(errs.length).toBe(0);
+      },
+    );
+
+    test("should return error because AGE has not correct payload", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 DEAT
+2 AGE not_an_age
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const AGE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(AGE);
+      expect(errs.length).toBe(1);
+    });
+  });
+
   describe("rule Xref", () => {
     const SAMPLE = `
 0 HEAD

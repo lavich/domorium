@@ -12,9 +12,12 @@ type FieldType =
   | "date-period"
   | "time"
   | "pointer"
+  | "age"
   | null;
 
 const TIME_REGEXP = /^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/;
+const AGE_REGEXP =
+  /^[<>]\s(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$|^(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$/;
 
 export class RuleNode {
   pointers: ASTNode[];
@@ -68,6 +71,10 @@ export class RuleNode {
       case "https://gedcom.io/terms/v7/type-Time":
       case "https://gedcom.io/terms/v5.5.1/type-TIME_VALUE":
         type = "time";
+        break;
+      case "https://gedcom.io/terms/v7/type-Age":
+      case "https://gedcom.io/terms/v5.5.1/type-AGE_AT_EVENT":
+        type = "age";
         break;
       case "pointer":
         type = "pointer";
@@ -197,6 +204,16 @@ export class RuleNode {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be correct time`,
+            range: VALUE?.range || node.range,
+            level: "error",
+          });
+        }
+        break;
+      case "age":
+        if (!value || !AGE_REGEXP.test(value)) {
+          errors.push({
+            code: "VAL",
+            message: `Value for ${TAG?.value} should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
             range: VALUE?.range || node.range,
             level: "error",
           });
