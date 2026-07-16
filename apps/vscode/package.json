@@ -60,11 +60,12 @@
   },
   "dependencies": {
     "@domorium/lsp": "*",
+    "vscode-languageclient": "^9.0.1",
     "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.11",
-    "vscode-languageclient": "^9.0.1"
+    "vscode-languageserver-textdocument": "^1.0.11"
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "@types/vscode": "^1.100.0",
     "@vscode/test-web": "^0.0.51"
   }
