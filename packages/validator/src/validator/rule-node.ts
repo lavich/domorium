@@ -87,6 +87,12 @@ function isValidGregorianDate(value: string, regexp: RegExp): boolean {
 // so a bare "DAY YEAR" (no month) never matches.
 const GREGORIAN_DATE_SRC = `(?:(?:\\d{1,2}\\s)?${MONTH_REGEXP_SRC}\\s)?${YEAR_REGEXP_SRC}`;
 const GREGORIAN_DATE_WITH_EPOCH_SRC = `${GREGORIAN_DATE_SRC}(?:\\s(?:BCE|B\\.C\\.))?`;
+// "FROM <date> [TO <date>]" / "TO <date>" — shared by DATE_VALUE (where it's
+// one of several modifiers) and DATE_PERIOD (where it's the only grammar).
+const DATE_PERIOD_SRC =
+  `FROM\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}(?:\\sTO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC})?` +
+  "|" +
+  `TO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}`;
 
 const DATE_VALUE_REGEXP = new RegExp(
   "^(?:" +
@@ -96,9 +102,7 @@ const DATE_VALUE_REGEXP = new RegExp(
     "|" +
     `BET\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}\\sAND\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
     "|" +
-    `FROM\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}(?:\\sTO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC})?` +
-    "|" +
-    `TO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
+    DATE_PERIOD_SRC +
     "|" +
     `INT\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}\\s\\([^()]*\\)` +
     "|" +
@@ -108,13 +112,7 @@ const DATE_VALUE_REGEXP = new RegExp(
     ")$",
 );
 
-const DATE_PERIOD_REGEXP = new RegExp(
-  "^(?:" +
-    `FROM\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}(?:\\sTO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC})?` +
-    "|" +
-    `TO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
-    ")$",
-);
+const DATE_PERIOD_REGEXP = new RegExp(`^(?:${DATE_PERIOD_SRC})$`);
 
 export class RuleNode {
   pointers: ASTNode[];
