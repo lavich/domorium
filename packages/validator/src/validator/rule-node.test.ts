@@ -825,6 +825,100 @@ describe("payload for VERS 5.5.1", () => {
     });
   });
 
+  describe("rule DateExact", () => {
+    test("should pass DATE with exact date", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE 9 MAR 2007
+1 GEDC
+2 VERS 5.5.1
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      const DATE = nodes[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because DATE is missing day and month", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE 2007
+1 GEDC
+2 VERS 5.5.1
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      const DATE = nodes[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+  });
+
+  describe("rule Date", () => {
+    test("should pass MARR DATE with a date value", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 MARR
+2 DATE ABT 1950
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      const DATE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because DATE is not a valid date value", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 MARR
+2 DATE not a date
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      const DATE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+  });
+
+  describe("rule DatePeriod", () => {
+    test("should pass SOUR DATA EVEN DATE with a period", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @S1@ SOUR
+1 DATA
+2 EVEN BIRT
+3 DATE FROM 1900 TO 1910
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      const DATE = nodes[1].children[0].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because DATE has no FROM/TO period marker", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @S1@ SOUR
+1 DATA
+2 EVEN BIRT
+3 DATE 1900
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      const DATE = nodes[1].children[0].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+  });
+
   describe("getNodeType", () => {
     test("should resolve CONT to its universal type instead of throwing", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
