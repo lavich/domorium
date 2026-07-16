@@ -657,6 +657,35 @@ describe("payload for VERS 7", () => {
       const errs = ruleEngine.validate(WIFE);
       expect(errs.length).toBe(1);
     });
+
+    test("should pass @VOID@ pointer with no children (deliberately empty reference)", async () => {
+      const { nodes: voidNodes, pointers: voidPointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 CHIL @VOID@
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, voidPointers);
+      const CHIL = voidNodes[1].children[0];
+      const errs = ruleEngine.validate(CHIL);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should pass @VOID@ pointer with a PHRASE child describing the omitted reference", async () => {
+      const { nodes: voidNodes, pointers: voidPointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 CHIL @VOID@
+2 PHRASE Second child
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, voidPointers);
+      const CHIL = voidNodes[1].children[0];
+      const errs = ruleEngine.validate(CHIL);
+      expect(errs.length).toBe(0);
+    });
   });
 });
 

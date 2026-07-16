@@ -19,6 +19,11 @@ type FieldType =
   | "language-tag"
   | null;
 
+// Reserved GEDCOM 7 pointer meaning "deliberately empty" — valid in the
+// value slot of any pointer-type payload, regardless of the target
+// record type, and doesn't correspond to any real declared record.
+const VOID_POINTER = "@VOID@";
+
 const TIME_REGEXP = /^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/;
 const AGE_REGEXP =
   /^[<>]\s(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$|^(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$/;
@@ -434,7 +439,9 @@ export class RuleNode {
         const XREF = node.tokens.XREF;
         const isXrefExist = !!XREF?.value;
         const isXrefValid =
-          isXrefExist && availableValues?.includes(XREF?.value);
+          isXrefExist &&
+          (XREF?.value === VOID_POINTER ||
+            availableValues?.includes(XREF?.value));
         const hasChildren = node.children.length !== 0;
         if ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren)) {
           errors.push({
