@@ -36,16 +36,24 @@ describe("positive tests", () => {
     expect(tokens.length).toBe(6);
   });
 
-  it("parse level, pointer, tag + error", () => {
+  it("parse level, pointer, tag, value with multiple words", () => {
     const { tokens, errors } = gedcomLexer.tokenize("1 @POINTER@ BIRT er df");
-    expect(errors.length).toBe(2);
-    expect(tokens.length).toBe(3);
+    expect(errors.length).toBe(0);
+    expect(tokens.length).toBe(4);
+    expect(tokens[3].image).toBe("er df");
   });
 
   it("parse new level", () => {
     const { tokens, errors } = gedcomLexer.tokenize("1 BIRT VALU E\n2 TEST e");
     expect(errors.length).toBe(0);
     expect(tokens.length).toBe(6);
+  });
+
+  it("parse level, pointer, tag, value (e.g. GEDCOM 7 SNOTE record)", () => {
+    const { tokens, errors } = gedcomLexer.tokenize("0 @N1@ SNOTE Shared note");
+    expect(errors.length).toBe(0);
+    expect(tokens.length).toBe(4);
+    expect(tokens[3].image).toBe("Shared note");
   });
 
   it("parse SAMPLE", () => {

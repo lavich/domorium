@@ -67,7 +67,12 @@ export const gedcomLexerDefinition: IMultiModeLexerDefinition = {
       Pointer,
       { ...Tag, PUSH_MODE: "hasNotPointer" },
     ],
-    hasPointer: [Newline, WhiteSpace, { ...Tag, POP_MODE: true }],
+    // A record-defining pointer line (e.g. "0 @I1@ INDI") is followed by
+    // TAG, and then optionally by an Xref/Value just like the no-pointer
+    // case below (e.g. "0 @N1@ SNOTE <shared note text>" in GEDCOM 7) — so
+    // TAG here pushes into the same "hasNotPointer" mode rather than
+    // popping straight back, or a trailing value would be mis-tokenized.
+    hasPointer: [Newline, WhiteSpace, { ...Tag, PUSH_MODE: "hasNotPointer" }],
     hasNotPointer: [Newline, WhiteSpace, Xref, Value],
   },
 };
