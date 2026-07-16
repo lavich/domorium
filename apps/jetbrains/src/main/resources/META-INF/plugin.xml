@@ -1,0 +1,49 @@
+<idea-plugin>
+    <id>dev.domorium.jetbrains</id>
+    <name>Domorium GEDCOM</name>
+    <vendor>Andrei Lobanov</vendor>
+
+    <description><![CDATA[
+    GEDCOM (.ged / .gedcom) language support — validation, hover, go-to-definition,
+    folding and semantic highlighting — powered by the same domorium language
+    server used by the VS Code extension, via LSP4IJ.
+    ]]></description>
+
+    <!-- com.intellij.modules.platform (not a specific product) keeps this
+         installable in any JetBrains IDE that shares the platform, not just
+         IntelliJ IDEA. -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.redhat.devtools.lsp4ij</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- A real FileType (rather than only LSP4IJ's own mapping extension
+             points) so the platform's FileTypeManager considers .ged/.gedcom
+             "claimed" — otherwise the IDE still offers to search the
+             Marketplace for a plugin even while this one is already handling
+             the file via LSP4IJ. There's no local TextMate grammar for
+             GEDCOM to preserve: highlighting comes entirely from the
+             language server's semantic tokens. -->
+        <fileType name="GEDCOM"
+                  implementationClass="dev.domorium.jetbrains.GedcomFileType"
+                  fieldName="INSTANCE"
+                  language="TEXT"
+                  extensions="ged;gedcom"/>
+        <spellchecker.support language="TEXT"
+                               implementationClass="dev.domorium.jetbrains.GedcomSpellcheckingStrategy"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+        <server id="domoriumGedcomServer"
+                name="Domorium GEDCOM Language Server"
+                factoryClass="dev.domorium.jetbrains.GedcomLanguageServerFactory">
+            <description><![CDATA[
+            The domorium GEDCOM language server (packages/lsp), run as a
+            standalone Node.js process over stdio.
+            ]]></description>
+        </server>
+
+        <fileTypeMapping fileType="GEDCOM"
+                          serverId="domoriumGedcomServer"
+                          languageId="gedcom"/>
+    </extensions>
+</idea-plugin>
