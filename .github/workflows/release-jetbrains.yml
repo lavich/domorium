@@ -1,0 +1,37 @@
+name: Release JetBrains Plugin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/jetbrains/**'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Publish plugin
+        run: ./gradlew publishPlugin
+        working-directory: apps/jetbrains
+        env:
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}

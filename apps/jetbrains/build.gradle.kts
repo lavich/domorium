@@ -33,6 +33,9 @@ intellijPlatform {
             sinceBuild = "242"
         }
     }
+    publishing {
+        token.set(providers.environmentVariable("PUBLISH_TOKEN"))
+    }
 }
 
 // The LSP server itself lives in packages/lsp (this monorepo's npm
