@@ -4,7 +4,7 @@
   "displayName": "Domorium",
   "description": "GEDCOM file language support with real-time validation for VS Code",
   "publisher": "lavich",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "author": "Andrei Lobanov",
   "repository": "https://github.com/lavich/domorium.git",
   "icon": "images/extensionIcon.png",
@@ -14,6 +14,7 @@
   ],
   "keywords": [
     "gedcom",
+    "ged",
     "genealogy",
     "family tree",
     "validation",
