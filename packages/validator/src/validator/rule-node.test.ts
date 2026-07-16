@@ -197,6 +197,40 @@ describe("payload for VERS 7", () => {
       const errs = ruleEngine.validate(TIME);
       expect(errs.length).toBe(1);
     });
+
+    test.each(["8:38", "15:43:20.48", "15:43:20.48Z", "15:43:20Z"])(
+      "should pass TIME with %s",
+      async (time) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE 9 MAR 2007
+2 TIME ${time}
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const TIME = nodes[0].children[0].children[0];
+        const errs = ruleEngine.validate(TIME);
+        expect(errs.length).toBe(0);
+      },
+    );
+
+    test.each(["25:00", "15:43:20X", "15:60:00"])(
+      "should return error because %s is not a correct time",
+      async (time) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE 9 MAR 2007
+2 TIME ${time}
+1 GEDC
+2 VERS 7.0
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const TIME = nodes[0].children[0].children[0];
+        const errs = ruleEngine.validate(TIME);
+        expect(errs.length).toBe(1);
+      },
+    );
   });
 
   describe("rule Age", () => {
@@ -801,6 +835,37 @@ describe("payload for VERS 5.5.1", () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
 1 DATE 9 MAR 2007
 2 TIME 15:1
+1 GEDC
+2 VERS 5.5.1
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      const TIME = nodes[0].children[0].children[0];
+      const errs = ruleEngine.validate(TIME);
+      expect(errs.length).toBe(1);
+    });
+
+    test.each(["8:38", "15:43:20.48"])(
+      "should pass TIME with %s",
+      async (time) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE 9 MAR 2007
+2 TIME ${time}
+1 GEDC
+2 VERS 5.5.1
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g551validation, pointers);
+        const TIME = nodes[0].children[0].children[0];
+        const errs = ruleEngine.validate(TIME);
+        expect(errs.length).toBe(0);
+      },
+    );
+
+    test("should return error because the GEDCOM 7-only Z (UTC) suffix is not valid in 5.5.1", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE 9 MAR 2007
+2 TIME 15:43:20Z
 1 GEDC
 2 VERS 5.5.1
 0 TRLR

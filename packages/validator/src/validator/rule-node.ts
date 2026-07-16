@@ -24,7 +24,14 @@ type FieldType =
 // record type, and doesn't correspond to any real declared record.
 const VOID_POINTER = "@VOID@";
 
-const TIME_REGEXP = /^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/;
+// Hour may be 1 or 2 digits (both "8:38" and "08:38" are valid) per both
+// v5.5.1 (HOUR is {SIZE=1:2}) and v7; minute/second are always 2 digits.
+const TIME_BASE_SRC =
+  "(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?";
+// v5.5.1's TIME_VALUE has no UTC marker.
+const TIME_REGEXP = new RegExp(`^${TIME_BASE_SRC}$`);
+// v7's Time additionally allows a trailing "Z" for UTC.
+const TIME_REGEXP_V7 = new RegExp(`^${TIME_BASE_SRC}Z?$`);
 const AGE_REGEXP =
   /^[<>]\s(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$|^(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$/;
 // A name, with at most one pair of slashes delimiting the surname, e.g.
@@ -413,8 +420,15 @@ export class RuleNode {
         }
         break;
       }
-      case "time":
-        if (!value || !TIME_REGEXP.test(value)) {
+      case "time": {
+        // Only v7's type-Time allows a trailing "Z" (UTC); v5.5.1's
+        // TIME_VALUE has no such marker, so the check is keyed off the
+        // raw payload URI rather than the shared "time" field type.
+        const isV7Time =
+          this.scheme.payload[tagType]?.type ===
+          "https://gedcom.io/terms/v7/type-Time";
+        const regexp = isV7Time ? TIME_REGEXP_V7 : TIME_REGEXP;
+        if (!value || !regexp.test(value)) {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be correct time`,
@@ -423,6 +437,7 @@ export class RuleNode {
           });
         }
         break;
+      }
       case "age":
         if (!value || !AGE_REGEXP.test(value)) {
           errors.push({
