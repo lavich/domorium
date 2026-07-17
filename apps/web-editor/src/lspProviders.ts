@@ -77,7 +77,9 @@ export function registerLspProviders(
         textDocument: { uri: model.uri.toString() },
         position: { line: position.lineNumber - 1, character: position.column - 1 },
       });
-      if (!result) return null;
+      if (!result) {
+        return null;
+      }
 
       const hover = result as Hover;
       const contents = Array.isArray(hover.contents) ? hover.contents : [hover.contents];
@@ -97,7 +99,9 @@ export function registerLspProviders(
         position: { line: position.lineNumber - 1, character: position.column - 1 },
       });
       const locations = results as Location[];
-      if (!locations?.length) return null;
+      if (!locations?.length) {
+        return null;
+      }
       return locations.map((location) => ({
         uri: monacoApi.Uri.parse(location.uri),
         range: toRange(monacoApi, location.range),

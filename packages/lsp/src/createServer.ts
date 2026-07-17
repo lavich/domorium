@@ -132,7 +132,9 @@ export const createServer = (connection: Connection) => {
   connection.onCompletion((params: CompletionParams): CompletionItem[] => {
     const parsed = cache.get(params.textDocument.uri);
     const textDocument = documents.get(params.textDocument.uri);
-    if (!parsed || !textDocument) return [];
+    if (!parsed || !textDocument) {
+      return [];
+    }
 
     const lineText = textDocument.getText({
       start: { line: params.position.line, character: 0 },
