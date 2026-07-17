@@ -1,4 +1,6 @@
 import type {
+  CompletionItem,
+  CompletionParams,
   Connection,
   DefinitionParams,
   Diagnostic,
@@ -30,6 +32,7 @@ import { levelIndent } from "./libs/indent/levelIndent";
 import { findDefinitionRanges } from "./libs/definition/definition";
 import { getHover } from "./libs/hover/hover";
 import { documentSymbols } from "./libs/symbols/documentSymbols";
+import { getCompletionItems } from "./libs/completion/completion";
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
@@ -44,6 +47,9 @@ export const createServer = (connection: Connection) => {
         definitionProvider: true,
         hoverProvider: true,
         documentSymbolProvider: true,
+        completionProvider: {
+          triggerCharacters: [" "],
+        },
         semanticTokensProvider: {
           legend,
           range: false,
@@ -121,6 +127,18 @@ export const createServer = (connection: Connection) => {
     return {
       data: builder.build().data,
     };
+  });
+
+  connection.onCompletion((params: CompletionParams): CompletionItem[] => {
+    const parsed = cache.get(params.textDocument.uri);
+    const textDocument = documents.get(params.textDocument.uri);
+    if (!parsed || !textDocument) return [];
+
+    const lineText = textDocument.getText({
+      start: { line: params.position.line, character: 0 },
+      end: params.position,
+    });
+    return getCompletionItems(parsed, params.position, lineText);
   });
 
   documents.onDidChangeContent(async (change) => {
