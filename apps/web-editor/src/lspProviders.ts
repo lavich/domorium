@@ -1,6 +1,8 @@
 import type * as monaco from "monaco-editor";
 import type { MessageConnection } from "vscode-jsonrpc";
 import {
+  CompletionItemKind,
+  CompletionRequest,
   DefinitionRequest,
   DocumentSymbolRequest,
   FoldingRangeRequest,
@@ -8,6 +10,8 @@ import {
   InlayHintRequest,
   SemanticTokensRequest,
   type DocumentSymbol,
+  type CompletionItem as LspCompletionItem,
+  type CompletionList as LspCompletionList,
   type FoldingRange,
   type Hover,
   type InlayHint,
@@ -17,11 +21,56 @@ import {
 
 const LANGUAGE_ID = "gedcom";
 
+export function toMonacoCompletionItems(
+  monacoApi: typeof import("monaco-editor"),
+  result: LspCompletionItem[] | LspCompletionList | null,
+  range: monaco.IRange,
+): monaco.languages.CompletionItem[] {
+  const items = Array.isArray(result) ? result : result?.items ?? [];
+  const kindMap: Partial<Record<CompletionItemKind, monaco.languages.CompletionItemKind>> = {
+    [CompletionItemKind.Field]: monacoApi.languages.CompletionItemKind.Field,
+    [CompletionItemKind.EnumMember]: monacoApi.languages.CompletionItemKind.EnumMember,
+    [CompletionItemKind.Reference]: monacoApi.languages.CompletionItemKind.Reference,
+  };
+
+  return items.map((item) => {
+    const label = item.label as string | { label: string };
+    return {
+      label: item.label,
+      detail: item.detail,
+      kind: (item.kind && kindMap[item.kind]) ?? monacoApi.languages.CompletionItemKind.Text,
+      insertText: typeof label === "string" ? label : label.label,
+      range,
+    };
+  });
+}
+
 export function registerLspProviders(
   monacoApi: typeof import("monaco-editor"),
   connection: MessageConnection,
   legend: { tokenTypes: string[]; tokenModifiers?: string[] } | undefined,
 ) {
+  monacoApi.languages.registerCompletionItemProvider(LANGUAGE_ID, {
+    triggerCharacters: [" "],
+    async provideCompletionItems(model, position) {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endLineNumber: position.lineNumber,
+        endColumn: word.endColumn,
+      };
+      const result = await connection.sendRequest(CompletionRequest.type, {
+        textDocument: { uri: model.uri.toString() },
+        position: {
+          line: position.lineNumber - 1,
+          character: position.column - 1,
+        },
+      });
+      return { suggestions: toMonacoCompletionItems(monacoApi, result, range) };
+    },
+  });
+
   monacoApi.languages.registerHoverProvider(LANGUAGE_ID, {
     async provideHover(model, position) {
       const result = await connection.sendRequest(HoverRequest.type, {
