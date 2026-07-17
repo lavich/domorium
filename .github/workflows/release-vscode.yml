@@ -27,7 +27,7 @@ jobs:
         env:
           LEFTHOOK: 0
       - name: Verify tagged commit belongs to main
-        run: git branch -r --contains "$GITHUB_SHA" | grep -q 'origin/main'
+        run: git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main
       - name: Verify VS Code version
         run: test "${GITHUB_REF_NAME#vscode-v}" = "$(node -p "require('./apps/vscode/package.json').version")"
       - name: Publish extension

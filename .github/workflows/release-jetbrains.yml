@@ -32,7 +32,7 @@ jobs:
         env:
           LEFTHOOK: 0
       - name: Verify tagged commit belongs to main
-        run: git branch -r --contains "$GITHUB_SHA" | grep -q 'origin/main'
+        run: git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main
       - name: Verify JetBrains version
         working-directory: apps/jetbrains
         run: test "${GITHUB_REF_NAME#jetbrains-v}" = "$(./gradlew properties -q | awk '/^version:/ { print $2 }')"
