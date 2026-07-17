@@ -1,0 +1,87 @@
+name: Reusable Quality Gates
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+        env:
+          LEFTHOOK: 0
+      - run: npm run lint
+      - run: npm run typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+        env:
+          LEFTHOOK: 0
+      - run: npm run test:run -- --coverage
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: coverage-report
+          path: coverage/
+          if-no-files-found: error
+
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+        env:
+          LEFTHOOK: 0
+      - run: npm run build:libs
+      - run: npm run build -w apps/web-editor
+
+  build-vscode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+        env:
+          LEFTHOOK: 0
+      - run: npm run build:vscode
+
+  build-jetbrains:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - run: npm ci
+        env:
+          LEFTHOOK: 0
+      - run: ./gradlew spotlessCheck test buildPlugin verifyPlugin
+        working-directory: apps/jetbrains
