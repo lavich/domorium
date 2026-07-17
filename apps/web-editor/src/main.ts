@@ -106,7 +106,7 @@ async function init() {
   registerGedcomLanguage(monaco);
 
   // Fetch default file
-  const res = await fetch("/test-data/simpsons55.ged");
+  const res = await fetch(`${import.meta.env.BASE_URL}simpsons55.ged`);
   if (!res.ok) throw new Error(`Failed to load simpsons55.ged: ${res.status}`);
   const fileContent = await res.text();
 
