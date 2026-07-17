@@ -11,12 +11,9 @@ interface SemanticToken {
 
 export const tokenTypes = [
   SemanticTokenTypes.comment,
-  SemanticTokenTypes.interface,
   SemanticTokenTypes.keyword,
-  SemanticTokenTypes.parameter,
   SemanticTokenTypes.string,
   SemanticTokenTypes.variable,
-  SemanticTokenTypes.function,
 ] as const;
 
 export const tokenModifiers = [SemanticTokenModifiers.declaration] as const;
@@ -31,9 +28,9 @@ const tokenModifierMap = new Map(tokenModifiers.map((m, i) => [m, i]));
 
 const tokenMap: Record<TokenNames, (typeof tokenTypes)[number]> = {
   LEVEL: SemanticTokenTypes.comment,
-  POINTER: SemanticTokenTypes.function,
-  XREF: SemanticTokenTypes.function,
-  TAG: SemanticTokenTypes.interface,
+  POINTER: SemanticTokenTypes.variable,
+  XREF: SemanticTokenTypes.variable,
+  TAG: SemanticTokenTypes.keyword,
   VALUE: SemanticTokenTypes.string,
 };
 
