@@ -6,6 +6,12 @@ import { GedcomVisitor } from "../parser/visitor";
 import { GedcomValidator } from "../validator";
 import { GedcomScheme } from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
+import { getGedcomVersion } from "../validator/getGedcomVersion";
+import {
+  getGedcomCompletions,
+  type GedcomCompletion,
+} from "../completion/completion";
+import type { Position } from "../types/position";
 
 export class GedcomDocument {
   private nodes: ASTNode[] = [];
@@ -73,6 +79,21 @@ export class GedcomDocument {
     }
     const type = new RuleNode(this.scheme, this.pointers).getNodeType(node);
     return this.scheme.label[type]?.["en-US"];
+  }
+
+  getCompletions(position: Position, lineText: string): GedcomCompletion[] {
+    if (!this.scheme) {
+      return [];
+    }
+    const version = getGedcomVersion(this.nodes);
+    return getGedcomCompletions({
+      nodes: this.nodes,
+      pointers: this.pointers,
+      scheme: this.scheme,
+      isGedcom7: !version?.startsWith("5"),
+      position,
+      lineText,
+    });
   }
 
   updateDocument(_text: string, _range: Range): GedcomDocument {
