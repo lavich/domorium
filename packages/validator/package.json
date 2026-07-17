@@ -20,11 +20,15 @@
     "typecheck": "tsc --noEmit",
     "build": "vite build && tsc --emitDeclarationOnly --declaration --outDir dist",
     "watch": "vite build --watch",
+    "generate": "tsx scripts/generate-schema.ts",
     "test": "vitest",
     "prepack": "npm run build"
   },
   "dependencies": {
     "chevrotain": "^11.0.3",
     "ts-brand": "^0.2.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.1"
   }
 }
