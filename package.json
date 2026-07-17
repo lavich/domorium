@@ -10,7 +10,6 @@
     "lint": "eslint .",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "check:typescript": "npm run lint && npm run typecheck && npm run test:run",
-    "prepare": "lefthook install",
     "format:staged": "lefthook run pre-commit",
     "postinstall": "npm run build:libs"
   },
