@@ -37,6 +37,19 @@ function parseMax(cardinality: string): number | null {
   return match[1] === "M" ? Infinity : Number(match[1]);
 }
 
+function hasValidAncestry(node: ASTNode, level: number): boolean {
+  let current: ASTNode | undefined = node;
+  let expectedLevel = level;
+  while (current) {
+    if (current.level !== expectedLevel || !current.tokens.TAG?.value) {
+      return false;
+    }
+    current = current.parent;
+    expectedLevel -= 1;
+  }
+  return expectedLevel === -1;
+}
+
 function resolveParent(context: CompletionContext, level: number) {
   if (level === 0) {
     return { parentType: GedcomType(""), siblings: context.nodes };
@@ -49,14 +62,26 @@ function resolveParent(context: CompletionContext, level: number) {
     (node) =>
       node.range.start.line === context.position.line && node.level === level,
   );
-  const parent =
-    current?.parent ??
-    nodes.findLast(
-      (node) =>
-        node.range.start.line < context.position.line &&
-        node.level === level - 1,
+  let parent = current?.parent;
+  if (current && (!parent || parent.level !== level - 1)) {
+    return null;
+  }
+  if (!current) {
+    const preceding = nodes.filter(
+      (node) => node.range.start.line < context.position.line,
     );
-  if (!parent) {
+    for (let index = preceding.length - 1; index >= 0; index -= 1) {
+      const node = preceding[index];
+      if (node.level < level - 1) {
+        return null;
+      }
+      if (node.level === level - 1) {
+        parent = node;
+        break;
+      }
+    }
+  }
+  if (!parent || !hasValidAncestry(parent, level - 1)) {
     return null;
   }
 

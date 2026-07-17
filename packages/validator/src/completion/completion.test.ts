@@ -157,4 +157,31 @@ describe("GedcomDocument.getCompletions", () => {
       ]),
     );
   });
+
+  it("does not reuse a parent from a branch closed by a lower-level node", () => {
+    const doc = document(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 BIRT
+0 TRLR
+`);
+
+    expect(doc.getCompletions({ line: 6, character: 2 }, "2 ")).toEqual([]);
+  });
+
+  it("returns no items when a parent chain has a missing tag", () => {
+    const doc = document(`0 @I1@ INDI
+1 SEX
+`);
+    const parent = doc.getNodes()[0];
+    parent.tokens.TAG = undefined;
+
+    expect(() =>
+      doc.getCompletions({ line: 1, character: 6 }, "1 SEX "),
+    ).not.toThrow();
+    expect(doc.getCompletions({ line: 1, character: 6 }, "1 SEX ")).toEqual(
+      [],
+    );
+  });
 });
