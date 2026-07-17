@@ -34,28 +34,104 @@ function sendLspMessage(
   stdin.write(Buffer.concat([header, body]));
 }
 
-// Accumulates raw stdout chunks and resolves as soon as one complete
-// Content-Length-framed LSP message has arrived (chunk boundaries don't
+// Accumulates raw stdout chunks and returns every complete
+// Content-Length-framed LSP message received (chunk boundaries don't
 // necessarily line up with message boundaries).
 class LspMessageBuffer {
   private buffer = Buffer.alloc(0);
 
-  push(chunk: Buffer): unknown | undefined {
+  push(chunk: Buffer): unknown[] {
     this.buffer = Buffer.concat([this.buffer, chunk]);
-    const text = this.buffer.toString("utf-8");
-    const headerEnd = text.indexOf("\r\n\r\n");
-    if (headerEnd === -1) {
-      return undefined;
+    const messages: unknown[] = [];
+
+    while (true) {
+      const text = this.buffer.toString("utf-8");
+      const headerEnd = text.indexOf("\r\n\r\n");
+      if (headerEnd === -1) {
+        break;
+      }
+      const contentLength = Number(
+        /Content-Length: (\d+)/.exec(text.slice(0, headerEnd))?.[1],
+      );
+      const bodyStart = headerEnd + 4;
+      const messageEnd = bodyStart + contentLength;
+      if (this.buffer.length < messageEnd) {
+        break;
+      }
+      const body = this.buffer.subarray(bodyStart, messageEnd);
+      messages.push(JSON.parse(body.toString("utf-8")));
+      this.buffer = this.buffer.subarray(messageEnd);
     }
-    const contentLength = Number(
-      /Content-Length: (\d+)/.exec(text.slice(0, headerEnd))?.[1],
-    );
-    const bodyStart = headerEnd + 4;
-    if (this.buffer.length < bodyStart + contentLength) {
-      return undefined;
+
+    return messages;
+  }
+}
+
+class LspTestClient {
+  private readonly pending = new Map<number, (message: unknown) => void>();
+  private readonly pendingRejects = new Map<number, (error: Error) => void>();
+  private readonly messageBuffer = new LspMessageBuffer();
+
+  constructor(private readonly child: ReturnType<typeof spawn>) {
+    child.stdout!.on("data", (data: Buffer) => {
+      for (const message of this.messageBuffer.push(data)) {
+        if (
+          typeof message !== "object" ||
+          message === null ||
+          !("id" in message) ||
+          typeof message.id !== "number"
+        ) {
+          continue;
+        }
+
+        const resolve = this.pending.get(message.id);
+        if (resolve !== undefined) {
+          this.pending.delete(message.id);
+          this.pendingRejects.delete(message.id);
+          resolve(message);
+        }
+      }
+    });
+
+    child.stderr!.on("data", (data: Buffer) => {
+      this.rejectPending(
+        new Error(`stdio process wrote to stderr: ${data.toString()}`),
+      );
+    });
+    child.on("exit", (code, signal) => {
+      if (this.pending.size > 0) {
+        this.rejectPending(
+          new Error(
+            `stdio process exited unexpectedly (code: ${code}, signal: ${signal})`,
+          ),
+        );
+      }
+    });
+  }
+
+  request(id: number, method: string, params: unknown): Promise<unknown> {
+    return new Promise((resolve, reject) => {
+      this.pending.set(id, resolve);
+      this.pendingRejects.set(id, reject);
+      sendLspMessage(this.child.stdin!, {
+        jsonrpc: "2.0",
+        id,
+        method,
+        params,
+      });
+    });
+  }
+
+  notify(method: string, params: unknown): void {
+    sendLspMessage(this.child.stdin!, { jsonrpc: "2.0", method, params });
+  }
+
+  private rejectPending(error: Error): void {
+    for (const reject of this.pendingRejects.values()) {
+      reject(error);
     }
-    const body = this.buffer.subarray(bodyStart, bodyStart + contentLength);
-    return JSON.parse(body.toString("utf-8"));
+    this.pending.clear();
+    this.pendingRejects.clear();
   }
 }
 
@@ -63,30 +139,12 @@ describe("stdio entry point", () => {
   it("responds to an LSP initialize request over stdin/stdout as a standalone process", async () => {
     const bundlePath = await bundleStdio();
     const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
 
-    const response = await new Promise<unknown>((resolve, reject) => {
-      const messageBuffer = new LspMessageBuffer();
-      const timeout = setTimeout(
-        () => reject(new Error("Timed out waiting for initialize response")),
-        5000,
-      );
-      child.stdout.on("data", (data: Buffer) => {
-        const message = messageBuffer.push(data);
-        if (message !== undefined) {
-          clearTimeout(timeout);
-          resolve(message);
-        }
-      });
-      child.stderr.on("data", (data: Buffer) => {
-        clearTimeout(timeout);
-        reject(new Error(`stdio process wrote to stderr: ${data.toString()}`));
-      });
-      sendLspMessage(child.stdin, {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "initialize",
-        params: { processId: null, rootUri: null, capabilities: {} },
-      });
+    const response = await client.request(1, "initialize", {
+      processId: null,
+      rootUri: null,
+      capabilities: {},
     }).finally(() => {
       child.kill();
     });
@@ -102,5 +160,62 @@ describe("stdio entry point", () => {
         },
       },
     });
+  }, 15000);
+
+  it("returns schema completions over the LSP wire protocol", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+
+    try {
+      const initializeResponse = await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      expect(initializeResponse).toMatchObject({
+        result: {
+          capabilities: {
+            completionProvider: {
+              triggerCharacters: [" "],
+            },
+          },
+        },
+      });
+
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri: "file:///completion.ged",
+          languageId: "gedcom",
+          version: 1,
+          text: [
+            "0 HEAD",
+            "1 GEDC",
+            "2 VERS 7.0",
+            "0 @I1@ INDI",
+            "1 SEX ",
+            "0 TRLR",
+          ].join("\n"),
+        },
+      });
+
+      const completionResponse = await client.request(
+        2,
+        "textDocument/completion",
+        {
+          textDocument: { uri: "file:///completion.ged" },
+          position: { line: 4, character: 6 },
+        },
+      );
+      expect(completionResponse).toMatchObject({
+        result: expect.arrayContaining([
+          expect.objectContaining({ label: "M" }),
+          expect.objectContaining({ label: "F" }),
+        ]),
+      });
+    } finally {
+      child.kill();
+    }
   }, 15000);
 });
