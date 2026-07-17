@@ -22,7 +22,6 @@ Outstanding tasks specific to the validator/schema layer (`rule-node.ts` and the
 
 Editor-facing features for the extension (LSP capabilities and webview UI), merged here from the "Planned Features" lists in `README.md` and `apps/vscode/README.md` — those lists are now removed from both READMEs to keep a single roadmap source.
 
-- [ ] **LSP: autocomplete** — suggest tags and enum values based on the schema (`completionProvider`).
 
 - [ ] **File Structure Tree** — view the GEDCOM file as a hierarchical outline (`documentSymbolProvider`).
 
