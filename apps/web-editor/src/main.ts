@@ -26,6 +26,7 @@ import {
   type InlayHint,
 } from "vscode-languageserver-protocol";
 import * as monaco from "monaco-editor";
+import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import "monaco-editor/min/vs/editor/editor.main.css";
 import { registerGedcomLanguage } from "./gedcomLanguage";
 
@@ -94,11 +95,9 @@ async function init() {
 
   // Configure Monaco web worker
   self.MonacoEnvironment = {
-    getWorkerUrl() {
-      return new URL(
-        "monaco-editor/esm/vs/editor/editor.worker.js",
-        import.meta.url,
-      ).href;
+    getWorker() {
+      const WorkerConstructor = editorWorker;
+      return new WorkerConstructor();
     },
   };
 
