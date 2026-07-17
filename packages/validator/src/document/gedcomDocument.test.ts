@@ -2,6 +2,18 @@ import { describe, expect, test } from "vitest";
 import { GedcomDocument } from "./gedcomDocument";
 
 describe("validator", () => {
+  test("accepts a partial line while an editor is initializing", () => {
+    const gedcomDocument = new GedcomDocument();
+
+    gedcomDocument.createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1`);
+
+    expect(gedcomDocument.getNodes()).toHaveLength(2);
+  });
+
   test("minimal valid test", async () => {
     const gedcomDocument = new GedcomDocument();
     gedcomDocument.createDocument(`0 HEAD

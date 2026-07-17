@@ -63,9 +63,9 @@ export class GedcomVisitor extends BaseGedcomVisitor {
     this.validateVisitor();
   }
 
-  root(ctx: CstNode): VisitorResult {
+  root(ctx: CstNode | undefined): VisitorResult {
     const nodes: ASTNode[] = [];
-    if (!ctx.children.line) {
+    if (!ctx?.children.line) {
       return { nodes, xrefs: new Map(), pointers: new Map() };
     }
 

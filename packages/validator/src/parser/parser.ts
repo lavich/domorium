@@ -20,7 +20,9 @@ export class GedcomParser extends CstParser {
       this.OPTION1(() => {
         this.CONSUME(tokens.Pointer);
       });
-      this.CONSUME(tokens.Tag);
+      this.OPTION4(() => {
+        this.CONSUME(tokens.Tag);
+      });
       this.OPTION2(() => {
         this.CONSUME(tokens.Xref);
       });

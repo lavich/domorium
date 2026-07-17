@@ -43,11 +43,13 @@ intellijPlatform {
 // plugin's resources so GedcomServerConnectionProvider can launch it
 // without requiring consumers to check out/npm-install the whole repo.
 val lspPackageDir = layout.projectDirectory.dir("../../packages/lsp")
+val validatorPackageDir = layout.projectDirectory.dir("../../packages/validator")
 
 val buildLspStdioBundle = tasks.register<Exec>("buildLspStdioBundle") {
     workingDir = lspPackageDir.asFile
     commandLine("npm", "run", "build:stdio")
     inputs.dir(lspPackageDir.dir("src"))
+    inputs.dir(validatorPackageDir.dir("src"))
     outputs.file(lspPackageDir.file("dist-stdio/stdio.cjs.js"))
 }
 

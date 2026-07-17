@@ -1,6 +1,7 @@
 package dev.domorium.jetbrains
 
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.redhat.devtools.lsp4ij.LanguageServerFactory
 import com.redhat.devtools.lsp4ij.server.OSProcessStreamConnectionProvider
@@ -40,6 +41,19 @@ class GedcomServerConnectionProvider : OSProcessStreamConnectionProvider() {
     init {
         val commandLine = GeneralCommandLine("node", extractBundledServerScript())
         setCommandLine(commandLine)
+        addLogErrorHandler { message ->
+            LOG.warn("GEDCOM language server stderr: $message")
+        }
+        addUnexpectedServerStopHandler {
+            LOG.warn(
+                "GEDCOM language server stopped unexpectedly " +
+                    "(exitCode=${getProcessHandler()?.exitCode}, command=${commandLine.commandLineString})",
+            )
+        }
+    }
+
+    private companion object {
+        val LOG: Logger = Logger.getInstance(GedcomServerConnectionProvider::class.java)
     }
 }
 
