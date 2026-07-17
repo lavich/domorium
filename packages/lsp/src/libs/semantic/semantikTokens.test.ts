@@ -25,7 +25,7 @@ describe("semanticTokens", () => {
     });
   });
 
-  it("colors LEVEL as comment and TAG as keyword", () => {
+  it("colors LEVEL, POINTER, and TAG as semantic tokens", () => {
     const res = semanticTokens(gedcomDocument.getNodes());
     const tagToken = res.find((t) => t.length === 4);
 

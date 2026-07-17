@@ -3,6 +3,8 @@
 Apps for working with `.ged` (GEDCOM) files.
 Provides syntax highlighting and validation for genealogical data.
 
+Try the [online GEDCOM editor](https://lavich.github.io/domorium/).
+
 ---
 
 ## ✨ Features
