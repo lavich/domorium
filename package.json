@@ -6,8 +6,10 @@
     "build:libs": "npm run build -w packages/lsp",
     "build:vscode": "npm run build -w apps/vscode",
     "test": "vitest",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "test:run": "vitest --run",
+    "lint": "eslint .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "check:typescript": "npm run lint && npm run typecheck && npm run test:run",
     "postinstall": "npm run build:libs"
   },
   "workspaces": [

@@ -1,9 +1,5 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import type { ParsedGrammar } from "./parse-gedstruct.js";
-import { parseTsv, type TsvRow } from "./parse-tsv.js";
-
-const G7_PREFIX = "https://gedcom.io/terms/v7/";
+import { parseTsv } from "./parse-tsv.js";
 
 interface PayloadEntry {
   type: string | null;
@@ -166,7 +162,7 @@ function buildTagMap(
     }
   }
 
-  for (const [_setName, setValues] of Object.entries(existingSet)) {
+  for (const setValues of Object.values(existingSet)) {
     for (const [shortVal, enumType] of Object.entries(setValues)) {
       result[enumType] = shortVal;
     }

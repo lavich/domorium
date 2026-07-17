@@ -6,6 +6,7 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "sourceMap": true,
+    "skipLibCheck": true,
     "strict": true
   },
   "include": ["src", "vite.config.client.ts", "vite.config.server.ts"],

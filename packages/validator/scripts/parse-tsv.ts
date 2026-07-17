@@ -1,6 +1,4 @@
-export interface TsvRow {
-  [key: string]: string;
-}
+export type TsvRow = Record<string, string>;
 
 export function parseTsv(text: string): TsvRow[] {
   const lines = text.split("\n").filter((l) => l.length > 0);

@@ -17,7 +17,7 @@ export const gedcomLanguageConfig: monaco.languages.LanguageConfiguration = {
       end: /^0\s+\S+/,
     },
   },
-  wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+  wordPattern: /(-?\d*\.\d\w*)|([^`~!@#%^&*()\-=[\]{}\\|;:'",.<>/?\s]+)/g,
 };
 
 export function registerGedcomLanguage(monaco: typeof import("monaco-editor")) {

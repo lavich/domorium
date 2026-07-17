@@ -57,6 +57,7 @@
     "build:client": "vite build --config vite.config.client.ts",
     "build:server": "vite build --config vite.config.server.ts",
     "build": "npm run build:libs && npm run build:client && npm run build:server",
+    "typecheck": "tsc --noEmit",
     "open": "code --extensionDevelopmentPath=$PWD ../../test-data"
   },
   "dependencies": {
