@@ -59,14 +59,15 @@ function resolveParent(context: CompletionContext, level: number) {
     (node) => node.range.start.line <= context.position.line,
   );
   const current = nodes.find(
-    (node) =>
-      node.range.start.line === context.position.line && node.level === level,
+    (node) => node.range.start.line === context.position.line,
   );
-  let parent = current?.parent;
-  if (current && (!parent || parent.level !== level - 1)) {
-    return null;
-  }
-  if (!current) {
+  let parent: ASTNode | undefined;
+  if (current) {
+    if (current.level !== level || current.parent?.level !== level - 1) {
+      return null;
+    }
+    parent = current.parent;
+  } else {
     const preceding = nodes.filter(
       (node) => node.range.start.line < context.position.line,
     );

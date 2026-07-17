@@ -22,6 +22,7 @@ describe("GedcomDocument.getCompletions", () => {
 2 VERS 7.0
 0 @I1@ INDI
 1 NAME Ada /Lovelace/
+
 0 TRLR
 `);
 
@@ -41,6 +42,7 @@ describe("GedcomDocument.getCompletions", () => {
 0 @I1@ INDI
 1 SEX F
 1 NAME Ada /Lovelace/
+
 0 TRLR
 `);
 
@@ -73,6 +75,7 @@ describe("GedcomDocument.getCompletions", () => {
 2 VERS 5.5.1
 0 @I1@ INDI
 1 NAME Ada /Lovelace/
+
 0 TRLR
 `);
     const labels = doc
@@ -106,6 +109,7 @@ describe("GedcomDocument.getCompletions", () => {
 1 NAME Ada /Lovelace/
 0 @F1@ FAM
 1 WIFE
+
 0 TRLR
 `);
     const labels = doc
@@ -183,5 +187,19 @@ describe("GedcomDocument.getCompletions", () => {
     expect(doc.getCompletions({ line: 1, character: 6 }, "1 SEX ")).toEqual(
       [],
     );
+  });
+
+  it("does not reuse an earlier sibling when the cached line level conflicts", () => {
+    const doc = document(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 BIRT
+2 DATE 1 JAN 1900
+1 DEAT
+0 TRLR
+`);
+
+    expect(doc.getCompletions({ line: 6, character: 2 }, "2 ")).toEqual([]);
   });
 });
