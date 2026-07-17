@@ -2,6 +2,8 @@ import type {
   Connection,
   DefinitionParams,
   Diagnostic,
+  DocumentSymbol,
+  DocumentSymbolParams,
   FoldingRange,
   Hover,
   HoverParams,
@@ -27,6 +29,7 @@ import { legend, semanticTokens } from "./libs/semantic/semanticTokens";
 import { levelIndent } from "./libs/indent/levelIndent";
 import { findDefinitionRanges } from "./libs/definition/definition";
 import { getHover } from "./libs/hover/hover";
+import { documentSymbols } from "./libs/symbols/documentSymbols";
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
@@ -40,6 +43,7 @@ export const createServer = (connection: Connection) => {
         foldingRangeProvider: true,
         definitionProvider: true,
         hoverProvider: true,
+        documentSymbolProvider: true,
         semanticTokensProvider: {
           legend,
           range: false,
@@ -85,6 +89,16 @@ export const createServer = (connection: Connection) => {
     }
     return levelFolding(parsed.getNodes());
   });
+
+  connection.onDocumentSymbol(
+    (params: DocumentSymbolParams): DocumentSymbol[] => {
+      const parsed = cache.get(params.textDocument.uri);
+      if (!parsed) {
+        return [];
+      }
+      return documentSymbols(parsed.getNodes());
+    },
+  );
 
   connection.languages.semanticTokens.on((params) => {
     const parsed = cache.get(params.textDocument.uri);
