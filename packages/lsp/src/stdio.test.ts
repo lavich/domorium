@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { build } from "esbuild";
 import { spawn } from "child_process";
 import { mkdtempSync } from "fs";
@@ -70,6 +70,10 @@ class LspMessageBuffer {
 class LspTestClient {
   private readonly pending = new Map<number, (message: unknown) => void>();
   private readonly pendingRejects = new Map<number, (error: Error) => void>();
+  private readonly pendingTimeouts = new Map<
+    number,
+    ReturnType<typeof setTimeout>
+  >();
   private readonly messageBuffer = new LspMessageBuffer();
 
   constructor(private readonly child: ReturnType<typeof spawn>) {
@@ -86,8 +90,7 @@ class LspTestClient {
 
         const resolve = this.pending.get(message.id);
         if (resolve !== undefined) {
-          this.pending.delete(message.id);
-          this.pendingRejects.delete(message.id);
+          this.clearPending(message.id);
           resolve(message);
         }
       }
@@ -113,6 +116,20 @@ class LspTestClient {
     return new Promise((resolve, reject) => {
       this.pending.set(id, resolve);
       this.pendingRejects.set(id, reject);
+      this.pendingTimeouts.set(
+        id,
+        setTimeout(() => {
+          const pendingReject = this.pendingRejects.get(id);
+          if (pendingReject !== undefined) {
+            this.clearPending(id);
+            pendingReject(
+              new Error(
+                `Timed out waiting for response to ${method} request ${id}`,
+              ),
+            );
+          }
+        }, 5000),
+      );
       sendLspMessage(this.child.stdin!, {
         jsonrpc: "2.0",
         id,
@@ -130,12 +147,47 @@ class LspTestClient {
     for (const reject of this.pendingRejects.values()) {
       reject(error);
     }
+    for (const timeout of this.pendingTimeouts.values()) {
+      clearTimeout(timeout);
+    }
     this.pending.clear();
     this.pendingRejects.clear();
+    this.pendingTimeouts.clear();
+  }
+
+  private clearPending(id: number): void {
+    const timeout = this.pendingTimeouts.get(id);
+    if (timeout !== undefined) {
+      clearTimeout(timeout);
+    }
+    this.pending.delete(id);
+    this.pendingRejects.delete(id);
+    this.pendingTimeouts.delete(id);
   }
 }
 
 describe("stdio entry point", () => {
+  it("rejects a request when the server does not respond", async () => {
+    vi.useFakeTimers();
+    const child = spawn("node", ["-e", "setInterval(() => {}, 1000)"]);
+    const client = new LspTestClient(child);
+    let requestError: unknown;
+
+    try {
+      void client.request(1, "initialize", {}).catch((error: unknown) => {
+        requestError = error;
+      });
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(requestError).toEqual(
+        new Error("Timed out waiting for response to initialize request 1"),
+      );
+    } finally {
+      child.kill();
+      vi.useRealTimers();
+    }
+  });
+
   it("responds to an LSP initialize request over stdin/stdout as a standalone process", async () => {
     const bundlePath = await bundleStdio();
     const child = spawn("node", [bundlePath]);
