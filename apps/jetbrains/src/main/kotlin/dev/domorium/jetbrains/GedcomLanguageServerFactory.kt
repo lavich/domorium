@@ -18,18 +18,19 @@ private const val BUNDLED_SERVER_RESOURCE = "server/stdio.cjs.js"
  * extracted to a temp file (deleted on JVM exit) before being handed to
  * `node` as a command-line argument.
  */
-private fun extractBundledServerScript(): String {
-    val resource = object {}.javaClass.classLoader.getResource(BUNDLED_SERVER_RESOURCE)
-        ?: error(
-            "Bundled GEDCOM language server resource ($BUNDLED_SERVER_RESOURCE) " +
-                "not found — was the copyLspStdioBundle Gradle task run?",
-        )
+internal fun extractBundledServerScript(): java.nio.file.Path {
+    val resource =
+        object {}.javaClass.classLoader.getResource(BUNDLED_SERVER_RESOURCE)
+            ?: error(
+                "Bundled GEDCOM language server resource ($BUNDLED_SERVER_RESOURCE) " +
+                    "not found — was the copyLspStdioBundle Gradle task run?",
+            )
     val tempFile = Files.createTempFile("domorium-gedcom-lsp-", ".cjs.js")
     tempFile.toFile().deleteOnExit()
     resource.openStream().use { input ->
         Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING)
     }
-    return tempFile.toAbsolutePath().toString()
+    return tempFile.toAbsolutePath()
 }
 
 /**
@@ -37,9 +38,11 @@ private fun extractBundledServerScript(): String {
  * entry point) as a `node` subprocess. Assumes `node` is available on the
  * user's PATH (see design doc — no auto-detection/download in v1).
  */
-class GedcomServerConnectionProvider : OSProcessStreamConnectionProvider() {
+class GedcomServerConnectionProvider(
+    serverScript: String = extractBundledServerScript().toString(),
+) : OSProcessStreamConnectionProvider() {
     init {
-        val commandLine = GeneralCommandLine("node", extractBundledServerScript())
+        val commandLine = GeneralCommandLine("node", serverScript)
         setCommandLine(commandLine)
         addLogErrorHandler { message ->
             LOG.warn("GEDCOM language server stderr: $message")
@@ -58,6 +61,5 @@ class GedcomServerConnectionProvider : OSProcessStreamConnectionProvider() {
 }
 
 class GedcomLanguageServerFactory : LanguageServerFactory {
-    override fun createConnectionProvider(project: Project): StreamConnectionProvider =
-        GedcomServerConnectionProvider()
+    override fun createConnectionProvider(project: Project): StreamConnectionProvider = GedcomServerConnectionProvider()
 }

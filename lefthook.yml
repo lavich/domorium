@@ -7,6 +7,7 @@ pre-commit:
       glob: "*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,yaml,yml,md,css,html}"
       exclude:
         - "**/dist/**"
+        - "**/dist-stdio/**"
         - "**/out/**"
         - "**/build/**"
         - "**/coverage/**"
@@ -19,6 +20,7 @@ pre-commit:
       glob: "*.{js,jsx,ts,tsx,mjs,cjs}"
       exclude:
         - "**/dist/**"
+        - "**/dist-stdio/**"
         - "**/out/**"
         - "**/build/**"
         - "**/coverage/**"

@@ -12,6 +12,7 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      "**/dist-stdio/**",
       "**/out/**",
       "**/build/**",
       "**/.intellijPlatform/**",

@@ -10,6 +10,8 @@
     "lint": "eslint .",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "check:typescript": "npm run lint && npm run typecheck && npm run test:run",
+    "check:jetbrains": "./apps/jetbrains/gradlew -p apps/jetbrains spotlessCheck test",
+    "check": "npm run check:typescript && npm run check:jetbrains",
     "format:staged": "lefthook run pre-commit",
     "postinstall": "npm run build:libs"
   },
