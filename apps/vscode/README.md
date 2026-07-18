@@ -1,53 +1,33 @@
-# GEDCOM for VS Code
+# Domorium for Visual Studio Code
 
-Extension for working with `.ged` (GEDCOM) files in Visual Studio Code.
-Provides syntax highlighting and validation for genealogical data.
+Domorium helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
 
----
+![Domorium autocomplete, validation, hover, and navigation](images/domorium-demo.gif)
 
-## ✨ Features
+## Features
 
-- GEDCOM syntax highlighting
-- Structural validation of GEDCOM files
+- Context-aware GEDCOM autocomplete
+- Real-time structural validation
+- Semantic syntax highlighting
+- Hover information for GEDCOM tags
+- Go to definition for cross-references
+- Code folding for records and nested structures
+- Support for `.ged` and `.gedcom` files
 
-<img src="images/Screenshot.png" width="600" alt="Syntax highlighting and validation" />
+## Installation
 
----
-
-## ⚙️ Installation
-
-### From Marketplace
-
-1. Open [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=lavich.gedcom-vscode)
-2. Click **Install**
-
-### Manual Installation
+Install [Domorium from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=lavich.gedcom-vscode), or run:
 
 ```bash
 code --install-extension lavich.gedcom-vscode
 ```
----
 
-## 🤝 Contributing
+You can also [try Domorium in your browser](https://lavich.github.io/domorium/).
 
-Want to contribute? Great!
+## Contributing
 
-1. Clone the repository
-2. Install dependencies:
+See the [project repository](https://github.com/lavich/domorium) for development setup and contribution instructions.
 
-   ```bash
-   npm install
-   ```
+## License
 
-3. Start debugging:
-
-   ```bash
-   npm run watch
-   npm run open
-   ```
-
----
-
-## 📜 License
-
-MIT © 2025
+MIT © 2025 Andrei Lobanov

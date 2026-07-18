@@ -4,9 +4,25 @@
     <vendor>Andrei Lobanov</vendor>
 
     <description><![CDATA[
-    GEDCOM (.ged / .gedcom) language support — validation, hover, go-to-definition,
-    folding and semantic highlighting — powered by the same domorium language
-    server used by the VS Code extension, via LSP4IJ.
+    <p>Domorium helps you read and edit <code>.ged</code> and <code>.gedcom</code> files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.</p>
+
+    <p><img src="https://raw.githubusercontent.com/lavich/domorium/main/apps/vscode/images/domorium-demo.png" alt="Domorium autocomplete in the web editor"></p>
+
+    <h2>Features</h2>
+    <ul>
+      <li>Context-aware GEDCOM autocomplete</li>
+      <li>Real-time structural validation</li>
+      <li>Semantic syntax highlighting</li>
+      <li>Hover information for GEDCOM tags</li>
+      <li>Go to definition for cross-references</li>
+      <li>Code folding for records and nested structures</li>
+      <li>Support for <code>.ged</code> and <code>.gedcom</code> files</li>
+    </ul>
+
+    <h2>Requirements</h2>
+    <p>Requires Node.js on <code>PATH</code>. The GEDCOM language server is bundled with the plugin and runs locally.</p>
+
+    <p><a href="https://lavich.github.io/domorium/">Try Domorium in your browser</a> · <a href="https://github.com/lavich/domorium">Source code and issue tracker</a></p>
     ]]></description>
 
     <!-- com.intellij.modules.platform (not a specific product) keeps this
