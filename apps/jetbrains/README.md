@@ -1,51 +1,41 @@
-# GEDCOM for JetBrains
+# Domorium for JetBrains IDEs
 
-Plugin for working with `.ged` / `.gedcom` (GEDCOM) files in JetBrains IDEs
-(IntelliJ IDEA, WebStorm, PyCharm, and any other IDE built on the IntelliJ
-Platform). Provides validation, hover, go-to-definition, folding and
-semantic highlighting, powered by the same domorium language server used
-by the VS Code extension.
+Domorium helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
 
----
+![Domorium autocomplete, validation, hover, and navigation](../vscode/images/domorium-demo.gif)
 
-## ✨ Features
+## Features
 
-- Real-time GEDCOM validation
-- Hover info, go-to-definition and code folding
-- Semantic highlighting
+- Context-aware GEDCOM autocomplete
+- Real-time structural validation
+- Semantic syntax highlighting
+- Hover information for GEDCOM tags
+- Go to definition for cross-references
+- Code folding for records and nested structures
+- Support for `.ged` and `.gedcom` files
 
----
+## Requirements
 
-## ⚙️ Requirements
+Requires Node.js on `PATH`. The GEDCOM language server is bundled with the plugin and runs locally.
 
-- `node` available on `PATH` — the plugin launches the bundled language
-  server as a Node.js subprocess (no auto-detection/download).
+[Try Domorium in your browser](https://lavich.github.io/domorium/) · [Source code and issue tracker](https://github.com/lavich/domorium)
 
----
+## Development
 
-## 🤝 Contributing
+Run the plugin in a sandboxed IDE:
 
-Want to contribute? Great!
+```bash
+./gradlew runIde
+```
 
-1. Clone the repository
-2. Run the plugin in a sandboxed IDE:
+Build the distributable plugin ZIP:
 
-   ```bash
-   ./gradlew runIde
-   ```
+```bash
+./gradlew buildPlugin
+```
 
-3. Build the distributable plugin `.zip`:
+The language server lives in `packages/lsp`. Gradle builds its standalone Node.js bundle and packages it with the plugin automatically.
 
-   ```bash
-   ./gradlew buildPlugin
-   ```
+## License
 
-The language server itself lives in `packages/lsp` (this monorepo's npm
-workspace); `./gradlew` builds its standalone Node bundle and packages it
-into the plugin automatically.
-
----
-
-## 📜 License
-
-MIT © 2026
+MIT © 2026 Andrei Lobanov
