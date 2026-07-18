@@ -2,7 +2,7 @@
 
 ## Priority: High
 
-- [ ] **CI** — verify GitHub Actions pass (lint, typecheck, test).
+- [x] **CI** — GitHub Actions, local hooks, workspace checks, product builds, protected main, and tagged release gates are configured.
 
 ## Priority: Low
 
@@ -12,7 +12,7 @@
 
 Outstanding tasks specific to the validator/schema layer (`rule-node.ts` and the GEDCOM schema data), moved here from the priority sections above.
 
-- [ ] **Extension Tags (_XXXX)** — support custom tags via `_TAG` with optional schema from `SCHMA`. Currently any `_TAG` is reported as `Unknown tag` (e.g. `_SKYPEID`, `_JABBERID` in `maximal70.ged`), even though `_`-prefixed tags are legal application-defined extensions per the GEDCOM spec.
+- [ ] **Extension Tags (\_XXXX)** — support custom tags via `_TAG` with optional schema from `SCHMA`. Currently any `_TAG` is reported as `Unknown tag` (e.g. `_SKYPEID`, `_JABBERID` in `maximal70.ged`), even though `_`-prefixed tags are legal application-defined extensions per the GEDCOM spec.
 
 - [ ] **Schema: type-FilePath** — verify coverage of the `type-FilePath` URI (`type-Date#exact` is now covered, see Date/DatePeriod validation above).
 
@@ -21,7 +21,6 @@ Outstanding tasks specific to the validator/schema layer (`rule-node.ts` and the
 ## apps/vscode
 
 Editor-facing features for the extension (LSP capabilities and webview UI), merged here from the "Planned Features" lists in `README.md` and `apps/vscode/README.md` — those lists are now removed from both READMEs to keep a single roadmap source.
-
 
 - [ ] **File Structure Tree** — view the GEDCOM file as a hierarchical outline (`documentSymbolProvider`).
 
