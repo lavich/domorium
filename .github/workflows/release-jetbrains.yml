@@ -2,34 +2,40 @@ name: Release JetBrains Plugin
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'apps/jetbrains/**'
+    tags: ["jetbrains-v*.*.*"]
+
+permissions:
+  contents: read
 
 jobs:
-  release:
+  checks:
+    uses: ./.github/workflows/quality.yml
+
+  publish:
+    needs: checks
     runs-on: ubuntu-latest
+    environment: release
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+          cache: npm
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
-
+          java-version: 17
+          cache: gradle
+      - run: npm ci
+        env:
+          LEFTHOOK: 0
+      - name: Verify tagged commit belongs to main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main
+      - name: Verify JetBrains version
+        working-directory: apps/jetbrains
+        run: test "${GITHUB_REF_NAME#jetbrains-v}" = "$(./gradlew properties -q | awk '/^version:/ { print $2 }')"
       - name: Publish plugin
         run: ./gradlew publishPlugin
         working-directory: apps/jetbrains

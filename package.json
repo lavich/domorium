@@ -6,8 +6,13 @@
     "build:libs": "npm run build -w packages/lsp",
     "build:vscode": "npm run build -w apps/vscode",
     "test": "vitest",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "test:run": "vitest --run",
+    "lint": "eslint .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "check:typescript": "npm run lint && npm run typecheck && npm run test:run",
+    "check:jetbrains": "./apps/jetbrains/gradlew -p apps/jetbrains spotlessCheck test",
+    "check": "npm run check:typescript && npm run check:jetbrains",
+    "format:staged": "lefthook run pre-commit",
     "postinstall": "npm run build:libs"
   },
   "workspaces": [
@@ -19,6 +24,7 @@
     "@stylistic/eslint-plugin": "^5.2.3",
     "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.34.0",
+    "lefthook": "^2.1.10",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.41.0",

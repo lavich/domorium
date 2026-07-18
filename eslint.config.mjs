@@ -10,7 +10,16 @@ import stylistic from "@stylistic/eslint-plugin";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist", "**/out"],
+    ignores: [
+      "**/dist/**",
+      "**/dist-stdio/**",
+      "**/out/**",
+      "**/build/**",
+      "**/.intellijPlatform/**",
+      "**/.worktrees/**",
+      "**/coverage/**",
+      "**/.vscode-test-web/**",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
