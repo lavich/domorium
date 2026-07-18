@@ -1,41 +1,37 @@
 # Domorium
 
-Apps for working with `.ged` (GEDCOM) files.
-Provides syntax highlighting and validation for genealogical data.
+Domorium makes GEDCOM files easier to understand and edit. It highlights their structure, suggests valid entries, and reports errors as you type—so you can work with genealogical data without memorizing the GEDCOM format.
 
-Try the [online GEDCOM editor](https://lavich.github.io/domorium/).
+Use Domorium in your browser, Visual Studio Code, or a JetBrains IDE.
 
----
+[Open the web editor](https://lavich.github.io/domorium/) · [Install for VS Code](https://marketplace.visualstudio.com/items?itemName=lavich.gedcom-vscode) · [JetBrains plugin details](apps/jetbrains/README.md)
 
-## ✨ Features
+![Domorium autocomplete, validation, hover, and navigation](apps/vscode/images/domorium-demo.gif)
 
-- GEDCOM syntax highlighting
-- Structural validation of GEDCOM files
+## Features
 
-<img src="apps/vscode/images/Screenshot.png" width="600" alt="Syntax highlighting and validation" />
+- Context-aware GEDCOM autocomplete
+- Real-time structural validation
+- Semantic syntax highlighting
+- Hover information for GEDCOM tags
+- Go to definition for cross-references
+- Code folding for records and nested structures
+- Support for `.ged` and `.gedcom` files
 
----
+## What is GEDCOM?
 
-## 🤝 Contributing
+GEDCOM is a text format for exchanging genealogical data between family-history applications. Domorium adds editor assistance to the raw format, helping genealogists and developers read its structure and catch mistakes while editing.
 
-Want to contribute? Great!
+## Contributing
 
-1. Clone the repository
-2. Install dependencies:
+```bash
+npm install
+npm run check
+npm run dev -w apps/web-editor
+```
 
-   ```bash
-   npm install
-   ```
+Product-specific build and development commands live in each app's README.
 
-3. Start debugging:
-
-   ```bash
-   npm run watch
-   npm run open
-   ```
-
----
-
-## 📜 License
+## License
 
 MIT © 2025

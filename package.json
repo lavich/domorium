@@ -1,7 +1,7 @@
 {
   "name": "domorium",
   "version": "1.0.0",
-  "description": "Apps for working with `.ged` (GEDCOM) files",
+  "description": "GEDCOM editing tools for the web, Visual Studio Code, and JetBrains IDEs",
   "scripts": {
     "build:libs": "npm run build -w packages/lsp",
     "build:vscode": "npm run build -w apps/vscode",
