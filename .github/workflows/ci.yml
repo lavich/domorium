@@ -46,6 +46,8 @@ jobs:
           fi
 
           if git diff --quiet "$COMPARE_SHA" "$HEAD_SHA" -- \
+            .github/workflows/ci.yml \
+            .github/workflows/quality.yml \
             apps/jetbrains \
             packages/lsp \
             packages/validator \
