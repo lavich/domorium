@@ -18,12 +18,16 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
+      quality: ${{ steps.filter.outputs.quality }}
+      tests: ${{ steps.filter.outputs.tests }}
+      web: ${{ steps.filter.outputs.web }}
+      vscode: ${{ steps.filter.outputs.vscode }}
       jetbrains: ${{ steps.filter.outputs.jetbrains }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Detect JetBrains-related changes
+      - name: Detect affected components
         id: filter
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -31,35 +35,125 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.sha }}
         run: |
+          emit_all() {
+            for component in quality tests web vscode jetbrains; do
+              echo "$component=true" >> "$GITHUB_OUTPUT"
+            done
+          }
+
+          changed() {
+            ! git diff --quiet "$COMPARE_SHA" "$HEAD_SHA" -- "$@"
+          }
+
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            echo "jetbrains=true" >> "$GITHUB_OUTPUT"
+            emit_all
             exit 0
           fi
 
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
             COMPARE_SHA="$BASE_SHA"
           elif [[ -z "$BEFORE_SHA" || "$BEFORE_SHA" =~ ^0+$ ]]; then
-            echo "jetbrains=true" >> "$GITHUB_OUTPUT"
+            emit_all
             exit 0
           else
             COMPARE_SHA="$BEFORE_SHA"
           fi
 
-          if git diff --quiet "$COMPARE_SHA" "$HEAD_SHA" -- \
-            .github/workflows/ci.yml \
-            .github/workflows/quality.yml \
+          if changed .github/workflows/ci.yml .github/workflows/quality.yml; then
+            emit_all
+            exit 0
+          fi
+
+          if changed \
+            apps/web-editor/src \
+            apps/vscode/src \
+            packages \
+            eslint.config.mjs \
+            tsconfig.json \
+            vitest.config.ts \
+            package.json \
+            package-lock.json; then
+            echo "quality=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "quality=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if changed \
+            apps/web-editor/src \
+            apps/vscode/src \
+            packages \
+            vitest.config.ts \
+            package.json \
+            package-lock.json; then
+            echo "tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tests=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if changed \
+            apps/web-editor \
+            packages/lsp \
+            packages/validator \
+            tsconfig.json \
+            package.json \
+            package-lock.json; then
+            echo "web=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "web=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if changed \
+            apps/vscode \
+            packages/lsp \
+            packages/validator \
+            tsconfig.json \
+            package.json \
+            package-lock.json; then
+            echo "vscode=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "vscode=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if changed \
             apps/jetbrains \
             packages/lsp \
             packages/validator \
+            tsconfig.json \
             package.json \
             package-lock.json; then
-            echo "jetbrains=false" >> "$GITHUB_OUTPUT"
-          else
             echo "jetbrains=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "jetbrains=false" >> "$GITHUB_OUTPUT"
           fi
 
   checks:
     needs: changes
     uses: ./.github/workflows/quality.yml
     with:
+      run_quality: ${{ needs.changes.outputs.quality == 'true' }}
+      run_tests: ${{ needs.changes.outputs.tests == 'true' }}
+      run_web: ${{ needs.changes.outputs.web == 'true' }}
+      run_vscode: ${{ needs.changes.outputs.vscode == 'true' }}
       run_jetbrains: ${{ needs.changes.outputs.jetbrains == 'true' }}
+
+  deploy-web:
+    needs: [changes, checks]
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
