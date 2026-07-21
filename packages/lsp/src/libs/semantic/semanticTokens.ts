@@ -1,7 +1,7 @@
 import { SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver";
 import type { ASTNode, ASTToken, TokenNames } from "@domorium/validator";
 
-interface SemanticToken {
+export interface SemanticToken {
   line: number;
   char: number;
   length: number;
