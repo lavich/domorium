@@ -1,6 +1,6 @@
 {
   "name": "@domorium/validator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "GEDCOM 5.5.1 and 7.0 parser and validator",
   "keywords": [
     "gedcom",
@@ -24,6 +24,9 @@
     "url": "https://github.com/lavich"
   },
   "sideEffects": false,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -53,7 +56,7 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "chevrotain": "^11.0.3",
+    "chevrotain": "^12.0.0",
     "ts-brand": "^0.2.0"
   },
   "devDependencies": {
