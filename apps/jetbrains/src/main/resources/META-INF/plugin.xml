@@ -1,12 +1,13 @@
-<idea-plugin>
+<idea-plugin url="https://github.com/lavich/domorium">
     <id>dev.domorium.jetbrains</id>
     <name>Domorium GEDCOM</name>
-    <vendor>Andrei Lobanov</vendor>
+    <vendor url="https://github.com/lavich"
+            email="lobanov.andrey.lavich@gmail.com">Andrei Lobanov</vendor>
 
     <description><![CDATA[
     <p>Domorium helps you read and edit <code>.ged</code> and <code>.gedcom</code> files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.</p>
 
-    <p><img src="https://raw.githubusercontent.com/lavich/domorium/main/apps/vscode/images/domorium-demo.png" alt="Domorium autocomplete in the web editor"></p>
+    <p><img src="https://raw.githubusercontent.com/lavich/domorium/main/apps/jetbrains/images/domorium-jetbrains.png" alt="Domorium autocomplete in IntelliJ IDEA"></p>
 
     <h2>Features</h2>
     <ul>
@@ -24,6 +25,17 @@
 
     <p><a href="https://lavich.github.io/domorium/">Try Domorium in your browser</a> · <a href="https://github.com/lavich/domorium">Source code and issue tracker</a></p>
     ]]></description>
+
+    <change-notes><![CDATA[
+    <h2>0.1.0</h2>
+    <ul>
+      <li>Initial JetBrains Marketplace release</li>
+      <li>Context-aware GEDCOM autocomplete</li>
+      <li>Real-time validation and semantic highlighting</li>
+      <li>Hover information and go to definition for cross-references</li>
+      <li>Document navigation and code folding</li>
+    </ul>
+    ]]></change-notes>
 
     <!-- com.intellij.modules.platform (not a specific product) keeps this
          installable in any JetBrains IDE that shares the platform, not just
