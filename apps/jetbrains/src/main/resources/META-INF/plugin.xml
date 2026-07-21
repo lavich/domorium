@@ -7,8 +7,6 @@
     <description><![CDATA[
     <p>Domorium helps you read and edit <code>.ged</code> and <code>.gedcom</code> files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.</p>
 
-    <p><img src="https://raw.githubusercontent.com/lavich/domorium/main/apps/jetbrains/images/domorium-jetbrains.png" alt="Domorium autocomplete in IntelliJ IDEA"></p>
-
     <h2>Features</h2>
     <ul>
       <li>Context-aware GEDCOM autocomplete</li>
@@ -27,6 +25,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>0.1.1</h2>
+    <ul>
+      <li>Moved the product screenshot from the description to the Marketplace media gallery</li>
+    </ul>
+
     <h2>0.1.0</h2>
     <ul>
       <li>Initial JetBrains Marketplace release</li>
