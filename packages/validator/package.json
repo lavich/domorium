@@ -1,6 +1,29 @@
 {
   "name": "@domorium/validator",
-  "description": "",
+  "version": "0.1.0",
+  "description": "GEDCOM 5.5.1 and 7.0 parser and validator",
+  "keywords": [
+    "gedcom",
+    "genealogy",
+    "parser",
+    "validator"
+  ],
+  "homepage": "https://github.com/lavich/domorium#readme",
+  "bugs": {
+    "url": "https://github.com/lavich/domorium/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lavich/domorium.git",
+    "directory": "packages/validator"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Andrey Lobanov",
+    "email": "lobanov.andrey.lavich@gmail.com",
+    "url": "https://github.com/lavich"
+  },
+  "sideEffects": false,
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -14,8 +37,13 @@
   "files": [
     "dist",
     "package.json",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "vite build && tsc --emitDeclarationOnly --declaration --outDir dist",

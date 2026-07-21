@@ -10,5 +10,8 @@ export default defineConfig({
       formats: ["cjs", "es"], // какие форматы собирать
       fileName: (format) => (format === "es" ? `index.esm.js` : `index.cjs.js`),
     },
+    rollupOptions: {
+      external: ["@domorium/validator"],
+    },
   },
 });

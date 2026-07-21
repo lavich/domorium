@@ -13,16 +13,16 @@ npm install @domorium/validator
 ```typescript
 import { GedcomDocument } from "@domorium/validator";
 
-const doc = new GedcomDocument(gedcomString);
-const errors = doc.validate();
+const document = new GedcomDocument().createDocument(gedcomString);
+const errors = document.getErrors();
 ```
 
 ## Scripts
 
-| Command | Description |
-| --- | --- |
-| `npm run build` | Build library (CJS + ESM + types) |
-| `npm run watch` | Build in watch mode |
-| `npm test` | Run tests |
-| `npm run typecheck` | Type-check without emitting |
-| `npm run generate` | Regenerate `g7validation.json` from upstream GEDCOM spec |
+| Command             | Description                                              |
+| ------------------- | -------------------------------------------------------- |
+| `npm run build`     | Build library (CJS + ESM + types)                        |
+| `npm run watch`     | Build in watch mode                                      |
+| `npm test`          | Run tests                                                |
+| `npm run typecheck` | Type-check without emitting                              |
+| `npm run generate`  | Regenerate `g7validation.json` from upstream GEDCOM spec |

@@ -1,6 +1,29 @@
 {
   "name": "@domorium/language-service",
+  "version": "0.1.0",
   "description": "Editor-independent GEDCOM language features",
+  "keywords": [
+    "gedcom",
+    "genealogy",
+    "language-service",
+    "editor"
+  ],
+  "homepage": "https://github.com/lavich/domorium#readme",
+  "bugs": {
+    "url": "https://github.com/lavich/domorium/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lavich/domorium.git",
+    "directory": "packages/language-service"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Andrey Lobanov",
+    "email": "lobanov.andrey.lavich@gmail.com",
+    "url": "https://github.com/lavich"
+  },
+  "sideEffects": false,
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -13,16 +36,23 @@
   },
   "files": [
     "dist",
-    "package.json"
+    "package.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build:dependencies": "cd ../.. && npm run build -w packages/validator",
     "build": "npm run build:dependencies && vite build && tsc --emitDeclarationOnly --declaration --outDir dist",
     "watch": "vite build --watch",
-    "test": "vitest"
+    "test": "vitest",
+    "prepack": "npm run build"
   },
   "dependencies": {
-    "@domorium/validator": "*"
+    "@domorium/validator": "^0.1.0"
   }
 }

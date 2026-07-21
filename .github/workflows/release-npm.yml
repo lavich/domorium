@@ -1,0 +1,60 @@
+name: Release npm Package
+
+on:
+  push:
+    tags:
+      - "validator-v*.*.*"
+      - "language-service-v*.*.*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Select package
+        id: package
+        shell: bash
+        run: |
+          case "$GITHUB_REF_NAME" in
+            validator-v*) package="validator" ;;
+            language-service-v*) package="language-service" ;;
+            *) echo "Unsupported release tag: $GITHUB_REF_NAME" >&2; exit 1 ;;
+          esac
+          echo "name=$package" >> "$GITHUB_OUTPUT"
+          echo "version=${GITHUB_REF_NAME#${package}-v}" >> "$GITHUB_OUTPUT"
+      - name: Verify tagged commit belongs to main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main
+      - name: Verify package version
+        env:
+          PACKAGE: ${{ steps.package.outputs.name }}
+          TAG_VERSION: ${{ steps.package.outputs.version }}
+        run: test "$TAG_VERSION" = "$(node -p "require('./packages/$PACKAGE/package.json').version")"
+      - run: npm ci
+        env:
+          LEFTHOOK: 0
+      - name: Verify repository
+        run: npm run check:typescript
+      - name: Build package
+        env:
+          PACKAGE: ${{ steps.package.outputs.name }}
+        run: npm run build --workspace "packages/$PACKAGE"
+      - name: Inspect package contents
+        env:
+          PACKAGE: ${{ steps.package.outputs.name }}
+        run: npm pack --dry-run --workspace "packages/$PACKAGE"
+      - name: Publish package
+        env:
+          PACKAGE: ${{ steps.package.outputs.name }}
+        run: npm publish --workspace "packages/$PACKAGE" --access public
