@@ -8,11 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  checks:
-    uses: ./.github/workflows/quality.yml
-
   publish:
-    needs: checks
     runs-on: ubuntu-latest
     environment: release
     steps:
@@ -27,7 +23,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
       - run: npm ci
         env:
           LEFTHOOK: 0

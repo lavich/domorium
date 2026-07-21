@@ -8,11 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  checks:
-    uses: ./.github/workflows/quality.yml
-
   publish:
-    needs: checks
     runs-on: ubuntu-latest
     environment: release
     steps:

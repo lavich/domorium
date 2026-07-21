@@ -2,6 +2,12 @@ name: Reusable Quality Gates
 
 on:
   workflow_call:
+    inputs:
+      run_jetbrains:
+        description: Run the JetBrains plugin build and compatibility checks
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -68,6 +74,7 @@ jobs:
       - run: npm run build:vscode
 
   build-jetbrains:
+    if: inputs.run_jetbrains
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +86,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-cleanup: on-success
       - run: npm ci
         env:
           LEFTHOOK: 0
