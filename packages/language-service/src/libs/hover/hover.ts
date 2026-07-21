@@ -1,5 +1,5 @@
 import type { ASTNode, GedcomDocument } from "@domorium/validator";
-import type { Hover, Position } from "vscode-languageserver";
+import type { Hover, Position } from "../../types";
 import { findNodeByTagAtPosition } from "../position/position";
 
 export const getHover = (

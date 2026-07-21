@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CompletionItemKind } from "vscode-languageserver";
+import { CompletionItemKind } from "../../types";
 import { GedcomDocument } from "@domorium/validator";
 import { getCompletionItems } from "./completion";
 
@@ -31,6 +31,6 @@ describe("getCompletionItems", () => {
         }),
       ]),
     );
-    expect(items.every((item) => item.insertText === undefined)).toBe(true);
+    expect(items.every((item) => !("insertText" in item))).toBe(true);
   });
 });

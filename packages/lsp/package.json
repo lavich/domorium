@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build:dependencies": "cd ../.. && npm run build -w packages/validator",
+    "build:dependencies": "cd ../.. && npm run build -w packages/language-service",
     "build": "npm run build:dependencies && vite build && tsc --emitDeclarationOnly --declaration --outDir dist",
     "build:stdio": "npm run build:dependencies && esbuild src/stdio.ts --bundle --platform=node --target=node18 --format=cjs --outfile=dist-stdio/stdio.cjs.js",
     "watch": "vite build --watch",
@@ -31,6 +31,6 @@
     "vscode-languageserver-textdocument": "^1.0.12"
   },
   "dependencies": {
-    "@domorium/validator": "*"
+    "@domorium/language-service": "*"
   }
 }

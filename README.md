@@ -2,9 +2,9 @@
 
 Domorium makes GEDCOM files easier to understand and edit. It highlights their structure, suggests valid entries, and reports errors as you type—so you can work with genealogical data without memorizing the GEDCOM format.
 
-Use Domorium in your browser, Visual Studio Code, or a JetBrains IDE.
+Use Domorium in your browser, Obsidian, Visual Studio Code, or a JetBrains IDE.
 
-[Open the web editor](https://lavich.github.io/domorium/) · [Install for VS Code](https://marketplace.visualstudio.com/items?itemName=lavich.gedcom-vscode) · [JetBrains plugin details](apps/jetbrains/README.md)
+[Open the web editor](https://lavich.github.io/domorium/) · [Obsidian plugin](https://github.com/lavich/domorium-obsidian) · [Install for VS Code](https://marketplace.visualstudio.com/items?itemName=lavich.gedcom-vscode) · [JetBrains plugin details](apps/jetbrains/README.md)
 
 ![Domorium autocomplete, validation, hover, and navigation](apps/vscode/images/domorium-demo.gif)
 
@@ -17,6 +17,16 @@ Use Domorium in your browser, Visual Studio Code, or a JetBrains IDE.
 - Go to definition for cross-references
 - Code folding for records and nested structures
 - Support for `.ged` and `.gedcom` files
+
+## Obsidian
+
+Domorium edits source GEDCOM files directly in an Obsidian vault without
+converting records to Markdown or uploading genealogy data. The desktop and
+mobile plugin is developed and released from the dedicated
+[lavich/domorium-obsidian](https://github.com/lavich/domorium-obsidian)
+repository.
+
+![Domorium GEDCOM editor in Obsidian](https://raw.githubusercontent.com/lavich/domorium-obsidian/main/images/domorium-obsidian.png)
 
 ## What is GEDCOM?
 

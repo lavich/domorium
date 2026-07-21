@@ -1,6 +1,5 @@
 import type { GedcomCompletion, GedcomDocument } from "@domorium/validator";
-import type { CompletionItem, Position } from "vscode-languageserver";
-import { CompletionItemKind } from "vscode-languageserver";
+import { CompletionItemKind, type CompletionItem, type Position } from "../../types";
 
 const kinds: Record<GedcomCompletion["kind"], CompletionItemKind> = {
   tag: CompletionItemKind.Field,

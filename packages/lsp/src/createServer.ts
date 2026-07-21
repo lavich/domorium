@@ -24,19 +24,14 @@ import type {
 } from "vscode-languageserver-protocol";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { GedcomDocument } from "@domorium/validator";
-
-import { levelFolding } from "./libs/folding/levelFolding";
-import { legend, semanticTokens } from "./libs/semantic/semanticTokens";
-import { levelIndent } from "./libs/indent/levelIndent";
-import { findDefinitionRanges } from "./libs/definition/definition";
-import { getHover } from "./libs/hover/hover";
-import { documentSymbols } from "./libs/symbols/documentSymbols";
-import { getCompletionItems } from "./libs/completion/completion";
+import {
+  GedcomLanguageService,
+  semanticTokenLegend,
+} from "@domorium/language-service";
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
-  const cache = new Map<string, GedcomDocument>();
+  const cache = new Map<string, GedcomLanguageService>();
 
   connection.onInitialize(() => {
     return {
@@ -51,7 +46,7 @@ export const createServer = (connection: Connection) => {
           triggerCharacters: [" "],
         },
         semanticTokensProvider: {
-          legend,
+          legend: semanticTokenLegend,
           range: false,
           full: true,
         },
@@ -60,59 +55,56 @@ export const createServer = (connection: Connection) => {
   });
 
   connection.languages.inlayHint.on((params: InlayHintParams): InlayHint[] => {
-    const parsed = cache.get(params.textDocument.uri);
-    if (!parsed) {
+    const service = cache.get(params.textDocument.uri);
+    if (!service) {
       return [];
     }
-    return levelIndent(parsed.getNodes());
+    return service.getInlayHints();
   });
 
   connection.onDefinition((params: DefinitionParams): Location[] => {
-    const parsed = cache.get(params.textDocument.uri);
-    if (!parsed) {
+    const service = cache.get(params.textDocument.uri);
+    if (!service) {
       return [];
     }
-    const ranges = findDefinitionRanges(
-      parsed.getNodes(),
-      parsed.pointers,
-      params.position,
-    );
-    return ranges.map((range) => ({ uri: params.textDocument.uri, range }));
+    return service
+      .getDefinitionRanges(params.position)
+      .map((range) => ({ uri: params.textDocument.uri, range }));
   });
 
   connection.onHover((params: HoverParams): Hover | null => {
-    const parsed = cache.get(params.textDocument.uri);
-    if (!parsed) {
+    const service = cache.get(params.textDocument.uri);
+    if (!service) {
       return null;
     }
-    return getHover(parsed, parsed.getNodes(), params.position);
+    return service.getHover(params.position);
   });
 
   connection.onFoldingRanges((params): FoldingRange[] => {
-    const parsed = cache.get(params.textDocument.uri);
-    if (!parsed) {
+    const service = cache.get(params.textDocument.uri);
+    if (!service) {
       return [];
     }
-    return levelFolding(parsed.getNodes());
+    return service.getFoldingRanges();
   });
 
   connection.onDocumentSymbol(
     (params: DocumentSymbolParams): DocumentSymbol[] => {
-      const parsed = cache.get(params.textDocument.uri);
-      if (!parsed) {
+      const service = cache.get(params.textDocument.uri);
+      if (!service) {
         return [];
       }
-      return documentSymbols(parsed.getNodes());
+      return service.getDocumentSymbols();
     },
   );
 
   connection.languages.semanticTokens.on((params) => {
-    const parsed = cache.get(params.textDocument.uri);
-    if (!parsed) {
+    const service = cache.get(params.textDocument.uri);
+    if (!service) {
       return { data: [] };
     }
 
-    const tokens = semanticTokens(parsed.getNodes());
+    const tokens = service.getSemanticTokens();
 
     const builder = new SemanticTokensBuilder();
     tokens.forEach((token) =>
@@ -130,30 +122,22 @@ export const createServer = (connection: Connection) => {
   });
 
   connection.onCompletion((params: CompletionParams): CompletionItem[] => {
-    const parsed = cache.get(params.textDocument.uri);
-    const textDocument = documents.get(params.textDocument.uri);
-    if (!parsed || !textDocument) {
+    const service = cache.get(params.textDocument.uri);
+    if (!service) {
       return [];
     }
-
-    const lineText = textDocument.getText({
-      start: { line: params.position.line, character: 0 },
-      end: params.position,
-    });
-    return getCompletionItems(parsed, params.position, lineText);
+    return service.getCompletionItems(params.position);
   });
 
   documents.onDidChangeContent(async (change) => {
-    const gedcomDocument = new GedcomDocument();
-    gedcomDocument.createDocument(change.document.getText());
-    cache.set(change.document.uri, gedcomDocument);
-    const errs = gedcomDocument.getErrors();
-    const diagnostics: Diagnostic[] = errs.map((err) => ({
-      ...err,
+    const service = new GedcomLanguageService(change.document.getText());
+    cache.set(change.document.uri, service);
+    const diagnostics: Diagnostic[] = service.getDiagnostics().map((diagnostic) => ({
+      ...diagnostic,
       severity:
-        err.level === "error"
+        diagnostic.severity === "error"
           ? DiagnosticSeverity.Error
-          : err.level === "warning"
+          : diagnostic.severity === "warning"
             ? DiagnosticSeverity.Warning
             : DiagnosticSeverity.Information,
     }));
