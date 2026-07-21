@@ -3,6 +3,26 @@ name: Reusable Quality Gates
 on:
   workflow_call:
     inputs:
+      run_quality:
+        description: Run ESLint and TypeScript checks
+        required: false
+        type: boolean
+        default: true
+      run_tests:
+        description: Run the TypeScript test suite
+        required: false
+        type: boolean
+        default: true
+      run_web:
+        description: Build the web editor
+        required: false
+        type: boolean
+        default: true
+      run_vscode:
+        description: Build the VS Code extension
+        required: false
+        type: boolean
+        default: true
       run_jetbrains:
         description: Run the JetBrains plugin build and compatibility checks
         required: false
@@ -14,6 +34,7 @@ permissions:
 
 jobs:
   quality:
+    if: inputs.run_quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +49,7 @@ jobs:
       - run: npm run typecheck
 
   test:
+    if: inputs.run_tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +69,7 @@ jobs:
           if-no-files-found: error
 
   build-web:
+    if: inputs.run_web
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,8 +82,13 @@ jobs:
           LEFTHOOK: 0
       - run: npm run build:libs
       - run: npm run build -w apps/web-editor
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          path: apps/web-editor/dist
 
   build-vscode:
+    if: inputs.run_vscode
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
