@@ -1,3 +1,9 @@
+### 0.0.11
+
+- Add context-aware autocomplete for GEDCOM tags, structures, and values
+- Add document symbols for navigating records in the Outline view
+- Improve semantic highlighting accuracy
+
 ### 0.0.10
 
 - Validate DATE, DATE_PERIOD and DATE_EXACT values
