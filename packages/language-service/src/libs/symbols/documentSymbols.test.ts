@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SymbolKind } from "vscode-languageserver-types";
+import { DocumentSymbolKind } from "../../types";
 import { documentSymbols } from "./documentSymbols";
 import { GedcomDocument } from "@domorium/validator";
 
@@ -16,7 +16,7 @@ describe("documentSymbols", () => {
       {
         name: "INDI",
         detail: "@I1@",
-        kind: SymbolKind.Object,
+        kind: DocumentSymbolKind.Object,
         range: {
           start: { line: 0, character: 0 },
           end: { line: 2, character: 7 },
@@ -29,7 +29,7 @@ describe("documentSymbols", () => {
           {
             name: "NAME",
             detail: "Homer /Simpson/",
-            kind: SymbolKind.Field,
+            kind: DocumentSymbolKind.Field,
             range: {
               start: { line: 1, character: 0 },
               end: { line: 1, character: 22 },
@@ -43,7 +43,7 @@ describe("documentSymbols", () => {
           {
             name: "SEX",
             detail: "M",
-            kind: SymbolKind.Field,
+            kind: DocumentSymbolKind.Field,
             range: {
               start: { line: 2, character: 0 },
               end: { line: 2, character: 7 },

@@ -1,0 +1,28 @@
+{
+  "name": "@domorium/language-service",
+  "description": "Editor-independent GEDCOM language features",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs.js",
+      "import": "./dist/index.esm.js"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build:dependencies": "cd ../.. && npm run build -w packages/validator",
+    "build": "npm run build:dependencies && vite build && tsc --emitDeclarationOnly --declaration --outDir dist",
+    "watch": "vite build --watch",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@domorium/validator": "*"
+  }
+}

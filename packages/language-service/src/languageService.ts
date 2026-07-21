@@ -1,15 +1,3 @@
-import type {
-  CompletionItem,
-  Diagnostic,
-  DocumentSymbol,
-  FoldingRange,
-  Hover,
-  InlayHint,
-  Position,
-  Range,
-} from "vscode-languageserver-protocol";
-import { DiagnosticSeverity } from "vscode-languageserver-protocol";
-
 import { GedcomDocument } from "@domorium/validator";
 
 import { getCompletionItems } from "./libs/completion/completion";
@@ -22,6 +10,16 @@ import {
   type SemanticToken,
 } from "./libs/semantic/semanticTokens";
 import { documentSymbols } from "./libs/symbols/documentSymbols";
+import type {
+  CompletionItem,
+  Diagnostic,
+  DocumentSymbol,
+  FoldingRange,
+  Hover,
+  InlayHint,
+  Position,
+  Range,
+} from "./types";
 
 export class GedcomLanguageService {
   private text = "";
@@ -41,12 +39,7 @@ export class GedcomLanguageService {
   getDiagnostics(): Diagnostic[] {
     return this.document.getErrors().map((error) => ({
       ...error,
-      severity:
-        error.level === "error"
-          ? DiagnosticSeverity.Error
-          : error.level === "warning"
-            ? DiagnosticSeverity.Warning
-            : DiagnosticSeverity.Information,
+      severity: error.level,
     }));
   }
 

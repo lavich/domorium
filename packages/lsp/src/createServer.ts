@@ -13,6 +13,7 @@ import type {
   Location,
 } from "vscode-languageserver";
 import {
+  DiagnosticSeverity,
   SemanticTokensBuilder,
   TextDocumentSyncKind,
   TextDocuments,
@@ -23,8 +24,10 @@ import type {
 } from "vscode-languageserver-protocol";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { GedcomLanguageService } from "./languageService";
-import { legend } from "./libs/semantic/semanticTokens";
+import {
+  GedcomLanguageService,
+  semanticTokenLegend,
+} from "@domorium/language-service";
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
@@ -43,7 +46,7 @@ export const createServer = (connection: Connection) => {
           triggerCharacters: [" "],
         },
         semanticTokensProvider: {
-          legend,
+          legend: semanticTokenLegend,
           range: false,
           full: true,
         },
@@ -129,7 +132,15 @@ export const createServer = (connection: Connection) => {
   documents.onDidChangeContent(async (change) => {
     const service = new GedcomLanguageService(change.document.getText());
     cache.set(change.document.uri, service);
-    const diagnostics: Diagnostic[] = service.getDiagnostics();
+    const diagnostics: Diagnostic[] = service.getDiagnostics().map((diagnostic) => ({
+      ...diagnostic,
+      severity:
+        diagnostic.severity === "error"
+          ? DiagnosticSeverity.Error
+          : diagnostic.severity === "warning"
+            ? DiagnosticSeverity.Warning
+            : DiagnosticSeverity.Information,
+    }));
     await connection.sendDiagnostics({ uri: change.document.uri, diagnostics });
   });
 

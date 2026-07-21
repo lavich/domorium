@@ -1,5 +1,5 @@
-import type { FoldingRange } from "vscode-languageserver-protocol";
 import type { ASTNode } from "@domorium/validator";
+import type { FoldingRange } from "../../types";
 
 export const levelFolding = (nodes: ASTNode[]): FoldingRange[] => {
   return nodes.flatMap((node) => {

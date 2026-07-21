@@ -1,6 +1,5 @@
-import type { InlayHint } from "vscode-languageserver-protocol";
-
 import { ASTNode } from "@domorium/validator";
+import type { InlayHint } from "../../types";
 
 const INDENT = "  ";
 

@@ -1,5 +1,5 @@
 import type { ASTNode } from "@domorium/validator";
-import type { Position, Range } from "vscode-languageserver";
+import type { Position, Range } from "../../types";
 
 export const isPositionInRange = (position: Position, range: Range): boolean => {
   if (position.line < range.start.line || position.line > range.end.line) {

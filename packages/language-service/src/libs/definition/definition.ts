@@ -1,5 +1,5 @@
 import type { ASTNode, ASTToken } from "@domorium/validator";
-import type { Position, Range } from "vscode-languageserver";
+import type { Position, Range } from "../../types";
 import { isPositionInRange } from "../position/position";
 
 const findXrefAtPosition = (

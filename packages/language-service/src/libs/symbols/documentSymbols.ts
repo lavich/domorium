@@ -1,6 +1,5 @@
-import type { DocumentSymbol } from "vscode-languageserver-protocol";
-import { SymbolKind } from "vscode-languageserver-types";
 import type { ASTNode } from "@domorium/validator";
+import { DocumentSymbolKind, type DocumentSymbol } from "../../types";
 
 export const documentSymbols = (nodes: ASTNode[]): DocumentSymbol[] => {
   return nodes.map((node) => {
@@ -13,7 +12,10 @@ export const documentSymbols = (nodes: ASTNode[]): DocumentSymbol[] => {
     return {
       name: tag,
       detail,
-      kind: node.level === 0 ? SymbolKind.Object : SymbolKind.Field,
+      kind:
+        node.level === 0
+          ? DocumentSymbolKind.Object
+          : DocumentSymbolKind.Field,
       range: node.range,
       selectionRange: node.tokens.TAG?.range ?? node.range,
       children: documentSymbols(node.children),
