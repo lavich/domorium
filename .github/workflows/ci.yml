@@ -24,7 +24,7 @@ jobs:
       vscode: ${{ steps.filter.outputs.vscode }}
       jetbrains: ${{ steps.filter.outputs.jetbrains }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Detect affected components
@@ -156,4 +156,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
