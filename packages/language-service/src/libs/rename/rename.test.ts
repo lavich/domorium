@@ -48,6 +48,8 @@ describe("XREF rename", () => {
   it.each([
     ["I2", "invalid-new-id"],
     ["@I 2@", "invalid-new-id"],
+    ["@I-2@", "invalid-new-id"],
+    ["@😀@", "invalid-new-id"],
     ["@F1@", "identifier-collision"],
   ])("refuses invalid or colliding name %s", (newName, code) => {
     const service = new GedcomLanguageService(text, 4);
@@ -62,9 +64,12 @@ describe("XREF rename", () => {
       stale.rename({ line: 0, character: 4 }, "@I2@", 4),
     ).toMatchObject({ ok: false, code: "stale-document" });
 
-    const unresolved = new GedcomLanguageService("1 HUSB @I9@", 1);
+    const unresolved = new GedcomLanguageService(
+      ["0 @F1@ FAM", "1 HUSB @I9@"].join("\n"),
+      1,
+    );
     expect(
-      unresolved.prepareRename({ line: 0, character: 9 }),
+      unresolved.prepareRename({ line: 1, character: 9 }),
     ).toMatchObject({ ok: false, code: "unresolved-declaration" });
 
     const duplicate = new GedcomLanguageService(
@@ -74,5 +79,46 @@ describe("XREF rename", () => {
     expect(
       duplicate.prepareRename({ line: 0, character: 4 }),
     ).toMatchObject({ ok: false, code: "duplicate-declaration" });
+  });
+
+  it("allows a new identifier that currently has unresolved usages only", () => {
+    const service = new GedcomLanguageService(
+      [text, "1 CHIL @I9@"].join("\n"),
+      1,
+    );
+
+    expect(
+      service.rename({ line: 0, character: 4 }, "@I9@", 1),
+    ).toMatchObject({ ok: true });
+  });
+
+  it("does not rename XREF-shaped prose and preserves unrelated bytes", () => {
+    const source = [
+      "0 @I1@ INDI\r",
+      "1 NOTE @I1@ 😀 prose\r",
+      "1 _CUSTOM unchanged\r",
+      "0 @F1@ FAM\r",
+      "1 HUSB @I1@\r",
+    ].join("\n");
+    const service = new GedcomLanguageService(source, 1);
+    const result = service.rename({ line: 4, character: 9 }, "@I2@", 1);
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    const lines = source.split("\n");
+    for (const edit of [...result.edit.edits].reverse()) {
+      const line = lines[edit.range.start.line];
+      lines[edit.range.start.line] =
+        line.slice(0, edit.range.start.character) +
+        edit.newText +
+        line.slice(edit.range.end.character);
+    }
+    expect(lines.join("\n")).toBe(
+      source
+        .replace("0 @I1@ INDI", "0 @I2@ INDI")
+        .replace("1 HUSB @I1@", "1 HUSB @I2@"),
+    );
   });
 });

@@ -56,4 +56,18 @@ describe("ReferenceIndex", () => {
       service.getReferenceIndex().get("@I1@")?.declarations,
     ).toHaveLength(2);
   });
+
+  it("does not index an XREF-shaped value in a non-pointer field", () => {
+    const service = new GedcomLanguageService(
+      ["0 @I1@ INDI", "1 NOTE @I1@ is prose"].join("\n"),
+    );
+
+    expect(service.getReferenceIndex().get("@I1@")?.usages).toEqual([]);
+    expect(
+      service.getReferences(
+        { line: 1, character: 9 },
+        { includeDeclaration: true },
+      ),
+    ).toEqual([]);
+  });
 });

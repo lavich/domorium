@@ -88,6 +88,37 @@ describe("document links", () => {
     ]);
   });
 
+  it("classifies URLs correctly in GEDCOM 5.5.1", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 5.5.1",
+        "0 @O1@ OBJE",
+        "1 FILE https://example.org/photo.jpg",
+        "1 FILE file:///Users/example/photo.jpg",
+      ].join("\n"),
+    );
+
+    expect(service.getDocumentLinks().map(({ kind }) => kind)).toEqual([
+      "http",
+      "file-absolute",
+    ]);
+  });
+
+  it("does not expose unsupported FTP links", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @O1@ OBJE",
+        "1 FILE ftp://example.org/photo.jpg",
+      ].join("\n"),
+    );
+    expect(service.getDocumentLinks()).toEqual([]);
+  });
+
   it("ignores malformed and unsafe URL schemes", () => {
     const service = new GedcomLanguageService(
       [

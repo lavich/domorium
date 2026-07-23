@@ -1,3 +1,4 @@
+import { GedcomDocument } from "@domorium/validator";
 import type {
   CodeAction,
   Diagnostic,
@@ -42,7 +43,8 @@ export function getCodeActions(
     }
     if (
       diagnostic.code === "invalid-level" &&
-      diagnostic.data?.expectedLevel !== undefined
+      diagnostic.data?.expectedLevel !== undefined &&
+      isSafeLevelFix(context.text, diagnostic)
     ) {
       return [
         {
@@ -109,7 +111,8 @@ function unresolvedXrefActions(
     .findIndex((line) => /^0\s+TRLR(?:\s|$)/u.test(line));
   if (
     trailerLine >= 0 &&
-    !context.index.get(xref)?.declarations.length
+    !context.index.get(xref)?.declarations.length &&
+    (recordTag === "INDI" || recordTag === "FAM")
   ) {
     const newline = context.text.includes("\r\n") ? "\r\n" : "\n";
     actions.push({
@@ -153,9 +156,30 @@ function sameDiagnostic(left: Diagnostic, right: Diagnostic): boolean {
 
 function overlaps(left: Range, right: Range): boolean {
   return (
-    comparePosition(left.end, right.start) >= 0 &&
-    comparePosition(right.end, left.start) >= 0
+    comparePosition(left.end, right.start) > 0 &&
+    comparePosition(right.end, left.start) > 0
   );
+}
+
+function isSafeLevelFix(text: string, diagnostic: Diagnostic): boolean {
+  const expectedLevel = diagnostic.data?.expectedLevel;
+  if (expectedLevel === undefined) {
+    return false;
+  }
+  const lines = text.split(/\r?\n/u);
+  const line = lines[diagnostic.range.start.line];
+  if (line === undefined) {
+    return false;
+  }
+  lines[diagnostic.range.start.line] =
+    line.slice(0, diagnostic.range.start.character) +
+    String(expectedLevel) +
+    line.slice(diagnostic.range.end.character);
+
+  return !new GedcomDocument()
+    .createDocument(lines.join("\n"))
+    .getErrors()
+    .some((error) => error.range.start.line === diagnostic.range.start.line);
 }
 
 function comparePosition(

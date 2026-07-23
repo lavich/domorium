@@ -125,4 +125,48 @@ describe("code actions", () => {
       ),
     ).toEqual([]);
   });
+
+  it("does not create a record whose required payload is unknown", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @I1@ INDI",
+        "1 OBJE @O9@",
+        "0 TRLR",
+      ].join("\n"),
+      1,
+    );
+    const diagnostic = service
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+
+    expect(
+      service
+        .getCodeActions(diagnostic.range, [diagnostic], 1)
+        .some((action) => "title" in action && action.title.startsWith("Create")),
+    ).toBe(false);
+  });
+
+  it("does not offer a level fix when the moved tag is invalid in schema", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @I1@ INDI",
+        "2 HUSB @I1@",
+        "0 TRLR",
+      ].join("\n"),
+      1,
+    );
+    const diagnostic = service
+      .getDiagnostics()
+      .find(({ code }) => code === "invalid-level")!;
+
+    expect(service.getCodeActions(diagnostic.range, [diagnostic], 1)).toEqual(
+      [],
+    );
+  });
 });

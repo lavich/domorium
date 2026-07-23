@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { findDefinitionRanges } from "./definition";
 import { GedcomDocument } from "@domorium/validator";
+import { ReferenceIndex } from "../references/referenceIndex";
 
 const gedcomDocument = new GedcomDocument();
 gedcomDocument.createDocument(`0 @Homer_Simpson@ INDI
@@ -8,13 +9,16 @@ gedcomDocument.createDocument(`0 @Homer_Simpson@ INDI
 1 HUSB @Homer_Simpson@
 1 WIFE @Marge_Simpson@
 `);
+const referenceIndex = new ReferenceIndex(
+  gedcomDocument.getNodes(),
+  (node) => gedcomDocument.getPointerTargetTag(node),
+);
 
 describe("findDefinitionRanges", () => {
   it("resolves the XREF under the cursor to its record definition", () => {
     // "1 HUSB @Homer_Simpson@" — line 2, cursor inside "@Homer_Simpson@"
     const ranges = findDefinitionRanges(
-      gedcomDocument.getNodes(),
-      gedcomDocument.pointers,
+      referenceIndex,
       { line: 2, character: 10 },
     );
 
@@ -25,8 +29,7 @@ describe("findDefinitionRanges", () => {
 
   it("returns nothing when the pointer has no matching record", () => {
     const ranges = findDefinitionRanges(
-      gedcomDocument.getNodes(),
-      gedcomDocument.pointers,
+      referenceIndex,
       { line: 3, character: 10 },
     );
 
@@ -35,8 +38,7 @@ describe("findDefinitionRanges", () => {
 
   it("returns nothing when the cursor is not on an XREF", () => {
     const ranges = findDefinitionRanges(
-      gedcomDocument.getNodes(),
-      gedcomDocument.pointers,
+      referenceIndex,
       { line: 2, character: 1 },
     );
 

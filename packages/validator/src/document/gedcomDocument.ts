@@ -102,6 +102,17 @@ export class GedcomDocument {
     return this.scheme.label[type]?.["en-US"];
   }
 
+  getPointerTargetTag(node: ASTNode): string | undefined {
+    if (!this.scheme) {
+      return undefined;
+    }
+    const ruleNode = new RuleNode(this.scheme, this.pointers);
+    const fieldType = ruleNode.getFieldType(ruleNode.getNodeType(node));
+    return fieldType.type === "pointer" && fieldType.to
+      ? this.scheme.tag[fieldType.to]
+      : undefined;
+  }
+
   getCompletions(position: Position, lineText: string): GedcomCompletion[] {
     if (!this.scheme) {
       return [];

@@ -70,4 +70,13 @@ describe("XREF navigation", () => {
       [],
     );
   });
+
+  it("treats token ranges as half-open", () => {
+    expect(
+      service.getReferences(
+        { line: 3, character: 11 },
+        { includeDeclaration: true },
+      ),
+    ).toEqual([]);
+  });
 });

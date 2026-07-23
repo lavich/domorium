@@ -7,7 +7,7 @@ import type {
 } from "../../types";
 import type { ReferenceIndex } from "../references/referenceIndex";
 
-const XREF_ID = /^@[^@\s]+@$/u;
+const XREF_ID = /^@[A-Za-z0-9_]+@$/u;
 
 const refusal = (
   code: EditRefusal["code"],
@@ -67,7 +67,10 @@ export function rename(
       "GEDCOM XREF identifiers must use the form @identifier@.",
     );
   }
-  if (newName !== prepared.placeholder && index.get(newName)) {
+  if (
+    newName !== prepared.placeholder &&
+    (index.get(newName)?.declarations.length ?? 0) > 0
+  ) {
     return refusal(
       "identifier-collision",
       `A declaration for ${newName} already exists.`,

@@ -2,7 +2,6 @@ import { GedcomDocument } from "@domorium/validator";
 
 import { getCompletionItems } from "./libs/completion/completion";
 import { getCodeActions } from "./libs/codeActions/codeActions";
-import { findDefinitionRanges } from "./libs/definition/definition";
 import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
@@ -53,7 +52,10 @@ export class GedcomLanguageService {
     const document = new GedcomDocument();
     document.createDocument(text);
     this.document = document;
-    this.referenceIndex = new ReferenceIndex(document.getNodes());
+    this.referenceIndex = new ReferenceIndex(
+      document.getNodes(),
+      (node) => document.getPointerTargetTag(node),
+    );
   }
 
   getDiagnostics(): Diagnostic[] {
@@ -76,11 +78,12 @@ export class GedcomLanguageService {
   }
 
   getDefinitionRanges(position: Position): Range[] {
-    return findDefinitionRanges(
-      this.document.getNodes(),
-      this.document.pointers,
-      position,
-    );
+    const occurrence = this.referenceIndex.at(position);
+    return occurrence
+      ? (this.referenceIndex.get(occurrence.id)?.declarations ?? []).map(
+          ({ range }) => range,
+        )
+      : [];
   }
 
   getSemanticTokens(): SemanticToken[] {

@@ -17,11 +17,14 @@ export function documentLinks(nodes: ASTNode[]): DocumentLink[] {
     const value = node.tokens[TokenNames.VALUE];
     if (tag === "FILE" && value?.value.trim()) {
       const targetText = value.value.trim();
-      const kind = isGedcom7
-        ? gedcom7FileKind(targetText)
-        : ABSOLUTE_PATH.test(targetText)
-          ? "file-absolute"
-          : "file-relative";
+      const urlKind = supportedUrlKind(targetText);
+      const kind =
+        urlKind ??
+        (isGedcom7
+          ? gedcom7LocalFileKind(targetText)
+          : ABSOLUTE_PATH.test(targetText)
+            ? "file-absolute"
+            : "file-relative");
       if (kind) {
         links.push({ range: value.range, targetText, kind });
       }
@@ -46,7 +49,7 @@ export function documentLinks(nodes: ASTNode[]): DocumentLink[] {
   return links;
 }
 
-function gedcom7FileKind(
+function supportedUrlKind(
   targetText: string,
 ): DocumentLink["kind"] | undefined {
   try {
@@ -54,22 +57,25 @@ function gedcom7FileKind(
     if (url.protocol === "file:") {
       return "file-absolute";
     }
-    if (
-      url.protocol === "ftp:" ||
-      url.protocol === "http:" ||
-      url.protocol === "https:"
-    ) {
+    if (url.protocol === "http:" || url.protocol === "https:") {
       return "http";
     }
     return undefined;
   } catch {
-    const segments = targetText.split("/");
-    const isPortableLocalPath =
-      !targetText.startsWith("/") &&
-      !targetText.includes("\\") &&
-      !targetText.includes("?") &&
-      !targetText.includes("#") &&
-      !segments.includes("..");
-    return isPortableLocalPath ? "file-relative" : undefined;
+    return undefined;
   }
+}
+
+function gedcom7LocalFileKind(
+  targetText: string,
+): DocumentLink["kind"] | undefined {
+  const segments = targetText.split("/");
+  const isPortableLocalPath =
+    !targetText.startsWith("/") &&
+    !targetText.includes("\\") &&
+    !targetText.includes("?") &&
+    !targetText.includes("#") &&
+    !targetText.includes(":") &&
+    !segments.includes("..");
+  return isPortableLocalPath ? "file-relative" : undefined;
 }

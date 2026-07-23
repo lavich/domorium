@@ -10,7 +10,12 @@ export class ReferenceIndex {
   private readonly byId = new Map<string, ReferenceEntry>();
   private readonly occurrences: ReferenceOccurrence[] = [];
 
-  constructor(nodes: ASTNode[]) {
+  constructor(
+    nodes: ASTNode[],
+    private readonly getPointerTargetTag: (
+      node: ASTNode,
+    ) => string | undefined = () => undefined,
+  ) {
     for (const node of nodes) {
       this.visit(node, node.tokens[TokenNames.TAG]?.value);
     }
@@ -45,7 +50,7 @@ export class ReferenceIndex {
       });
     }
 
-    if (fieldTag && usage) {
+    if (fieldTag && usage && this.getPointerTargetTag(node)) {
       this.add({
         id: usage.value,
         role: "usage",
