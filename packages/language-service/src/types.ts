@@ -87,8 +87,26 @@ export interface Diagnostic {
   code: string;
   message: string;
   hint?: string;
+  data?: {
+    xref?: string;
+    requiredRecordTag?: string;
+    expectedLevel?: number;
+  };
   range: Range;
   severity: DiagnosticSeverity;
+}
+
+export interface CodeActionChoice {
+  title: string;
+  edit: WorkspaceEdit;
+}
+
+export interface CodeAction {
+  title: string;
+  kind: "quickfix";
+  diagnostics: Diagnostic[];
+  edit?: WorkspaceEdit;
+  choices?: CodeActionChoice[];
 }
 
 export enum CompletionItemKind {

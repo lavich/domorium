@@ -5,6 +5,8 @@ export {
   type SemanticToken,
 } from "./libs/semantic/semanticTokens";
 export {
+  type CodeAction,
+  type CodeActionChoice,
   CompletionItemKind,
   DocumentSymbolKind,
   type CompletionItem,

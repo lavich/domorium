@@ -1,6 +1,7 @@
 import { GedcomDocument } from "@domorium/validator";
 
 import { getCompletionItems } from "./libs/completion/completion";
+import { getCodeActions } from "./libs/codeActions/codeActions";
 import { findDefinitionRanges } from "./libs/definition/definition";
 import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
@@ -19,6 +20,7 @@ import {
 import { documentSymbols } from "./libs/symbols/documentSymbols";
 import type {
   CompletionItem,
+  CodeAction,
   Diagnostic,
   DocumentHighlight,
   DocumentLink,
@@ -111,6 +113,24 @@ export class GedcomLanguageService {
 
   getDocumentLinks(): DocumentLink[] {
     return documentLinks(this.document.getNodes());
+  }
+
+  getCodeActions(
+    range: Range,
+    diagnostics: Diagnostic[],
+    expectedVersion: DocumentVersion,
+  ): CodeAction[] | EditRefusal {
+    return getCodeActions(
+      {
+        text: this.text,
+        index: this.referenceIndex,
+        currentDiagnostics: this.getDiagnostics(),
+        version: this.version,
+      },
+      range,
+      diagnostics,
+      expectedVersion,
+    );
   }
 
   prepareRename(position: Position): PrepareRenameResult | EditRefusal {

@@ -67,10 +67,31 @@ export class GedcomDocument {
     this.nodes = nodes;
     this.pointers = pointers;
     this.xRefs = xrefs;
+    this.errors.push(...this.validateLevels(nodes));
     const validator = new GedcomValidator(pointers);
     this.scheme = validator.setScheme(this.nodes);
     this.errors.push(...validator.validate(this.nodes));
     return this;
+  }
+
+  private validateLevels(nodes: ASTNode[], expectedLevel = 0): GedcomError[] {
+    const errors: GedcomError[] = [];
+    for (const node of nodes) {
+      if (node.level !== expectedLevel) {
+        errors.push({
+          code: "invalid-level",
+          message: `Level ${node.level} should be ${expectedLevel}`,
+          data: { expectedLevel },
+          range: node.tokens.LEVEL?.range ?? {
+            start: node.range.start,
+            end: node.range.start,
+          },
+          level: "error",
+        });
+      }
+      errors.push(...this.validateLevels(node.children, node.level + 1));
+    }
+    return errors;
   }
 
   getLabel(node: ASTNode): string | undefined {

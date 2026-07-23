@@ -42,4 +42,46 @@ describe("validator", () => {
     expect(gedcomDocument.pointers.size).toBe(2);
     expect(gedcomDocument.xRefs.size).toBe(1);
   });
+
+  test("reports structured metadata for an unresolved pointer", () => {
+    const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 WIFE @I9@
+0 TRLR
+`);
+
+    expect(gedcomDocument.getErrors()).toContainEqual(
+      expect.objectContaining({
+        code: "unresolved-xref",
+        data: { xref: "@I9@", requiredRecordTag: "INDI" },
+        range: {
+          start: { line: 4, character: 7 },
+          end: { line: 4, character: 11 },
+        },
+      }),
+    );
+  });
+
+  test("reports the expected level when a line skips a hierarchy level", () => {
+    const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+2 NAME Homer /Simpson/
+0 TRLR
+`);
+
+    expect(gedcomDocument.getErrors()).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-level",
+        data: { expectedLevel: 1 },
+        range: {
+          start: { line: 4, character: 0 },
+          end: { line: 4, character: 1 },
+        },
+      }),
+    );
+  });
 });
