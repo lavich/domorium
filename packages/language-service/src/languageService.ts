@@ -10,6 +10,7 @@ import {
   getDocumentHighlights,
   getReferences,
 } from "./libs/references/references";
+import { prepareRename, rename } from "./libs/rename/rename";
 import {
   semanticTokens,
   type SemanticToken,
@@ -19,26 +20,32 @@ import type {
   CompletionItem,
   Diagnostic,
   DocumentHighlight,
+  DocumentVersion,
+  EditRefusal,
   DocumentSymbol,
   FoldingRange,
   Hover,
   InlayHint,
   Position,
+  PrepareRenameResult,
   Range,
   ReferenceOptions,
+  WorkspaceEditResult,
 } from "./types";
 
 export class GedcomLanguageService {
   private text = "";
   private document = new GedcomDocument();
   private referenceIndex = new ReferenceIndex([]);
+  private version: DocumentVersion = 0;
 
-  constructor(text = "") {
-    this.update(text);
+  constructor(text = "", version: DocumentVersion = 0) {
+    this.update(text, version);
   }
 
-  update(text: string): void {
+  update(text: string, version: DocumentVersion = this.version + 1): void {
     this.text = text;
+    this.version = version;
     const document = new GedcomDocument();
     document.createDocument(text);
     this.document = document;
@@ -98,6 +105,24 @@ export class GedcomLanguageService {
 
   getDocumentHighlights(position: Position): DocumentHighlight[] {
     return getDocumentHighlights(this.referenceIndex, position);
+  }
+
+  prepareRename(position: Position): PrepareRenameResult | EditRefusal {
+    return prepareRename(this.referenceIndex, position, this.version);
+  }
+
+  rename(
+    position: Position,
+    newName: string,
+    expectedVersion: DocumentVersion,
+  ): WorkspaceEditResult | EditRefusal {
+    return rename(
+      this.referenceIndex,
+      position,
+      newName,
+      expectedVersion,
+      this.version,
+    );
   }
 
   private getLinePrefix(position: Position): string {

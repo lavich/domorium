@@ -35,6 +35,44 @@ export interface DocumentHighlight {
   kind: "read" | "write";
 }
 
+export interface TextEdit {
+  range: Range;
+  newText: string;
+}
+
+export interface WorkspaceEdit {
+  version: DocumentVersion;
+  edits: TextEdit[];
+}
+
+export type EditRefusalCode =
+  | "not-xref"
+  | "unresolved-declaration"
+  | "duplicate-declaration"
+  | "invalid-new-id"
+  | "identifier-collision"
+  | "stale-document"
+  | "ambiguous-fix"
+  | "unsupported-fix";
+
+export interface EditRefusal {
+  ok: false;
+  code: EditRefusalCode;
+  message: string;
+}
+
+export interface PrepareRenameResult {
+  ok: true;
+  range: Range;
+  placeholder: string;
+  version: DocumentVersion;
+}
+
+export interface WorkspaceEditResult {
+  ok: true;
+  edit: WorkspaceEdit;
+}
+
 export type DiagnosticSeverity = "error" | "warning" | "info";
 
 export interface Diagnostic {
