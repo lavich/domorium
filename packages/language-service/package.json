@@ -1,6 +1,6 @@
 {
   "name": "@domorium/language-service",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Editor-independent GEDCOM language features",
   "keywords": [
     "gedcom",
@@ -53,6 +53,6 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@domorium/validator": "^0.1.0"
+    "@domorium/validator": "^0.1.2"
   }
 }

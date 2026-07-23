@@ -9,6 +9,18 @@ import {
   HoverRequest,
   InlayHintRequest,
   SemanticTokensRequest,
+  ReferencesRequest,
+  DocumentHighlightRequest,
+  PrepareRenameRequest,
+  RenameRequest,
+  DocumentLinkRequest,
+  CodeActionRequest,
+  DocumentHighlightKind,
+  type WorkspaceEdit,
+  type CodeAction,
+  type DocumentHighlight,
+  type DocumentLink,
+  type PrepareRenameResult,
   type DocumentSymbol,
   type CompletionItem as LspCompletionItem,
   type CompletionList as LspCompletionList,
@@ -109,6 +121,158 @@ export function registerLspProviders(
     },
   });
 
+  monacoApi.languages.registerReferenceProvider(LANGUAGE_ID, {
+    async provideReferences(model, position, context, token) {
+      const result = await connection.sendRequest(
+        ReferencesRequest.type,
+        {
+          textDocument: { uri: model.uri.toString() },
+          position: toLspPosition(position),
+          context: { includeDeclaration: context.includeDeclaration },
+        },
+        token,
+      );
+      if (token.isCancellationRequested) return [];
+      return ((result ?? []) as Location[]).map((location) => ({
+        uri: monacoApi.Uri.parse(location.uri),
+        range: toRange(monacoApi, location.range),
+      }));
+    },
+  });
+
+  monacoApi.languages.registerDocumentHighlightProvider(LANGUAGE_ID, {
+    async provideDocumentHighlights(model, position, token) {
+      const result = await connection.sendRequest(
+        DocumentHighlightRequest.type,
+        {
+          textDocument: { uri: model.uri.toString() },
+          position: toLspPosition(position),
+        },
+        token,
+      );
+      if (token.isCancellationRequested) return [];
+      return ((result ?? []) as DocumentHighlight[]).map((highlight) => ({
+        range: toRange(monacoApi, highlight.range),
+        kind:
+          highlight.kind === DocumentHighlightKind.Write
+            ? monacoApi.languages.DocumentHighlightKind.Write
+            : monacoApi.languages.DocumentHighlightKind.Read,
+      }));
+    },
+  });
+
+  monacoApi.languages.registerRenameProvider(LANGUAGE_ID, {
+    async resolveRenameLocation(model, position, token) {
+      let result: PrepareRenameResult | null;
+      try {
+        result = await connection.sendRequest(
+          PrepareRenameRequest.type,
+          {
+            textDocument: { uri: model.uri.toString() },
+            position: toLspPosition(position),
+          },
+          token,
+        );
+      } catch (error) {
+        return {
+          range: new monacoApi.Range(1, 1, 1, 1),
+          text: "",
+          rejectReason: rpcErrorMessage(error),
+        };
+      }
+      if (token.isCancellationRequested || !result) {
+        return { range: new monacoApi.Range(1, 1, 1, 1), text: "", rejectReason: "Rename cancelled" };
+      }
+      const prepared = result as Exclude<PrepareRenameResult, null>;
+      if ("defaultBehavior" in prepared) {
+        return { range: new monacoApi.Range(position.lineNumber, position.column, position.lineNumber, position.column), text: "" };
+      }
+      const range = "range" in prepared ? prepared.range : prepared;
+      return {
+        range: toRange(monacoApi, range),
+        text: "placeholder" in prepared ? prepared.placeholder : model.getValueInRange(toRange(monacoApi, range)),
+      };
+    },
+    async provideRenameEdits(model, position, newName, token) {
+      let result: WorkspaceEdit | null;
+      try {
+        result = await connection.sendRequest(
+          RenameRequest.type,
+          {
+            textDocument: { uri: model.uri.toString() },
+            position: toLspPosition(position),
+            newName,
+          },
+          token,
+        );
+      } catch (error) {
+        return { edits: [], rejectReason: rpcErrorMessage(error) };
+      }
+      if (token.isCancellationRequested || !result) return { edits: [] };
+      return toMonacoWorkspaceEdit(monacoApi, result);
+    },
+  });
+
+  monacoApi.languages.registerLinkProvider(LANGUAGE_ID, {
+    async provideLinks(model, token) {
+      const result = await connection.sendRequest(
+        DocumentLinkRequest.type,
+        { textDocument: { uri: model.uri.toString() } },
+        token,
+      );
+      if (token.isCancellationRequested) return { links: [] };
+      return {
+        links: ((result ?? []) as DocumentLink[]).map((link) => ({
+          range: toRange(monacoApi, link.range),
+          url:
+            link.target && /^https?:\/\//iu.test(link.target)
+              ? monacoApi.Uri.parse(link.target)
+              : undefined,
+          tooltip: link.tooltip,
+        })),
+      };
+    },
+  });
+
+  monacoApi.languages.registerCodeActionProvider(
+    LANGUAGE_ID,
+    {
+      async provideCodeActions(model, range, context, token) {
+        const result = await connection.sendRequest(
+          CodeActionRequest.type,
+          {
+            textDocument: { uri: model.uri.toString() },
+            range: toLspRange(range),
+            context: {
+              diagnostics: context.markers.map((marker) => ({
+                range: toLspRange(marker),
+                message: marker.message,
+                code:
+                  typeof marker.code === "object"
+                    ? marker.code.value
+                    : marker.code,
+              })),
+            },
+          },
+          token,
+        );
+        if (token.isCancellationRequested) return { actions: [], dispose() {} };
+        return {
+          actions: ((result ?? []) as CodeAction[]).map((action) => ({
+            title: action.title,
+            kind: action.kind,
+            diagnostics: context.markers,
+            edit: action.edit
+              ? toMonacoWorkspaceEdit(monacoApi, action.edit)
+              : undefined,
+          })),
+          dispose() {},
+        };
+      },
+    },
+    { providedCodeActionKinds: ["quickfix"] },
+  );
+
   monacoApi.languages.registerDocumentSymbolProvider(LANGUAGE_ID, {
     async provideDocumentSymbols(model) {
       const result = await connection.sendRequest(DocumentSymbolRequest.type, {
@@ -162,6 +326,71 @@ export function registerLspProviders(
       };
     },
   });
+}
+
+function toLspPosition(position: monaco.IPosition) {
+  return { line: position.lineNumber - 1, character: position.column - 1 };
+}
+
+function toLspRange(range: monaco.IRange) {
+  return {
+    start: { line: range.startLineNumber - 1, character: range.startColumn - 1 },
+    end: { line: range.endLineNumber - 1, character: range.endColumn - 1 },
+  };
+}
+
+function toMonacoWorkspaceEdit(
+  monacoApi: typeof import("monaco-editor"),
+  edit: WorkspaceEdit,
+): monaco.languages.WorkspaceEdit & { rejectReason?: string } {
+  const edits: monaco.languages.IWorkspaceTextEdit[] = [];
+  if (edit.changes || !edit.documentChanges) {
+    return {
+      edits: [],
+      rejectReason: "The server returned an unversioned workspace edit.",
+    };
+  }
+  for (const change of edit.documentChanges) {
+    if (
+      !("textDocument" in change) ||
+      !("edits" in change) ||
+      typeof change.textDocument.version !== "number"
+    ) {
+      return {
+        edits: [],
+        rejectReason: "The server returned an unsupported workspace edit.",
+      };
+    }
+    for (const textEdit of change.edits) {
+      if (!("range" in textEdit) || !("newText" in textEdit)) {
+        return {
+          edits: [],
+          rejectReason: "The server returned an unsupported workspace edit.",
+        };
+      }
+      edits.push({
+        resource: monacoApi.Uri.parse(change.textDocument.uri),
+        versionId: change.textDocument.version,
+        textEdit: {
+          range: toRange(monacoApi, textEdit.range),
+          text: textEdit.newText,
+        },
+      });
+    }
+  }
+  return { edits };
+}
+
+function rpcErrorMessage(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+  return "Rename was rejected by the language server.";
 }
 
 function toRange(monacoApi: typeof import("monaco-editor"), range: { start: { line: number; character: number }; end: { line: number; character: number } }) {

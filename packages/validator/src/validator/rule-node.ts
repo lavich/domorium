@@ -460,10 +460,22 @@ export class RuleNode {
         const hasChildren = node.children.length !== 0;
         if ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren)) {
           errors.push({
-            code: "VAL",
+            code:
+              isXrefExist && XREF?.value !== VOID_POINTER
+                ? "unresolved-xref"
+                : "VAL",
             message: hasChildren
               ? `Value for ${TAG?.value} should be in set [${availableValues}]`
               : `Value for ${TAG?.value} should be POINTER`,
+            data:
+              isXrefExist && XREF?.value !== VOID_POINTER
+                ? {
+                    xref: XREF?.value,
+                    requiredRecordTag: fieldType.to
+                      ? this.scheme.tag[fieldType.to]
+                      : undefined,
+                  }
+                : undefined,
             range: XREF?.range || TAG?.range || node.range,
             level: "error",
           });

@@ -4,7 +4,11 @@ import { ConfigurableLexer, gedcomLexerDefinition } from "../parser/lexer";
 import { GedcomParser } from "../parser/parser";
 import { GedcomVisitor } from "../parser/visitor";
 import { GedcomValidator } from "../validator";
-import { GedcomScheme } from "../schemes/schema-types";
+import {
+  GedcomScheme,
+  GedcomTag,
+  GedcomType,
+} from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
 import { getGedcomVersion } from "../validator/getGedcomVersion";
 import {
@@ -67,10 +71,31 @@ export class GedcomDocument {
     this.nodes = nodes;
     this.pointers = pointers;
     this.xRefs = xrefs;
+    this.errors.push(...this.validateLevels(nodes));
     const validator = new GedcomValidator(pointers);
     this.scheme = validator.setScheme(this.nodes);
     this.errors.push(...validator.validate(this.nodes));
     return this;
+  }
+
+  private validateLevels(nodes: ASTNode[], expectedLevel = 0): GedcomError[] {
+    const errors: GedcomError[] = [];
+    for (const node of nodes) {
+      if (node.level !== expectedLevel) {
+        errors.push({
+          code: "invalid-level",
+          message: `Level ${node.level} should be ${expectedLevel}`,
+          data: { expectedLevel },
+          range: node.tokens.LEVEL?.range ?? {
+            start: node.range.start,
+            end: node.range.start,
+          },
+          level: "error",
+        });
+      }
+      errors.push(...this.validateLevels(node.children, node.level + 1));
+    }
+    return errors;
   }
 
   getLabel(node: ASTNode): string | undefined {
@@ -79,6 +104,32 @@ export class GedcomDocument {
     }
     const type = new RuleNode(this.scheme, this.pointers).getNodeType(node);
     return this.scheme.label[type]?.["en-US"];
+  }
+
+  getPointerTargetTag(node: ASTNode): string | undefined {
+    if (!this.scheme) {
+      return undefined;
+    }
+    const ruleNode = new RuleNode(this.scheme, this.pointers);
+    const fieldType = ruleNode.getFieldType(ruleNode.getNodeType(node));
+    return fieldType.type === "pointer" && fieldType.to
+      ? this.scheme.tag[fieldType.to]
+      : undefined;
+  }
+
+  isRecordDeclaration(node: ASTNode): boolean {
+    if (!this.scheme || node.level !== 0 || node.parent || !node.tokens.POINTER) {
+      return false;
+    }
+    const tag = node.tokens.TAG?.value;
+    const type = tag
+      ? this.scheme.substructure[GedcomType("")]?.[GedcomTag(tag)]?.type
+      : undefined;
+    return type?.includes("/record-") === true;
+  }
+
+  getVersion(): string | undefined {
+    return getGedcomVersion(this.nodes);
   }
 
   getCompletions(position: Position, lineText: string): GedcomCompletion[] {

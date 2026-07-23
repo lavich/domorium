@@ -1,3 +1,10 @@
+### 0.0.12
+
+- Add Find All References and read/write XREF highlights
+- Add safe, atomic XREF rename with stale-edit protection
+- Add clickable web and local-file links
+- Add quick fixes for broken references and invalid GEDCOM levels
+
 ### 0.0.11
 
 - Add context-aware autocomplete for GEDCOM tags, structures, and values

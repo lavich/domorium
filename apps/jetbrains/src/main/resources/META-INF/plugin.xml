@@ -14,6 +14,10 @@
       <li>Semantic syntax highlighting</li>
       <li>Hover information for GEDCOM tags</li>
       <li>Go to definition for cross-references</li>
+      <li>Find all XREF references with read/write highlights</li>
+      <li>Safe, atomic XREF rename</li>
+      <li>Clickable web and local-file links</li>
+      <li>Quick fixes for broken references and invalid levels</li>
       <li>Code folding for records and nested structures</li>
       <li>Support for <code>.ged</code> and <code>.gedcom</code> files</li>
     </ul>
@@ -25,6 +29,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>0.2.0</h2>
+    <ul>
+      <li>Added Find All References and read/write XREF highlights</li>
+      <li>Added safe, atomic XREF rename with stale-edit protection</li>
+      <li>Added clickable web and local-file links</li>
+      <li>Added quick fixes for broken references and invalid GEDCOM levels</li>
+    </ul>
+
     <h2>0.1.1</h2>
     <ul>
       <li>Moved the product screenshot from the description to the Marketplace media gallery</li>

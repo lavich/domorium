@@ -11,6 +11,10 @@ Domorium helps you read and edit `.ged` and `.gedcom` files with confidence. It 
 - Semantic syntax highlighting
 - Hover information for GEDCOM tags
 - Go to definition for cross-references
+- Find all XREF references with read/write highlights
+- Safe, atomic XREF rename
+- Clickable web and local-file links
+- Quick fixes for broken references and invalid levels
 - Code folding for records and nested structures
 - Support for `.ged` and `.gedcom` files
 

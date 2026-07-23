@@ -15,6 +15,10 @@ Use Domorium in your browser, Obsidian, Visual Studio Code, or a JetBrains IDE.
 - Semantic syntax highlighting
 - Hover information for GEDCOM tags
 - Go to definition for cross-references
+- Find all XREF references with read/write highlights
+- Safe, atomic XREF rename
+- Clickable web and local-file links where the editor platform permits them
+- Quick fixes for broken references and invalid levels
 - Code folding for records and nested structures
 - Support for `.ged` and `.gedcom` files
 

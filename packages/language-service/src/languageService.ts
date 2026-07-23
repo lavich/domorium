@@ -1,10 +1,17 @@
 import { GedcomDocument } from "@domorium/validator";
 
 import { getCompletionItems } from "./libs/completion/completion";
-import { findDefinitionRanges } from "./libs/definition/definition";
+import { getCodeActions } from "./libs/codeActions/codeActions";
 import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
+import { documentLinks } from "./libs/links/documentLinks";
+import { ReferenceIndex } from "./libs/references/referenceIndex";
+import {
+  getDocumentHighlights,
+  getReferences,
+} from "./libs/references/references";
+import { prepareRename, rename } from "./libs/rename/rename";
 import {
   semanticTokens,
   type SemanticToken,
@@ -12,28 +19,44 @@ import {
 import { documentSymbols } from "./libs/symbols/documentSymbols";
 import type {
   CompletionItem,
+  CodeAction,
   Diagnostic,
+  DocumentHighlight,
+  DocumentLink,
+  DocumentVersion,
+  EditRefusal,
   DocumentSymbol,
   FoldingRange,
   Hover,
   InlayHint,
   Position,
+  PrepareRenameResult,
   Range,
+  ReferenceOptions,
+  WorkspaceEditResult,
 } from "./types";
 
 export class GedcomLanguageService {
   private text = "";
   private document = new GedcomDocument();
+  private referenceIndex = new ReferenceIndex([]);
+  private version: DocumentVersion = 0;
 
-  constructor(text = "") {
-    this.update(text);
+  constructor(text = "", version: DocumentVersion = 0) {
+    this.update(text, version);
   }
 
-  update(text: string): void {
+  update(text: string, version: DocumentVersion = this.version + 1): void {
     this.text = text;
+    this.version = version;
     const document = new GedcomDocument();
     document.createDocument(text);
     this.document = document;
+    this.referenceIndex = new ReferenceIndex(
+      document.getNodes(),
+      (node) => document.getPointerTargetTag(node),
+      (node) => document.isRecordDeclaration(node),
+    );
   }
 
   getDiagnostics(): Diagnostic[] {
@@ -56,11 +79,12 @@ export class GedcomLanguageService {
   }
 
   getDefinitionRanges(position: Position): Range[] {
-    return findDefinitionRanges(
-      this.document.getNodes(),
-      this.document.pointers,
-      position,
-    );
+    const occurrence = this.referenceIndex.at(position);
+    return occurrence
+      ? (this.referenceIndex.get(occurrence.id)?.declarations ?? []).map(
+          ({ range }) => range,
+        )
+      : [];
   }
 
   getSemanticTokens(): SemanticToken[] {
@@ -77,6 +101,59 @@ export class GedcomLanguageService {
 
   getInlayHints(): InlayHint[] {
     return levelIndent(this.document.getNodes());
+  }
+
+  getReferenceIndex(): ReferenceIndex {
+    return this.referenceIndex;
+  }
+
+  getReferences(position: Position, options: ReferenceOptions): Range[] {
+    return getReferences(this.referenceIndex, position, options);
+  }
+
+  getDocumentHighlights(position: Position): DocumentHighlight[] {
+    return getDocumentHighlights(this.referenceIndex, position);
+  }
+
+  getDocumentLinks(): DocumentLink[] {
+    return documentLinks(this.document.getNodes());
+  }
+
+  getCodeActions(
+    range: Range,
+    diagnostics: Diagnostic[],
+    expectedVersion: DocumentVersion,
+  ): CodeAction[] | EditRefusal {
+    return getCodeActions(
+      {
+        text: this.text,
+        index: this.referenceIndex,
+        currentDiagnostics: this.getDiagnostics(),
+        version: this.version,
+        gedcomVersion: this.document.getVersion(),
+      },
+      range,
+      diagnostics,
+      expectedVersion,
+    );
+  }
+
+  prepareRename(position: Position): PrepareRenameResult | EditRefusal {
+    return prepareRename(this.referenceIndex, position, this.version);
+  }
+
+  rename(
+    position: Position,
+    newName: string,
+    expectedVersion: DocumentVersion,
+  ): WorkspaceEditResult | EditRefusal {
+    return rename(
+      this.referenceIndex,
+      position,
+      newName,
+      expectedVersion,
+      this.version,
+    );
   }
 
   private getLinePrefix(position: Position): string {
