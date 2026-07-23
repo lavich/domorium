@@ -2,6 +2,7 @@ import { TokenNames, type ASTNode } from "@domorium/validator";
 import type { DocumentLink } from "../../types";
 
 const ABSOLUTE_PATH = /^(?:\/|[A-Za-z]:[\\/]|\\\\)/u;
+const URI_SCHEME = /^[A-Za-z][A-Za-z0-9+.-]*:/u;
 
 export function documentLinks(nodes: ASTNode[]): DocumentLink[] {
   const links: DocumentLink[] = [];
@@ -17,14 +18,9 @@ export function documentLinks(nodes: ASTNode[]): DocumentLink[] {
     const value = node.tokens[TokenNames.VALUE];
     if (tag === "FILE" && value?.value.trim()) {
       const targetText = value.value.trim();
-      const urlKind = supportedUrlKind(targetText);
-      const kind =
-        urlKind ??
-        (isGedcom7
-          ? gedcom7LocalFileKind(targetText)
-          : ABSOLUTE_PATH.test(targetText)
-            ? "file-absolute"
-            : "file-relative");
+      const kind = isGedcom7
+        ? supportedUrlKind(targetText) ?? gedcom7LocalFileKind(targetText)
+        : gedcom551FileKind(targetText);
       if (kind) {
         links.push({ range: value.range, targetText, kind });
       }
@@ -78,4 +74,17 @@ function gedcom7LocalFileKind(
     !targetText.includes(":") &&
     !segments.includes("..");
   return isPortableLocalPath ? "file-relative" : undefined;
+}
+
+function gedcom551FileKind(
+  targetText: string,
+): DocumentLink["kind"] | undefined {
+  const urlKind = supportedUrlKind(targetText);
+  if (urlKind) {
+    return urlKind;
+  }
+  if (ABSOLUTE_PATH.test(targetText)) {
+    return "file-absolute";
+  }
+  return URI_SCHEME.test(targetText) ? undefined : "file-relative";
 }

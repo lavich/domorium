@@ -121,4 +121,32 @@ describe("XREF rename", () => {
         .replace("1 HUSB @I1@", "1 HUSB @I2@"),
     );
   });
+
+  it("renames references in GEDCOM 5.5.1", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 5.5.1",
+        "0 @I1@ INDI",
+        "0 @F1@ FAM",
+        "1 HUSB @I1@",
+        "0 TRLR",
+      ].join("\n"),
+      7,
+    );
+
+    expect(
+      service.rename({ line: 5, character: 9 }, "@I2@", 7),
+    ).toMatchObject({ ok: true });
+  });
+
+  it("rejects an edit from before a sequential update", () => {
+    const service = new GedcomLanguageService(text, 1);
+    service.update(text.replace("HUSB", "WIFE"), 2);
+
+    expect(
+      service.rename({ line: 3, character: 9 }, "@I2@", 1),
+    ).toMatchObject({ ok: false, code: "stale-document" });
+  });
 });

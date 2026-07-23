@@ -119,6 +119,20 @@ describe("document links", () => {
     expect(service.getDocumentLinks()).toEqual([]);
   });
 
+  it("does not turn malformed or unsupported 5.5.1 URLs into file links", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 5.5.1",
+        "0 @O1@ OBJE",
+        "1 FILE ftp://example.org/photo.jpg",
+        "1 FILE https://",
+      ].join("\n"),
+    );
+    expect(service.getDocumentLinks()).toEqual([]);
+  });
+
   it("ignores malformed and unsafe URL schemes", () => {
     const service = new GedcomLanguageService(
       [

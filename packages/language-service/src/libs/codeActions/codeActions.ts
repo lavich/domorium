@@ -78,7 +78,8 @@ function unresolvedXrefActions(
   }
 
   const candidates = Array.from(context.index.entries())
-    .flatMap(({ declarations }) => declarations)
+    .filter(({ declarations }) => declarations.length === 1)
+    .map(({ declarations }) => declarations[0])
     .filter((declaration) => declaration.recordTag === recordTag);
   const actions: CodeAction[] = [];
 
@@ -112,7 +113,7 @@ function unresolvedXrefActions(
   if (
     trailerLine >= 0 &&
     !context.index.get(xref)?.declarations.length &&
-    (recordTag === "INDI" || recordTag === "FAM")
+    canCreateBareRecord(context.text, recordTag)
   ) {
     const newline = context.text.includes("\r\n") ? "\r\n" : "\n";
     actions.push({
@@ -135,6 +136,18 @@ function unresolvedXrefActions(
   }
 
   return actions;
+}
+
+function canCreateBareRecord(text: string, recordTag: string): boolean {
+  const isGedcom551 = text
+    .split(/\r?\n/u)
+    .some((line) =>
+      /^\s*2\s+VERS\s+5(?:\.5(?:\.1)?)?(?:\s|$)/u.test(line),
+    );
+  const allowed = isGedcom551
+    ? new Set(["FAM", "INDI", "NOTE", "SOUR", "SUBN"])
+    : new Set(["FAM", "INDI", "SNOTE", "SOUR"]);
+  return allowed.has(recordTag);
 }
 
 function replacementEdit(

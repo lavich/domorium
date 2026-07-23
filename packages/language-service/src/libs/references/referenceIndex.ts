@@ -15,6 +15,8 @@ export class ReferenceIndex {
     private readonly getPointerTargetTag: (
       node: ASTNode,
     ) => string | undefined = () => undefined,
+    private readonly isValidDeclaration: (node: ASTNode) => boolean = (node) =>
+      node.level === 0 && !node.parent,
   ) {
     for (const node of nodes) {
       this.visit(node, node.tokens[TokenNames.TAG]?.value);
@@ -40,7 +42,7 @@ export class ReferenceIndex {
     const declaration = node.tokens[TokenNames.POINTER];
     const usage = node.tokens[TokenNames.XREF];
 
-    if (fieldTag && declaration) {
+    if (fieldTag && declaration && this.isValidDeclaration(node)) {
       this.add({
         id: declaration.value,
         role: "declaration",

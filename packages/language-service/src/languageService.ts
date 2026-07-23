@@ -55,6 +55,7 @@ export class GedcomLanguageService {
     this.referenceIndex = new ReferenceIndex(
       document.getNodes(),
       (node) => document.getPointerTargetTag(node),
+      (node) => document.isRecordDeclaration(node),
     );
   }
 

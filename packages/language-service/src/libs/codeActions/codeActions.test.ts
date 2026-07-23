@@ -169,4 +169,76 @@ describe("code actions", () => {
       [],
     );
   });
+
+  it("creates bare records only for types valid in the detected version", () => {
+    const v7 = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @I1@ INDI",
+        "1 SOUR @S9@",
+        "0 TRLR",
+      ].join("\n"),
+      1,
+    );
+    const v7Diagnostic = v7
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+    expect(
+      v7
+        .getCodeActions(v7Diagnostic.range, [v7Diagnostic], 1)
+        .map((action) => ("title" in action ? action.title : "")),
+    ).toContain("Create SOUR record @S9@");
+
+    const v551 = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 5.5.1",
+        "0 @I1@ INDI",
+        "1 NOTE @N9@",
+        "0 TRLR",
+      ].join("\n"),
+      1,
+    );
+    const v551Diagnostic = v551
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+    expect(
+      v551
+        .getCodeActions(v551Diagnostic.range, [v551Diagnostic], 1)
+        .map((action) => ("title" in action ? action.title : "")),
+    ).toContain("Create NOTE record @N9@");
+  });
+
+  it("does not use duplicate declarations as replacement candidates", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @I1@ INDI",
+        "0 @I1@ INDI",
+        "0 @F1@ FAM",
+        "1 WIFE @I9@",
+        "0 TRLR",
+      ].join("\n"),
+      1,
+    );
+    const diagnostic = service
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+    const actions = service.getCodeActions(
+      diagnostic.range,
+      [diagnostic],
+      1,
+    );
+    expect(
+      actions.some(
+        (action) =>
+          "title" in action && action.title.startsWith("Replace @I9@"),
+      ),
+    ).toBe(false);
+  });
 });

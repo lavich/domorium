@@ -70,4 +70,19 @@ describe("ReferenceIndex", () => {
       ),
     ).toEqual([]);
   });
+
+  it("does not index a declaration nested below level zero", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 @F1@ FAM",
+        "1 @I1@ INDI",
+        "1 HUSB @I1@",
+      ].join("\n"),
+    );
+
+    expect(service.getReferenceIndex().get("@I1@")?.declarations).toEqual([]);
+    expect(
+      service.prepareRename({ line: 1, character: 4 }),
+    ).toMatchObject({ ok: false, code: "not-xref" });
+  });
 });
