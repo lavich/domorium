@@ -12,6 +12,8 @@ export {
   type DiagnosticSeverity,
   type DocumentVersion,
   type DocumentHighlight,
+  type DocumentLink,
+  type DocumentLinkKind,
   type EditRefusal,
   type EditRefusalCode,
   type DocumentSymbol,

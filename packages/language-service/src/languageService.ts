@@ -5,6 +5,7 @@ import { findDefinitionRanges } from "./libs/definition/definition";
 import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
+import { documentLinks } from "./libs/links/documentLinks";
 import { ReferenceIndex } from "./libs/references/referenceIndex";
 import {
   getDocumentHighlights,
@@ -20,6 +21,7 @@ import type {
   CompletionItem,
   Diagnostic,
   DocumentHighlight,
+  DocumentLink,
   DocumentVersion,
   EditRefusal,
   DocumentSymbol,
@@ -105,6 +107,10 @@ export class GedcomLanguageService {
 
   getDocumentHighlights(position: Position): DocumentHighlight[] {
     return getDocumentHighlights(this.referenceIndex, position);
+  }
+
+  getDocumentLinks(): DocumentLink[] {
+    return documentLinks(this.document.getNodes());
   }
 
   prepareRename(position: Position): PrepareRenameResult | EditRefusal {

@@ -73,6 +73,14 @@ export interface WorkspaceEditResult {
   edit: WorkspaceEdit;
 }
 
+export type DocumentLinkKind = "http" | "file-relative" | "file-absolute";
+
+export interface DocumentLink {
+  range: Range;
+  targetText: string;
+  kind: DocumentLinkKind;
+}
+
 export type DiagnosticSeverity = "error" | "warning" | "info";
 
 export interface Diagnostic {
