@@ -163,7 +163,11 @@ describe("reference editing providers", () => {
     const connection = {
       sendRequest: vi.fn(async (type: { method: string }, params: unknown) => {
         requests.push({ method: type.method, params });
-        return responses[type.method] ?? [];
+        const response = responses[type.method];
+        if (response instanceof Error) {
+          throw response;
+        }
+        return response ?? [];
       }),
     } as never;
     registerLspProviders(api, connection, undefined);
@@ -257,6 +261,20 @@ describe("reference editing providers", () => {
     expect((await links.provideLinks(model, token)).links[0].url?.toString()).toBe(
       "https://example.com",
     );
+    responses["textDocument/documentLink"] = [
+      {
+        range: {
+          start: { line: 2, character: 7 },
+          end: { line: 2, character: 19 },
+        },
+        target: "file:///private/portrait.jpg",
+        tooltip: "Open file: portrait.jpg",
+      },
+    ];
+    expect((await links.provideLinks(model, token)).links[0]).toMatchObject({
+      url: undefined,
+      tooltip: "Open file: portrait.jpg",
+    });
 
     const codeActions = registered.codeActions as {
       provideCodeActions: (
@@ -301,6 +319,51 @@ describe("reference editing providers", () => {
         "textDocument/documentLink",
         "textDocument/codeAction",
       ]),
+    );
+
+    responses["textDocument/rename"] = {
+      documentChanges: [
+        {
+          textDocument: { uri: "file:///a.ged", version: 4 },
+          edits: [],
+        },
+        { kind: "delete", uri: "file:///other.ged" },
+      ],
+    };
+    expect(
+      await rename.provideRenameEdits(
+        model,
+        { lineNumber: 2, column: 4 },
+        "@I2@",
+        token,
+      ),
+    ).toEqual({
+      edits: [],
+      rejectReason: "The server returned an unsupported workspace edit.",
+    });
+
+    responses["textDocument/prepareRename"] = new Error(
+      "Duplicate declarations cannot be renamed.",
+    );
+    expect(
+      await rename.resolveRenameLocation(
+        model,
+        { lineNumber: 2, column: 4 },
+        token,
+      ),
+    ).toMatchObject({
+      rejectReason: "Duplicate declarations cannot be renamed.",
+    });
+    expect(
+      (
+        connection as unknown as {
+          sendRequest: ReturnType<typeof vi.fn>;
+        }
+      ).sendRequest,
+    ).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      token,
     );
   });
 });

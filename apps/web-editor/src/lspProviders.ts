@@ -123,11 +123,15 @@ export function registerLspProviders(
 
   monacoApi.languages.registerReferenceProvider(LANGUAGE_ID, {
     async provideReferences(model, position, context, token) {
-      const result = await connection.sendRequest(ReferencesRequest.type, {
-        textDocument: { uri: model.uri.toString() },
-        position: toLspPosition(position),
-        context: { includeDeclaration: context.includeDeclaration },
-      });
+      const result = await connection.sendRequest(
+        ReferencesRequest.type,
+        {
+          textDocument: { uri: model.uri.toString() },
+          position: toLspPosition(position),
+          context: { includeDeclaration: context.includeDeclaration },
+        },
+        token,
+      );
       if (token.isCancellationRequested) return [];
       return ((result ?? []) as Location[]).map((location) => ({
         uri: monacoApi.Uri.parse(location.uri),
@@ -138,10 +142,14 @@ export function registerLspProviders(
 
   monacoApi.languages.registerDocumentHighlightProvider(LANGUAGE_ID, {
     async provideDocumentHighlights(model, position, token) {
-      const result = await connection.sendRequest(DocumentHighlightRequest.type, {
-        textDocument: { uri: model.uri.toString() },
-        position: toLspPosition(position),
-      });
+      const result = await connection.sendRequest(
+        DocumentHighlightRequest.type,
+        {
+          textDocument: { uri: model.uri.toString() },
+          position: toLspPosition(position),
+        },
+        token,
+      );
       if (token.isCancellationRequested) return [];
       return ((result ?? []) as DocumentHighlight[]).map((highlight) => ({
         range: toRange(monacoApi, highlight.range),
@@ -155,10 +163,23 @@ export function registerLspProviders(
 
   monacoApi.languages.registerRenameProvider(LANGUAGE_ID, {
     async resolveRenameLocation(model, position, token) {
-      const result = await connection.sendRequest(PrepareRenameRequest.type, {
-        textDocument: { uri: model.uri.toString() },
-        position: toLspPosition(position),
-      });
+      let result: PrepareRenameResult | null;
+      try {
+        result = await connection.sendRequest(
+          PrepareRenameRequest.type,
+          {
+            textDocument: { uri: model.uri.toString() },
+            position: toLspPosition(position),
+          },
+          token,
+        );
+      } catch (error) {
+        return {
+          range: new monacoApi.Range(1, 1, 1, 1),
+          text: "",
+          rejectReason: rpcErrorMessage(error),
+        };
+      }
       if (token.isCancellationRequested || !result) {
         return { range: new monacoApi.Range(1, 1, 1, 1), text: "", rejectReason: "Rename cancelled" };
       }
@@ -173,26 +194,40 @@ export function registerLspProviders(
       };
     },
     async provideRenameEdits(model, position, newName, token) {
-      const result = await connection.sendRequest(RenameRequest.type, {
-        textDocument: { uri: model.uri.toString() },
-        position: toLspPosition(position),
-        newName,
-      });
+      let result: WorkspaceEdit | null;
+      try {
+        result = await connection.sendRequest(
+          RenameRequest.type,
+          {
+            textDocument: { uri: model.uri.toString() },
+            position: toLspPosition(position),
+            newName,
+          },
+          token,
+        );
+      } catch (error) {
+        return { edits: [], rejectReason: rpcErrorMessage(error) };
+      }
       if (token.isCancellationRequested || !result) return { edits: [] };
-      return toMonacoWorkspaceEdit(monacoApi, result as WorkspaceEdit);
+      return toMonacoWorkspaceEdit(monacoApi, result);
     },
   });
 
   monacoApi.languages.registerLinkProvider(LANGUAGE_ID, {
     async provideLinks(model, token) {
-      const result = await connection.sendRequest(DocumentLinkRequest.type, {
-        textDocument: { uri: model.uri.toString() },
-      });
+      const result = await connection.sendRequest(
+        DocumentLinkRequest.type,
+        { textDocument: { uri: model.uri.toString() } },
+        token,
+      );
       if (token.isCancellationRequested) return { links: [] };
       return {
         links: ((result ?? []) as DocumentLink[]).map((link) => ({
           range: toRange(monacoApi, link.range),
-          url: link.target ? monacoApi.Uri.parse(link.target) : undefined,
+          url:
+            link.target && /^https?:\/\//u.test(link.target)
+              ? monacoApi.Uri.parse(link.target)
+              : undefined,
           tooltip: link.tooltip,
         })),
       };
@@ -203,20 +238,24 @@ export function registerLspProviders(
     LANGUAGE_ID,
     {
       async provideCodeActions(model, range, context, token) {
-        const result = await connection.sendRequest(CodeActionRequest.type, {
-          textDocument: { uri: model.uri.toString() },
-          range: toLspRange(range),
-          context: {
-            diagnostics: context.markers.map((marker) => ({
-              range: toLspRange(marker),
-              message: marker.message,
-              code:
-                typeof marker.code === "object"
-                  ? marker.code.value
-                  : marker.code,
-            })),
+        const result = await connection.sendRequest(
+          CodeActionRequest.type,
+          {
+            textDocument: { uri: model.uri.toString() },
+            range: toLspRange(range),
+            context: {
+              diagnostics: context.markers.map((marker) => ({
+                range: toLspRange(marker),
+                message: marker.message,
+                code:
+                  typeof marker.code === "object"
+                    ? marker.code.value
+                    : marker.code,
+              })),
+            },
           },
-        });
+          token,
+        );
         if (token.isCancellationRequested) return { actions: [], dispose() {} };
         return {
           actions: ((result ?? []) as CodeAction[]).map((action) => ({
@@ -303,34 +342,55 @@ function toLspRange(range: monaco.IRange) {
 function toMonacoWorkspaceEdit(
   monacoApi: typeof import("monaco-editor"),
   edit: WorkspaceEdit,
-): monaco.languages.WorkspaceEdit {
+): monaco.languages.WorkspaceEdit & { rejectReason?: string } {
   const edits: monaco.languages.IWorkspaceTextEdit[] = [];
-  for (const change of edit.documentChanges ?? []) {
-    if ("textDocument" in change && "edits" in change) {
-      for (const textEdit of change.edits) {
-        if ("range" in textEdit && "newText" in textEdit) {
-          edits.push({
-            resource: monacoApi.Uri.parse(change.textDocument.uri),
-            versionId: change.textDocument.version ?? undefined,
-            textEdit: {
-              range: toRange(monacoApi, textEdit.range),
-              text: textEdit.newText,
-            },
-          });
-        }
-      }
-    }
+  if (edit.changes || !edit.documentChanges) {
+    return {
+      edits: [],
+      rejectReason: "The server returned an unversioned workspace edit.",
+    };
   }
-  for (const [uri, changes] of Object.entries(edit.changes ?? {})) {
-    for (const textEdit of changes) {
+  for (const change of edit.documentChanges) {
+    if (
+      !("textDocument" in change) ||
+      !("edits" in change) ||
+      typeof change.textDocument.version !== "number"
+    ) {
+      return {
+        edits: [],
+        rejectReason: "The server returned an unsupported workspace edit.",
+      };
+    }
+    for (const textEdit of change.edits) {
+      if (!("range" in textEdit) || !("newText" in textEdit)) {
+        return {
+          edits: [],
+          rejectReason: "The server returned an unsupported workspace edit.",
+        };
+      }
       edits.push({
-        resource: monacoApi.Uri.parse(uri),
-        textEdit: { range: toRange(monacoApi, textEdit.range), text: textEdit.newText },
-        versionId: undefined,
+        resource: monacoApi.Uri.parse(change.textDocument.uri),
+        versionId: change.textDocument.version,
+        textEdit: {
+          range: toRange(monacoApi, textEdit.range),
+          text: textEdit.newText,
+        },
       });
     }
   }
   return { edits };
+}
+
+function rpcErrorMessage(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+  return "Rename was rejected by the language server.";
 }
 
 function toRange(monacoApi: typeof import("monaco-editor"), range: { start: { line: number; character: number }; end: { line: number; character: number } }) {
