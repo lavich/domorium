@@ -8,6 +8,33 @@ export interface Range {
   end: Position;
 }
 
+export type DocumentVersion = number;
+
+export type ReferenceRole = "declaration" | "usage";
+
+export interface ReferenceOccurrence {
+  id: string;
+  role: ReferenceRole;
+  range: Range;
+  recordTag?: string;
+  fieldTag: string;
+}
+
+export interface ReferenceEntry {
+  id: string;
+  declarations: ReferenceOccurrence[];
+  usages: ReferenceOccurrence[];
+}
+
+export interface ReferenceOptions {
+  includeDeclaration: boolean;
+}
+
+export interface DocumentHighlight {
+  range: Range;
+  kind: "read" | "write";
+}
+
 export type DiagnosticSeverity = "error" | "warning" | "info";
 
 export interface Diagnostic {

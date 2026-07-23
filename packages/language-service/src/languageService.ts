@@ -5,6 +5,11 @@ import { findDefinitionRanges } from "./libs/definition/definition";
 import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
+import { ReferenceIndex } from "./libs/references/referenceIndex";
+import {
+  getDocumentHighlights,
+  getReferences,
+} from "./libs/references/references";
 import {
   semanticTokens,
   type SemanticToken,
@@ -13,17 +18,20 @@ import { documentSymbols } from "./libs/symbols/documentSymbols";
 import type {
   CompletionItem,
   Diagnostic,
+  DocumentHighlight,
   DocumentSymbol,
   FoldingRange,
   Hover,
   InlayHint,
   Position,
   Range,
+  ReferenceOptions,
 } from "./types";
 
 export class GedcomLanguageService {
   private text = "";
   private document = new GedcomDocument();
+  private referenceIndex = new ReferenceIndex([]);
 
   constructor(text = "") {
     this.update(text);
@@ -34,6 +42,7 @@ export class GedcomLanguageService {
     const document = new GedcomDocument();
     document.createDocument(text);
     this.document = document;
+    this.referenceIndex = new ReferenceIndex(document.getNodes());
   }
 
   getDiagnostics(): Diagnostic[] {
@@ -77,6 +86,18 @@ export class GedcomLanguageService {
 
   getInlayHints(): InlayHint[] {
     return levelIndent(this.document.getNodes());
+  }
+
+  getReferenceIndex(): ReferenceIndex {
+    return this.referenceIndex;
+  }
+
+  getReferences(position: Position, options: ReferenceOptions): Range[] {
+    return getReferences(this.referenceIndex, position, options);
+  }
+
+  getDocumentHighlights(position: Position): DocumentHighlight[] {
+    return getDocumentHighlights(this.referenceIndex, position);
   }
 
   private getLinePrefix(position: Position): string {

@@ -1,35 +1,18 @@
-import type { ASTNode, ASTToken } from "@domorium/validator";
+import type { ASTNode } from "@domorium/validator";
 import type { Position, Range } from "../../types";
-import { isPositionInRange } from "../position/position";
-
-const findXrefAtPosition = (
-  nodes: ASTNode[],
-  position: Position,
-): ASTToken | undefined => {
-  for (const node of nodes) {
-    const xref = node.tokens.XREF;
-    if (xref && isPositionInRange(position, xref.range)) {
-      return xref;
-    }
-    const childMatch = findXrefAtPosition(node.children, position);
-    if (childMatch) {
-      return childMatch;
-    }
-  }
-  return undefined;
-};
+import { ReferenceIndex } from "../references/referenceIndex";
 
 export const findDefinitionRanges = (
   nodes: ASTNode[],
-  pointers: Map<string, ASTNode[]>,
+  _pointers: Map<string, ASTNode[]>,
   position: Position,
 ): Range[] => {
-  const xref = findXrefAtPosition(nodes, position);
-  if (!xref) {
+  const index = new ReferenceIndex(nodes);
+  const occurrence = index.at(position);
+  if (!occurrence) {
     return [];
   }
-  const targets = pointers.get(xref.value) ?? [];
-  return targets
-    .map((node) => node.tokens.POINTER?.range)
-    .filter((range): range is Range => !!range);
+  return (index.get(occurrence.id)?.declarations ?? []).map(
+    ({ range }) => range,
+  );
 };
