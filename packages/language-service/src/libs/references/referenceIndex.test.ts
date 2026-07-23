@@ -85,4 +85,25 @@ describe("ReferenceIndex", () => {
       service.prepareRename({ line: 1, character: 4 }),
     ).toMatchObject({ ok: false, code: "not-xref" });
   });
+
+  it("does not index HEAD or TRLR as XREF record declarations", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 @H1@ HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @T1@ TRLR",
+      ].join("\n"),
+      1,
+    );
+
+    expect(service.prepareRename({ line: 0, character: 4 }, 1)).toMatchObject({
+      ok: false,
+      code: "not-xref",
+    });
+    expect(service.prepareRename({ line: 3, character: 4 }, 1)).toMatchObject({
+      ok: false,
+      code: "not-xref",
+    });
+  });
 });

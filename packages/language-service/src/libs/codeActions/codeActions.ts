@@ -13,6 +13,7 @@ interface CodeActionContext {
   index: ReferenceIndex;
   currentDiagnostics: Diagnostic[];
   version: DocumentVersion;
+  gedcomVersion: string | undefined;
 }
 
 export function getCodeActions(
@@ -113,7 +114,7 @@ function unresolvedXrefActions(
   if (
     trailerLine >= 0 &&
     !context.index.get(xref)?.declarations.length &&
-    canCreateBareRecord(context.text, recordTag)
+    canCreateBareRecord(context.gedcomVersion, recordTag)
   ) {
     const newline = context.text.includes("\r\n") ? "\r\n" : "\n";
     actions.push({
@@ -138,15 +139,14 @@ function unresolvedXrefActions(
   return actions;
 }
 
-function canCreateBareRecord(text: string, recordTag: string): boolean {
-  const isGedcom551 = text
-    .split(/\r?\n/u)
-    .some((line) =>
-      /^\s*2\s+VERS\s+5(?:\.5(?:\.1)?)?(?:\s|$)/u.test(line),
-    );
+function canCreateBareRecord(
+  gedcomVersion: string | undefined,
+  recordTag: string,
+): boolean {
+  const isGedcom551 = gedcomVersion?.startsWith("5") === true;
   const allowed = isGedcom551
-    ? new Set(["FAM", "INDI", "NOTE", "SOUR", "SUBN"])
-    : new Set(["FAM", "INDI", "SNOTE", "SOUR"]);
+    ? new Set(["FAM", "INDI", "SOUR", "SUBN"])
+    : new Set(["FAM", "INDI", "SOUR"]);
   return allowed.has(recordTag);
 }
 

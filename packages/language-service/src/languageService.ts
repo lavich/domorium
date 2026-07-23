@@ -130,6 +130,7 @@ export class GedcomLanguageService {
         index: this.referenceIndex,
         currentDiagnostics: this.getDiagnostics(),
         version: this.version,
+        gedcomVersion: this.document.getVersion(),
       },
       range,
       diagnostics,

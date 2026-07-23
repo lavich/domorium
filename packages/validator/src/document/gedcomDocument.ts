@@ -122,10 +122,14 @@ export class GedcomDocument {
       return false;
     }
     const tag = node.tokens.TAG?.value;
-    return (
-      !!tag &&
-      this.scheme.substructure[GedcomType("")]?.[GedcomTag(tag)] !== undefined
-    );
+    const type = tag
+      ? this.scheme.substructure[GedcomType("")]?.[GedcomTag(tag)]?.type
+      : undefined;
+    return type?.includes("/record-") === true;
+  }
+
+  getVersion(): string | undefined {
+    return getGedcomVersion(this.nodes);
   }
 
   getCompletions(position: Position, lineText: string): GedcomCompletion[] {

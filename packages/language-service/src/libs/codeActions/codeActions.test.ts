@@ -170,7 +170,7 @@ describe("code actions", () => {
     );
   });
 
-  it("creates bare records only for types valid in the detected version", () => {
+  it("creates bare records only when the inserted record revalidates", () => {
     const v7 = new GedcomLanguageService(
       [
         "0 HEAD",
@@ -185,11 +185,28 @@ describe("code actions", () => {
     const v7Diagnostic = v7
       .getDiagnostics()
       .find(({ code }) => code === "unresolved-xref")!;
+    const createSource = v7
+      .getCodeActions(v7Diagnostic.range, [v7Diagnostic], 1)
+      .find(
+        (action) =>
+          "title" in action && action.title === "Create SOUR record @S9@",
+      )!;
+    const sourceEdit = "edit" in createSource ? createSource.edit.edits[0] : null;
+    expect(sourceEdit).not.toBeNull();
+    const v7Text = [
+      "0 HEAD",
+      "1 GEDC",
+      "2 VERS 7.0",
+      "0 @I1@ INDI",
+      "1 SOUR @S9@",
+      sourceEdit!.newText.trimEnd(),
+      "0 TRLR",
+    ].join("\n");
     expect(
-      v7
-        .getCodeActions(v7Diagnostic.range, [v7Diagnostic], 1)
-        .map((action) => ("title" in action ? action.title : "")),
-    ).toContain("Create SOUR record @S9@");
+      new GedcomLanguageService(v7Text, 2)
+        .getDiagnostics()
+        .filter(({ code }) => code !== "unresolved-xref"),
+    ).toEqual([]);
 
     const v551 = new GedcomLanguageService(
       [
@@ -209,7 +226,32 @@ describe("code actions", () => {
       v551
         .getCodeActions(v551Diagnostic.range, [v551Diagnostic], 1)
         .map((action) => ("title" in action ? action.title : "")),
-    ).toContain("Create NOTE record @N9@");
+    ).not.toContain("Create NOTE record @N9@");
+  });
+
+  it("uses only the HEAD.GEDC.VERS value when selecting templates", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @I1@ INDI",
+        "1 EVEN",
+        "2 VERS 5.5.1",
+        "1 SOUR @S9@",
+        "0 TRLR",
+      ].join("\n"),
+      1,
+    );
+    const diagnostic = service
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+
+    expect(
+      service
+        .getCodeActions(diagnostic.range, [diagnostic], 1)
+        .map((action) => ("title" in action ? action.title : "")),
+    ).toContain("Create SOUR record @S9@");
   });
 
   it("does not use duplicate declarations as replacement candidates", () => {
