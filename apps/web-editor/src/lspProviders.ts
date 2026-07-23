@@ -225,7 +225,7 @@ export function registerLspProviders(
         links: ((result ?? []) as DocumentLink[]).map((link) => ({
           range: toRange(monacoApi, link.range),
           url:
-            link.target && /^https?:\/\//u.test(link.target)
+            link.target && /^https?:\/\//iu.test(link.target)
               ? monacoApi.Uri.parse(link.target)
               : undefined,
           tooltip: link.tooltip,

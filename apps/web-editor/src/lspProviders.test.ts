@@ -342,6 +342,41 @@ describe("reference editing providers", () => {
       rejectReason: "The server returned an unsupported workspace edit.",
     });
 
+    responses["textDocument/rename"] = {
+      changes: { "file:///a.ged": [] },
+    };
+    expect(
+      await rename.provideRenameEdits(
+        model,
+        { lineNumber: 2, column: 4 },
+        "@I2@",
+        token,
+      ),
+    ).toMatchObject({
+      edits: [],
+      rejectReason: "The server returned an unversioned workspace edit.",
+    });
+
+    responses["textDocument/rename"] = {
+      documentChanges: [
+        {
+          textDocument: { uri: "file:///a.ged", version: null },
+          edits: [],
+        },
+      ],
+    };
+    expect(
+      await rename.provideRenameEdits(
+        model,
+        { lineNumber: 2, column: 4 },
+        "@I2@",
+        token,
+      ),
+    ).toMatchObject({
+      edits: [],
+      rejectReason: "The server returned an unsupported workspace edit.",
+    });
+
     responses["textDocument/prepareRename"] = new Error(
       "Duplicate declarations cannot be renamed.",
     );
