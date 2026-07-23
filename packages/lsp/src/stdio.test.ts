@@ -209,6 +209,11 @@ describe("stdio entry point", () => {
           hoverProvider: true,
           definitionProvider: true,
           foldingRangeProvider: true,
+          referencesProvider: true,
+          documentHighlightProvider: true,
+          renameProvider: { prepareProvider: true },
+          documentLinkProvider: { resolveProvider: false },
+          codeActionProvider: { codeActionKinds: ["quickfix"] },
         },
       },
     });
@@ -264,6 +269,133 @@ describe("stdio entry point", () => {
         result: expect.arrayContaining([
           expect.objectContaining({ label: "M" }),
           expect.objectContaining({ label: "F" }),
+        ]),
+      });
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
+  it("exposes reference editing operations over the LSP wire protocol", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///tree/family.ged";
+
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 7,
+          text: [
+            "0 HEAD",
+            "1 GEDC",
+            "2 VERS 7.0",
+            "0 @I1@ INDI",
+            "1 OBJE",
+            "2 FILE portrait.jpg",
+            "0 @F1@ FAM",
+            "1 HUSB @I1@",
+            "1 WIFE @I9@",
+            "0 TRLR",
+          ].join("\n"),
+        },
+      });
+
+      await expect(
+        client.request(2, "textDocument/references", {
+          textDocument: { uri },
+          position: { line: 7, character: 9 },
+          context: { includeDeclaration: true },
+        }),
+      ).resolves.toMatchObject({
+        result: [
+          { uri, range: { start: { line: 3, character: 2 } } },
+          { uri, range: { start: { line: 7, character: 7 } } },
+        ],
+      });
+      await expect(
+        client.request(3, "textDocument/documentHighlight", {
+          textDocument: { uri },
+          position: { line: 3, character: 4 },
+        }),
+      ).resolves.toMatchObject({
+        result: [{ kind: 3 }, { kind: 2 }],
+      });
+      await expect(
+        client.request(4, "textDocument/prepareRename", {
+          textDocument: { uri },
+          position: { line: 3, character: 4 },
+        }),
+      ).resolves.toMatchObject({
+        result: { placeholder: "@I1@" },
+      });
+      await expect(
+        client.request(5, "textDocument/rename", {
+          textDocument: { uri },
+          position: { line: 3, character: 4 },
+          newName: "@I2@",
+        }),
+      ).resolves.toMatchObject({
+        result: {
+          documentChanges: [
+            {
+              textDocument: { uri, version: 7 },
+              edits: [{ newText: "@I2@" }, { newText: "@I2@" }],
+            },
+          ],
+        },
+      });
+      await expect(
+        client.request(6, "textDocument/documentLink", {
+          textDocument: { uri },
+        }),
+      ).resolves.toMatchObject({
+        result: [
+          {
+            target: "file:///tree/portrait.jpg",
+            tooltip: "Open file: portrait.jpg",
+          },
+        ],
+      });
+      await expect(
+        client.request(7, "textDocument/codeAction", {
+          textDocument: { uri },
+          range: {
+            start: { line: 8, character: 7 },
+            end: { line: 8, character: 11 },
+          },
+          context: {
+            diagnostics: [
+              {
+                code: "unresolved-xref",
+                message: "Value for WIFE should be POINTER",
+                range: {
+                  start: { line: 8, character: 7 },
+                  end: { line: 8, character: 11 },
+                },
+                data: { xref: "@I9@", requiredRecordTag: "INDI" },
+              },
+            ],
+          },
+        }),
+      ).resolves.toMatchObject({
+        result: expect.arrayContaining([
+          expect.objectContaining({
+            title: "Replace @I9@ with @I1@",
+            kind: "quickfix",
+          }),
+          expect.objectContaining({
+            title: "Create INDI record @I9@",
+            kind: "quickfix",
+          }),
         ]),
       });
     } finally {
