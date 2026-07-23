@@ -4,7 +4,7 @@
   "displayName": "Domorium",
   "description": "Edit GEDCOM files with autocomplete, validation, navigation, and semantic highlighting",
   "publisher": "lavich",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "author": "Andrei Lobanov",
   "repository": "https://github.com/lavich/domorium.git",
   "icon": "images/extensionIcon.png",

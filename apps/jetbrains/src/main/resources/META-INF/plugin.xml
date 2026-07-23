@@ -29,6 +29,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>0.2.0</h2>
+    <ul>
+      <li>Added Find All References and read/write XREF highlights</li>
+      <li>Added safe, atomic XREF rename with stale-edit protection</li>
+      <li>Added clickable web and local-file links</li>
+      <li>Added quick fixes for broken references and invalid GEDCOM levels</li>
+    </ul>
+
     <h2>0.1.1</h2>
     <ul>
       <li>Moved the product screenshot from the description to the Marketplace media gallery</li>
