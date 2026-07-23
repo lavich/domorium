@@ -69,9 +69,9 @@
         <fileType name="GEDCOM"
                   implementationClass="dev.domorium.jetbrains.GedcomFileType"
                   fieldName="INSTANCE"
-                  language="TEXT"
+                  language="GEDCOM"
                   extensions="ged;gedcom"/>
-        <spellchecker.support language="TEXT"
+        <spellchecker.support language="GEDCOM"
                                implementationClass="dev.domorium.jetbrains.GedcomSpellcheckingStrategy"/>
     </extensions>
 
