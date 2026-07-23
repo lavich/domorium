@@ -16,6 +16,10 @@ export function applyDiagnostics(
           ? monacoApi.MarkerSeverity.Warning
           : monacoApi.MarkerSeverity.Info,
     message: d.message,
+    code:
+      typeof d.code === "number" || typeof d.code === "string"
+        ? String(d.code)
+        : undefined,
     startLineNumber: d.range.start.line + 1,
     startColumn: d.range.start.character + 1,
     endLineNumber: d.range.end.line + 1,

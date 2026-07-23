@@ -166,19 +166,23 @@ export const createServer = (connection: Connection) => {
     const service = cache.get(params.textDocument.uri);
     const document = documents.get(params.textDocument.uri);
     if (!service || !document) return [];
-    const diagnostics = params.context.diagnostics.map((diagnostic) => ({
-      code: String(diagnostic.code ?? ""),
-      message: diagnostic.message,
-      range: diagnostic.range,
-      severity: "error" as const,
-      data: diagnostic.data as
-        | {
-            xref?: string;
-            requiredRecordTag?: string;
-            expectedLevel?: number;
-          }
-        | undefined,
-    }));
+    const currentDiagnostics = service.getDiagnostics();
+    const diagnostics = params.context.diagnostics.map((diagnostic) => {
+      const code = String(diagnostic.code ?? "");
+      return (
+        currentDiagnostics.find(
+          (current) =>
+            current.code === code &&
+            current.message === diagnostic.message &&
+            JSON.stringify(current.range) === JSON.stringify(diagnostic.range),
+        ) ?? {
+          code,
+          message: diagnostic.message,
+          range: diagnostic.range,
+          severity: "error" as const,
+        }
+      );
+    });
     const result = service.getCodeActions(
       params.range,
       diagnostics,
