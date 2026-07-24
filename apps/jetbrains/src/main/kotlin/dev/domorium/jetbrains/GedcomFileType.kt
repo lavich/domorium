@@ -1,6 +1,7 @@
 package dev.domorium.jetbrains
 
 import com.intellij.openapi.fileTypes.LanguageFileType
+import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.util.IconLoader
 import javax.swing.Icon
 
@@ -10,11 +11,10 @@ import javax.swing.Icon
  * .ged and .gedcom "claimed" by an installed plugin — otherwise the IDE
  * still shows its own "no plugin handles this file" marketplace
  * suggestion even while LSP4IJ is successfully driving the language
- * server for the file. Uses a dedicated language so platform services such
- * as spellchecking can target GEDCOM without affecting ordinary text files.
- * Parsing and highlighting still come from the language server.
+ * server for the file. Parsing and highlighting come from the language
+ * server, while the platform uses its plain-text PSI implementation.
  */
-object GedcomFileType : LanguageFileType(GedcomLanguage) {
+object GedcomFileType : LanguageFileType(PlainTextLanguage.INSTANCE) {
     override fun getName(): String = "GEDCOM"
 
     override fun getDescription(): String = "GEDCOM genealogy data"

@@ -11,7 +11,7 @@ import com.intellij.spellchecker.tokenizer.Tokenizer
  * misspellings. Suppress spellchecking entirely for .ged and .gedcom files.
  */
 class GedcomSpellcheckingStrategy : SpellcheckingStrategy() {
-    override fun isMyContext(element: PsiElement): Boolean = isGedcomFileType(element.containingFile?.fileType)
+    override fun isMyContext(element: PsiElement): Boolean = isGedcomFileType(element.containingFile?.virtualFile?.fileType)
 
     override fun getTokenizer(element: PsiElement): Tokenizer<*> = gedcomSpellcheckingTokenizer()
 }

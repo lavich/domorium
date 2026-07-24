@@ -11,8 +11,8 @@ import kotlin.test.assertTrue
 
 class GedcomSpellcheckingStrategyTest {
     @Test
-    fun `GEDCOM uses its own language and disables spellchecking`() {
-        assertSame(GedcomLanguage, GedcomFileType.language)
+    fun `GEDCOM uses plain text PSI and disables spellchecking`() {
+        assertSame(PlainTextFileType.INSTANCE.language, GedcomFileType.language)
         assertTrue(isGedcomFileType(GedcomFileType))
         assertSame(SpellcheckingStrategy.EMPTY_TOKENIZER, gedcomSpellcheckingTokenizer())
     }
@@ -23,13 +23,16 @@ class GedcomSpellcheckingStrategyTest {
     }
 
     @Test
-    fun `plugin registers spellchecking for the dedicated GEDCOM language`() {
+    fun `plugin gives GEDCOM first priority in plain text spellchecking`() {
         val resource = checkNotNull(javaClass.classLoader.getResourceAsStream("META-INF/plugin.xml"))
         val document = resource.use { DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(it) }
         val fileTypeRegistration = document.getElementsByTagName("fileType").item(0)
         val registration = document.getElementsByTagName("spellchecker.support").item(0)
+        val lspMapping = document.getElementsByTagName("fileNamePatternMapping").item(0)
 
-        assertEquals("GEDCOM", fileTypeRegistration.attributes.getNamedItem("language").nodeValue)
-        assertEquals("GEDCOM", registration.attributes.getNamedItem("language").nodeValue)
+        assertEquals("TEXT", fileTypeRegistration.attributes.getNamedItem("language").nodeValue)
+        assertEquals("TEXT", registration.attributes.getNamedItem("language").nodeValue)
+        assertEquals("first", registration.attributes.getNamedItem("order").nodeValue)
+        assertEquals("*.ged;*.gedcom", lspMapping.attributes.getNamedItem("patterns").nodeValue)
     }
 }
