@@ -2,7 +2,7 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.0.20"
+    id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.jetbrains.intellij.platform") version "2.18.1"
     id("com.diffplug.spotless") version "8.8.0"
 }
@@ -30,8 +30,8 @@ dependencies {
     }
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.13.4")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:6.1.2")
 }
 
 spotless {
