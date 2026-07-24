@@ -29,7 +29,9 @@ dependencies {
         testFramework(TestFrameworkType.Platform)
     }
     testImplementation(kotlin("test"))
+    testImplementation("junit:junit:4.13.2")
     testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.13.4")
 }
 
 spotless {

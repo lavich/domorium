@@ -20,6 +20,10 @@ Requires Node.js on `PATH`. The GEDCOM language server is bundled with the plugi
 
 [Try Domorium in your browser](https://lavich.github.io/domorium/) · [Source code and issue tracker](https://github.com/lavich/domorium)
 
+## Roadmap
+
+- TODO: Check spelling only in natural-language GEDCOM values while excluding levels, tags, structure, and XREF identifiers.
+
 ## Development
 
 Run the plugin in a sandboxed IDE:

@@ -11,10 +11,8 @@ import javax.swing.Icon
  * .ged and .gedcom "claimed" by an installed plugin — otherwise the IDE
  * still shows its own "no plugin handles this file" marketplace
  * suggestion even while LSP4IJ is successfully driving the language
- * server for the file. Reuses PlainTextLanguage since GEDCOM highlighting
- * comes entirely from the language server's semantic tokens, not from a
- * local lexer/grammar — there's no separate TextMate coloring to give up
- * by registering this FileType.
+ * server for the file. Parsing and highlighting come from the language
+ * server, while the platform uses its plain-text PSI implementation.
  */
 object GedcomFileType : LanguageFileType(PlainTextLanguage.INSTANCE) {
     override fun getName(): String = "GEDCOM"

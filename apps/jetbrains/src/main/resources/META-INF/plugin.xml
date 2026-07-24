@@ -72,7 +72,8 @@
                   language="TEXT"
                   extensions="ged;gedcom"/>
         <spellchecker.support language="TEXT"
-                               implementationClass="dev.domorium.jetbrains.GedcomSpellcheckingStrategy"/>
+                              implementationClass="dev.domorium.jetbrains.GedcomSpellcheckingStrategy"
+                              order="first"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
@@ -85,8 +86,8 @@
             ]]></description>
         </server>
 
-        <fileTypeMapping fileType="GEDCOM"
-                          serverId="domoriumGedcomServer"
-                          languageId="gedcom"/>
+        <fileNamePatternMapping patterns="*.ged;*.gedcom"
+                                serverId="domoriumGedcomServer"
+                                languageId="gedcom"/>
     </extensions>
 </idea-plugin>
