@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { levelFolding } from "./levelFolding";
-import { GedcomDocument } from "@domorium/validator";
+import { GedcomDocument } from "gedcom-validator";
 
 const gedcomDocument = new GedcomDocument();
 gedcomDocument.createDocument(`0 @Abraham_Simpson@ INDI

@@ -1,6 +1,6 @@
 {
-  "name": "@domorium/language-service",
-  "version": "0.1.1",
+  "name": "gedcom-language-service",
+  "version": "0.1.2",
   "description": "Editor-independent GEDCOM language features",
   "keywords": [
     "gedcom",
@@ -8,13 +8,13 @@
     "language-service",
     "editor"
   ],
-  "homepage": "https://github.com/lavich/domorium#readme",
+  "homepage": "https://github.com/lavich/gedcom#readme",
   "bugs": {
-    "url": "https://github.com/lavich/domorium/issues"
+    "url": "https://github.com/lavich/gedcom/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lavich/domorium.git",
+    "url": "git+https://github.com/lavich/gedcom.git",
     "directory": "packages/language-service"
   },
   "license": "MIT",
@@ -53,6 +53,6 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@domorium/validator": "^0.1.2"
+    "gedcom-validator": "^0.1.3"
   }
 }

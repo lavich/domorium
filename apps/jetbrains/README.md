@@ -1,8 +1,8 @@
-# Domorium for JetBrains IDEs
+# GEDCOM for JetBrains IDEs
 
-Domorium helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
+GEDCOM helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
 
-![Domorium autocomplete, validation, hover, and navigation](../vscode/images/domorium-demo.gif)
+![GEDCOM autocomplete, validation, hover, and navigation](../vscode/images/gedcom-demo.gif)
 
 ## Features
 
@@ -18,7 +18,7 @@ Domorium helps you read and edit `.ged` and `.gedcom` files with confidence. It 
 
 Requires Node.js on `PATH`. The GEDCOM language server is bundled with the plugin and runs locally.
 
-[Try Domorium in your browser](https://lavich.github.io/domorium/) · [Source code and issue tracker](https://github.com/lavich/domorium)
+[Try GEDCOM in your browser](https://lavich.github.io/gedcom/) · [Source code and issue tracker](https://github.com/lavich/gedcom)
 
 ## Roadmap
 

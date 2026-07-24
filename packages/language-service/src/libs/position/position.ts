@@ -1,4 +1,4 @@
-import type { ASTNode } from "@domorium/validator";
+import type { ASTNode } from "gedcom-validator";
 import type { Position, Range } from "../../types";
 
 export const isPositionInRange = (position: Position, range: Range): boolean => {

@@ -1,4 +1,4 @@
-package dev.domorium.jetbrains
+package gedcom.jetbrains
 
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.psi.PsiElement

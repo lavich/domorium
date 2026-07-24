@@ -1,4 +1,4 @@
-package dev.domorium.jetbrains
+package gedcom.jetbrains
 
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.fileTypes.PlainTextLanguage

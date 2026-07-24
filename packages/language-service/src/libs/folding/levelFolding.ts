@@ -1,4 +1,4 @@
-import type { ASTNode } from "@domorium/validator";
+import type { ASTNode } from "gedcom-validator";
 import type { FoldingRange } from "../../types";
 
 export const levelFolding = (nodes: ASTNode[]): FoldingRange[] => {

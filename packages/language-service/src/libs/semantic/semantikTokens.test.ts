@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { semanticTokens, tokenTypeIndex } from "./semanticTokens";
-import { GedcomDocument, TokenNames } from "@domorium/validator";
+import { GedcomDocument, TokenNames } from "gedcom-validator";
 
 const gedcomDocument = new GedcomDocument();
 gedcomDocument.createDocument(`0 @Abraham_Simpson@ INDI`);

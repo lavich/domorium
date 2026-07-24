@@ -12,7 +12,7 @@ import { join } from "path";
 // it — a single self-contained Node script) and drive it as a real
 // child process over the LSP wire protocol.
 async function bundleStdio(): Promise<string> {
-  const outDir = mkdtempSync(join(tmpdir(), "domorium-lsp-stdio-"));
+  const outDir = mkdtempSync(join(tmpdir(), "gedcom-lsp-stdio-"));
   const outfile = join(outDir, "stdio.cjs.js");
   await build({
     entryPoints: [join(__dirname, "stdio.ts")],

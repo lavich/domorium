@@ -1,5 +1,5 @@
 {
-  "name": "@domorium/lsp",
+  "name": "gedcom-lsp",
   "description": "",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
@@ -31,6 +31,6 @@
     "vscode-languageserver-textdocument": "^1.0.12"
   },
   "dependencies": {
-    "@domorium/language-service": "*"
+    "gedcom-language-service": "*"
   }
 }

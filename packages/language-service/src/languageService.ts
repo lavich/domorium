@@ -1,4 +1,4 @@
-import { GedcomDocument } from "@domorium/validator";
+import { GedcomDocument } from "gedcom-validator";
 
 import { getCompletionItems } from "./libs/completion/completion";
 import { getCodeActions } from "./libs/codeActions/codeActions";

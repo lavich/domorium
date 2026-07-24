@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { findDefinitionRanges } from "./definition";
-import { GedcomDocument } from "@domorium/validator";
+import { GedcomDocument } from "gedcom-validator";
 import { ReferenceIndex } from "../references/referenceIndex";
 
 const gedcomDocument = new GedcomDocument();

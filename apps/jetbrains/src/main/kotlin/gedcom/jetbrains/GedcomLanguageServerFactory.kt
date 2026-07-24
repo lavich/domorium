@@ -1,4 +1,4 @@
-package dev.domorium.jetbrains
+package gedcom.jetbrains
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.diagnostic.Logger
@@ -25,7 +25,7 @@ internal fun extractBundledServerScript(): java.nio.file.Path {
                 "Bundled GEDCOM language server resource ($BUNDLED_SERVER_RESOURCE) " +
                     "not found — was the copyLspStdioBundle Gradle task run?",
             )
-    val tempFile = Files.createTempFile("domorium-gedcom-lsp-", ".cjs.js")
+    val tempFile = Files.createTempFile("gedcom-gedcom-lsp-", ".cjs.js")
     tempFile.toFile().deleteOnExit()
     resource.openStream().use { input ->
         Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING)
@@ -34,7 +34,7 @@ internal fun extractBundledServerScript(): java.nio.file.Path {
 }
 
 /**
- * Launches the domorium GEDCOM language server (packages/lsp's stdio
+ * Launches the gedcom GEDCOM language server (packages/lsp's stdio
  * entry point) as a `node` subprocess. Assumes `node` is available on the
  * user's PATH (see design doc — no auto-detection/download in v1).
  */

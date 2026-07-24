@@ -1,4 +1,4 @@
-import type { ASTNode, GedcomDocument } from "@domorium/validator";
+import type { ASTNode, GedcomDocument } from "gedcom-validator";
 import type { Hover, Position } from "../../types";
 import { findNodeByTagAtPosition } from "../position/position";
 

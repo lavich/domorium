@@ -3,7 +3,7 @@ import {
   BrowserMessageReader,
   BrowserMessageWriter,
 } from "vscode-languageserver/browser";
-import { createServer } from "@domorium/lsp";
+import { createServer } from "gedcom-lsp";
 
 declare const self: DedicatedWorkerGlobalScope;
 

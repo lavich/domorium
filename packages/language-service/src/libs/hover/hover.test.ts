@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getHover } from "./hover";
-import { GedcomDocument } from "@domorium/validator";
+import { GedcomDocument } from "gedcom-validator";
 
 const gedcomDocument = new GedcomDocument();
 gedcomDocument.createDocument(`0 HEAD

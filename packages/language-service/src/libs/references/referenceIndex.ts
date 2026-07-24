@@ -1,4 +1,4 @@
-import { TokenNames, type ASTNode } from "@domorium/validator";
+import { TokenNames, type ASTNode } from "gedcom-validator";
 import type {
   Position,
   ReferenceEntry,

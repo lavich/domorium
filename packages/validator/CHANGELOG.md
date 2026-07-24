@@ -1,6 +1,11 @@
 # Changelog
 
-All notable changes to `@domorium/validator` are documented here.
+All notable changes to `gedcom-validator` are documented here.
+
+## 0.1.3 - 2026-07-24
+
+- Rename the public package to `gedcom-validator`.
+- Update repository metadata and documentation for the GEDCOM project.
 
 ## 0.1.2 - 2026-07-23
 

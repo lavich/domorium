@@ -1,4 +1,4 @@
-package dev.domorium.jetbrains
+package gedcom.jetbrains
 
 import kotlin.io.path.exists
 import kotlin.test.Test

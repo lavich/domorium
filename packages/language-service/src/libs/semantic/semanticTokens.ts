@@ -1,4 +1,4 @@
-import type { ASTNode, ASTToken, TokenNames } from "@domorium/validator";
+import type { ASTNode, ASTToken, TokenNames } from "gedcom-validator";
 
 const SemanticTokenTypes = {
   comment: "comment",

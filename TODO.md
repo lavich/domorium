@@ -1,4 +1,4 @@
-# Domorium — Roadmap
+# GEDCOM — Roadmap
 
 ## Priority: High
 
@@ -58,7 +58,7 @@ New workspace packages/apps, not fixes to existing code — each would be its ow
 
 - [ ] **Family tree visualization in Excalidraw** — render a visual tree (or export an Excalidraw scene) from a parsed GEDCOM document, walking FAMC/FAMS/HUSB/WIFE/CHIL pointers already resolved via `pointers` map in the AST. Architecture: keep GEDCOM as the read-only model layer; store layout data (node positions, edge routes) separately; Excalidraw becomes one of several possible renderers. Coordinates must never be written back into the `.ged` file — this preserves source fidelity and allows multiple views (Excalidraw, custom web, print) over the same tree without corruption.
 
-- [ ] **CLI validator/linter** — thin wrapper over `packages/validator` (e.g. `npx domorium lint file.ged`), for use in scripts/CI outside any editor.
+- [ ] **CLI validator/linter** — thin wrapper over `packages/validator` (e.g. `npx gedcom-validator file.ged`), for use in scripts/CI outside any editor.
 
 - [ ] **GitHub Action** — wraps the CLI above to lint `.ged` files in other repositories' CI pipelines.
 
