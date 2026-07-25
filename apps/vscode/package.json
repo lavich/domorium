@@ -1,12 +1,12 @@
 {
   "name": "gedcom-vscode",
   "license": "MIT",
-  "displayName": "Domorium",
+  "displayName": "GEDCOM",
   "description": "Edit GEDCOM files with autocomplete, validation, navigation, and semantic highlighting",
   "publisher": "lavich",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "author": "Andrei Lobanov",
-  "repository": "https://github.com/lavich/domorium.git",
+  "repository": "https://github.com/lavich/gedcom.git",
   "icon": "images/extensionIcon.png",
   "categories": [
     "Programming Languages",
@@ -48,7 +48,7 @@
   },
   "vsce": {
     "dependencies": false,
-    "baseImagesUrl": "https://raw.githubusercontent.com/lavich/domorium/main/apps/vscode"
+    "baseImagesUrl": "https://raw.githubusercontent.com/lavich/gedcom/main/apps/vscode"
   },
   "browser": "./dist/client/browserClientMain",
   "scripts": {
@@ -62,7 +62,7 @@
     "open": "code --extensionDevelopmentPath=$PWD ../../test-data"
   },
   "dependencies": {
-    "@domorium/lsp": "*",
+    "gedcom-lsp": "*",
     "vscode-languageclient": "^9.0.1",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.11"

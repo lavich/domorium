@@ -1,5 +1,5 @@
 {
-  "name": "domorium",
+  "name": "gedcom",
   "version": "1.0.0",
   "description": "GEDCOM editing tools for the web, Visual Studio Code, and JetBrains IDEs",
   "scripts": {

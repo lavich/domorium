@@ -7,8 +7,8 @@ plugins {
     id("com.diffplug.spotless") version "8.8.0"
 }
 
-group = "dev.domorium"
-version = "0.2.0"
+group = "gedcom"
+version = "0.2.1"
 
 repositories {
     mavenCentral()

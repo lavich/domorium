@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CompletionItemKind } from "../../types";
-import { GedcomDocument } from "@domorium/validator";
+import { GedcomDocument } from "gedcom-validator";
 import { getCompletionItems } from "./completion";
 
 describe("getCompletionItems", () => {

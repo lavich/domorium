@@ -1,6 +1,6 @@
 {
-  "name": "@domorium/validator",
-  "version": "0.1.2",
+  "name": "gedcom-validator",
+  "version": "0.1.3",
   "description": "GEDCOM 5.5.1 and 7.0 parser and validator",
   "keywords": [
     "gedcom",
@@ -8,13 +8,13 @@
     "parser",
     "validator"
   ],
-  "homepage": "https://github.com/lavich/domorium#readme",
+  "homepage": "https://github.com/lavich/gedcom#readme",
   "bugs": {
-    "url": "https://github.com/lavich/domorium/issues"
+    "url": "https://github.com/lavich/gedcom/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lavich/domorium.git",
+    "url": "git+https://github.com/lavich/gedcom.git",
     "directory": "packages/validator"
   },
   "license": "MIT",

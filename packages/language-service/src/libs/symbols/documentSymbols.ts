@@ -1,4 +1,4 @@
-import type { ASTNode } from "@domorium/validator";
+import type { ASTNode } from "gedcom-validator";
 import { DocumentSymbolKind, type DocumentSymbol } from "../../types";
 
 export const documentSymbols = (nodes: ASTNode[]): DocumentSymbol[] => {

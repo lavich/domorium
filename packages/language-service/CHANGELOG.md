@@ -1,6 +1,11 @@
 # Changelog
 
-All notable changes to `@domorium/language-service` are documented here.
+All notable changes to `gedcom-language-service` are documented here.
+
+## 0.1.2 - 2026-07-24
+
+- Rename the public package to `gedcom-language-service`.
+- Replace the validator dependency with `gedcom-validator`.
 
 ## 0.1.1 - 2026-07-23
 

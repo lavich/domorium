@@ -11,7 +11,7 @@ export default defineConfig({
       fileName: (format) => (format === "es" ? `index.esm.js` : `index.cjs.js`),
     },
     rollupOptions: {
-      external: ["@domorium/validator"],
+      external: ["gedcom-validator"],
     },
   },
 });
