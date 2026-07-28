@@ -52,20 +52,20 @@ New workspace packages/apps, not fixes to existing code — each would be its ow
 
 - [ ] **Prettier plugin** — GEDCOM formatter for Prettier, using the existing chevrotain parser/AST as the `parse` step. A shared `packages/formatter` core (see below) would let this and the native LSP formatter reuse the same printing logic instead of duplicating it.
 
-- [ ] **Monaco editor integration** — `packages/lsp` is already a generic LSP server, and `apps/vscode` already builds a browser bundle of it (`browser` entry, `@vscode/test-web`). Wiring it up to Monaco via `monaco-languageclient` should be cheap — no validator/server rewrite needed.
+- [ ] **Monaco editor integration** — `packages/language-server` is already a generic LSP server, and `apps/vscode` already builds a browser bundle of it (`browser` entry, `@vscode/test-web`). Wiring it up to Monaco via `monaco-languageclient` should be cheap — no validator/server rewrite needed.
 
-- [x] **JetBrains/IntelliJ plugin** — implemented with **LSP4IJ**, using the bundled `packages/lsp` server over stdio.
+- [x] **JetBrains/IntelliJ plugin** — implemented with **LSP4IJ**, using the bundled `packages/language-server` server over stdio.
 
 - [ ] **Family tree visualization in Excalidraw** — render a visual tree (or export an Excalidraw scene) from a parsed GEDCOM document, walking FAMC/FAMS/HUSB/WIFE/CHIL pointers already resolved via `pointers` map in the AST. Architecture: keep GEDCOM as the read-only model layer; store layout data (node positions, edge routes) separately; Excalidraw becomes one of several possible renderers. Coordinates must never be written back into the `.ged` file — this preserves source fidelity and allows multiple views (Excalidraw, custom web, print) over the same tree without corruption.
 
-- [ ] **CLI validator/linter** — thin wrapper over `packages/validator` (e.g. `npx gedcom-validator file.ged`), for use in scripts/CI outside any editor.
+- [ ] **CLI validator/linter** — thin wrapper over `packages/validator` (e.g. `npx @gedcom/validator file.ged`), for use in scripts/CI outside any editor.
 
 - [ ] **GitHub Action** — wraps the CLI above to lint `.ged` files in other repositories' CI pipelines.
 
-- [ ] **Neovim / Sublime / Zed LSP client config** — since `packages/lsp` is a generic LSP server, supporting these editors is mostly client configuration/documentation (e.g. an `nvim-lspconfig` entry), much cheaper than a bespoke editor plugin.
+- [ ] **Neovim / Sublime / Zed LSP client config** — since `packages/language-server` is a generic LSP server, supporting these editors is mostly client configuration/documentation (e.g. an `nvim-lspconfig` entry), much cheaper than a bespoke editor plugin.
 
 - [ ] **Web playground** — paste-a-GEDCOM-see-live-diagnostics demo page, reusing the same in-browser LSP bundle `apps/vscode` already produces. Good for demos/marketing; could also host the Monaco integration above.
 
-- [ ] **`packages/formatter`** — shared GEDCOM pretty-printing core, reused by the Prettier plugin and by a native `documentFormattingProvider` capability in `packages/lsp` (not currently in the LSP capabilities list).
+- [ ] **`packages/formatter`** — shared GEDCOM pretty-printing core, reused by the Prettier plugin and by a native `documentFormattingProvider` capability in `packages/language-server` (not currently in the LSP capabilities list).
 
 - [ ] **GEDCOM diff/merge tool** — compare two `.ged` files and visualize differences; pairs naturally with the Excalidraw tree visualization above (e.g. highlight conflicting FAMC across two sources for the same person).

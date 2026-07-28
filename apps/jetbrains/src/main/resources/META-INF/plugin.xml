@@ -87,7 +87,7 @@
                 name="GEDCOM Language Server"
                 factoryClass="gedcom.jetbrains.GedcomLanguageServerFactory">
             <description><![CDATA[
-            The GEDCOM language server (packages/lsp), run as a
+            The GEDCOM language server (packages/language-server), run as a
             standalone Node.js process over stdio.
             ]]></description>
         </server>

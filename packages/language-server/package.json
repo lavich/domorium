@@ -1,6 +1,7 @@
 {
-  "name": "gedcom-lsp",
-  "description": "",
+  "name": "@gedcom/language-server",
+  "description": "Internal Language Server Protocol adapter for GEDCOM editor integrations",
+  "private": true,
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -31,6 +32,6 @@
     "vscode-languageserver-textdocument": "^1.0.12"
   },
   "dependencies": {
-    "gedcom-language-service": "*"
+    "@gedcom/language-service": "*"
   }
 }

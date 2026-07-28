@@ -38,7 +38,7 @@ Build the distributable plugin ZIP:
 ./gradlew buildPlugin
 ```
 
-The language server lives in `packages/lsp`. Gradle builds its standalone Node.js bundle and packages it with the plugin automatically.
+The language server lives in `packages/language-server`. Gradle builds its standalone Node.js bundle and packages it with the plugin automatically.
 
 ## License
 

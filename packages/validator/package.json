@@ -1,5 +1,5 @@
 {
-  "name": "gedcom-validator",
+  "name": "@gedcom/validator",
   "version": "0.1.3",
   "description": "GEDCOM 5.5.1 and 7.0 parser and validator",
   "keywords": [
@@ -19,7 +19,7 @@
   },
   "license": "MIT",
   "author": {
-    "name": "Andrey Lobanov",
+    "name": "Andrei Lobanov",
     "email": "lobanov.andrey.lavich@gmail.com",
     "url": "https://github.com/lavich"
   },

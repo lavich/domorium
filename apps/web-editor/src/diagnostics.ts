@@ -24,7 +24,7 @@ export function applyDiagnostics(
     startColumn: d.range.start.character + 1,
     endLineNumber: d.range.end.line + 1,
     endColumn: d.range.end.character + 1,
-    source: "gedcom-lsp",
+    source: "gedcom-language-server",
   }));
 
   monacoApi.editor.setModelMarkers(model, "gedcom", markers);

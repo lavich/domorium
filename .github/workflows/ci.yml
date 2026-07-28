@@ -92,7 +92,7 @@ jobs:
 
           if changed \
             apps/web-editor \
-            packages/lsp \
+            packages/language-server \
             packages/validator \
             tsconfig.json \
             package.json \
@@ -104,7 +104,7 @@ jobs:
 
           if changed \
             apps/vscode \
-            packages/lsp \
+            packages/language-server \
             packages/validator \
             tsconfig.json \
             package.json \
@@ -116,7 +116,7 @@ jobs:
 
           if changed \
             apps/jetbrains \
-            packages/lsp \
+            packages/language-server \
             packages/validator \
             tsconfig.json \
             package.json \
