@@ -6,6 +6,6 @@ export default defineConfig({
     format: "es",
   },
   optimizeDeps: {
-    exclude: ["gedcom-lsp", "gedcom-validator"],
+    exclude: ["@gedcom/language-server", "@gedcom/validator"],
   },
 });

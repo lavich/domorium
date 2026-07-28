@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "gedcom-lsp": "*",
+    "@gedcom/language-server": "*",
     "monaco-editor": "^0.52.2",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-protocol": "^3.17.5"

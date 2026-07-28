@@ -3,7 +3,7 @@ import {
   BrowserMessageReader,
   BrowserMessageWriter,
 } from "vscode-languageserver/browser";
-import { createServer } from "gedcom-lsp";
+import { createServer } from "@gedcom/language-server";
 
 declare const self: DedicatedWorkerGlobalScope;
 

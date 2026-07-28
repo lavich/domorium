@@ -41,7 +41,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   GedcomLanguageService,
   semanticTokenLegend,
-} from "gedcom-language-service";
+} from "@gedcom/language-service";
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);

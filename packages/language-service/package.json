@@ -1,5 +1,5 @@
 {
-  "name": "gedcom-language-service",
+  "name": "@gedcom/language-service",
   "version": "0.1.2",
   "description": "Editor-independent GEDCOM language features",
   "keywords": [
@@ -19,7 +19,7 @@
   },
   "license": "MIT",
   "author": {
-    "name": "Andrey Lobanov",
+    "name": "Andrei Lobanov",
     "email": "lobanov.andrey.lavich@gmail.com",
     "url": "https://github.com/lavich"
   },
@@ -53,6 +53,6 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "gedcom-validator": "^0.1.3"
+    "@gedcom/validator": "^0.1.3"
   }
 }

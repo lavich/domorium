@@ -1,4 +1,4 @@
-import { GedcomDocument } from "gedcom-validator";
+import { GedcomDocument } from "@gedcom/validator";
 import type {
   CodeAction,
   Diagnostic,

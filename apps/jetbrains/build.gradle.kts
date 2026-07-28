@@ -56,11 +56,11 @@ intellijPlatform {
     }
 }
 
-// The LSP server itself lives in packages/lsp (this monorepo's npm
+// The LSP server itself lives in packages/language-server (this monorepo's npm
 // workspace) — build its standalone Node bundle and copy it into this
 // plugin's resources so GedcomServerConnectionProvider can launch it
 // without requiring consumers to check out/npm-install the whole repo.
-val lspPackageDir = layout.projectDirectory.dir("../../packages/lsp")
+val lspPackageDir = layout.projectDirectory.dir("../../packages/language-server")
 val validatorPackageDir = layout.projectDirectory.dir("../../packages/validator")
 
 val buildLspStdioBundle =
