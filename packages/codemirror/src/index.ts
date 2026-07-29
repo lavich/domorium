@@ -1,4 +1,4 @@
-export { gedcomLanguage, gedcomSyntaxHighlighting, classifyGedcomLine } from "./language";
+export { gedcomLanguage, classifyGedcomLine } from "./language";
 export {
   createGedcomExtensions,
   getDiagnosticActions,

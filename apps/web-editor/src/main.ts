@@ -1,5 +1,7 @@
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags } from "@lezer/highlight";
 import {
   applyWorkspaceEdit,
   createGedcomExtensions,
@@ -61,6 +63,7 @@ async function init(): Promise<void> {
             },
           },
         ]),
+        webSyntaxHighlighting,
         webEditorTheme,
       ],
     }),
@@ -109,20 +112,26 @@ const webEditorTheme = EditorView.theme({
     border: "none",
   },
   ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "#2a2d2e" },
-  ".gedcom-reference-read": { backgroundColor: "#264f78" },
-  ".gedcom-reference-write": {
-    backgroundColor: "#264f78",
-    textDecoration: "underline",
-  },
-  ".gedcom-token-comment": { color: "#6a9955" },
-  ".gedcom-token-keyword": { color: "#569cd6" },
-  ".gedcom-token-string": { color: "#ce9178" },
-  ".gedcom-token-declaration": { fontWeight: "600" },
-  ".gedcom-indent-hint": {
-    color: "#6a9955",
-    opacity: "0.7",
-    paddingRight: "0.4em",
-  },
+  // ".gedcom-reference-read": { backgroundColor: "#264f78" },
+  // ".gedcom-reference-write": {
+  //   backgroundColor: "#264f78",
+  //   textDecoration: "underline",
+  // },
+  // ".gedcom-token-comment": { color: "#6a9955" },
+  // ".gedcom-token-keyword": { color: "#569cd6" },
+  // ".gedcom-token-string": { color: "#ce9178" },
+  // ".gedcom-token-declaration": { fontWeight: "600" },
+  // ".gedcom-indent-hint": {
+  //   color: "#6a9955",
+  //   opacity: "0.7",
+  //   paddingRight: "0.4em",
+  // },
 }, { dark: true });
+
+const webSyntaxHighlighting = syntaxHighlighting(HighlightStyle.define([
+  { tag: tags.comment, color: "#6a9955" },
+  { tag: tags.keyword, color: "#569cd6" },
+  { tag: tags.string, color: "#ce9178" },
+]));
 
 init().catch(console.error);

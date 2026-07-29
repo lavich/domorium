@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { classifyGedcomLine } from "./language";
+import * as languageModule from "./language";
 
 describe("GEDCOM syntax classification", () => {
+  it("does not bundle a fixed syntax palette", () => {
+    expect("gedcomSyntaxHighlighting" in languageModule).toBe(false);
+  });
+
   it("classifies a record declaration", () => {
     expect(classifyGedcomLine("0 @I1@ INDI")).toEqual([
       { from: 0, to: 1, role: "level" },

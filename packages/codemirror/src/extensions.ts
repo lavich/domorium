@@ -26,7 +26,7 @@ import {
   type WorkspaceEdit,
 } from "@gedcom/language-service";
 
-import { gedcomLanguage, gedcomSyntaxHighlighting } from "./language";
+import { gedcomLanguage } from "./language";
 import { toOffset, toOffsets, toPosition } from "./positions";
 import { EditorLanguageService } from "./service";
 
@@ -338,7 +338,6 @@ export function createGedcomExtensions(options: GedcomEditorOptions): Extension[
   const indentationHints = options.settings?.indentationHints ?? true;
   const extensions: Extension[] = [
     gedcomLanguage,
-    gedcomSyntaxHighlighting,
     lineNumbers(),
     history(),
     foldGutter(),

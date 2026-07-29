@@ -1,10 +1,7 @@
 import {
-  HighlightStyle,
   StreamLanguage,
   type StreamParser,
-  syntaxHighlighting,
 } from "@codemirror/language";
-import { tags } from "@lezer/highlight";
 
 export type GedcomSyntaxRole =
   | "level"
@@ -95,9 +92,3 @@ function tokenStyle(role: GedcomSyntaxRole): string | null {
 }
 
 export const gedcomLanguage = StreamLanguage.define(parser);
-
-export const gedcomSyntaxHighlighting = syntaxHighlighting(HighlightStyle.define([
-  { tag: tags.comment, color: "#6a9955" },
-  { tag: tags.keyword, color: "#569cd6" },
-  { tag: tags.string, color: "#ce9178" },
-]));
