@@ -1,4 +1,5 @@
 import { EditorState } from "@codemirror/state";
+import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorView, keymap } from "@codemirror/view";
 import {
   applyWorkspaceEdit,
@@ -61,7 +62,8 @@ async function init(): Promise<void> {
             },
           },
         ]),
-        webEditorTheme,
+        oneDark,
+        webEditorLayout,
       ],
     }),
   });
@@ -90,21 +92,15 @@ function openDocumentLink(link: DocumentLink): void {
   }
 }
 
-const webEditorTheme = EditorView.theme({
+const webEditorLayout = EditorView.theme({
   "&": {
     height: "100%",
-    color: "#d4d4d4",
     fontSize: "14px",
   },
   ".cm-scroller": {
     overflow: "auto",
     fontFamily: "Menlo, Monaco, Consolas, monospace",
   },
-  ".cm-gutters": {
-    color: "#858585",
-    border: "none",
-  },
-  ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "#2a2d2e" },
 });
 
 init().catch(console.error);
