@@ -8,7 +8,7 @@ import {
   type WorkspaceEdit,
 } from "@gedcom/language-service";
 
-import { toOffsets } from "./positions";
+import { rangeToOffsets } from "./positions";
 
 export interface CodeMirrorChange {
   from: number;
@@ -37,7 +37,7 @@ export function toCodeMirrorChanges(
     return null;
   }
   const changes = edit.edits.map(({ range, newText }) => ({
-    ...toOffsets(document, range),
+    ...rangeToOffsets(document, range),
     insert: newText,
   })).sort((left, right) => left.from - right.from || left.to - right.to);
   for (let index = 1; index < changes.length; index += 1) {

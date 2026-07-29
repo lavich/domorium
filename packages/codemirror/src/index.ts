@@ -8,7 +8,11 @@ export {
   type GedcomEditorSettings,
   type ReferenceHighlightSpec,
 } from "./extensions";
-export { toOffset, toOffsets, toPosition } from "./positions";
+export {
+  offsetToPosition,
+  positionToOffset,
+  rangeToOffsets,
+} from "./positions";
 export {
   applyWorkspaceEdit,
   EditorLanguageService,

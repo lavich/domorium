@@ -32,7 +32,11 @@ import {
 } from "@gedcom/language-service";
 import { tags, type Tag } from "@lezer/highlight";
 
-import { toOffset, toOffsets, toPosition } from "./positions";
+import {
+  offsetToPosition,
+  positionToOffset,
+  rangeToOffsets,
+} from "./positions";
 import { EditorLanguageService } from "./service";
 
 export interface GedcomEditorSettings {
@@ -63,9 +67,9 @@ export function getReferenceHighlightSpecs(
 ): ReferenceHighlightSpec[] {
   const service = language.update(state.sliceDoc());
   return service.getDocumentHighlights(
-    toPosition(state.doc, state.selection.main.head),
+    offsetToPosition(state.doc, state.selection.main.head),
   ).map((highlight) => ({
-    ...toOffsets(state.doc, highlight.range),
+    ...rangeToOffsets(state.doc, highlight.range),
     kind: highlight.kind,
   }));
 }
@@ -103,8 +107,8 @@ export function getDiagnosticActions(
 
 const completionType: Record<number, string> = {
   5: "property",
-  17: "variable",
-  18: "enum",
+  18: "variable",
+  20: "enum",
 };
 
 function completionSource(
@@ -119,7 +123,7 @@ function completionSource(
     return null;
   }
   const items = language.update(context.state.sliceDoc())
-    .getCompletionItems(toPosition(context.state.doc, context.pos));
+    .getCompletionItems(offsetToPosition(context.state.doc, context.pos));
   if (items.length === 0) {
     return null;
   }
@@ -139,7 +143,7 @@ function diagnosticSource(
 ): Extension {
   return linter((view) => language.update(view.state.sliceDoc())
     .getDiagnostics().map((diagnostic): CodeMirrorDiagnostic => {
-      const range = toOffsets(view.state.doc, diagnostic.range);
+      const range = rangeToOffsets(view.state.doc, diagnostic.range);
       return {
         from: range.from,
         to: Math.max(range.from, range.to),
@@ -160,7 +164,7 @@ function diagnosticSource(
 function hoverSource(language: EditorLanguageService): Extension {
   return hoverTooltip((view, offset) => {
     const hover = language.update(view.state.sliceDoc())
-      .getHover(toPosition(view.state.doc, offset));
+      .getHover(offsetToPosition(view.state.doc, offset));
     if (!hover) {
       return null;
     }
@@ -206,14 +210,16 @@ function navigation(
       }
       const service = language.update(view.state.sliceDoc());
       const definition = service.getDefinitionRanges(
-        toPosition(view.state.doc, offset),
+        offsetToPosition(view.state.doc, offset),
       )[0];
       if (!definition) {
         return false;
       }
       event.preventDefault();
       view.dispatch({
-        selection: { anchor: toOffset(view.state.doc, definition.start) },
+        selection: {
+          anchor: positionToOffset(view.state.doc, definition.start),
+        },
         scrollIntoView: true,
       });
       view.focus();
@@ -230,7 +236,7 @@ function navigation(
       }
       const link = language.update(view.state.sliceDoc()).getDocumentLinks()
         .find((candidate) => {
-          const range = toOffsets(view.state.doc, candidate.range);
+          const range = rangeToOffsets(view.state.doc, candidate.range);
           return offset >= range.from && offset < range.to;
         });
       if (!link) {
@@ -297,7 +303,10 @@ function semanticDecorations(
 ): DecorationSet {
   const service = language.update(state.sliceDoc());
   const tokens = service.getSemanticTokens().flatMap((token) => {
-    const from = toOffset(state.doc, { line: token.line, character: token.char });
+    const from = positionToOffset(state.doc, {
+      line: token.line,
+      character: token.char,
+    });
     const tag = semanticTokenTag(token.tokenType);
     const themeClass = tag ? highlightingFor(state, [tag]) : null;
     const classes = [
@@ -313,7 +322,7 @@ function semanticDecorations(
     Decoration.widget({
       widget: new IndentHintWidget(hint.label),
       side: -1,
-    }).range(toOffset(state.doc, hint.position))) : [];
+    }).range(positionToOffset(state.doc, hint.position))) : [];
   return Decoration.set(
     [...tokens, ...hints].sort((left, right) => left.from - right.from || left.to - right.to),
     true,
@@ -345,7 +354,8 @@ function semanticFeatures(
     }
 
     update(update: ViewUpdate): void {
-      if (update.docChanged) {
+      if (update.docChanged ||
+          update.transactions.some((transaction) => transaction.reconfigured)) {
         this.decorations = semanticDecorations(
           update.state,
           language,
@@ -373,6 +383,7 @@ export function createGedcomExtensions(options: GedcomEditorOptions): Extension[
     indentUnit.of("  "),
     EditorView.lineWrapping,
     EditorView.contentAttributes.of({ spellcheck: "false", autocorrect: "off" }),
+    gedcomBaseTheme,
     keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
   ];
   if (diagnostics) {
@@ -380,3 +391,17 @@ export function createGedcomExtensions(options: GedcomEditorOptions): Extension[
   }
   return extensions;
 }
+
+const gedcomBaseTheme = EditorView.baseTheme({
+  ".gedcom-reference-read": {
+    backgroundColor: "color-mix(in srgb, currentColor 12%, transparent)",
+  },
+  ".gedcom-reference-write": {
+    backgroundColor: "color-mix(in srgb, currentColor 18%, transparent)",
+    textDecoration: "underline",
+  },
+  ".gedcom-indent-hint": {
+    opacity: "0.55",
+    pointerEvents: "none",
+  },
+});

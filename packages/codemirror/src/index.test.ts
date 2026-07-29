@@ -7,4 +7,13 @@ describe("@gedcom/codemirror public API", () => {
     expect("gedcomLanguage" in packageApi).toBe(false);
     expect("classifyGedcomLine" in packageApi).toBe(false);
   });
+
+  it("exposes explicit CodeMirror coordinate conversion names", () => {
+    expect("positionToOffset" in packageApi).toBe(true);
+    expect("offsetToPosition" in packageApi).toBe(true);
+    expect("rangeToOffsets" in packageApi).toBe(true);
+    expect("toOffset" in packageApi).toBe(false);
+    expect("toPosition" in packageApi).toBe(false);
+    expect("toOffsets" in packageApi).toBe(false);
+  });
 });

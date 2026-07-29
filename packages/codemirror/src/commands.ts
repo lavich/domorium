@@ -1,7 +1,7 @@
 import { EditorState, type TransactionSpec } from "@codemirror/state";
 import type { Range } from "@gedcom/language-service";
 
-import { toOffset, toPosition } from "./positions";
+import { offsetToPosition, positionToOffset } from "./positions";
 import { EditorLanguageService, toCodeMirrorChanges } from "./service";
 
 export interface GedcomCommandTarget {
@@ -14,7 +14,7 @@ export function findReferences(
   language: EditorLanguageService,
 ): Range[] {
   return language.update(state.sliceDoc()).getReferences(
-    toPosition(state.doc, state.selection.main.head),
+    offsetToPosition(state.doc, state.selection.main.head),
     { includeDeclaration: true },
   );
 }
@@ -24,9 +24,9 @@ export function getDefinitionOffset(
   language: EditorLanguageService,
 ): number | null {
   const definition = language.update(state.sliceDoc()).getDefinitionRanges(
-    toPosition(state.doc, state.selection.main.head),
+    offsetToPosition(state.doc, state.selection.main.head),
   )[0];
-  return definition ? toOffset(state.doc, definition.start) : null;
+  return definition ? positionToOffset(state.doc, definition.start) : null;
 }
 
 export function goToDefinition(
@@ -50,7 +50,8 @@ export function goToNextReference(
     return 0;
   }
   const current = target.state.selection.main.head;
-  const offsets = ranges.map((range) => toOffset(target.state.doc, range.start));
+  const offsets = ranges.map((range) =>
+    positionToOffset(target.state.doc, range.start));
   const offset = offsets.find((candidate) => candidate > current) ?? offsets[0];
   target.dispatch({ selection: { anchor: offset }, scrollIntoView: true });
   return ranges.length;
@@ -63,7 +64,7 @@ export function renameReference(
 ): boolean {
   language.update(target.state.sliceDoc());
   const result = language.service.rename(
-    toPosition(target.state.doc, target.state.selection.main.head),
+    offsetToPosition(target.state.doc, target.state.selection.main.head),
     newName,
     language.getVersion(),
   );

@@ -8,8 +8,8 @@ import {
   EditorLanguageService,
   goToDefinition,
   goToNextReference,
+  offsetToPosition,
   renameReference,
-  toPosition,
 } from "@gedcom/codemirror";
 
 async function init(): Promise<void> {
@@ -45,7 +45,7 @@ async function init(): Promise<void> {
             key: "F2",
             run: (view) => {
               const prepared = language.update(view.state.sliceDoc())
-                .prepareRename(toPosition(
+                .prepareRename(offsetToPosition(
                   view.state.doc,
                   view.state.selection.main.head,
                 ));
