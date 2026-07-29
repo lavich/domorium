@@ -1,4 +1,5 @@
 import { EditorState } from "@codemirror/state";
+import { keymap } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { describe, expect, it, vi } from "vitest";
 
@@ -21,6 +22,34 @@ const text = [
 ].join("\n");
 
 describe("GEDCOM editor extensions", () => {
+  it("keeps host editor keymaps out of the GEDCOM feature layer", () => {
+    const createStandaloneEditorExtensions = Reflect.get(
+      extensionsModule,
+      "createStandaloneEditorExtensions",
+    );
+    expect(createStandaloneEditorExtensions).toBeTypeOf("function");
+
+    const actions = { applyWorkspaceEdit: () => true };
+    const gedcomState = EditorState.create({
+      extensions: extensionsModule.createGedcomExtensions({
+        actions,
+        settings: { diagnostics: false },
+      }),
+    });
+    const standaloneState = EditorState.create({
+      extensions: createStandaloneEditorExtensions(),
+    });
+
+    const gedcomKeys = gedcomState.facet(keymap).flat()
+      .map((binding) => binding.key);
+    const standaloneKeys = standaloneState.facet(keymap).flat()
+      .map((binding) => binding.key);
+
+    expect(gedcomKeys).toContain("Ctrl-Space");
+    expect(gedcomKeys).not.toContain("Tab");
+    expect(standaloneKeys).toContain("Tab");
+  });
+
   it("maps language-service semantic token types to CodeMirror theme tags", () => {
     expect("semanticTokenTag" in extensionsModule).toBe(true);
     const semanticTokenTag = Reflect.get(extensionsModule, "semanticTokenTag");

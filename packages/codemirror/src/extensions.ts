@@ -371,25 +371,31 @@ export function createGedcomExtensions(options: GedcomEditorOptions): Extension[
   const diagnostics = options.settings?.diagnostics ?? true;
   const indentationHints = options.settings?.indentationHints ?? true;
   const extensions: Extension[] = [
-    lineNumbers(),
-    history(),
-    foldGutter(),
     autocompletion({ override: [(context) => completionSource(language, context)] }),
     hoverSource(language),
     foldingSource(language),
     navigation(language, options.actions),
     referenceHighlights(language),
     semanticFeatures(language, indentationHints),
+    gedcomBaseTheme,
+  ];
+  if (diagnostics) {
+    extensions.push(diagnosticSource(language, options.actions));
+  }
+  return extensions;
+}
+
+export function createStandaloneEditorExtensions(): Extension[] {
+  return [
+    lineNumbers(),
+    history(),
+    foldGutter(),
+    lintGutter(),
     indentUnit.of("  "),
     EditorView.lineWrapping,
     EditorView.contentAttributes.of({ spellcheck: "false", autocorrect: "off" }),
-    gedcomBaseTheme,
     keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
   ];
-  if (diagnostics) {
-    extensions.push(lintGutter(), diagnosticSource(language, options.actions));
-  }
-  return extensions;
 }
 
 const gedcomBaseTheme = EditorView.baseTheme({

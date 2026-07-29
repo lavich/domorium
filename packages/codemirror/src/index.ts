@@ -1,5 +1,6 @@
 export {
   createGedcomExtensions,
+  createStandaloneEditorExtensions,
   getDiagnosticActions,
   getReferenceHighlightSpecs,
   semanticTokenTag,

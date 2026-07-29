@@ -4,6 +4,7 @@ import { EditorView, keymap } from "@codemirror/view";
 import {
   applyWorkspaceEdit,
   createGedcomExtensions,
+  createStandaloneEditorExtensions,
   type DocumentLink,
   EditorLanguageService,
   goToDefinition,
@@ -32,6 +33,7 @@ async function init(): Promise<void> {
             openDocumentLink,
           },
         }),
+        ...createStandaloneEditorExtensions(),
         keymap.of([
           {
             key: "F12",
