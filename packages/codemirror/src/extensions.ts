@@ -4,7 +4,12 @@ import {
   type CompletionResult,
 } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
-import { foldGutter, foldService, indentUnit } from "@codemirror/language";
+import {
+  foldGutter,
+  foldService,
+  highlightingFor,
+  indentUnit,
+} from "@codemirror/language";
 import { linter, lintGutter, type Diagnostic as CodeMirrorDiagnostic } from "@codemirror/lint";
 import { EditorState, type Extension } from "@codemirror/state";
 import {
@@ -25,8 +30,8 @@ import {
   semanticTokenLegend,
   type WorkspaceEdit,
 } from "@gedcom/language-service";
+import { tags, type Tag } from "@lezer/highlight";
 
-import { gedcomLanguage } from "./language";
 import { toOffset, toOffsets, toPosition } from "./positions";
 import { EditorLanguageService } from "./service";
 
@@ -291,12 +296,18 @@ function semanticDecorations(
   indentationHints: boolean,
 ): DecorationSet {
   const service = language.update(state.sliceDoc());
-  const tokens = service.getSemanticTokens().map((token) => {
+  const tokens = service.getSemanticTokens().flatMap((token) => {
     const from = toOffset(state.doc, { line: token.line, character: token.char });
-    const type = semanticTokenLegend.tokenTypes[token.tokenType] ?? "unknown";
-    const declaration = token.tokenModifiers === 0 ? "" : " gedcom-token-declaration";
-    return Decoration.mark({ class: `gedcom-token-${type}${declaration}` })
-      .range(from, Math.min(from + token.length, state.doc.length));
+    const tag = semanticTokenTag(token.tokenType);
+    const themeClass = tag ? highlightingFor(state, [tag]) : null;
+    const classes = [
+      themeClass,
+      token.tokenModifiers === 0 ? null : "gedcom-token-declaration",
+    ].filter((value): value is string => value !== null);
+    return classes.length === 0
+      ? []
+      : [Decoration.mark({ class: classes.join(" ") })
+        .range(from, Math.min(from + token.length, state.doc.length))];
   }).filter(({ from, to }) => from < to);
   const hints = indentationHints ? service.getInlayHints().map((hint) =>
     Decoration.widget({
@@ -307,6 +318,19 @@ function semanticDecorations(
     [...tokens, ...hints].sort((left, right) => left.from - right.from || left.to - right.to),
     true,
   );
+}
+
+export function semanticTokenTag(tokenType: number): Tag | null {
+  switch (semanticTokenLegend.tokenTypes[tokenType]) {
+    case "comment":
+      return tags.comment;
+    case "keyword":
+      return tags.keyword;
+    case "string":
+      return tags.string;
+    default:
+      return null;
+  }
 }
 
 function semanticFeatures(
@@ -337,7 +361,6 @@ export function createGedcomExtensions(options: GedcomEditorOptions): Extension[
   const diagnostics = options.settings?.diagnostics ?? true;
   const indentationHints = options.settings?.indentationHints ?? true;
   const extensions: Extension[] = [
-    gedcomLanguage,
     lineNumbers(),
     history(),
     foldGutter(),

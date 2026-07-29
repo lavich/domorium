@@ -1,8 +1,8 @@
-export { gedcomLanguage, classifyGedcomLine } from "./language";
 export {
   createGedcomExtensions,
   getDiagnosticActions,
   getReferenceHighlightSpecs,
+  semanticTokenTag,
   type GedcomEditorActions,
   type GedcomEditorOptions,
   type GedcomEditorSettings,

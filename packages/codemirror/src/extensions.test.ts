@@ -1,6 +1,8 @@
 import { EditorState } from "@codemirror/state";
+import { tags } from "@lezer/highlight";
 import { describe, expect, it, vi } from "vitest";
 
+import * as extensionsModule from "./extensions";
 import {
   getDiagnosticActions,
   getReferenceHighlightSpecs,
@@ -19,6 +21,14 @@ const text = [
 ].join("\n");
 
 describe("GEDCOM editor extensions", () => {
+  it("maps language-service semantic token types to CodeMirror theme tags", () => {
+    expect("semanticTokenTag" in extensionsModule).toBe(true);
+    const semanticTokenTag = Reflect.get(extensionsModule, "semanticTokenTag");
+    expect(semanticTokenTag(0)).toBe(tags.comment);
+    expect(semanticTokenTag(1)).toBe(tags.keyword);
+    expect(semanticTokenTag(2)).toBe(tags.string);
+  });
+
   it("maps declaration and use highlights at the selection", () => {
     const language = new EditorLanguageService();
     const declaration = text.indexOf("@I1@");

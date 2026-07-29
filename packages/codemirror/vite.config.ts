@@ -16,6 +16,7 @@ export default defineConfig({
         "@codemirror/lint",
         "@codemirror/state",
         "@codemirror/view",
+        "@lezer/highlight",
         "@gedcom/language-service",
       ],
     },
