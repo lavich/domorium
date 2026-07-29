@@ -11,15 +11,18 @@
         padding: 0;
         box-sizing: border-box;
       }
-      html, body, #monaco-editor-root {
+      html, body, #codemirror-editor-root {
         width: 100%;
         height: 100%;
         overflow: hidden;
       }
+      body {
+        background: #1e1e1e;
+      }
     </style>
   </head>
   <body>
-    <div id="monaco-editor-root"></div>
+    <div id="codemirror-editor-root"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
