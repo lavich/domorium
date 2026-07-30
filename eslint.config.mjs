@@ -47,4 +47,16 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Repository tooling runs in Node, outside any workspace's tsconfig. Globals are
+    // listed explicitly rather than pulled from the `globals` package, which is only
+    // available transitively here.
+    files: ["scripts/**/*.mjs", "*.mjs"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        process: "readonly",
+      },
+    },
+  },
 );

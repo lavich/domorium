@@ -68,6 +68,9 @@ jobs:
             apps/web-editor/src \
             apps/vscode/src \
             packages \
+            docs \
+            scripts \
+            '*.md' \
             eslint.config.mjs \
             tsconfig.json \
             vitest.config.ts \

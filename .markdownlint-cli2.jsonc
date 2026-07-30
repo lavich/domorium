@@ -1,0 +1,26 @@
+{
+  // Editor configuration for the markdownlint extension. It is deliberately NOT wired
+  // into `npm run check:docs` or CI yet: that requires adding markdownlint-cli2 as a
+  // devDependency, which has not been done. Until then this file only shapes the
+  // in-editor warnings, and `npx markdownlint-cli2` would fetch the tool from the
+  // network rather than use a pinned local version.
+  //
+  // MD013 (line-length) is off because Prettier owns Markdown formatting here and lays
+  // out tables wider than 80 columns without wrapping them, so the rule reports errors
+  // that cannot be fixed without fighting the formatter. Every other default stays on.
+  "config": {
+    "MD013": false,
+  },
+  "globs": ["**/*.md"],
+  "ignores": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/dist-stdio/**",
+    "**/out/**",
+    "**/build/**",
+    "**/coverage/**",
+    "**/.worktrees/**",
+    "**/.intellijPlatform/**",
+    "**/CHANGELOG.md",
+  ],
+}
