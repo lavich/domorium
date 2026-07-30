@@ -2,27 +2,58 @@
   "name": "@gedcom/codemirror",
   "version": "0.1.0",
   "description": "CodeMirror 6 integration for GEDCOM language features",
-  "private": true,
+  "keywords": [
+    "gedcom",
+    "genealogy",
+    "codemirror",
+    "editor"
+  ],
+  "homepage": "https://github.com/lavich/gedcom#readme",
+  "bugs": {
+    "url": "https://github.com/lavich/gedcom/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lavich/gedcom.git",
+    "directory": "packages/codemirror"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Andrei Lobanov",
+    "email": "lobanov.andrey.lavich@gmail.com",
+    "url": "https://github.com/lavich"
+  },
   "type": "module",
   "sideEffects": false,
-  "main": "dist/index.cjs.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "main": "dist/index.cjs",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.cjs.js",
+      "require": "./dist/index.cjs",
       "import": "./dist/index.esm.js"
     }
   },
   "files": [
     "dist",
-    "package.json"
+    "package.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "vite build && tsc --emitDeclarationOnly --declaration --outDir dist",
+    "build:dependencies": "cd ../.. && npm run build -w packages/language-service",
+    "build": "npm run build:dependencies && vite build && tsc --emitDeclarationOnly --declaration --outDir dist",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@gedcom/language-service": "^0.1.2"

@@ -8,25 +8,26 @@ export {
   type GedcomEditorOptions,
   type GedcomEditorSettings,
   type ReferenceHighlightSpec,
-} from "./extensions";
+} from "./extensions.js";
 export {
   offsetToPosition,
   positionToOffset,
   rangeToOffsets,
-} from "./positions";
+} from "./positions.js";
 export {
   applyWorkspaceEdit,
   EditorLanguageService,
   toCodeMirrorChanges,
   type CodeMirrorChange,
   type CodeMirrorEditTarget,
-} from "./service";
+} from "./service.js";
 export {
+  canRenameReference,
   findReferences,
   getDefinitionOffset,
   goToDefinition,
   goToNextReference,
   renameReference,
   type GedcomCommandTarget,
-} from "./commands";
+} from "./commands.js";
 export type { DocumentLink, Range, WorkspaceEdit } from "@gedcom/language-service";

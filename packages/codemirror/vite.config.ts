@@ -6,7 +6,7 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
       formats: ["cjs", "es"],
-      fileName: (format) => format === "es" ? "index.esm.js" : "index.cjs.js",
+      fileName: (format) => format === "es" ? "index.esm.js" : "index.cjs",
     },
     rollupOptions: {
       external: [
