@@ -44,6 +44,8 @@ npm run check
 npm run dev -w apps/web-editor
 ```
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, checks, and the release process,
+and [docs/architecture.md](docs/architecture.md) for how the packages fit together.
 Product-specific build and development commands live in each app's README.
 
 ## License

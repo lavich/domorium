@@ -1,5 +1,13 @@
 # CodeMirror Package and Obsidian Integration Design
 
+- **Status:** In progress
+- **Started:** 2026-07-30
+
+The work proceeds in the order the sections below are written: prepare and validate
+the package locally against a real tarball, publish it, then move the Obsidian
+repository onto the published version. Release gates and the tarball requirement
+are project-wide rules and live in [AGENTS.md](../../AGENTS.md).
+
 ## Goal
 
 Publish the shared GEDCOM CodeMirror integration as
