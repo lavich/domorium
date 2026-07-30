@@ -1,8 +1,8 @@
 import { EditorState, type TransactionSpec } from "@codemirror/state";
 import type { Range } from "@gedcom/language-service";
 
-import { offsetToPosition, positionToOffset } from "./positions";
-import { EditorLanguageService, toCodeMirrorChanges } from "./service";
+import { offsetToPosition, positionToOffset } from "./positions.js";
+import { EditorLanguageService, toCodeMirrorChanges } from "./service.js";
 
 export interface GedcomCommandTarget {
   readonly state: EditorState;

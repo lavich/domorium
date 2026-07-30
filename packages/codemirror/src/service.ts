@@ -8,7 +8,7 @@ import {
   type WorkspaceEdit,
 } from "@gedcom/language-service";
 
-import { rangeToOffsets } from "./positions";
+import { rangeToOffsets } from "./positions.js";
 
 export interface CodeMirrorChange {
   from: number;

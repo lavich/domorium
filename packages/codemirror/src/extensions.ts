@@ -36,8 +36,8 @@ import {
   offsetToPosition,
   positionToOffset,
   rangeToOffsets,
-} from "./positions";
-import { EditorLanguageService } from "./service";
+} from "./positions.js";
+import { EditorLanguageService } from "./service.js";
 
 export interface GedcomEditorSettings {
   diagnostics?: boolean;
