@@ -96,6 +96,10 @@ export class EditorLanguageService {
   getDocumentLinks(): DocumentLink[] {
     return this.service.getDocumentLinks();
   }
+
+  prepareRename(position: Position) {
+    return this.service.prepareRename(position);
+  }
 }
 
 function isValidPosition(document: Text, position: Position): boolean {

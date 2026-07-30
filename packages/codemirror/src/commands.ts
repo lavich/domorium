@@ -29,6 +29,15 @@ export function getDefinitionOffset(
   return definition ? positionToOffset(state.doc, definition.start) : null;
 }
 
+export function canRenameReference(
+  state: EditorState,
+  language: EditorLanguageService,
+): boolean {
+  return language.update(state.sliceDoc()).prepareRename(
+    offsetToPosition(state.doc, state.selection.main.head),
+  ).ok;
+}
+
 export function goToDefinition(
   target: GedcomCommandTarget,
   language: EditorLanguageService,

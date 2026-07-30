@@ -22,6 +22,7 @@ export {
   type CodeMirrorEditTarget,
 } from "./service";
 export {
+  canRenameReference,
   findReferences,
   getDefinitionOffset,
   goToDefinition,

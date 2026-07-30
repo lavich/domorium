@@ -16,4 +16,11 @@ describe("@gedcom/codemirror public API", () => {
     expect("toPosition" in packageApi).toBe(false);
     expect("toOffsets" in packageApi).toBe(false);
   });
+
+  it("exposes reference commands needed by editor hosts", () => {
+    expect("canRenameReference" in packageApi).toBe(true);
+    expect("renameReference" in packageApi).toBe(true);
+    expect("goToDefinition" in packageApi).toBe(true);
+    expect("goToNextReference" in packageApi).toBe(true);
+  });
 });
