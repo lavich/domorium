@@ -1,81 +1,108 @@
-import * as monaco from "monaco-editor";
-import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-import "monaco-editor/min/vs/editor/editor.main.css";
+import { EditorState } from "@codemirror/state";
+import { oneDark } from "@codemirror/theme-one-dark";
+import { EditorView, keymap } from "@codemirror/view";
 import {
-  DidChangeTextDocumentNotification,
-  DidOpenTextDocumentNotification,
-} from "vscode-languageserver-protocol";
-import { applyDiagnostics } from "./diagnostics";
-import { registerGedcomLanguage } from "./gedcomLanguage";
-import { createLspClient } from "./lspClient";
-import { registerLspProviders } from "./lspProviders";
+  applyWorkspaceEdit,
+  createGedcomExtensions,
+  createStandaloneEditorExtensions,
+  type DocumentLink,
+  EditorLanguageService,
+  goToDefinition,
+  goToNextReference,
+  offsetToPosition,
+  renameReference,
+} from "@gedcom/codemirror";
 
-const FILE_URI = "file:///workspace/simpsons55.ged";
-const LANGUAGE_ID = "gedcom";
-
-async function init() {
-  configureMonaco();
-  registerGedcomLanguage(monaco);
-
-  const model = await createInitialModel();
-  createEditor(model);
-
-  const { connection, initializeResult } = await createLspClient((params) =>
-    applyDiagnostics(monaco, model, params),
-  );
-  registerLspProviders(
-    monaco,
-    connection,
-    initializeResult.capabilities.semanticTokensProvider?.legend,
-  );
-  synchronizeDocument(connection, model);
+async function init(): Promise<void> {
+  const document = await loadSample();
+  const language = new EditorLanguageService();
+  const editorRef: { current: EditorView | null } = { current: null };
+  const editor = new EditorView({
+    parent: documentRoot(),
+    state: EditorState.create({
+      doc: document,
+      extensions: [
+        ...createGedcomExtensions({
+          language,
+          actions: {
+            applyWorkspaceEdit: (edit) => {
+              return editorRef.current
+                ? applyWorkspaceEdit(editorRef.current, edit, language.getVersion())
+                : false;
+            },
+            openDocumentLink,
+          },
+        }),
+        ...createStandaloneEditorExtensions(),
+        keymap.of([
+          {
+            key: "F12",
+            run: (view) => goToDefinition(view, language),
+          },
+          {
+            key: "Shift-F12",
+            run: (view) => goToNextReference(view, language) > 0,
+          },
+          {
+            key: "F2",
+            run: (view) => {
+              const prepared = language.update(view.state.sliceDoc())
+                .prepareRename(offsetToPosition(
+                  view.state.doc,
+                  view.state.selection.main.head,
+                ));
+              if (!prepared.ok) {
+                return false;
+              }
+              const nextName = window.prompt(
+                "Rename GEDCOM XREF",
+                prepared.placeholder,
+              );
+              return nextName === null
+                ? true
+                : renameReference(view, language, nextName);
+            },
+          },
+        ]),
+        oneDark,
+        webEditorLayout,
+      ],
+    }),
+  });
+  editorRef.current = editor;
 }
 
-function configureMonaco() {
-  self.MonacoEnvironment = {
-    getWorker() {
-      return new editorWorker();
-    },
-  };
-}
-
-async function createInitialModel() {
+async function loadSample(): Promise<string> {
   const response = await fetch(`${import.meta.env.BASE_URL}simpsons55.ged`);
-  if (!response.ok) throw new Error(`Failed to load simpsons55.ged: ${response.status}`);
-  return monaco.editor.createModel(
-    await response.text(),
-    LANGUAGE_ID,
-    monaco.Uri.parse(FILE_URI),
-  );
+  if (!response.ok) {
+    throw new Error(`Failed to load simpsons55.ged: ${response.status}`);
+  }
+  return response.text();
 }
 
-function createEditor(model: monaco.editor.ITextModel) {
-  return monaco.editor.create(document.getElementById("monaco-editor-root")!, {
-    model,
-    theme: "vs-dark",
-    automaticLayout: true,
-    minimap: { enabled: false },
-    fontSize: 14,
-    tabSize: 2,
-    wordWrap: "on",
-    "semanticHighlighting.enabled": true,
-  });
+function documentRoot(): HTMLElement {
+  const root = document.getElementById("codemirror-editor-root");
+  if (!root) {
+    throw new Error("CodeMirror editor root was not found");
+  }
+  return root;
 }
 
-function synchronizeDocument(
-  connection: import("vscode-jsonrpc").MessageConnection,
-  model: monaco.editor.ITextModel,
-) {
-  const uri = model.uri.toString();
-  connection.sendNotification(DidOpenTextDocumentNotification.type, {
-    textDocument: { uri, languageId: LANGUAGE_ID, version: model.getVersionId(), text: model.getValue() },
-  });
-  model.onDidChangeContent(() => {
-    connection.sendNotification(DidChangeTextDocumentNotification.type, {
-      textDocument: { uri, version: model.getVersionId() },
-      contentChanges: [{ text: model.getValue() }],
-    });
-  });
+function openDocumentLink(link: DocumentLink): void {
+  if (link.kind === "http") {
+    window.open(link.targetText, "_blank", "noopener,noreferrer");
+  }
 }
+
+const webEditorLayout = EditorView.theme({
+  "&": {
+    height: "100%",
+    fontSize: "14px",
+  },
+  ".cm-scroller": {
+    overflow: "auto",
+    fontFamily: "Menlo, Monaco, Consolas, monospace",
+  },
+});
 
 init().catch(console.error);

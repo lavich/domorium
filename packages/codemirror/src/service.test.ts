@@ -1,0 +1,61 @@
+import { Text } from "@codemirror/state";
+import { describe, expect, it } from "vitest";
+
+import {
+  EditorLanguageService,
+  toCodeMirrorChanges,
+} from "./service";
+
+describe("EditorLanguageService", () => {
+  it("reuses an unchanged snapshot and increments versions only on changes", () => {
+    const language = new EditorLanguageService();
+    const first = language.update("0 HEAD\n0 TRLR");
+    const version = language.getVersion();
+
+    expect(language.update("0 HEAD\n0 TRLR")).toBe(first);
+    expect(language.getVersion()).toBe(version);
+
+    language.update("0 HEAD");
+    expect(language.getVersion()).toBe(version + 1);
+  });
+});
+
+describe("toCodeMirrorChanges", () => {
+  const document = Text.of(["0 @I1@ INDI", "1 FAMC @F1@"]);
+
+  it("converts a current non-overlapping workspace edit", () => {
+    expect(toCodeMirrorChanges(document, {
+      version: 3,
+      edits: [{
+        range: {
+          start: { line: 0, character: 2 },
+          end: { line: 0, character: 6 },
+        },
+        newText: "@I2@",
+      }],
+    }, 3)).toEqual([{ from: 2, to: 6, insert: "@I2@" }]);
+  });
+
+  it("rejects stale and overlapping edits", () => {
+    expect(toCodeMirrorChanges(document, { version: 2, edits: [] }, 3)).toBeNull();
+    expect(toCodeMirrorChanges(document, {
+      version: 3,
+      edits: [
+        {
+          range: {
+            start: { line: 0, character: 2 },
+            end: { line: 0, character: 6 },
+          },
+          newText: "@I2@",
+        },
+        {
+          range: {
+            start: { line: 0, character: 4 },
+            end: { line: 0, character: 6 },
+          },
+          newText: "2@",
+        },
+      ],
+    }, 3)).toBeNull();
+  });
+});
