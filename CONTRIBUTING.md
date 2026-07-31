@@ -96,8 +96,8 @@ A release is a deliberate three-step act:
    for the JetBrains plugin.
 2. Add the matching `CHANGELOG.md` entry. Changelogs are written by hand, aimed at
    the people who use the package.
-3. Tag and push: `validator-vX.Y.Z`, `language-service-vX.Y.Z`, `vscode-vX.Y.Z`, or
-   `jetbrains-vX.Y.Z`.
+3. Tag and push: `validator-vX.Y.Z`, `language-service-vX.Y.Z`,
+   `codemirror-vX.Y.Z`, `vscode-vX.Y.Z`, or `jetbrains-vX.Y.Z`.
 
 The workflow refuses to publish if the tag version and the package version
 disagree, or if any check fails. Publication is irreversible — npm versions are

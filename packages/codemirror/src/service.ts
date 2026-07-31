@@ -8,7 +8,7 @@ import {
   type WorkspaceEdit,
 } from "@gedcom/language-service";
 
-import { rangeToOffsets } from "./positions";
+import { rangeToOffsets } from "./positions.js";
 
 export interface CodeMirrorChange {
   from: number;
@@ -95,6 +95,10 @@ export class EditorLanguageService {
 
   getDocumentLinks(): DocumentLink[] {
     return this.service.getDocumentLinks();
+  }
+
+  prepareRename(position: Position) {
+    return this.service.prepareRename(position);
   }
 }
 

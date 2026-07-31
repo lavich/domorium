@@ -39,11 +39,10 @@ Check each of the following and report what you find before changing anything:
    contradicts an existing ADR, that record is superseded by a new one; existing
    records are never edited.
 
-5. **Designs.** If the diff completes work described in `docs/design/`, drain that
-   document: durable decisions into an ADR, structural facts into
-   `docs/architecture.md`, user-visible changes into the relevant `CHANGELOG.md`.
-   Only then delete it. If the work is still in progress, is the document's status
-   header still accurate?
+5. **Temporary planning.** Did brainstorming or an implementation plan produce
+   reasoning that outlives the task? Record durable decisions in an ADR,
+   structural facts in `docs/architecture.md`, and user-visible changes in the
+   relevant `CHANGELOG.md`. Do not commit the temporary planning document itself.
 
 6. **Contributor-facing commands.** Did any script, check, or build step change in a
    way that makes `CONTRIBUTING.md` or a README wrong?

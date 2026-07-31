@@ -13,7 +13,7 @@ as `CLAUDE.md` are pointers to it and must not carry content of their own.
 packages/validator          @gedcom/validator        parser + schema validation   (npm)
 packages/language-service   @gedcom/language-service editor-independent features (npm)
 packages/language-server    @gedcom/language-server  LSP adapter                 (internal)
-packages/codemirror         @gedcom/codemirror       CodeMirror 6 adapter        (internal)
+packages/codemirror         @gedcom/codemirror       CodeMirror 6 adapter        (npm)
 apps/vscode                 VS Code extension        → language-server
 apps/jetbrains              JetBrains plugin         → language-server (bundled stdio build)
 apps/web-editor             Vite app, GitHub Pages   → codemirror
@@ -116,10 +116,10 @@ Obligations when making a change:
 - An item in [TODO.md](TODO.md) was completed → mark it there. Do not silently
   promote items out of [docs/roadmap.md](docs/roadmap.md); that document holds
   directions, not commitments.
-- Work described by a document in [docs/design/](docs/design/) shipped → drain the
-  document before deleting it: durable decisions become an ADR, structural facts
-  go into `docs/architecture.md`, user-visible changes go into a changelog. Never
-  delete a design document without extracting its reasoning first.
+- Brainstorming notes, feature designs, and implementation plans are temporary
+  working material and are not committed. Preserve only what outlives the task:
+  durable decisions become ADRs, structural facts go into `docs/architecture.md`,
+  and user-visible changes go into a changelog.
 
 Assistant session memory is not project documentation. A durable decision that
 surfaced in conversation belongs in an ADR or it does not exist.
@@ -129,8 +129,6 @@ surfaced in conversation belongs in an ADR or it does not exist.
 - [docs/architecture.md](docs/architecture.md) — layers, build order, release
   topology, invariants in full
 - [docs/adr/](docs/adr/) — recorded decisions and rejected alternatives
-- [docs/design/](docs/design/) — designs for in-flight work, with their lifecycle
-  rules
 - [TODO.md](TODO.md) — near-term work
 - [docs/roadmap.md](docs/roadmap.md) — longer-range directions
 - Per-app READMEs — platform-specific build and debug instructions

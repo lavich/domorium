@@ -1,7 +1,13 @@
-import { EditorState, type TransactionSpec } from "@codemirror/state";
+import { history, undo } from "@codemirror/commands";
+import {
+  EditorState,
+  Transaction,
+  type TransactionSpec,
+} from "@codemirror/state";
 import { describe, expect, it } from "vitest";
 
 import {
+  canRenameReference,
   findReferences,
   getDefinitionOffset,
   renameReference,
@@ -28,22 +34,42 @@ describe("GEDCOM CodeMirror commands", () => {
     expect(getDefinitionOffset(state, language)).toBe(text.indexOf("@I1@"));
   });
 
-  it("renames a declaration and all references atomically", () => {
+  it("reports whether the current selection can be renamed", () => {
+    const language = new EditorLanguageService();
+    const reference = EditorState.create({
+      doc: text,
+      selection: { anchor: text.lastIndexOf("@I1@") + 1 },
+    });
+    const whitespace = EditorState.create({
+      doc: text,
+      selection: { anchor: text.indexOf("HEAD") - 1 },
+    });
+
+    expect(canRenameReference(reference, language)).toBe(true);
+    expect(canRenameReference(whitespace, language)).toBe(false);
+  });
+
+  it("renames atomically so one undo restores every reference", () => {
     let state = EditorState.create({
       doc: text,
       selection: { anchor: text.lastIndexOf("@I1@") + 1 },
+      extensions: [history()],
     });
     const target = {
       get state() {
         return state;
       },
-      dispatch(spec: TransactionSpec) {
-        state = state.update(spec).state;
+      dispatch(transaction: Transaction | TransactionSpec) {
+        state = transaction instanceof Transaction
+          ? transaction.state
+          : state.update(transaction).state;
       },
     };
 
     expect(renameReference(target, new EditorLanguageService(), "@I2@")).toBe(true);
     expect(state.doc.toString().match(/@I2@/g)).toHaveLength(2);
     expect(state.doc.toString()).not.toContain("@I1@");
+    expect(undo(target)).toBe(true);
+    expect(state.doc.toString()).toBe(text);
   });
 });

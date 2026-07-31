@@ -24,9 +24,7 @@ commitments, and anything a future contributor would otherwise have to
 reconstruct from commit history.
 
 Routine implementation choices do not belong here. Roadmap items live in
-[TODO.md](../../TODO.md), longer-range directions in [roadmap.md](../roadmap.md), and
-feature designs in [docs/design/](../design/).
-
-A design document that is about to be deleted is the most common source of new
-ADRs: whatever in it outlives the task is recorded here first. See
-[docs/design/README.md](../design/README.md).
+[TODO.md](../../TODO.md), and longer-range directions in
+[roadmap.md](../roadmap.md). Brainstorming notes and implementation plans remain
+temporary; any decision from them that outlives the task is recorded here before
+the change is merged.

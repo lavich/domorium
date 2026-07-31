@@ -5,11 +5,10 @@
 
 ## Context
 
-This record was reconstructed from a design document that was deleted when the
-work shipped (`docs/superpowers/specs/2026-07-21-npm-package-publishing-design.md`,
-recoverable as `git show 18cf461:<path>`). The decisions below are in force in the
-repository today; only their rationale was missing. Details that were specific to
-the one-time rollout are deliberately not carried over.
+This record was reconstructed from git history after the temporary planning
+material was deleted when the work shipped. The decisions below are in force in
+the repository today; only their rationale was missing. Details that were specific
+to the one-time rollout are deliberately not carried over.
 
 The standalone Obsidian plugin lives in its own repository and originally carried
 copied sources of the shared validator and language-service workspaces. Copied
@@ -17,30 +16,28 @@ source has no version boundary: a fix in this repository reached the plugin only
 by another copy, divergence was invisible, and neither side could state which
 revision of the shared logic it was built against.
 
-Two shared libraries are genuinely reusable outside this repository — the parser
-and validator, and the editor-independent language features. The LSP adapter is
-not: it exists to bridge one specific protocol to specific editor hosts.
+Three shared libraries are genuinely reusable outside this repository — the parser
+and validator, the editor-independent language features, and the CodeMirror adapter.
+The LSP adapter is not: it exists to bridge one specific protocol to specific editor
+hosts.
 
 Publishing to a registry requires publish credentials in CI, which is where the
 security question enters: a long-lived registry token stored as a repository
 secret is a standing credential that can be exfiltrated and used from anywhere.
 
-At the time of the decision the packages were scoped `@domorium/*`. They were later
-renamed to `@gedcom/*`; the scope name is not part of this decision.
-
 ## Decision
 
-Publish the two reusable libraries as public npm packages, and have the Obsidian
+Publish the reusable libraries as public npm packages, and have the Obsidian
 repository consume them as ordinary versioned dependencies instead of copying
 source.
 
 **Independent versioning.** Each package carries its own semantic version, its own
 changelog, and its own release tag family (`validator-v*.*.*`,
-`language-service-v*.*.*`). The language service declares a compatible released
-range of the validator. npm workspaces continue to link the packages locally
-during development, so the monorepo workflow is unaffected. Below `1.0.0`,
-consumers pin a minor range such as `^0.1.0` and breaking changes raise the minor
-version.
+`language-service-v*.*.*`, `codemirror-v*.*.*`). Each package declares compatible
+released ranges of its reusable dependencies. npm workspaces continue to link the
+packages locally during development, so the monorepo workflow is unaffected. Below
+`1.0.0`, consumers pin a minor range such as `^0.1.0` and breaking changes raise the
+minor version.
 
 **The LSP adapter stays internal.** It is a transport adapter, not a reusable
 library, and is consumed only inside this repository.

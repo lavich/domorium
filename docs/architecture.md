@@ -18,7 +18,7 @@ graph TD
     web["apps/web-editor<br/>GitHub Pages"]
     obsidian["lavich/gedcom-obsidian<br/><i>separate repository</i>"]
     lsp["@gedcom/language-server<br/>LSP adapter<br/><i>internal</i>"]
-    cm["@gedcom/codemirror<br/>CodeMirror 6 adapter<br/><i>internal</i>"]
+    cm["@gedcom/codemirror<br/>CodeMirror 6 adapter<br/><i>published</i>"]
     service["@gedcom/language-service<br/>editor-independent features<br/><i>published</i>"]
     validator["@gedcom/validator<br/>parser + schema validation<br/><i>published</i>"]
 
@@ -89,8 +89,7 @@ this package does not need to depend on both.
 
 ### `packages/codemirror` — `@gedcom/codemirror`
 
-Currently private, prepared for publication as `0.1.0`. Adapts the language
-service to CodeMirror 6.
+Published to npm. Adapts the language service to CodeMirror 6.
 
 `createGedcomExtensions` and `createStandaloneEditorExtensions` produce the
 extension set; `positions.ts` converts between the language service's
@@ -138,6 +137,7 @@ triggers the matching workflow in `.github/workflows/`.
 | -------------------------- | ------------------------- | ------------------------------- |
 | `@gedcom/validator`        | `validator-v*.*.*`        | npm                             |
 | `@gedcom/language-service` | `language-service-v*.*.*` | npm                             |
+| `@gedcom/codemirror`       | `codemirror-v*.*.*`       | npm                             |
 | VS Code extension          | `vscode-v*.*.*`           | VS Code Marketplace             |
 | JetBrains plugin           | `jetbrains-v*.*.*`        | JetBrains Marketplace           |
 | Web editor                 | none                      | GitHub Pages on merge to `main` |
@@ -163,4 +163,3 @@ usually means a feature has been implemented at the wrong level.
 - [docs/roadmap.md](roadmap.md) — longer-range directions, including possible shared
   packages (`query`, `graph`, `mutations`) that would sit alongside
   `language-service`
-- [docs/design/](design/) — designs for in-flight work

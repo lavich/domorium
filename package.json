@@ -13,6 +13,7 @@
     "check:typescript": "npm run lint && npm run typecheck && npm run test:run",
     "check:jetbrains": "./apps/jetbrains/gradlew -p apps/jetbrains spotlessCheck test",
     "check": "npm run check:typescript && npm run check:docs && npm run check:jetbrains",
+    "verify:codemirror-package": "node scripts/verify-codemirror-package.mjs",
     "format:staged": "lefthook run pre-commit",
     "postinstall": "npm run build:libs"
   },

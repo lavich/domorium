@@ -5,6 +5,7 @@ on:
     tags:
       - "validator-v*.*.*"
       - "language-service-v*.*.*"
+      - "codemirror-v*.*.*"
 
 permissions:
   contents: read
@@ -30,6 +31,7 @@ jobs:
           case "$GITHUB_REF_NAME" in
             validator-v*) package="validator" ;;
             language-service-v*) package="language-service" ;;
+            codemirror-v*) package="codemirror" ;;
             *) echo "Unsupported release tag: $GITHUB_REF_NAME" >&2; exit 1 ;;
           esac
           echo "name=$package" >> "$GITHUB_OUTPUT"
@@ -54,6 +56,9 @@ jobs:
         env:
           PACKAGE: ${{ steps.package.outputs.name }}
         run: npm pack --dry-run --workspace "packages/$PACKAGE"
+      - name: Verify CodeMirror package consumers
+        if: steps.package.outputs.name == 'codemirror'
+        run: npm run verify:codemirror-package
       - name: Publish package
         env:
           PACKAGE: ${{ steps.package.outputs.name }}

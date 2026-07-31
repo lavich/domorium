@@ -48,20 +48,15 @@ layers:
 - **Contributors** — `CONTRIBUTING.md` for setup, checks, and the release
   process; `docs/architecture.md` for the layer map and dependency direction.
 - **Decisions** — `docs/adr/`, per [0001](0001-record-architecture-decisions.md).
-- **Feature work** — `docs/design/`, one design document per piece of work. No
-  separate implementation plans: ordering that matters is a constraint in the
-  design, and a step-by-step checklist is the fastest-staling document a
-  repository can hold while contributing nothing that outlives the task.
 - **History** — a hand-written `CHANGELOG.md` per released package.
 
-Documents in `docs/design/` are scaffolding with a defined lifecycle, not
-permanent documentation. Each carries an explicit status, and when the work ships
-the document is drained before it is deleted: durable decisions and rejected
-alternatives move into an ADR, structural facts move into `docs/architecture.md`,
-user-visible changes move into a changelog. This rule is a correction — a design
-document was previously deleted with the commit that shipped it, and its reasoning
-was lost until it was recovered from git history as
-[0003](0003-independent-package-publishing.md). See `docs/design/README.md`.
+Brainstorming notes, feature designs, and implementation plans are temporary
+working material, not repository documentation. Before a change is merged, any
+reasoning that outlives the task is recorded in the durable destination that owns
+it: decisions and rejected alternatives in an ADR, structural facts in
+`docs/architecture.md`, and user-visible changes in a changelog. This avoids both
+losing important reasoning and keeping task scaffolding that becomes stale as soon
+as the work ships.
 
 Directory and file names describe content, never the tool that produced them. The
 same reasoning that rules out a vendor-specific instruction file rules out a

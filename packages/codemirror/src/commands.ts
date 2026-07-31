@@ -1,8 +1,8 @@
 import { EditorState, type TransactionSpec } from "@codemirror/state";
 import type { Range } from "@gedcom/language-service";
 
-import { offsetToPosition, positionToOffset } from "./positions";
-import { EditorLanguageService, toCodeMirrorChanges } from "./service";
+import { offsetToPosition, positionToOffset } from "./positions.js";
+import { EditorLanguageService, toCodeMirrorChanges } from "./service.js";
 
 export interface GedcomCommandTarget {
   readonly state: EditorState;
@@ -27,6 +27,15 @@ export function getDefinitionOffset(
     offsetToPosition(state.doc, state.selection.main.head),
   )[0];
   return definition ? positionToOffset(state.doc, definition.start) : null;
+}
+
+export function canRenameReference(
+  state: EditorState,
+  language: EditorLanguageService,
+): boolean {
+  return language.update(state.sliceDoc()).prepareRename(
+    offsetToPosition(state.doc, state.selection.main.head),
+  ).ok;
 }
 
 export function goToDefinition(

@@ -59,8 +59,9 @@ why the local `npm pack` tarball step exists, to validate the integration before
 version is permanent. Contributors must know where a given behavior belongs, and
 that knowledge is exactly what the boundary test above is for.
 
-Cross-repository work is coordinated through a design document here rather than
-through the plugin repository, since this side owns the shared packages.
+Cross-repository work is coordinated through issues and pull requests. Durable
+decisions remain documented in the repository that owns the affected boundary;
+temporary cross-repository plans are not committed as project documentation.
 
 ## Alternatives considered
 

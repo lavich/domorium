@@ -36,8 +36,28 @@ describe("toCodeMirrorChanges", () => {
     }, 3)).toEqual([{ from: 2, to: 6, insert: "@I2@" }]);
   });
 
-  it("rejects stale and overlapping edits", () => {
+  it("rejects stale, invalid, reversed, and overlapping edits", () => {
     expect(toCodeMirrorChanges(document, { version: 2, edits: [] }, 3)).toBeNull();
+    expect(toCodeMirrorChanges(document, {
+      version: 3,
+      edits: [{
+        range: {
+          start: { line: 99, character: 0 },
+          end: { line: 99, character: 0 },
+        },
+        newText: "invalid",
+      }],
+    }, 3)).toBeNull();
+    expect(toCodeMirrorChanges(document, {
+      version: 3,
+      edits: [{
+        range: {
+          start: { line: 0, character: 6 },
+          end: { line: 0, character: 2 },
+        },
+        newText: "@I2@",
+      }],
+    }, 3)).toBeNull();
     expect(toCodeMirrorChanges(document, {
       version: 3,
       edits: [

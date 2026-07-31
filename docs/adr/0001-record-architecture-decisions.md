@@ -33,8 +33,8 @@ history. Numbers are never reused.
 
 The bar for a record is reversal cost: if undoing the decision later would be
 expensive, it belongs here. Routine implementation choices do not. Roadmap items
-stay in `TODO.md`, longer-range directions in `docs/roadmap.md`, and feature designs
-in `docs/design/`.
+stay in `TODO.md`, and longer-range directions in `docs/roadmap.md`. Temporary
+feature designs and implementation plans are not project documentation.
 
 ## Consequences
 
