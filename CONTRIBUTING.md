@@ -27,17 +27,28 @@ npm run check
 That is the full gate — lint, type-check, and tests across the TypeScript
 workspaces, the documentation checks, plus Kotlin formatting and tests for the
 JetBrains plugin. It runs automatically on pre-push via [lefthook](lefthook.yml),
-which also formats and lints staged files on commit.
+which also formats and lints staged files on commit. The last stage needs a JDK; if
+you do not have one the hook skips it, says so, and runs the rest — CI covers the
+JetBrains plugin on every pull request either way.
 
 Narrower commands while iterating:
 
-| Command                    | Scope                              |
-| -------------------------- | ---------------------------------- |
-| `npm run check:typescript` | Lint, type-check, tests            |
-| `npm run check:docs`       | Links, package READMEs, changelogs |
-| `npm run check:jetbrains`  | Kotlin formatting and tests        |
-| `npm test`                 | Vitest in watch mode               |
-| `npm run typecheck`        | Types only, all workspaces         |
+| Command                    | Scope                                        |
+| -------------------------- | -------------------------------------------- |
+| `npm run check:typescript` | Lint, type-check, tests                      |
+| `npm run check:docs`       | Markdown formatting, lint, links, references |
+| `npm run check:jetbrains`  | Kotlin formatting and tests                  |
+| `npm test`                 | Vitest in watch mode                         |
+| `npm run typecheck`        | Types only, all workspaces                   |
+
+`check:docs` verifies that Markdown is Prettier-formatted and passes markdownlint,
+that every relative link and `#fragment` resolves, that every package and app has a
+README, that all five release units have a changelog entry for their current version,
+and that the ADR index is complete. Code examples in READMEs are not checked —
+keeping those honest is on whoever changes the API.
+
+Formatting failures reported by `check:docs` are fixed with
+`npx prettier --write <files>`; everything else it reports is a real edit to make.
 
 Tests are Vitest, colocated as `*.test.ts` beside the code they cover. New
 behavior in a package ships with tests in that package.
@@ -45,8 +56,8 @@ behavior in a package ships with tests in that package.
 ## Running the apps
 
 ```bash
-npm run dev -w apps/web-editor        # browser editor
-npm run open -w apps/vscode          # VS Code with the extension loaded
+npm run dev -w apps/web-editor   # browser editor
+npm run open -w apps/vscode      # VS Code with the extension loaded
 ```
 
 Each app's README has its platform-specific details:
@@ -80,7 +91,7 @@ identically — and the reasoning is in
 [ADR 0002](docs/adr/0002-documentation-in-repository.md). In short: a changed
 public API means an updated package README, a changed boundary means an updated
 architecture document, and a decision that would be expensive to reverse means a
-new ADR.
+new ADR plus its row in [the index](docs/adr/README.md).
 
 ## Releases
 
@@ -94,8 +105,9 @@ A release is a deliberate three-step act:
 1. Bump the version — `package.json` for npm packages and the VS Code extension,
    `version` in [apps/jetbrains/build.gradle.kts](apps/jetbrains/build.gradle.kts)
    for the JetBrains plugin.
-2. Add the matching `CHANGELOG.md` entry. Changelogs are written by hand, aimed at
-   the people who use the package.
+2. Add the matching changelog entry — `CHANGELOG.md` for the npm packages and the VS
+   Code extension, the `<change-notes>` block in the JetBrains plugin's `plugin.xml`.
+   Changelogs are written by hand, aimed at the people who use the release.
 3. Tag and push: `validator-vX.Y.Z`, `language-service-vX.Y.Z`,
    `codemirror-vX.Y.Z`, `vscode-vX.Y.Z`, or `jetbrains-vX.Y.Z`.
 

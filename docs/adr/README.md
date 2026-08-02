@@ -6,7 +6,9 @@ accepted — a decision that no longer holds is superseded by a newer ADR rather
 than edited in place.
 
 Use [template.md](template.md) for new records. Number them sequentially and
-never reuse a number.
+never reuse a number. The table below is part of the record: `npm run check:docs`
+fails if a file in this directory is missing from it, or if two records share a
+number.
 
 | ADR                                                 | Title                                          | Status   |
 | --------------------------------------------------- | ---------------------------------------------- | -------- |

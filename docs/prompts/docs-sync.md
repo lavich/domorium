@@ -4,9 +4,10 @@ A prompt for any coding assistant, kept as plain Markdown so it is not tied to o
 tool. Paste it, or reference this file.
 
 Use it before opening a pull request, after `npm run check:docs` passes. That script
-catches mechanical drift — broken links, a missing README, a version with no
-changelog entry, an example importing something that no longer exists. This prompt
-covers what a script cannot judge: whether the words are still true.
+catches mechanical drift — unformatted or lint-failing Markdown, a broken link or
+anchor, a missing README, a version with no changelog entry, an ADR missing from the
+index. This prompt covers what a script cannot judge: whether the words are still
+true. Code examples fall entirely on this side of the line — nothing verifies them.
 
 ---
 
@@ -21,8 +22,10 @@ git diff main...HEAD
 Check each of the following and report what you find before changing anything:
 
 1. **Public API.** For every package whose exports changed, does its `README.md`
-   still describe the current API? Are the usage examples still the way you would
-   actually use it, or merely still valid?
+   still describe the current API? Check every identifier the example imports against
+   the package's `src/index.ts` — no tooling does this, so a renamed export survives
+   in the documentation until someone reads it. Then ask the harder question: is the
+   example still the way you would actually use the API, or merely still valid?
 
 2. **Layer boundaries.** Did any change alter what depends on what, or move behavior
    between packages? If so, `docs/architecture.md` needs updating — including the

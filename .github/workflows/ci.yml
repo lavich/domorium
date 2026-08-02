@@ -71,6 +71,7 @@ jobs:
             docs \
             scripts \
             '*.md' \
+            .markdownlint-cli2.jsonc \
             eslint.config.mjs \
             tsconfig.json \
             vitest.config.ts \

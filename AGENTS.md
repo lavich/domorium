@@ -33,13 +33,18 @@ Run from the repository root.
 | `npm run check`                  | Full gate: TypeScript, docs, JetBrains      |
 | `npm run check:typescript`       | Lint, typecheck, tests                      |
 | `npm run check:docs`             | Documentation checks (see below)            |
+| `npx prettier --write <files>`   | Fix formatting the checks complain about    |
 | `npm run test:run`               | Vitest, single run                          |
 | `npm run build:libs`             | Rebuild `language-server` and `codemirror`  |
 | `npm run dev -w apps/web-editor` | Web editor dev server                       |
 
-`npm run check` must pass before any commit is proposed. It is also enforced on
+`npm run check` must pass before any commit is proposed, and it is enforced on
 pre-push by [lefthook.yml](lefthook.yml), which additionally runs Prettier and
 ESLint with `--fix` on staged files at pre-commit.
+
+Its `check:jetbrains` stage needs a JDK. Without one it is skipped — the pre-push
+hook detects this and says so — and CI runs it anyway. Say in the commit proposal
+that the stage did not run locally; skipped is not the same as passed.
 
 After changing a lower-layer package, rebuild it — consumers import from `dist`
 and will otherwise use stale output.
@@ -103,16 +108,18 @@ for the reasoning.
 Obligations when making a change:
 
 - Public API of a package changed → update that package's `README.md`, including its
-  usage example. `npm run check:docs` verifies that every name an example imports is
-  really exported; call signatures are not checked mechanically, so read the example
-  and confirm it is still how you would actually use the API.
+  usage example. Nothing checks examples mechanically, so read this one and confirm
+  every name still exists and the call is still how you would actually use the API.
 - Layer boundaries or dependency direction changed → update
   [docs/architecture.md](docs/architecture.md).
 - A decision was made that would be expensive to reverse → add an ADR in
-  [docs/adr/](docs/adr/) using [the template](docs/adr/template.md). Existing
-  records are immutable; supersede rather than edit.
-- A released package's version changed → add the matching `CHANGELOG.md` entry by
-  hand. Changelogs are curated, not generated.
+  [docs/adr/](docs/adr/) using [the template](docs/adr/template.md), and add its row
+  to [the index](docs/adr/README.md). Existing records are immutable; supersede
+  rather than edit.
+- A release unit's version changed → add the matching changelog entry by hand.
+  `CHANGELOG.md` for the npm packages and the VS Code extension; the `<change-notes>`
+  block in `apps/jetbrains/.../plugin.xml` for the JetBrains plugin, which is where
+  its Marketplace listing reads them from. Changelogs are curated, not generated.
 - An item in [TODO.md](TODO.md) was completed → mark it there. Do not silently
   promote items out of [docs/roadmap.md](docs/roadmap.md); that document holds
   directions, not commitments.
@@ -120,6 +127,15 @@ Obligations when making a change:
   working material and are not committed. Preserve only what outlives the task:
   durable decisions become ADRs, structural facts go into `docs/architecture.md`,
   and user-visible changes go into a changelog.
+
+`npm run check:docs` enforces the mechanical half: Markdown is Prettier-formatted
+and passes markdownlint, every relative link and `#fragment` resolves, every package
+and app has a README, all five release units have a changelog entry for their current
+version, and the ADR index lists every record. It cannot judge whether the prose is
+still true, and it
+does not look inside code examples at all — that is what the obligations above are
+for, and [docs/prompts/docs-sync.md](docs/prompts/docs-sync.md) is the pass to run
+before opening a pull request.
 
 Assistant session memory is not project documentation. A durable decision that
 surfaced in conversation belongs in an ADR or it does not exist.

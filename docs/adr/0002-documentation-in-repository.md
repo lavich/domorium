@@ -6,11 +6,13 @@
 ## Context
 
 Documentation in this repository is thin and unevenly distributed. The root
-`README.md` and the per-app READMEs are accurate and maintained. Two of the four
-packages have a README; the other two have none. Three changelogs are maintained by
-hand in a consistent format. `TODO.md` carries a detailed roadmap. There is no
-description of how the layers fit together, no contributor guide, and no
-instructions of any kind for coding assistants.
+`README.md` is accurate and maintained, and so are the READMEs of the two apps that
+have one — `apps/vscode` and `apps/jetbrains`; `apps/web-editor` has none. Three of
+the four packages have a README; `packages/language-server` has none. Three
+changelogs are maintained by hand in a consistent format, in two different heading
+styles. `TODO.md` carries a detailed roadmap. There is no description of how the
+layers fit together, no contributor guide, and no instructions of any kind for
+coding assistants.
 
 Two forces make this worth deciding deliberately rather than letting it accrete.
 
@@ -48,7 +50,11 @@ layers:
 - **Contributors** — `CONTRIBUTING.md` for setup, checks, and the release
   process; `docs/architecture.md` for the layer map and dependency direction.
 - **Decisions** — `docs/adr/`, per [0001](0001-record-architecture-decisions.md).
-- **History** — a hand-written `CHANGELOG.md` per released package.
+- **History** — a hand-written changelog per release unit: `CHANGELOG.md` for the
+  npm packages and the VS Code extension, and the `<change-notes>` block of
+  `plugin.xml` for the JetBrains plugin, which is where its Marketplace listing
+  reads them from. Each lives where its own ecosystem expects it rather than being
+  copied into a second file for uniformity.
 
 Brainstorming notes, feature designs, and implementation plans are temporary
 working material, not repository documentation. Before a change is merged, any
@@ -79,19 +85,36 @@ genuinely differs, such as the Gradle and Kotlin build under `apps/jetbrains`.
 Documentation is kept honest by deterministic checks rather than by review
 attention or by an assistant reviewing pull requests. A `npm run check:docs`
 target, runnable by a human, an assistant, or CI, is the enforcement mechanism.
-Its initial checks: Markdown links resolve, including relative links to files, so
-renames break the build; every package under `packages/*` has a README; each
-released package's `package.json` version has a matching changelog heading; and
-every name a README example imports from a workspace package is really exported by
-it, which catches the most common form of public API drift.
+Its initial checks: Markdown is Prettier-formatted and passes markdownlint, whose
+`relative-links` rule resolves every relative link and `#fragment` against the file
+system so a rename breaks the build; every directory under `packages/*` and
+`apps/*` has a README; every release unit's current version has a changelog entry,
+the JetBrains plugin included even though its version and changelog live outside
+`package.json`; and the ADR index lists every record with no number reused.
 
-Call signatures in examples are deliberately not verified. Doing so means compiling
-the extracted snippets, which requires built declarations and therefore a build step
-inside the documentation check — a cost this decision does not pay for now.
-Signature drift is caught by reading the example, and the obligation to do so is
-stated in `AGENTS.md`. The weaker guarantee is stated plainly wherever the check is
-described, because a check believed to be stronger than it is would be worse than no
-check.
+Each of those is a file-existence or string-presence test. That is the boundary:
+work that would require parsing a language is delegated to a tool built for it —
+Prettier for formatting, markdownlint and its rules for anything that means
+understanding Markdown — and the repository's own script stays small enough to
+audit in one sitting. A check nobody can read is a check nobody will fix when it
+misfires.
+
+One list decides what the checks apply to, and it comes from `git ls-files` rather
+than from globs configured per tool. The external tools are invoked with that list
+instead of being pointed at the tree, so there is no second definition of "our
+Markdown" to drift out of sync with the first. The same reasoning keeps
+`.markdownlint-cli2.jsonc` limited to rule configuration.
+
+Nothing verifies README code examples. Doing it properly means compiling the
+extracted snippets, which requires built declarations and therefore a build step
+inside the documentation check — a cost this decision does not pay for now. Doing
+it approximately, by matching exported names with regular expressions, was built
+and then removed: it accounted for more than a third of the script, it cannot be
+sound about a language it does not parse, and its failure mode is to accuse correct
+documentation of being wrong. A check that cries wolf is worse than no check,
+because the cost lands on whoever is least able to tell it is lying. Example drift
+is therefore caught by reading the example, and the obligation to do so is stated
+in `AGENTS.md` and in the review prompt.
 
 Specific tool choices are implementation details, not part of this decision.
 
@@ -110,17 +133,30 @@ instead of diverging per tool. Adding support for a new tool costs one pointer
 file.
 
 The deterministic checks turn a class of documentation rot into build failures,
-which is the only form of enforcement that survives a busy week. The export
-verification in particular ties the published API surface to its documentation: a
-rename that leaves a README behind stops the build rather than shipping.
+which is the only form of enforcement that survives a busy week. Link resolution in
+particular ties the documents to the tree they describe: a rename that leaves a
+reference behind stops the build rather than shipping.
 
 The costs are real. `npm run check:docs` adds a maintenance surface of its own,
-and a link checker that reaches the network is a source of flakiness — external
-link checking may need to be scheduled rather than run per commit. Instructions
-kept short enough to stay stable will sometimes be less specific than a given
-task wants; the fix is to link to detail, not to grow the file. Pointer files are
-a small, deliberate duplication accepted in exchange for not depending on symlink
-behavior across platforms.
+plus two devDependencies that exist solely for it, and a link checker that reaches
+the network is a source of flakiness — external link checking may need to be
+scheduled rather than run per commit. Enforcing formatting means a contributor can
+be blocked by a rule about blank lines, which is only tolerable because the fix is
+a single command. Instructions kept short enough to stay stable will sometimes be
+less specific than a given task wants; the fix is to link to detail, not to grow
+the file. Pointer files are a small, deliberate duplication accepted in exchange
+for not depending on symlink behavior across platforms.
+
+Leaning on external rules rather than repository code trades one maintenance
+surface for another: the rules are somebody else's to change, and a major version of
+`markdownlint-cli2` can turn a passing build into a failing one. That is accepted
+because the alternative is worse — the code this project would have to write instead
+is exactly the code it is least equipped to keep correct.
+
+Formatting is enforced for Markdown only. The TypeScript sources have accumulated
+drift from Prettier that predates this decision, and reformatting them belongs in
+its own change rather than hidden inside a documentation one — until then, lefthook
+keeps them formatted at commit time and CI does not verify it.
 
 The `AGENTS.md` support matrix across tools is still moving. Pointer files
 insulate the project from that, but which pointers are needed has to be verified

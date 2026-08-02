@@ -1,79 +1,80 @@
 #!/usr/bin/env node
-// Deterministic documentation checks. See docs/adr/0002-documentation-in-repository.md
-// for why documentation is enforced by a script rather than by review attention.
+// Deterministic documentation checks. See docs/adr/0002-documentation-in-repository.md.
 //
-// 1. Relative Markdown links resolve, so a rename breaks the build.
-// 2. Every package has a README.
-// 3. Every versioned package's version has a matching changelog heading.
-// 4. Identifiers imported by README examples are really exported by the package.
-//
-// Deliberately not covered: call signatures in examples, which would need built
-// declarations and therefore a build step before the check can run.
+// Every check here is a file-existence or string-presence test. Anything that would
+// need to parse a language belongs in a tool built for it — that boundary is the
+// decision, not an accident.
 
+import console from "node:console";
+import process from "node:process";
 import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { check as isFormatted, resolveConfig } from "prettier";
+import { main as markdownlint } from "markdownlint-cli2";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
 
 const fail = (file, message) => failures.push(`${file}: ${message}`);
 
-/**
- * Markdown files that are ours to keep correct. Includes files that are not committed
- * yet — a new document is the most likely one to carry a broken link — while excluding
- * anything gitignored, generated, or vendored.
- */
+// `--others` so an uncommitted document is checked too; the existsSync filter drops
+// files deleted from the working tree but still in the index, which git also lists.
 function markdownFiles() {
   const out = execFileSync(
     "git",
     ["ls-files", "--cached", "--others", "--exclude-standard", "*.md"],
     { cwd: root, encoding: "utf8" },
   );
-  return [...new Set(out.split("\n").filter(Boolean))].filter(
-    (f) => !f.startsWith(".worktrees/"),
-  );
+  return [...new Set(out.split("\n").filter(Boolean))]
+    .filter((file) => existsSync(join(root, file)))
+    .sort();
 }
 
-function checkLinks(files) {
+async function checkFormatting(files) {
   for (const file of files) {
-    const body = readFileSync(join(root, file), "utf8");
-    const withoutCode = body
-      .replace(/```[\s\S]*?```/g, "")
-      .replace(/`[^`\n]*`/g, "");
-    for (const [, target] of withoutCode.matchAll(/\]\(([^)\s]+)\)/g)) {
-      if (/^(https?:|mailto:|#)/.test(target)) {
-        continue;
-      }
-      const [path] = target.split("#");
-      if (!path) {
-        continue;
-      }
-      if (!existsSync(resolve(dirname(join(root, file)), path))) {
-        fail(file, `broken link -> ${target}`);
-      }
+    const path = join(root, file);
+    const options = await resolveConfig(path);
+    const formatted = await isFormatted(readFileSync(path, "utf8"), {
+      ...options,
+      filepath: path,
+    });
+    if (!formatted) {
+      fail(file, "not Prettier-formatted — run `npx prettier --write` on it");
     }
   }
 }
 
-function packageDirs() {
-  return readdirSync(join(root, "packages"), { withFileTypes: true })
-    .filter((e) => e.isDirectory())
-    .map((e) => join("packages", e.name))
-    .filter((dir) => existsSync(join(root, dir, "package.json")));
+// Rules live in `.markdownlint-cli2.jsonc`; the file list is passed from here, which
+// is why that config carries no globs of its own.
+async function checkMarkdownLint(files) {
+  await markdownlint({
+    argv: files,
+    directory: root,
+    noGlobs: true,
+    logMessage: () => {},
+    logError: (message) => failures.push(message),
+  });
 }
 
-function checkPackageReadmes(dirs) {
+const subdirectories = (parent) =>
+  readdirSync(join(root, parent), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join(parent, entry.name));
+
+function checkReadmes(dirs) {
   for (const dir of dirs) {
     if (!existsSync(join(root, dir, "README.md"))) {
-      fail(dir, "package has no README.md");
+      fail(dir, "has no README.md");
     }
   }
 }
 
-/** A version that ships must be findable in its own changelog. */
+// Covers the npm packages and the VS Code extension. `private` is what excludes the
+// web editor, which carries a version field but is never released.
 function checkChangelogs(dirs) {
+  let checked = 0;
   for (const dir of dirs) {
     const manifest = JSON.parse(
       readFileSync(join(root, dir, "package.json"), "utf8"),
@@ -81,6 +82,7 @@ function checkChangelogs(dirs) {
     if (!manifest.version || manifest.private) {
       continue;
     }
+    checked += 1;
     const changelog = join(root, dir, "CHANGELOG.md");
     if (!existsSync(changelog)) {
       fail(
@@ -99,105 +101,84 @@ function checkChangelogs(dirs) {
       );
     }
   }
+  return checked;
 }
 
-/** Named exports of a package, following `export * from "@gedcom/…"` one level. */
-function publicExports(dir, dirsByName, seen = new Set()) {
-  const entry = join(root, dir, "src/index.ts");
-  if (seen.has(entry) || !existsSync(entry)) {
-    return new Set();
+// Same rule as checkChangelogs, but the JetBrains plugin keeps its version in Gradle
+// and its changelog in plugin.xml, where the Marketplace reads it. Restated here
+// rather than duplicated into a CHANGELOG.md that nothing would render.
+function checkJetBrainsChangeNotes() {
+  const build = join(root, "apps/jetbrains/build.gradle.kts");
+  const manifest = join(
+    root,
+    "apps/jetbrains/src/main/resources/META-INF/plugin.xml",
+  );
+  if (!existsSync(build) || !existsSync(manifest)) {
+    fail("apps/jetbrains", "build.gradle.kts or plugin.xml is missing");
+    return;
   }
-  seen.add(entry);
 
-  const source = readFileSync(entry, "utf8");
-  const names = new Set();
+  const version = readFileSync(build, "utf8").match(
+    /^version\s*=\s*"([^"]+)"/m,
+  )?.[1];
+  if (!version) {
+    fail(relative(root, build), 'no `version = "…"` assignment found');
+    return;
+  }
 
-  for (const [, clause] of source.matchAll(/export\s*\{([^}]*)\}/g)) {
-    for (const part of clause.split(",")) {
-      const name = part
-        .trim()
-        .replace(/^type\s+/, "")
-        .split(/\s+as\s+/)
-        .pop()
-        ?.trim();
-      if (name) {
-        names.add(name);
-      }
-    }
+  const headings = readFileSync(manifest, "utf8").matchAll(
+    /<h2>\s*v?([0-9][^\s<]*)\s*<\/h2>/g,
+  );
+  if (![...headings].some(([, v]) => v === version)) {
+    fail(
+      relative(root, manifest),
+      `change-notes has no <h2> for version ${version} from build.gradle.kts`,
+    );
   }
-  for (const [, pkg] of source.matchAll(/export\s+\*\s+from\s+"([^"]+)"/g)) {
-    const target = dirsByName.get(pkg);
-    if (target) {
-      for (const name of publicExports(target, dirsByName, seen)) {
-        names.add(name);
-      }
-    }
-  }
-  return names;
 }
 
-/**
- * Verify that every identifier a README example imports from a workspace package is
- * actually exported by it. This catches the drift that matters — a renamed or removed
- * export documented as if it still exists — without needing a build or a complete
- * install. It does not check call signatures; that would require built declarations.
- */
-function checkExampleImports(dirs) {
-  const dirsByName = new Map(
-    dirs.map((dir) => [
-      JSON.parse(readFileSync(join(root, dir, "package.json"), "utf8")).name,
-      dir,
-    ]),
-  );
-  const exportsByName = new Map(
-    [...dirsByName].map(([name, dir]) => [
-      name,
-      publicExports(dir, dirsByName),
-    ]),
-  );
+function checkAdrIndex() {
+  const directory = join(root, "docs/adr");
+  const records = readdirSync(directory)
+    .filter((name) => /^\d{4}-.+\.md$/.test(name))
+    .sort();
+  if (!existsSync(join(directory, "README.md"))) {
+    fail("docs/adr", "the ADR index README.md is missing");
+    return;
+  }
+  const index = readFileSync(join(directory, "README.md"), "utf8");
 
-  for (const dir of dirs) {
-    const readme = join(root, dir, "README.md");
-    if (!existsSync(readme)) {
-      continue;
+  const numbers = new Map();
+  for (const record of records) {
+    const number = record.slice(0, 4);
+    numbers.set(number, [...(numbers.get(number) ?? []), record]);
+    if (!index.includes(`(${record})`)) {
+      fail("docs/adr/README.md", `does not list ${record}`);
     }
-    const body = readFileSync(readme, "utf8");
-
-    for (const [, code] of body.matchAll(
-      /```(?:typescript|ts)\n([\s\S]*?)```/g,
-    )) {
-      for (const [, clause, pkg] of code.matchAll(
-        /import\s+(?:type\s+)?\{([^}]*)\}\s*from\s*"([^"]+)"/g,
-      )) {
-        const known = exportsByName.get(pkg);
-        if (!known) {
-          continue;
-        }
-        for (const part of clause.split(",")) {
-          const name = part
-            .trim()
-            .replace(/^type\s+/, "")
-            .split(/\s+as\s+/)[0]
-            ?.trim();
-          if (name && !known.has(name)) {
-            fail(
-              relative(root, readme),
-              `example imports "${name}" from ${pkg}, which does not export it`,
-            );
-          }
-        }
-      }
+  }
+  for (const [number, duplicates] of numbers) {
+    if (duplicates.length > 1) {
+      fail(
+        "docs/adr",
+        `number ${number} is used twice: ${duplicates.join(", ")}`,
+      );
     }
   }
 }
 
 const files = markdownFiles();
-const dirs = packageDirs();
+const units = [...subdirectories("packages"), ...subdirectories("apps")];
+const versioned = units.filter((dir) =>
+  existsSync(join(root, dir, "package.json")),
+);
 
-checkLinks(files);
-checkPackageReadmes(dirs);
-checkChangelogs(dirs);
-checkExampleImports(dirs);
+await checkFormatting(files);
+await checkMarkdownLint(files);
+checkReadmes(units);
+// The JetBrains plugin is the one release unit without a package.json, hence the +1.
+const released = checkChangelogs(versioned) + 1;
+checkJetBrainsChangeNotes();
+checkAdrIndex();
 
 if (failures.length > 0) {
   console.error(`Documentation checks failed (${failures.length}):\n`);
@@ -209,5 +190,6 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `Documentation checks passed: ${files.length} Markdown files, ${dirs.length} packages.`,
+  `Documentation checks passed: ${files.length} Markdown files, ` +
+    `${units.length} packages and apps, ${released} release units.`,
 );
