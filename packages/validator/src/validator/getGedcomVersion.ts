@@ -1,4 +1,4 @@
-import {ASTNode} from "../parser";
+import { ASTNode } from "../parser";
 
 export function getGedcomVersion(nodes: ASTNode[]) {
   const HEAD = nodes.find((node) => node.tokens.TAG?.value === "HEAD");

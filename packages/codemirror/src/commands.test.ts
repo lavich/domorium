@@ -60,13 +60,16 @@ describe("GEDCOM CodeMirror commands", () => {
         return state;
       },
       dispatch(transaction: Transaction | TransactionSpec) {
-        state = transaction instanceof Transaction
-          ? transaction.state
-          : state.update(transaction).state;
+        state =
+          transaction instanceof Transaction
+            ? transaction.state
+            : state.update(transaction).state;
       },
     };
 
-    expect(renameReference(target, new EditorLanguageService(), "@I2@")).toBe(true);
+    expect(renameReference(target, new EditorLanguageService(), "@I2@")).toBe(
+      true,
+    );
     expect(state.doc.toString().match(/@I2@/g)).toHaveLength(2);
     expect(state.doc.toString()).not.toContain("@I1@");
     expect(undo(target)).toBe(true);

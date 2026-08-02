@@ -13,8 +13,12 @@ interface SubstructureEntry {
 }
 
 function parsePayloadValue(raw: string): PayloadEntry {
-  if (raw === "") return { type: null };
-  if (raw === "Y|<NULL>") return { type: "Y|<NULL>" };
+  if (raw === "") {
+    return { type: null };
+  }
+  if (raw === "Y|<NULL>") {
+    return { type: "Y|<NULL>" };
+  }
 
   const pointerMatch = raw.match(/^@<(.+)>@$/);
   if (pointerMatch) {
@@ -27,7 +31,7 @@ function parsePayloadValue(raw: string): PayloadEntry {
 function buildPayloads(
   payloadsTsv: string,
   enumerationsTsv: string,
-  existingPayload: Record<string, PayloadEntry>
+  existingPayload: Record<string, PayloadEntry>,
 ): Record<string, PayloadEntry> {
   const payloads = parseTsv(payloadsTsv);
   const enumerations = parseTsv(enumerationsTsv);
@@ -60,7 +64,7 @@ function buildSubstructures(
   cardinalitiesTsv: string,
   substructuresTsv: string,
   grammar: ParsedGrammar,
-  existingSubstructure: Record<string, Record<string, SubstructureEntry>>
+  existingSubstructure: Record<string, Record<string, SubstructureEntry>>,
 ): Record<string, Record<string, SubstructureEntry>> {
   const cardinalities = parseTsv(cardinalitiesTsv);
   const substructures = parseTsv(substructuresTsv);
@@ -73,7 +77,9 @@ function buildSubstructures(
   const subMap = new Map<string, Map<string, string>>();
   for (const row of substructures) {
     const parent = row.superstructure || "";
-    if (!subMap.has(parent)) subMap.set(parent, new Map());
+    if (!subMap.has(parent)) {
+      subMap.set(parent, new Map());
+    }
     subMap.get(parent)!.set(row.tag, row.structure);
   }
 
@@ -94,7 +100,9 @@ function buildSubstructures(
   }
 
   for (const [parent, entries] of Object.entries(existingSubstructure)) {
-    if (!result[parent]) result[parent] = {};
+    if (!result[parent]) {
+      result[parent] = {};
+    }
     for (const [tag, entry] of Object.entries(entries)) {
       if (!result[parent][tag]) {
         result[parent][tag] = entry;
@@ -109,12 +117,16 @@ function buildSubstructures(
 
 function addGrammarRootEntries(
   result: Record<string, Record<string, SubstructureEntry>>,
-  grammar: ParsedGrammar
+  grammar: ParsedGrammar,
 ) {
   const datasetEntries = grammar.structures.get("Dataset");
-  if (!datasetEntries) return;
+  if (!datasetEntries) {
+    return;
+  }
 
-  if (!result[""]) result[""] = {};
+  if (!result[""]) {
+    result[""] = {};
+  }
 
   for (const entry of datasetEntries) {
     if (entry.ref) {
@@ -146,8 +158,11 @@ function buildTagMap(
   grammar: ParsedGrammar,
   existingPayload: Record<string, PayloadEntry>,
   existingSet: Record<string, Record<string, string>>,
-  existingCalendar: Record<string, { months: Record<string, string>; type: string }>,
-  existingTag: Record<string, string>
+  existingCalendar: Record<
+    string,
+    { months: Record<string, string>; type: string }
+  >,
+  existingTag: Record<string, string>,
 ): Record<string, string> {
   const result: Record<string, string> = {};
 
@@ -193,25 +208,28 @@ export function assembleSchema(
     substructure: Record<string, unknown>;
     tag: Record<string, string>;
     tagInContext: Record<string, unknown>;
-  }
+  },
 ) {
   const payload = buildPayloads(
     upstream.payloads,
     upstream.enumerations,
-    existing.payload as Record<string, PayloadEntry>
+    existing.payload as Record<string, PayloadEntry>,
   );
   const substructure = buildSubstructures(
     upstream.cardinalities,
     upstream.substructures,
     grammar,
-    existing.substructure as Record<string, Record<string, SubstructureEntry>>
+    existing.substructure as Record<string, Record<string, SubstructureEntry>>,
   );
   const tag = buildTagMap(
     grammar,
     payload,
     existing.set as Record<string, Record<string, string>>,
-    existing.calendar as Record<string, { months: Record<string, string>; type: string }>,
-    existing.tag as Record<string, string>
+    existing.calendar as Record<
+      string,
+      { months: Record<string, string>; type: string }
+    >,
+    existing.tag as Record<string, string>,
   );
 
   return {

@@ -53,32 +53,35 @@ describe("XREF rename", () => {
     ["@F1@", "identifier-collision"],
   ])("refuses invalid or colliding name %s", (newName, code) => {
     const service = new GedcomLanguageService(text, 4);
-    expect(
-      service.rename({ line: 0, character: 4 }, newName, 4),
-    ).toMatchObject({ ok: false, code });
+    expect(service.rename({ line: 0, character: 4 }, newName, 4)).toMatchObject(
+      { ok: false, code },
+    );
   });
 
   it("refuses stale, unresolved, and duplicate targets", () => {
     const stale = new GedcomLanguageService(text, 5);
-    expect(
-      stale.rename({ line: 0, character: 4 }, "@I2@", 4),
-    ).toMatchObject({ ok: false, code: "stale-document" });
+    expect(stale.rename({ line: 0, character: 4 }, "@I2@", 4)).toMatchObject({
+      ok: false,
+      code: "stale-document",
+    });
 
     const unresolved = new GedcomLanguageService(
       ["0 @F1@ FAM", "1 HUSB @I9@"].join("\n"),
       1,
     );
-    expect(
-      unresolved.prepareRename({ line: 1, character: 9 }),
-    ).toMatchObject({ ok: false, code: "unresolved-declaration" });
+    expect(unresolved.prepareRename({ line: 1, character: 9 })).toMatchObject({
+      ok: false,
+      code: "unresolved-declaration",
+    });
 
     const duplicate = new GedcomLanguageService(
       ["0 @I1@ INDI", "0 @I1@ INDI"].join("\n"),
       1,
     );
-    expect(
-      duplicate.prepareRename({ line: 0, character: 4 }),
-    ).toMatchObject({ ok: false, code: "duplicate-declaration" });
+    expect(duplicate.prepareRename({ line: 0, character: 4 })).toMatchObject({
+      ok: false,
+      code: "duplicate-declaration",
+    });
   });
 
   it("allows a new identifier that currently has unresolved usages only", () => {
@@ -87,9 +90,9 @@ describe("XREF rename", () => {
       1,
     );
 
-    expect(
-      service.rename({ line: 0, character: 4 }, "@I9@", 1),
-    ).toMatchObject({ ok: true });
+    expect(service.rename({ line: 0, character: 4 }, "@I9@", 1)).toMatchObject({
+      ok: true,
+    });
   });
 
   it("does not rename XREF-shaped prose and preserves unrelated bytes", () => {
@@ -136,17 +139,18 @@ describe("XREF rename", () => {
       7,
     );
 
-    expect(
-      service.rename({ line: 5, character: 9 }, "@I2@", 7),
-    ).toMatchObject({ ok: true });
+    expect(service.rename({ line: 5, character: 9 }, "@I2@", 7)).toMatchObject({
+      ok: true,
+    });
   });
 
   it("rejects an edit from before a sequential update", () => {
     const service = new GedcomLanguageService(text, 1);
     service.update(text.replace("HUSB", "WIFE"), 2);
 
-    expect(
-      service.rename({ line: 3, character: 9 }, "@I2@", 1),
-    ).toMatchObject({ ok: false, code: "stale-document" });
+    expect(service.rename({ line: 3, character: 9 }, "@I2@", 1)).toMatchObject({
+      ok: false,
+      code: "stale-document",
+    });
   });
 });

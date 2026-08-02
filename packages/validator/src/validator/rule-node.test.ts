@@ -234,10 +234,16 @@ describe("payload for VERS 7", () => {
   });
 
   describe("rule Age", () => {
-    test.each(["35y 11m 8w 21d", "9y", "< 1y", "> 25y", "CHILD", "INFANT", "STILLBORN"])(
-      "should pass AGE with %s",
-      async (age) => {
-        const { nodes, pointers } = astBuilder(`0 HEAD
+    test.each([
+      "35y 11m 8w 21d",
+      "9y",
+      "< 1y",
+      "> 25y",
+      "CHILD",
+      "INFANT",
+      "STILLBORN",
+    ])("should pass AGE with %s", async (age) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
 2 VERS 7.0
 0 @I1@ INDI
@@ -245,12 +251,11 @@ describe("payload for VERS 7", () => {
 2 AGE ${age}
 0 TRLR
 `);
-        const ruleEngine = new RuleNode(g7validationJson, pointers);
-        const AGE = nodes[1].children[0].children[0];
-        const errs = ruleEngine.validate(AGE);
-        expect(errs.length).toBe(0);
-      },
-    );
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const AGE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(AGE);
+      expect(errs.length).toBe(0);
+    });
 
     test("should return error because AGE has not correct payload", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
@@ -415,12 +420,10 @@ describe("payload for VERS 7", () => {
       expect(errs.length).toBe(0);
     });
 
-    test.each([
-      "BET 1900 1910",
-      "FROM 1900 TO",
-      "(a(b)c)",
-    ])("should return error because %s is not a valid date value", async (date) => {
-      const { nodes, pointers } = astBuilder(`0 HEAD
+    test.each(["BET 1900 1910", "FROM 1900 TO", "(a(b)c)"])(
+      "should return error because %s is not a valid date value",
+      async (date) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
 2 VERS 7.0
 0 @F1@ FAM
@@ -428,11 +431,12 @@ describe("payload for VERS 7", () => {
 2 DATE ${date}
 0 TRLR
 `);
-      const ruleEngine = new RuleNode(g7validationJson, pointers);
-      const DATE = nodes[1].children[0].children[0];
-      const errs = ruleEngine.validate(DATE);
-      expect(errs.length).toBe(1);
-    });
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const DATE = nodes[1].children[0].children[0];
+        const errs = ruleEngine.validate(DATE);
+        expect(errs.length).toBe(1);
+      },
+    );
   });
 
   describe("rule DatePeriod", () => {
@@ -540,10 +544,12 @@ describe("payload for VERS 7", () => {
   });
 
   describe("rule MediaType", () => {
-    test.each(["image/jpeg", "text/plain", "application/vnd.google-earth.kml+xml"])(
-      "should pass FORM with %s",
-      async (mediaType) => {
-        const { nodes, pointers } = astBuilder(`0 HEAD
+    test.each([
+      "image/jpeg",
+      "text/plain",
+      "application/vnd.google-earth.kml+xml",
+    ])("should pass FORM with %s", async (mediaType) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
 2 VERS 7.0
 0 @M1@ OBJE
@@ -551,12 +557,11 @@ describe("payload for VERS 7", () => {
 2 FORM ${mediaType}
 0 TRLR
 `);
-        const ruleEngine = new RuleNode(g7validationJson, pointers);
-        const FORM = nodes[1].children[0].children[0];
-        const errs = ruleEngine.validate(FORM);
-        expect(errs.length).toBe(0);
-      },
-    );
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const FORM = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(FORM);
+      expect(errs.length).toBe(0);
+    });
 
     test("should return error because FORM is not a media type", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
@@ -636,21 +641,26 @@ describe("payload for VERS 7", () => {
   });
 
   describe("rule LanguageTag", () => {
-    test.each(["en", "en-US", "ru-RU", "zh-Hans", "zh-Hans-CN", "sr-Latn-RS", "i-klingon"])(
-      "should pass LANG with %s",
-      async (lang) => {
-        const { nodes, pointers } = astBuilder(`0 HEAD
+    test.each([
+      "en",
+      "en-US",
+      "ru-RU",
+      "zh-Hans",
+      "zh-Hans-CN",
+      "sr-Latn-RS",
+      "i-klingon",
+    ])("should pass LANG with %s", async (lang) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
 1 LANG ${lang}
 1 GEDC
 2 VERS 7.0
 0 TRLR
 `);
-        const ruleEngine = new RuleNode(g7validationJson, pointers);
-        const LANG = nodes[0].children[0];
-        const errs = ruleEngine.validate(LANG);
-        expect(errs.length).toBe(0);
-      },
-    );
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const LANG = nodes[0].children[0];
+      const errs = ruleEngine.validate(LANG);
+      expect(errs.length).toBe(0);
+    });
 
     test("should return error because LANG is not a valid language tag", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD

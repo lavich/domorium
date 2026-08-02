@@ -73,10 +73,12 @@ describe("document links", () => {
       ].join("\n"),
     );
 
-    expect(service.getDocumentLinks().map(({ kind, targetText }) => ({
-      kind,
-      targetText,
-    }))).toEqual([
+    expect(
+      service.getDocumentLinks().map(({ kind, targetText }) => ({
+        kind,
+        targetText,
+      })),
+    ).toEqual([
       {
         kind: "file-absolute",
         targetText: "/Users/example/photo.jpg",

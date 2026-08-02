@@ -52,9 +52,9 @@ describe("ReferenceIndex", () => {
       ["0 @I1@ INDI", "0 @I1@ INDI"].join("\n"),
     );
 
-    expect(
-      service.getReferenceIndex().get("@I1@")?.declarations,
-    ).toHaveLength(2);
+    expect(service.getReferenceIndex().get("@I1@")?.declarations).toHaveLength(
+      2,
+    );
   });
 
   it("does not index an XREF-shaped value in a non-pointer field", () => {
@@ -73,27 +73,19 @@ describe("ReferenceIndex", () => {
 
   it("does not index a declaration nested below level zero", () => {
     const service = new GedcomLanguageService(
-      [
-        "0 @F1@ FAM",
-        "1 @I1@ INDI",
-        "1 HUSB @I1@",
-      ].join("\n"),
+      ["0 @F1@ FAM", "1 @I1@ INDI", "1 HUSB @I1@"].join("\n"),
     );
 
     expect(service.getReferenceIndex().get("@I1@")?.declarations).toEqual([]);
-    expect(
-      service.prepareRename({ line: 1, character: 4 }),
-    ).toMatchObject({ ok: false, code: "not-xref" });
+    expect(service.prepareRename({ line: 1, character: 4 })).toMatchObject({
+      ok: false,
+      code: "not-xref",
+    });
   });
 
   it("does not index HEAD or TRLR as XREF record declarations", () => {
     const service = new GedcomLanguageService(
-      [
-        "0 @H1@ HEAD",
-        "1 GEDC",
-        "2 VERS 7.0",
-        "0 @T1@ TRLR",
-      ].join("\n"),
+      ["0 @H1@ HEAD", "1 GEDC", "2 VERS 7.0", "0 @T1@ TRLR"].join("\n"),
       1,
     );
 

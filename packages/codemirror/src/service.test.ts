@@ -1,10 +1,7 @@
 import { Text } from "@codemirror/state";
 import { describe, expect, it } from "vitest";
 
-import {
-  EditorLanguageService,
-  toCodeMirrorChanges,
-} from "./service";
+import { EditorLanguageService, toCodeMirrorChanges } from "./service";
 
 describe("EditorLanguageService", () => {
   it("reuses an unchanged snapshot and increments versions only on changes", () => {
@@ -24,58 +21,90 @@ describe("toCodeMirrorChanges", () => {
   const document = Text.of(["0 @I1@ INDI", "1 FAMC @F1@"]);
 
   it("converts a current non-overlapping workspace edit", () => {
-    expect(toCodeMirrorChanges(document, {
-      version: 3,
-      edits: [{
-        range: {
-          start: { line: 0, character: 2 },
-          end: { line: 0, character: 6 },
+    expect(
+      toCodeMirrorChanges(
+        document,
+        {
+          version: 3,
+          edits: [
+            {
+              range: {
+                start: { line: 0, character: 2 },
+                end: { line: 0, character: 6 },
+              },
+              newText: "@I2@",
+            },
+          ],
         },
-        newText: "@I2@",
-      }],
-    }, 3)).toEqual([{ from: 2, to: 6, insert: "@I2@" }]);
+        3,
+      ),
+    ).toEqual([{ from: 2, to: 6, insert: "@I2@" }]);
   });
 
   it("rejects stale, invalid, reversed, and overlapping edits", () => {
-    expect(toCodeMirrorChanges(document, { version: 2, edits: [] }, 3)).toBeNull();
-    expect(toCodeMirrorChanges(document, {
-      version: 3,
-      edits: [{
-        range: {
-          start: { line: 99, character: 0 },
-          end: { line: 99, character: 0 },
-        },
-        newText: "invalid",
-      }],
-    }, 3)).toBeNull();
-    expect(toCodeMirrorChanges(document, {
-      version: 3,
-      edits: [{
-        range: {
-          start: { line: 0, character: 6 },
-          end: { line: 0, character: 2 },
-        },
-        newText: "@I2@",
-      }],
-    }, 3)).toBeNull();
-    expect(toCodeMirrorChanges(document, {
-      version: 3,
-      edits: [
+    expect(
+      toCodeMirrorChanges(document, { version: 2, edits: [] }, 3),
+    ).toBeNull();
+    expect(
+      toCodeMirrorChanges(
+        document,
         {
-          range: {
-            start: { line: 0, character: 2 },
-            end: { line: 0, character: 6 },
-          },
-          newText: "@I2@",
+          version: 3,
+          edits: [
+            {
+              range: {
+                start: { line: 99, character: 0 },
+                end: { line: 99, character: 0 },
+              },
+              newText: "invalid",
+            },
+          ],
         },
+        3,
+      ),
+    ).toBeNull();
+    expect(
+      toCodeMirrorChanges(
+        document,
         {
-          range: {
-            start: { line: 0, character: 4 },
-            end: { line: 0, character: 6 },
-          },
-          newText: "2@",
+          version: 3,
+          edits: [
+            {
+              range: {
+                start: { line: 0, character: 6 },
+                end: { line: 0, character: 2 },
+              },
+              newText: "@I2@",
+            },
+          ],
         },
-      ],
-    }, 3)).toBeNull();
+        3,
+      ),
+    ).toBeNull();
+    expect(
+      toCodeMirrorChanges(
+        document,
+        {
+          version: 3,
+          edits: [
+            {
+              range: {
+                start: { line: 0, character: 2 },
+                end: { line: 0, character: 6 },
+              },
+              newText: "@I2@",
+            },
+            {
+              range: {
+                start: { line: 0, character: 4 },
+                end: { line: 0, character: 6 },
+              },
+              newText: "2@",
+            },
+          ],
+        },
+        3,
+      ),
+    ).toBeNull();
   });
 });

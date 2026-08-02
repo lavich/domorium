@@ -22,7 +22,10 @@ describe("getHover", () => {
 
     expect(hover).toStrictEqual({
       contents: { kind: "markdown", value: "**BIRT** — Birth" },
-      range: { start: { line: 4, character: 2 }, end: { line: 4, character: 6 } },
+      range: {
+        start: { line: 4, character: 2 },
+        end: { line: 4, character: 6 },
+      },
     });
   });
 

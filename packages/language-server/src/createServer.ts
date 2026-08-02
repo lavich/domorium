@@ -93,7 +93,9 @@ export const createServer = (connection: Connection) => {
 
   connection.onReferences((params: ReferenceParams): Location[] => {
     const service = cache.get(params.textDocument.uri);
-    if (!service) return [];
+    if (!service) {
+      return [];
+    }
     return service
       .getReferences(params.position, {
         includeDeclaration: params.context.includeDeclaration,
@@ -104,24 +106,34 @@ export const createServer = (connection: Connection) => {
   connection.onDocumentHighlight(
     (params: DocumentHighlightParams): DocumentHighlight[] => {
       const service = cache.get(params.textDocument.uri);
-      if (!service) return [];
-      return service.getDocumentHighlights(params.position).map((highlight) => ({
-        range: highlight.range,
-        kind:
-          highlight.kind === "write"
-            ? DocumentHighlightKind.Write
-            : DocumentHighlightKind.Read,
-      }));
+      if (!service) {
+        return [];
+      }
+      return service
+        .getDocumentHighlights(params.position)
+        .map((highlight) => ({
+          range: highlight.range,
+          kind:
+            highlight.kind === "write"
+              ? DocumentHighlightKind.Write
+              : DocumentHighlightKind.Read,
+        }));
     },
   );
 
   connection.onPrepareRename((params: PrepareRenameParams) => {
     const service = cache.get(params.textDocument.uri);
     const document = documents.get(params.textDocument.uri);
-    if (!service || !document) return null;
+    if (!service || !document) {
+      return null;
+    }
     const result = service.prepareRename(params.position);
     if (!result.ok) {
-      throw new ResponseError(ErrorCodes.InvalidRequest, result.message, result.code);
+      throw new ResponseError(
+        ErrorCodes.InvalidRequest,
+        result.message,
+        result.code,
+      );
     }
     return { range: result.range, placeholder: result.placeholder };
   });
@@ -129,14 +141,20 @@ export const createServer = (connection: Connection) => {
   connection.onRenameRequest((params: RenameParams): WorkspaceEdit | null => {
     const service = cache.get(params.textDocument.uri);
     const document = documents.get(params.textDocument.uri);
-    if (!service || !document) return null;
+    if (!service || !document) {
+      return null;
+    }
     const result = service.rename(
       params.position,
       params.newName,
       document.version,
     );
     if (!result.ok) {
-      throw new ResponseError(ErrorCodes.InvalidRequest, result.message, result.code);
+      throw new ResponseError(
+        ErrorCodes.InvalidRequest,
+        result.message,
+        result.code,
+      );
     }
     return {
       documentChanges: [
@@ -153,19 +171,25 @@ export const createServer = (connection: Connection) => {
 
   connection.onDocumentLinks((params: DocumentLinkParams): DocumentLink[] => {
     const service = cache.get(params.textDocument.uri);
-    if (!service) return [];
+    if (!service) {
+      return [];
+    }
     return service.getDocumentLinks().map((link) => ({
       range: link.range,
       target: resolveLinkTarget(params.textDocument.uri, link),
       tooltip:
-        link.kind === "http" ? link.targetText : `Open file: ${link.targetText}`,
+        link.kind === "http"
+          ? link.targetText
+          : `Open file: ${link.targetText}`,
     }));
   });
 
   connection.onCodeAction((params: CodeActionParams): CodeAction[] => {
     const service = cache.get(params.textDocument.uri);
     const document = documents.get(params.textDocument.uri);
-    if (!service || !document) return [];
+    if (!service || !document) {
+      return [];
+    }
     const currentDiagnostics = service.getDiagnostics();
     const diagnostics = params.context.diagnostics.map((diagnostic) => {
       const code = String(diagnostic.code ?? "");
@@ -188,13 +212,27 @@ export const createServer = (connection: Connection) => {
       diagnostics,
       document.version,
     );
-    if (!Array.isArray(result)) return [];
+    if (!Array.isArray(result)) {
+      return [];
+    }
     return result.flatMap((action) => {
       const edits = action.edit
-        ? [toCodeAction(action.title, params.textDocument.uri, action.edit, params.context.diagnostics)]
+        ? [
+            toCodeAction(
+              action.title,
+              params.textDocument.uri,
+              action.edit,
+              params.context.diagnostics,
+            ),
+          ]
         : [];
       const choices = (action.choices ?? []).map((choice) =>
-        toCodeAction(choice.title, params.textDocument.uri, choice.edit, params.context.diagnostics),
+        toCodeAction(
+          choice.title,
+          params.textDocument.uri,
+          choice.edit,
+          params.context.diagnostics,
+        ),
       );
       return [...edits, ...choices];
     });
@@ -263,15 +301,17 @@ export const createServer = (connection: Connection) => {
       change.document.version,
     );
     cache.set(change.document.uri, service);
-    const diagnostics: Diagnostic[] = service.getDiagnostics().map((diagnostic) => ({
-      ...diagnostic,
-      severity:
-        diagnostic.severity === "error"
-          ? DiagnosticSeverity.Error
-          : diagnostic.severity === "warning"
-            ? DiagnosticSeverity.Warning
-            : DiagnosticSeverity.Information,
-    }));
+    const diagnostics: Diagnostic[] = service
+      .getDiagnostics()
+      .map((diagnostic) => ({
+        ...diagnostic,
+        severity:
+          diagnostic.severity === "error"
+            ? DiagnosticSeverity.Error
+            : diagnostic.severity === "warning"
+              ? DiagnosticSeverity.Warning
+              : DiagnosticSeverity.Information,
+      }));
     await connection.sendDiagnostics({ uri: change.document.uri, diagnostics });
   });
 
@@ -299,7 +339,10 @@ function resolveLinkTarget(
 function toCodeAction(
   title: string,
   uri: string,
-  edit: { version: number; edits: { range: import("vscode-languageserver").Range; newText: string }[] },
+  edit: {
+    version: number;
+    edits: { range: import("vscode-languageserver").Range; newText: string }[];
+  },
   diagnostics: import("vscode-languageserver").Diagnostic[],
 ): CodeAction {
   return {

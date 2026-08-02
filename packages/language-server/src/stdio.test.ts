@@ -25,10 +25,7 @@ async function bundleStdio(): Promise<string> {
   return outfile;
 }
 
-function sendLspMessage(
-  stdin: NodeJS.WritableStream,
-  message: unknown,
-): void {
+function sendLspMessage(stdin: NodeJS.WritableStream, message: unknown): void {
   const body = Buffer.from(JSON.stringify(message), "utf-8");
   const header = Buffer.from(`Content-Length: ${body.length}\r\n\r\n`, "utf-8");
   stdin.write(Buffer.concat([header, body]));
@@ -193,13 +190,15 @@ describe("stdio entry point", () => {
     const child = spawn("node", [bundlePath]);
     const client = new LspTestClient(child);
 
-    const response = await client.request(1, "initialize", {
-      processId: null,
-      rootUri: null,
-      capabilities: {},
-    }).finally(() => {
-      child.kill();
-    });
+    const response = await client
+      .request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      })
+      .finally(() => {
+        child.kill();
+      });
 
     expect(response).toMatchObject({
       jsonrpc: "2.0",

@@ -4,10 +4,7 @@ import { tags } from "@lezer/highlight";
 import { describe, expect, it, vi } from "vitest";
 
 import * as extensionsModule from "./extensions";
-import {
-  getDiagnosticActions,
-  getReferenceHighlightSpecs,
-} from "./extensions";
+import { getDiagnosticActions, getReferenceHighlightSpecs } from "./extensions";
 import { EditorLanguageService } from "./service";
 
 const text = [
@@ -40,9 +37,13 @@ describe("GEDCOM editor extensions", () => {
       extensions: createStandaloneEditorExtensions(),
     });
 
-    const gedcomKeys = gedcomState.facet(keymap).flat()
+    const gedcomKeys = gedcomState
+      .facet(keymap)
+      .flat()
       .map((binding) => binding.key);
-    const standaloneKeys = standaloneState.facet(keymap).flat()
+    const standaloneKeys = standaloneState
+      .facet(keymap)
+      .flat()
       .map((binding) => binding.key);
 
     expect(gedcomKeys).toContain("Ctrl-Space");
@@ -82,10 +83,12 @@ describe("GEDCOM editor extensions", () => {
 
     const actions = getDiagnosticActions(language, diagnostic, apply);
 
-    expect(actions.map(({ name }) => name)).toEqual(expect.arrayContaining([
-      "Replace @I9@ with @I1@",
-      "Create INDI record @I9@",
-    ]));
+    expect(actions.map(({ name }) => name)).toEqual(
+      expect.arrayContaining([
+        "Replace @I9@ with @I1@",
+        "Create INDI record @I9@",
+      ]),
+    );
     actions[0].apply();
     expect(apply).toHaveBeenCalledOnce();
   });

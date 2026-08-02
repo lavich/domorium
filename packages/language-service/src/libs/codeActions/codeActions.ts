@@ -99,11 +99,7 @@ function unresolvedXrefActions(
       diagnostics: [diagnostic],
       choices: candidates.map((candidate) => ({
         title: `Replace with ${candidate.id}`,
-        edit: replacementEdit(
-          context.version,
-          diagnostic.range,
-          candidate.id,
-        ),
+        edit: replacementEdit(context.version, diagnostic.range, candidate.id),
       })),
     });
   }

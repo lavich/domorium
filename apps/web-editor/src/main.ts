@@ -27,7 +27,11 @@ async function init(): Promise<void> {
           actions: {
             applyWorkspaceEdit: (edit) => {
               return editorRef.current
-                ? applyWorkspaceEdit(editorRef.current, edit, language.getVersion())
+                ? applyWorkspaceEdit(
+                    editorRef.current,
+                    edit,
+                    language.getVersion(),
+                  )
                 : false;
             },
             openDocumentLink,
@@ -46,11 +50,14 @@ async function init(): Promise<void> {
           {
             key: "F2",
             run: (view) => {
-              const prepared = language.update(view.state.sliceDoc())
-                .prepareRename(offsetToPosition(
-                  view.state.doc,
-                  view.state.selection.main.head,
-                ));
+              const prepared = language
+                .update(view.state.sliceDoc())
+                .prepareRename(
+                  offsetToPosition(
+                    view.state.doc,
+                    view.state.selection.main.head,
+                  ),
+                );
               if (!prepared.ok) {
                 return false;
               }

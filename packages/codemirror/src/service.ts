@@ -29,17 +29,22 @@ export function toCodeMirrorChanges(
   if (edit.version !== version) {
     return null;
   }
-  if (edit.edits.some(({ range }) =>
-    !isValidPosition(document, range.start) ||
-    !isValidPosition(document, range.end) ||
-    comparePositions(range.start, range.end) > 0
-  )) {
+  if (
+    edit.edits.some(
+      ({ range }) =>
+        !isValidPosition(document, range.start) ||
+        !isValidPosition(document, range.end) ||
+        comparePositions(range.start, range.end) > 0,
+    )
+  ) {
     return null;
   }
-  const changes = edit.edits.map(({ range, newText }) => ({
-    ...rangeToOffsets(document, range),
-    insert: newText,
-  })).sort((left, right) => left.from - right.from || left.to - right.to);
+  const changes = edit.edits
+    .map(({ range, newText }) => ({
+      ...rangeToOffsets(document, range),
+      insert: newText,
+    }))
+    .sort((left, right) => left.from - right.from || left.to - right.to);
   for (let index = 1; index < changes.length; index += 1) {
     if (changes[index - 1].to > changes[index].from) {
       return null;
@@ -103,8 +108,13 @@ export class EditorLanguageService {
 }
 
 function isValidPosition(document: Text, position: Position): boolean {
-  if (!Number.isInteger(position.line) || !Number.isInteger(position.character) ||
-      position.line < 0 || position.character < 0 || position.line >= document.lines) {
+  if (
+    !Number.isInteger(position.line) ||
+    !Number.isInteger(position.character) ||
+    position.line < 0 ||
+    position.character < 0 ||
+    position.line >= document.lines
+  ) {
     return false;
   }
   return position.character <= document.line(position.line + 1).length;

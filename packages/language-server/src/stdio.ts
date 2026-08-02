@@ -1,7 +1,4 @@
-import {
-  createConnection,
-  ProposedFeatures,
-} from "vscode-languageserver/node";
+import { createConnection, ProposedFeatures } from "vscode-languageserver/node";
 import { createServer } from "./createServer";
 
 createServer(

@@ -19,7 +19,7 @@ export function documentLinks(nodes: ASTNode[]): DocumentLink[] {
     if (tag === "FILE" && value?.value.trim()) {
       const targetText = value.value.trim();
       const kind = isGedcom7
-        ? supportedUrlKind(targetText) ?? gedcom7LocalFileKind(targetText)
+        ? (supportedUrlKind(targetText) ?? gedcom7LocalFileKind(targetText))
         : gedcom551FileKind(targetText);
       if (kind) {
         links.push({ range: value.range, targetText, kind });

@@ -3,14 +3,23 @@ import {
   type CompletionContext,
   type CompletionResult,
 } from "@codemirror/autocomplete";
-import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentWithTab,
+} from "@codemirror/commands";
 import {
   foldGutter,
   foldService,
   highlightingFor,
   indentUnit,
 } from "@codemirror/language";
-import { linter, lintGutter, type Diagnostic as CodeMirrorDiagnostic } from "@codemirror/lint";
+import {
+  linter,
+  lintGutter,
+  type Diagnostic as CodeMirrorDiagnostic,
+} from "@codemirror/lint";
 import { EditorState, type Extension } from "@codemirror/state";
 import {
   Decoration,
@@ -66,12 +75,14 @@ export function getReferenceHighlightSpecs(
   language: EditorLanguageService,
 ): ReferenceHighlightSpec[] {
   const service = language.update(state.sliceDoc());
-  return service.getDocumentHighlights(
-    offsetToPosition(state.doc, state.selection.main.head),
-  ).map((highlight) => ({
-    ...rangeToOffsets(state.doc, highlight.range),
-    kind: highlight.kind,
-  }));
+  return service
+    .getDocumentHighlights(
+      offsetToPosition(state.doc, state.selection.main.head),
+    )
+    .map((highlight) => ({
+      ...rangeToOffsets(state.doc, highlight.range),
+      kind: highlight.kind,
+    }));
 }
 
 export function getDiagnosticActions(
@@ -87,22 +98,24 @@ export function getDiagnosticActions(
   if (!Array.isArray(actions)) {
     return [];
   }
-  return actions.flatMap((action) => [
-    ...(action.edit ? [{ name: action.title, edit: action.edit }] : []),
-    ...(action.choices ?? []).map((choice) => ({
-      name: choice.title,
-      edit: choice.edit,
-    })),
-  ]).map(({ name, edit }) => ({
-    name,
-    apply: () => {
-      try {
-        applyEdit(edit);
-      } catch {
-        // Host integrations must not be able to break CodeMirror's lint UI.
-      }
-    },
-  }));
+  return actions
+    .flatMap((action) => [
+      ...(action.edit ? [{ name: action.title, edit: action.edit }] : []),
+      ...(action.choices ?? []).map((choice) => ({
+        name: choice.title,
+        edit: choice.edit,
+      })),
+    ])
+    .map(({ name, edit }) => ({
+      name,
+      apply: () => {
+        try {
+          applyEdit(edit);
+        } catch {
+          // Host integrations must not be able to break CodeMirror's lint UI.
+        }
+      },
+    }));
 }
 
 const completionType: Record<number, string> = {
@@ -118,11 +131,15 @@ function completionSource(
   const before = context.matchBefore(/[A-Z0-9_@]*$/i);
   const line = context.state.doc.lineAt(context.pos);
   const prefix = line.text.slice(0, context.pos - line.from);
-  if (!context.explicit && (!before || before.from === before.to) &&
-      !prefix.endsWith(" ")) {
+  if (
+    !context.explicit &&
+    (!before || before.from === before.to) &&
+    !prefix.endsWith(" ")
+  ) {
     return null;
   }
-  const items = language.update(context.state.sliceDoc())
+  const items = language
+    .update(context.state.sliceDoc())
     .getCompletionItems(offsetToPosition(context.state.doc, context.pos));
   if (items.length === 0) {
     return null;
@@ -141,29 +158,39 @@ function diagnosticSource(
   language: EditorLanguageService,
   actions: GedcomEditorActions,
 ): Extension {
-  return linter((view) => language.update(view.state.sliceDoc())
-    .getDiagnostics().map((diagnostic): CodeMirrorDiagnostic => {
-      const range = rangeToOffsets(view.state.doc, diagnostic.range);
-      return {
-        from: range.from,
-        to: Math.max(range.from, range.to),
-        severity: diagnostic.severity === "error"
-          ? "error"
-          : diagnostic.severity === "warning" ? "warning" : "info",
-        message: diagnostic.message,
-        source: "GEDCOM",
-        actions: getDiagnosticActions(
-          language,
-          diagnostic,
-          actions.applyWorkspaceEdit,
-        ),
-      };
-    }), { delay: 250 });
+  return linter(
+    (view) =>
+      language
+        .update(view.state.sliceDoc())
+        .getDiagnostics()
+        .map((diagnostic): CodeMirrorDiagnostic => {
+          const range = rangeToOffsets(view.state.doc, diagnostic.range);
+          return {
+            from: range.from,
+            to: Math.max(range.from, range.to),
+            severity:
+              diagnostic.severity === "error"
+                ? "error"
+                : diagnostic.severity === "warning"
+                  ? "warning"
+                  : "info",
+            message: diagnostic.message,
+            source: "GEDCOM",
+            actions: getDiagnosticActions(
+              language,
+              diagnostic,
+              actions.applyWorkspaceEdit,
+            ),
+          };
+        }),
+    { delay: 250 },
+  );
 }
 
 function hoverSource(language: EditorLanguageService): Extension {
   return hoverTooltip((view, offset) => {
-    const hover = language.update(view.state.sliceDoc())
+    const hover = language
+      .update(view.state.sliceDoc())
       .getHover(offsetToPosition(view.state.doc, offset));
     if (!hover) {
       return null;
@@ -183,7 +210,9 @@ function hoverSource(language: EditorLanguageService): Extension {
 function foldingSource(language: EditorLanguageService): Extension {
   return foldService.of((state, lineStart) => {
     const line = state.doc.lineAt(lineStart);
-    const range = language.update(state.sliceDoc()).getFoldingRanges()
+    const range = language
+      .update(state.sliceDoc())
+      .getFoldingRanges()
       .find((candidate) => candidate.startLine === line.number - 1);
     if (!range) {
       return null;
@@ -226,15 +255,20 @@ function navigation(
       return true;
     },
     click(event, view) {
-      if (!(event.metaKey || event.ctrlKey) || event.button !== 0 ||
-          !actions.openDocumentLink) {
+      if (
+        !(event.metaKey || event.ctrlKey) ||
+        event.button !== 0 ||
+        !actions.openDocumentLink
+      ) {
         return false;
       }
       const offset = view.posAtCoords({ x: event.clientX, y: event.clientY });
       if (offset === null) {
         return false;
       }
-      const link = language.update(view.state.sliceDoc()).getDocumentLinks()
+      const link = language
+        .update(view.state.sliceDoc())
+        .getDocumentLinks()
         .find((candidate) => {
           const range = rangeToOffsets(view.state.doc, candidate.range);
           return offset >= range.from && offset < range.to;
@@ -254,29 +288,35 @@ function navigation(
 }
 
 function referenceHighlights(language: EditorLanguageService): Extension {
-  return ViewPlugin.fromClass(class {
-    decorations: DecorationSet;
+  return ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
 
-    constructor(view: EditorView) {
-      this.decorations = buildReferenceDecorations(view, language);
-    }
-
-    update(update: ViewUpdate): void {
-      if (update.docChanged || update.selectionSet) {
-        this.decorations = buildReferenceDecorations(update.view, language);
+      constructor(view: EditorView) {
+        this.decorations = buildReferenceDecorations(view, language);
       }
-    }
-  }, { decorations: (plugin) => plugin.decorations });
+
+      update(update: ViewUpdate): void {
+        if (update.docChanged || update.selectionSet) {
+          this.decorations = buildReferenceDecorations(update.view, language);
+        }
+      }
+    },
+    { decorations: (plugin) => plugin.decorations },
+  );
 }
 
 function buildReferenceDecorations(
   view: EditorView,
   language: EditorLanguageService,
 ): DecorationSet {
-  return Decoration.set(getReferenceHighlightSpecs(view.state, language)
-    .map((highlight) => Decoration.mark({
-      class: `gedcom-reference-${highlight.kind}`,
-    }).range(highlight.from, highlight.to)));
+  return Decoration.set(
+    getReferenceHighlightSpecs(view.state, language).map((highlight) =>
+      Decoration.mark({
+        class: `gedcom-reference-${highlight.kind}`,
+      }).range(highlight.from, highlight.to),
+    ),
+  );
 }
 
 class IndentHintWidget extends WidgetType {
@@ -302,29 +342,41 @@ function semanticDecorations(
   indentationHints: boolean,
 ): DecorationSet {
   const service = language.update(state.sliceDoc());
-  const tokens = service.getSemanticTokens().flatMap((token) => {
-    const from = positionToOffset(state.doc, {
-      line: token.line,
-      character: token.char,
-    });
-    const tag = semanticTokenTag(token.tokenType);
-    const themeClass = tag ? highlightingFor(state, [tag]) : null;
-    const classes = [
-      themeClass,
-      token.tokenModifiers === 0 ? null : "gedcom-token-declaration",
-    ].filter((value): value is string => value !== null);
-    return classes.length === 0
-      ? []
-      : [Decoration.mark({ class: classes.join(" ") })
-        .range(from, Math.min(from + token.length, state.doc.length))];
-  }).filter(({ from, to }) => from < to);
-  const hints = indentationHints ? service.getInlayHints().map((hint) =>
-    Decoration.widget({
-      widget: new IndentHintWidget(hint.label),
-      side: -1,
-    }).range(positionToOffset(state.doc, hint.position))) : [];
+  const tokens = service
+    .getSemanticTokens()
+    .flatMap((token) => {
+      const from = positionToOffset(state.doc, {
+        line: token.line,
+        character: token.char,
+      });
+      const tag = semanticTokenTag(token.tokenType);
+      const themeClass = tag ? highlightingFor(state, [tag]) : null;
+      const classes = [
+        themeClass,
+        token.tokenModifiers === 0 ? null : "gedcom-token-declaration",
+      ].filter((value): value is string => value !== null);
+      return classes.length === 0
+        ? []
+        : [
+            Decoration.mark({ class: classes.join(" ") }).range(
+              from,
+              Math.min(from + token.length, state.doc.length),
+            ),
+          ];
+    })
+    .filter(({ from, to }) => from < to);
+  const hints = indentationHints
+    ? service.getInlayHints().map((hint) =>
+        Decoration.widget({
+          widget: new IndentHintWidget(hint.label),
+          side: -1,
+        }).range(positionToOffset(state.doc, hint.position)),
+      )
+    : [];
   return Decoration.set(
-    [...tokens, ...hints].sort((left, right) => left.from - right.from || left.to - right.to),
+    [...tokens, ...hints].sort(
+      (left, right) => left.from - right.from || left.to - right.to,
+    ),
     true,
   );
 }
@@ -346,32 +398,45 @@ function semanticFeatures(
   language: EditorLanguageService,
   indentationHints: boolean,
 ): Extension {
-  return ViewPlugin.fromClass(class {
-    decorations: DecorationSet;
+  return ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
 
-    constructor(view: EditorView) {
-      this.decorations = semanticDecorations(view.state, language, indentationHints);
-    }
-
-    update(update: ViewUpdate): void {
-      if (update.docChanged ||
-          update.transactions.some((transaction) => transaction.reconfigured)) {
+      constructor(view: EditorView) {
         this.decorations = semanticDecorations(
-          update.state,
+          view.state,
           language,
           indentationHints,
         );
       }
-    }
-  }, { decorations: (plugin) => plugin.decorations });
+
+      update(update: ViewUpdate): void {
+        if (
+          update.docChanged ||
+          update.transactions.some((transaction) => transaction.reconfigured)
+        ) {
+          this.decorations = semanticDecorations(
+            update.state,
+            language,
+            indentationHints,
+          );
+        }
+      }
+    },
+    { decorations: (plugin) => plugin.decorations },
+  );
 }
 
-export function createGedcomExtensions(options: GedcomEditorOptions): Extension[] {
+export function createGedcomExtensions(
+  options: GedcomEditorOptions,
+): Extension[] {
   const language = options.language ?? new EditorLanguageService();
   const diagnostics = options.settings?.diagnostics ?? true;
   const indentationHints = options.settings?.indentationHints ?? true;
   const extensions: Extension[] = [
-    autocompletion({ override: [(context) => completionSource(language, context)] }),
+    autocompletion({
+      override: [(context) => completionSource(language, context)],
+    }),
     hoverSource(language),
     foldingSource(language),
     navigation(language, options.actions),
@@ -393,7 +458,10 @@ export function createStandaloneEditorExtensions(): Extension[] {
     lintGutter(),
     indentUnit.of("  "),
     EditorView.lineWrapping,
-    EditorView.contentAttributes.of({ spellcheck: "false", autocorrect: "off" }),
+    EditorView.contentAttributes.of({
+      spellcheck: "false",
+      autocorrect: "off",
+    }),
     keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
   ];
 }

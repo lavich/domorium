@@ -1,7 +1,10 @@
 import type { ASTNode } from "@gedcom/validator";
 import type { Position, Range } from "../../types";
 
-export const isPositionInRange = (position: Position, range: Range): boolean => {
+export const isPositionInRange = (
+  position: Position,
+  range: Range,
+): boolean => {
   if (position.line < range.start.line || position.line > range.end.line) {
     return false;
   }
