@@ -65,8 +65,9 @@ jobs:
           fi
 
           if changed \
+            apps/jetbrains \
+            apps/vscode \
             apps/web-editor/src \
-            apps/vscode/src \
             packages \
             docs \
             scripts \
