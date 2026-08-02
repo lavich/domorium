@@ -5,9 +5,10 @@
 
 ## Context
 
-This record was written after the fact. The first decision is documented in the
-body of commit `e79aa17`; the second is visible only as the absence of code, and
-its reasoning came from the session in which it was made. Both are in force.
+This record was written after the fact to capture two related decisions already
+in force: replace custom semantic token names with the standard vocabulary, and
+keep the resulting mapping coarse rather than deriving payload types from the
+schema.
 
 Semantic highlighting works by returning token types that the editor maps to
 theme colors. The mapping lives in the theme, not in this project — which means a
@@ -31,14 +32,13 @@ helper on the document.
 to the standard LSP names — `comment`, `keyword`, `string`, and the `declaration`
 modifier — chosen so that every theme already has a color for them.
 
-The names are declared locally in
-`packages/language-service/src/libs/semantic/semanticTokens.ts` rather than
-imported from `vscode-languageserver-protocol`. That is not a departure from the
-decision but a consequence of the layer boundary recorded in
+The names are declared locally by `@gedcom/language-service` rather than imported
+from `vscode-languageserver-protocol`. That is not a departure from the decision
+but a consequence of the layer boundary recorded in
 [docs/architecture.md](../architecture.md): the language service must not depend on
 an LSP runtime, so it restates the standard names instead of importing them. The
-commit that made this decision did import the enums, back when semantic tokens
-still lived in the LSP package; the split moved the code below that boundary.
+initial implementation imported the enums while semantic tokens still lived in
+the LSP package; the later package split moved the behavior below that boundary.
 
 **Keep the mapping coarse and syntactic.** One token type per lexical token kind.
 Schema-aware per-value typing was implemented and then removed: payload values
@@ -69,8 +69,8 @@ name, and that the reason be stronger than "the schema makes it possible."
 vocabulary for this format — `level`, `tag`, `xref`, `payload` would each say
 exactly what they are. Rejected because accuracy is worthless if nothing renders
 it: themes color the standard set, and a custom name produces no color unless every
-user writes theme rules by hand. This was the original implementation, and it is
-what commit `e79aa17` corrected.
+user writes theme rules by hand. This was the original implementation and was
+replaced by the standard vocabulary described above.
 
 **Schema-aware per-value token types.** Implemented, then removed. It genuinely
 improved dense documents, where numeric and enumerated payloads stood out. Rejected
