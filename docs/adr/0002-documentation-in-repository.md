@@ -153,10 +153,12 @@ surface for another: the rules are somebody else's to change, and a major versio
 because the alternative is worse — the code this project would have to write instead
 is exactly the code it is least equipped to keep correct.
 
-Formatting is enforced for Markdown only. The TypeScript sources have accumulated
-drift from Prettier that predates this decision, and reformatting them belongs in
-its own change rather than hidden inside a documentation one — until then, lefthook
-keeps them formatted at commit time and CI does not verify it.
+In CI, formatting is verified for Markdown only. The TypeScript sources carry drift
+from Prettier that predates this decision — the pre-commit hook matched no file
+outside the repository root, so nothing had been formatting them — and reformatting
+them belongs in its own change rather than hidden inside a documentation one. The
+hook now reaches them, so the drift shrinks as files are touched, but a file nobody
+edits stays as it is and CI will not say so.
 
 The `AGENTS.md` support matrix across tools is still moving. Pointer files
 insulate the project from that, but which pointers are needed has to be verified
