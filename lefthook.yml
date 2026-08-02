@@ -36,4 +36,13 @@ pre-commit:
 pre-push:
   commands:
     quality:
-      run: npm run check
+      # Without a JDK the JetBrains stage is skipped rather than blocking the push; CI
+      # runs it either way. `java -version` and not `command -v java`, because macOS
+      # ships a /usr/bin/java stub that exists with no runtime behind it.
+      run: |
+        if [ -n "$JAVA_HOME" ] || java -version >/dev/null 2>&1; then
+          npm run check
+        else
+          echo "lefthook: no JDK found, skipping check:jetbrains — CI will run it" >&2
+          npm run check:typescript && npm run check:docs
+        fi
