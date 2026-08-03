@@ -17,6 +17,7 @@ number.
 | [0003](0003-independent-package-publishing.md)      | Publish shared packages independently via OIDC | Accepted |
 | [0004](0004-standard-semantic-token-vocabulary.md)  | Use the standard LSP semantic token vocabulary | Accepted |
 | [0005](0005-obsidian-plugin-separate-repository.md) | Keep the Obsidian plugin in its own repository | Accepted |
+| [0006](0006-domorium-product-identity.md)           | Use Domorium as the product identity           | Accepted |
 
 ## What belongs in an ADR
 

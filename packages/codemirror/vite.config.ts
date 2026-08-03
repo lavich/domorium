@@ -17,7 +17,7 @@ export default defineConfig({
         "@codemirror/state",
         "@codemirror/view",
         "@lezer/highlight",
-        "@gedcom/language-service",
+        "@domorium/language-service",
       ],
     },
   },

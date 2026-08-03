@@ -34,4 +34,4 @@ export type {
   DocumentLink,
   Range,
   WorkspaceEdit,
-} from "@gedcom/language-service";
+} from "@domorium/language-service";

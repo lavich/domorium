@@ -1,7 +1,7 @@
 {
-  "name": "gedcom",
+  "name": "domorium",
   "version": "1.0.0",
-  "description": "GEDCOM editing tools for the web, Visual Studio Code, and JetBrains IDEs",
+  "description": "Domorium GEDCOM editing tools for the web, Visual Studio Code, and JetBrains IDEs",
   "scripts": {
     "build:libs": "npm run build -w packages/language-server && npm run build -w packages/codemirror",
     "build:vscode": "npm run build -w apps/vscode",

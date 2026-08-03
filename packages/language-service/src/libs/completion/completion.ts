@@ -1,4 +1,4 @@
-import type { GedcomCompletion, GedcomDocument } from "@gedcom/validator";
+import type { GedcomCompletion, GedcomDocument } from "@domorium/validator";
 import {
   CompletionItemKind,
   type CompletionItem,

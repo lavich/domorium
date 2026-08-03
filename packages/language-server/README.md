@@ -1,13 +1,13 @@
-# @gedcom/language-server
+# @domorium/language-server
 
 Language Server Protocol adapter for GEDCOM. Wraps
-[`@gedcom/language-service`](../language-service) in an LSP server so editors that
+[`@domorium/language-service`](../language-service) in an LSP server so editors that
 speak the protocol get GEDCOM completion, diagnostics, hover, navigation,
 references, rename, folding, symbols, and semantic highlighting.
 
 Internal to this repository and not published to npm. Editors that do not speak
-LSP should depend on `@gedcom/language-service` directly, or on
-`@gedcom/codemirror` for a CodeMirror host.
+LSP should depend on `@domorium/language-service` directly, or on
+`@domorium/codemirror` for a CodeMirror host.
 
 ## Usage
 
@@ -16,14 +16,14 @@ run in a Node process, a browser worker, or a test harness:
 
 ```typescript
 import { createConnection, ProposedFeatures } from "vscode-languageserver/node";
-import { createServer } from "@gedcom/language-server";
+import { createServer } from "@domorium/language-server";
 
 createServer(
   createConnection(ProposedFeatures.all, process.stdin, process.stdout),
 );
 ```
 
-The package re-exports the whole `@gedcom/language-service` public API, so a
+The package re-exports the whole `@domorium/language-service` public API, so a
 consumer needs only this dependency.
 
 ## Entry points

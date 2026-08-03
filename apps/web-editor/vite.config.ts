@@ -1,8 +1,8 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/gedcom/",
+  base: "/domorium/",
   optimizeDeps: {
-    exclude: ["@gedcom/validator"],
+    exclude: ["@domorium/validator"],
   },
 });

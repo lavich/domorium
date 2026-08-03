@@ -38,7 +38,7 @@ import {
   type DocumentLink,
   semanticTokenLegend,
   type WorkspaceEdit,
-} from "@gedcom/language-service";
+} from "@domorium/language-service";
 import { tags, type Tag } from "@lezer/highlight";
 
 import {

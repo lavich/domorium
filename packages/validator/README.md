@@ -1,17 +1,17 @@
-# @gedcom/validator
+# @domorium/validator
 
 GEDCOM 5.5.1 and 7.0 parser and validator. Parses `.ged` files into an AST and validates structure, cardinality, and payload types against the official GEDCOM specification schemas.
 
 ## Install
 
 ```bash
-npm install @gedcom/validator
+npm install @domorium/validator
 ```
 
 ## Usage
 
 ```typescript
-import { GedcomDocument } from "@gedcom/validator";
+import { GedcomDocument } from "@domorium/validator";
 
 const gedcomString = "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 TRLR\n";
 

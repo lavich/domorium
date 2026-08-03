@@ -1,6 +1,12 @@
 # Changelog
 
-All notable changes to `@gedcom/validator` are documented here.
+All notable changes to `@domorium/validator` are documented here.
+
+## 0.2.0 - 2026-08-03
+
+- Move the package from `@gedcom/validator` to `@domorium/validator` as part of
+  the Domorium rebrand.
+- Add the FamilySearch GEDCOM specification notice to the published package.
 
 ## 0.1.3 - 2026-07-24
 

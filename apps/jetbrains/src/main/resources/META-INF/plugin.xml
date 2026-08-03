@@ -1,11 +1,11 @@
-<idea-plugin url="https://github.com/lavich/gedcom">
-    <id>gedcom.jetbrains</id>
-    <name>GEDCOM</name>
+<idea-plugin url="https://github.com/lavich/domorium">
+    <id>domorium.gedcom</id>
+    <name>Domorium: GEDCOM Tools</name>
     <vendor url="https://github.com/lavich"
             email="lobanov.andrey.lavich@gmail.com">Andrei Lobanov</vendor>
 
     <description><![CDATA[
-    <p>GEDCOM helps you read and edit <code>.ged</code> and <code>.gedcom</code> files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.</p>
+    <p>Domorium helps you read and edit <code>.ged</code> and <code>.gedcom</code> files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.</p>
 
     <h2>Features</h2>
     <ul>
@@ -25,10 +25,18 @@
     <h2>Requirements</h2>
     <p>Requires Node.js on <code>PATH</code>. The GEDCOM language server is bundled with the plugin and runs locally.</p>
 
-    <p><a href="https://lavich.github.io/gedcom/">Try GEDCOM in your browser</a> · <a href="https://github.com/lavich/gedcom">Source code and issue tracker</a></p>
+    <p><a href="https://lavich.github.io/domorium/">Try Domorium in your browser</a> · <a href="https://github.com/lavich/domorium">Source code and issue tracker</a></p>
+
+    <p>Domorium is an independent project and is not affiliated with or endorsed by FamilySearch or Intellectual Reserve, Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH® are trademarks of Intellectual Reserve, Inc.</p>
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>0.3.0</h2>
+    <ul>
+      <li>Rebranded the plugin as Domorium: GEDCOM Tools</li>
+      <li>Moved to the new <code>domorium.gedcom</code> plugin ID and <code>@domorium</code> package scope</li>
+    </ul>
+
     <h2>0.2.1</h2>
     <ul>
       <li>Renamed the plugin to GEDCOM and moved to the new <code>gedcom.jetbrains</code> plugin ID</li>
@@ -73,19 +81,19 @@
              GEDCOM to preserve: highlighting comes entirely from the
              language server's semantic tokens. -->
         <fileType name="GEDCOM"
-                  implementationClass="gedcom.jetbrains.GedcomFileType"
+                  implementationClass="domorium.jetbrains.GedcomFileType"
                   fieldName="INSTANCE"
                   language="TEXT"
                   extensions="ged;gedcom"/>
         <spellchecker.support language="TEXT"
-                              implementationClass="gedcom.jetbrains.GedcomSpellcheckingStrategy"
+                              implementationClass="domorium.jetbrains.GedcomSpellcheckingStrategy"
                               order="first"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
         <server id="gedcomServer"
                 name="GEDCOM Language Server"
-                factoryClass="gedcom.jetbrains.GedcomLanguageServerFactory">
+                factoryClass="domorium.jetbrains.GedcomLanguageServerFactory">
             <description><![CDATA[
             The GEDCOM language server (packages/language-server), run as a
             standalone Node.js process over stdio.

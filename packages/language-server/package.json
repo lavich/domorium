@@ -1,5 +1,5 @@
 {
-  "name": "@gedcom/language-server",
+  "name": "@domorium/language-server",
   "description": "Internal Language Server Protocol adapter for GEDCOM editor integrations",
   "private": true,
   "main": "dist/index.cjs.js",
@@ -32,6 +32,6 @@
     "vscode-languageserver-textdocument": "^1.0.12"
   },
   "dependencies": {
-    "@gedcom/language-service": "*"
+    "@domorium/language-service": "*"
   }
 }

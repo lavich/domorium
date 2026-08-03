@@ -1,6 +1,12 @@
 # Changelog
 
-All notable changes to the GEDCOM VS Code extension are documented here.
+All notable changes to the Domorium VS Code extension are documented here.
+
+## 0.1.0
+
+- Rebrand the extension as Domorium — GEDCOM Tools.
+- Move the Marketplace identity to `domorium.gedcom`.
+- Move shared dependencies to the `@domorium` npm scope.
 
 ## 0.0.13
 

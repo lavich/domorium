@@ -1,7 +1,7 @@
 # Agent instructions
 
-GEDCOM editing tools — parser, validator, and language features for `.ged` files,
-adapted to VS Code, JetBrains IDEs, the browser, and Obsidian. npm workspace
+Domorium is a collection of GEDCOM editing tools — parser, validator, and
+language features for `.ged` files, adapted to VS Code, JetBrains IDEs, the browser, and Obsidian. npm workspace
 monorepo, TypeScript, with a Kotlin/Gradle plugin under `apps/jetbrains`.
 
 This file is the canonical instruction set for all coding assistants. Files such
@@ -10,10 +10,10 @@ as `CLAUDE.md` are pointers to it and must not carry content of their own.
 ## Layout
 
 ```text
-packages/validator          @gedcom/validator        parser + schema validation   (npm)
-packages/language-service   @gedcom/language-service editor-independent features (npm)
-packages/language-server    @gedcom/language-server  LSP adapter                 (internal)
-packages/codemirror         @gedcom/codemirror       CodeMirror 6 adapter        (npm)
+packages/validator          @domorium/validator        parser + schema validation   (npm)
+packages/language-service   @domorium/language-service editor-independent features (npm)
+packages/language-server    @domorium/language-server  LSP adapter                 (internal)
+packages/codemirror         @domorium/codemirror       CodeMirror 6 adapter        (npm)
 apps/vscode                 VS Code extension        → language-server
 apps/jetbrains              JetBrains plugin         → language-server (bundled stdio build)
 apps/web-editor             Vite app, GitHub Pages   → codemirror
@@ -55,7 +55,7 @@ Violating one of these means the change is at the wrong layer. Do not work aroun
 them; move the code instead.
 
 - No package below the adapter layer imports an editor API or an LSP type.
-- `@gedcom/language-service` declares its own protocol-shaped types in
+- `@domorium/language-service` declares its own protocol-shaped types in
   `src/types.ts` and never depends on `vscode-languageserver-protocol`.
 - Genealogy logic lives in a shared package, never duplicated across apps.
 - `@codemirror/*` and `@lezer/*` stay peer dependencies, single-instanced.

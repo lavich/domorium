@@ -1,6 +1,6 @@
-# GEDCOM for JetBrains IDEs
+# Domorium: GEDCOM Tools for JetBrains IDEs
 
-GEDCOM helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
+Domorium helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
 
 ![GEDCOM autocomplete, validation, hover, and navigation](../vscode/images/gedcom-demo.gif)
 
@@ -18,7 +18,7 @@ GEDCOM helps you read and edit `.ged` and `.gedcom` files with confidence. It un
 
 Requires Node.js on `PATH`. The GEDCOM language server is bundled with the plugin and runs locally.
 
-[Try GEDCOM in your browser](https://lavich.github.io/gedcom/) · [Source code and issue tracker](https://github.com/lavich/gedcom)
+[Try Domorium in your browser](https://lavich.github.io/domorium/) · [Source code and issue tracker](https://github.com/lavich/domorium)
 
 ## Roadmap
 
@@ -43,3 +43,7 @@ The language server lives in `packages/language-server`. Gradle builds its stand
 ## License
 
 MIT © 2026 Andrei Lobanov
+
+Domorium is an independent project and is not affiliated with or endorsed by
+FamilySearch or Intellectual Reserve, Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH®
+are trademarks of Intellectual Reserve, Inc.

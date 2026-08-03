@@ -1,2 +1,2 @@
 export { createServer } from "./createServer";
-export * from "@gedcom/language-service";
+export * from "@domorium/language-service";
