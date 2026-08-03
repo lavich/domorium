@@ -1,10 +1,10 @@
-# GEDCOM web editor
+# Domorium — GEDCOM Web Editor
 
 Browser editor for `.ged` and `.gedcom` files, deployed at
-[lavich.github.io/gedcom](https://lavich.github.io/gedcom/). No upload and no
+[lavich.github.io/domorium](https://lavich.github.io/domorium/). No upload and no
 server: the file is parsed and validated entirely in the browser.
 
-It is also the reference host for [`@gedcom/codemirror`](../../packages/codemirror)
+It is also the reference host for [`@domorium/codemirror`](../../packages/codemirror)
 — whatever a CodeMirror host needs from the shared packages should be visible in
 this app's small amount of code.
 
@@ -36,3 +36,9 @@ npm run build:libs                 # from the repository root
 Merging to `main` deploys to GitHub Pages when web-related paths change; there is
 no release tag. See the release topology in
 [docs/architecture.md](../../docs/architecture.md).
+
+## Trademark notice
+
+Domorium is an independent project and is not affiliated with or endorsed by
+FamilySearch or Intellectual Reserve, Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH®
+are trademarks of Intellectual Reserve, Inc.

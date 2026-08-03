@@ -16,11 +16,11 @@ graph TD
     vscode["apps/vscode<br/>VS Code extension"]
     jb["apps/jetbrains<br/>JetBrains plugin"]
     web["apps/web-editor<br/>GitHub Pages"]
-    obsidian["lavich/gedcom-obsidian<br/><i>separate repository</i>"]
-    lsp["@gedcom/language-server<br/>LSP adapter<br/><i>internal</i>"]
-    cm["@gedcom/codemirror<br/>CodeMirror 6 adapter<br/><i>published</i>"]
-    service["@gedcom/language-service<br/>editor-independent features<br/><i>published</i>"]
-    validator["@gedcom/validator<br/>parser + schema validation<br/><i>published</i>"]
+    obsidian["lavich/domorium-obsidian<br/><i>separate repository</i>"]
+    lsp["@domorium/language-server<br/>LSP adapter<br/><i>internal</i>"]
+    cm["@domorium/codemirror<br/>CodeMirror 6 adapter<br/><i>published</i>"]
+    service["@domorium/language-service<br/>editor-independent features<br/><i>published</i>"]
+    validator["@domorium/validator<br/>parser + schema validation<br/><i>published</i>"]
 
     vscode --> lsp
     jb -->|"bundled stdio build"| lsp
@@ -33,7 +33,7 @@ graph TD
 
 ## Layers
 
-### `packages/validator` — `@gedcom/validator`
+### `packages/validator` — `@domorium/validator`
 
 Published to npm. Owns everything about the GEDCOM format itself and nothing
 about editors.
@@ -53,7 +53,7 @@ means editing it directly.
 Runtime dependencies are `chevrotain` and `ts-brand`. Requires Node.js 22 or
 newer when used directly in Node.js.
 
-### `packages/language-service` — `@gedcom/language-service`
+### `packages/language-service` — `@domorium/language-service`
 
 Published to npm. Turns a validated document into editor features, while staying
 independent of any editor and of the Language Server Protocol runtime.
@@ -73,7 +73,7 @@ distinction between this layer and the one above it.
 Positions are line/character pairs. Conversion to and from byte offsets is the
 adapter's job, not this package's.
 
-### `packages/language-server` — `@gedcom/language-server`
+### `packages/language-server` — `@domorium/language-server`
 
 Internal, not published. Adapts the language service to the Language Server
 Protocol.
@@ -84,10 +84,10 @@ hosts that spawn a process. Among the shared packages, LSP dependencies are conf
 to this one; an editor host may of course depend on its own platform's LSP client and
 runtime, as `apps/vscode` does.
 
-`src/index.ts` re-exports all of `@gedcom/language-service`, so a consumer of
+`src/index.ts` re-exports all of `@domorium/language-service`, so a consumer of
 this package does not need to depend on both.
 
-### `packages/codemirror` — `@gedcom/codemirror`
+### `packages/codemirror` — `@domorium/codemirror`
 
 Published to npm. Adapts the language service to CodeMirror 6.
 
@@ -103,15 +103,15 @@ this package would break any host that already has its own copy.
 
 ## Editor hosts
 
-| App               | Consumes                  | Notes                                                                                                     |
-| ----------------- | ------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `apps/vscode`     | `@gedcom/language-server` | Web extension: `browser` entry only, with a client and an in-worker server bundle                         |
-| `apps/jetbrains`  | `@gedcom/language-server` | Gradle build runs `build:stdio` and bundles the result onto the plugin classpath as `server/stdio.cjs.js` |
-| `apps/web-editor` | `@gedcom/codemirror`      | Vite app deployed to GitHub Pages from `main` when web-related paths change                               |
+| App               | Consumes                    | Notes                                                                                                     |
+| ----------------- | --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `apps/vscode`     | `@domorium/language-server` | Web extension: `browser` entry only, with a client and an in-worker server bundle                         |
+| `apps/jetbrains`  | `@domorium/language-server` | Gradle build runs `build:stdio` and bundles the result onto the plugin classpath as `server/stdio.cjs.js` |
+| `apps/web-editor` | `@domorium/codemirror`      | Vite app deployed to GitHub Pages from `main` when web-related paths change                               |
 
 The Obsidian plugin lives in a separate repository,
-[lavich/gedcom-obsidian](https://github.com/lavich/gedcom-obsidian), and will
-consume the published `@gedcom/codemirror` package. This repository stays the
+[lavich/domorium-obsidian](https://github.com/lavich/domorium-obsidian), and will
+consume the published `@domorium/codemirror` package. This repository stays the
 source of truth for editor-independent behavior; the Obsidian repository owns only
 Obsidian integration — its view lifecycle, vault persistence, settings, commands,
 and link handling.
@@ -133,14 +133,14 @@ iterative one.
 Each releasable unit is versioned and tagged independently. Pushing a tag
 triggers the matching workflow in `.github/workflows/`.
 
-| Unit                       | Tag pattern               | Target                          |
-| -------------------------- | ------------------------- | ------------------------------- |
-| `@gedcom/validator`        | `validator-v*.*.*`        | npm                             |
-| `@gedcom/language-service` | `language-service-v*.*.*` | npm                             |
-| `@gedcom/codemirror`       | `codemirror-v*.*.*`       | npm                             |
-| VS Code extension          | `vscode-v*.*.*`           | VS Code Marketplace             |
-| JetBrains plugin           | `jetbrains-v*.*.*`        | JetBrains Marketplace           |
-| Web editor                 | none                      | GitHub Pages on merge to `main` |
+| Unit                         | Tag pattern               | Target                          |
+| ---------------------------- | ------------------------- | ------------------------------- |
+| `@domorium/validator`        | `validator-v*.*.*`        | npm                             |
+| `@domorium/language-service` | `language-service-v*.*.*` | npm                             |
+| `@domorium/codemirror`       | `codemirror-v*.*.*`       | npm                             |
+| VS Code extension            | `vscode-v*.*.*`           | VS Code Marketplace             |
+| JetBrains plugin             | `jetbrains-v*.*.*`        | JetBrains Marketplace           |
+| Web editor                   | none                      | GitHub Pages on merge to `main` |
 
 ## Invariants
 
@@ -148,7 +148,7 @@ These are the properties that make the layering worth having. Breaking one
 usually means a feature has been implemented at the wrong level.
 
 - No package below the adapter layer imports an editor API or an LSP type.
-- `@gedcom/language-service` never depends on `vscode-languageserver-protocol`.
+- `@domorium/language-service` never depends on `vscode-languageserver-protocol`.
 - Genealogy logic belongs in a shared package, not in an app. Two apps needing
   the same behavior is a signal to move it down, not to copy it.
 - CodeMirror packages stay external and single-instanced.

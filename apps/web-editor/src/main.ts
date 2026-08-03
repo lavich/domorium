@@ -11,7 +11,7 @@ import {
   goToNextReference,
   offsetToPosition,
   renameReference,
-} from "@gedcom/codemirror";
+} from "@domorium/codemirror";
 
 async function init(): Promise<void> {
   const document = await loadSample();

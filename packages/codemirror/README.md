@@ -1,15 +1,15 @@
-# @gedcom/codemirror
+# @domorium/codemirror
 
 CodeMirror 6 integration for GEDCOM completion, diagnostics, hover, folding,
 semantic highlighting, document links, definitions, references, and rename.
-The language behavior comes from `@gedcom/language-service`.
+The language behavior comes from `@domorium/language-service`.
 
 ## Install
 
 Install the package and the CodeMirror peer dependencies used by your host:
 
 ```bash
-npm install @gedcom/codemirror \
+npm install @domorium/codemirror \
   @codemirror/autocomplete \
   @codemirror/commands \
   @codemirror/language \
@@ -29,7 +29,7 @@ import {
   createGedcomExtensions,
   createStandaloneEditorExtensions,
   EditorLanguageService,
-} from "@gedcom/codemirror";
+} from "@domorium/codemirror";
 
 const language = new EditorLanguageService();
 let view: EditorView;

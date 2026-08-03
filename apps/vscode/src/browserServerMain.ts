@@ -3,7 +3,7 @@ import {
   BrowserMessageReader,
   BrowserMessageWriter,
 } from "vscode-languageserver/browser";
-import { createServer } from "@gedcom/language-server";
+import { createServer } from "@domorium/language-server";
 
 const messageReader = new BrowserMessageReader(self);
 const messageWriter = new BrowserMessageWriter(self);

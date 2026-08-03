@@ -1,17 +1,17 @@
-# @gedcom/language-service
+# @domorium/language-service
 
-Editor-independent GEDCOM language features built on `@gedcom/validator`. It can power browser editors, IDE extensions, and note-taking plugins without depending on the Language Server Protocol runtime.
+Editor-independent GEDCOM language features built on `@domorium/validator`. It can power browser editors, IDE extensions, and note-taking plugins without depending on the Language Server Protocol runtime.
 
 ## Install
 
 ```bash
-npm install @gedcom/language-service
+npm install @domorium/language-service
 ```
 
 ## Usage
 
 ```typescript
-import { GedcomLanguageService } from "@gedcom/language-service";
+import { GedcomLanguageService } from "@domorium/language-service";
 
 const gedcomText = "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 TRLR\n";
 

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for looking at GEDCOM. This document covers getting set up, the checks a
+Thanks for looking at Domorium. This document covers getting set up, the checks a
 change has to pass, and how releases are made.
 
 Before changing anything that crosses a package boundary, read

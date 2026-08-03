@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DocumentSymbolKind } from "../../types";
 import { documentSymbols } from "./documentSymbols";
-import { GedcomDocument } from "@gedcom/validator";
+import { GedcomDocument } from "@domorium/validator";
 
 const gedcomDocument = new GedcomDocument();
 gedcomDocument.createDocument(`0 @I1@ INDI

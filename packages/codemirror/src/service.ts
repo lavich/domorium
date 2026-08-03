@@ -6,7 +6,7 @@ import {
   type Position,
   type ReferenceOptions,
   type WorkspaceEdit,
-} from "@gedcom/language-service";
+} from "@domorium/language-service";
 
 import { rangeToOffsets } from "./positions.js";
 

@@ -1,4 +1,4 @@
-import { ASTNode } from "@gedcom/validator";
+import { ASTNode } from "@domorium/validator";
 import type { InlayHint } from "../../types";
 
 const INDENT = "  ";

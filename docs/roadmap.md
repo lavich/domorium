@@ -1,4 +1,4 @@
-# GEDCOM — Roadmap
+# Domorium — Roadmap
 
 Where this project could go. These are directions, not commitments: nothing here is
 scheduled, sized, or assigned, and an item may sit untouched for a long time or be
@@ -80,7 +80,7 @@ New workspace packages/apps, not fixes to existing code — each would be its ow
 
 - **Family tree visualization in Excalidraw** — render a visual tree (or export an Excalidraw scene) from a parsed GEDCOM document, walking FAMC/FAMS/HUSB/WIFE/CHIL pointers already resolved via `pointers` map in the AST. Architecture: keep GEDCOM as the read-only model layer; store layout data (node positions, edge routes) separately; Excalidraw becomes one of several possible renderers. Coordinates must never be written back into the `.ged` file — this preserves source fidelity and allows multiple views (Excalidraw, custom web, print) over the same tree without corruption.
 
-- **CLI validator/linter** — thin wrapper over `packages/validator` (e.g. `npx @gedcom/validator file.ged`), for use in scripts/CI outside any editor.
+- **CLI validator/linter** — thin wrapper over `packages/validator` (e.g. `npx @domorium/validator file.ged`), for use in scripts/CI outside any editor.
 
 - **GitHub Action** — wraps the CLI above to lint `.ged` files in other repositories' CI pipelines.
 
@@ -92,9 +92,9 @@ New workspace packages/apps, not fixes to existing code — each would be its ow
 
 ## AI / MCP
 
-Keep `@gedcom/mcp` as a thin protocol adapter over `query`, `validator`, `graph`, `mutations`, and `diff`; business logic must remain usable without MCP.
+Keep `@domorium/mcp` as a thin protocol adapter over `query`, `validator`, `graph`, `mutations`, and `diff`; business logic must remain usable without MCP.
 
-- **Read-only `@gedcom/mcp` MVP** — stdio server with document info, person search, person/family lookup, relationships, ancestors, descendants, validation, and diagnostics. Return compact DTOs rather than dumping the full AST into model context.
+- **Read-only `@domorium/mcp` MVP** — stdio server with document info, person search, person/family lookup, relationships, ancestors, descendants, validation, and diagnostics. Return compact DTOs rather than dumping the full AST into model context.
 
 - **MCP Resources** — expose stable URIs for document summary, statistics, diagnostics, people, families, places, sources, and the active GEDCOM schema.
 

@@ -1,4 +1,4 @@
-package gedcom.jetbrains
+package domorium.jetbrains
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.diagnostic.Logger

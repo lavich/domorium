@@ -1,5 +1,5 @@
 import type { Text } from "@codemirror/state";
-import type { Position, Range } from "@gedcom/language-service";
+import type { Position, Range } from "@domorium/language-service";
 
 export function positionToOffset(document: Text, position: Position): number {
   const lineNumber = Math.min(Math.max(position.line + 1, 1), document.lines);

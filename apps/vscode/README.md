@@ -1,6 +1,6 @@
-# GEDCOM for Visual Studio Code
+# Domorium — GEDCOM Tools for Visual Studio Code
 
-GEDCOM helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
+Domorium helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
 
 ![GEDCOM autocomplete, validation, hover, and navigation](images/gedcom-demo.gif)
 
@@ -20,18 +20,22 @@ GEDCOM helps you read and edit `.ged` and `.gedcom` files with confidence. It un
 
 ## Installation
 
-Install [GEDCOM from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=lavich.gedcom-vscode), or run:
+Install [Domorium from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom), or run:
 
 ```bash
-code --install-extension lavich.gedcom-vscode
+code --install-extension domorium.gedcom
 ```
 
-You can also [try GEDCOM in your browser](https://lavich.github.io/gedcom/).
+You can also [try Domorium in your browser](https://lavich.github.io/domorium/).
 
 ## Contributing
 
-See the [project repository](https://github.com/lavich/gedcom) for development setup and contribution instructions.
+See the [project repository](https://github.com/lavich/domorium) for development setup and contribution instructions.
 
 ## License
 
 MIT © 2025 Andrei Lobanov
+
+Domorium is an independent project and is not affiliated with or endorsed by
+FamilySearch or Intellectual Reserve, Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH®
+are trademarks of Intellectual Reserve, Inc.

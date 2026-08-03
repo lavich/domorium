@@ -1,6 +1,12 @@
 # Changelog
 
-All notable changes to `@gedcom/codemirror` are documented here.
+All notable changes to `@domorium/codemirror` are documented here.
+
+## 0.2.0 - 2026-08-03
+
+- Move the package from `@gedcom/codemirror` to `@domorium/codemirror` as part
+  of the Domorium rebrand.
+- Replace the language service dependency with `@domorium/language-service`.
 
 ## 0.1.0 - 2026-07-30
 

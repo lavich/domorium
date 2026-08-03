@@ -1,4 +1,4 @@
-# GEDCOM — TODO
+# Domorium — TODO
 
 Near-term work. Longer-range directions live in [docs/roadmap.md](docs/roadmap.md).
 

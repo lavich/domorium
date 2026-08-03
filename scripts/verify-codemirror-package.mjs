@@ -60,7 +60,7 @@ try {
   writeFileSync(
     join(temporaryDirectory, "verify-esm.mjs"),
     [
-      'import { createGedcomExtensions } from "@gedcom/codemirror";',
+      'import { createGedcomExtensions } from "@domorium/codemirror";',
       'if (typeof createGedcomExtensions !== "function") {',
       '  throw new Error("ESM export is unavailable");',
       "}",
@@ -72,7 +72,7 @@ try {
   writeFileSync(
     join(temporaryDirectory, "verify-cjs.cjs"),
     [
-      'const { createGedcomExtensions } = require("@gedcom/codemirror");',
+      'const { createGedcomExtensions } = require("@domorium/codemirror");',
       'if (typeof createGedcomExtensions !== "function") {',
       '  throw new Error("CommonJS export is unavailable");',
       "}",
@@ -88,7 +88,7 @@ try {
       "  createGedcomExtensions,",
       "  EditorLanguageService,",
       "  type GedcomEditorOptions,",
-      '} from "@gedcom/codemirror";',
+      '} from "@domorium/codemirror";',
       "",
       "const language = new EditorLanguageService();",
       "const options: GedcomEditorOptions = {",
