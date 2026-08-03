@@ -1,4 +1,4 @@
-# Domorium — GEDCOM Tools for JetBrains IDEs
+# Domorium: GEDCOM Tools for JetBrains IDEs
 
 Domorium helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
 

@@ -1,6 +1,6 @@
 <idea-plugin url="https://github.com/lavich/domorium">
     <id>domorium.gedcom</id>
-    <name>Domorium — GEDCOM Tools</name>
+    <name>Domorium: GEDCOM Tools</name>
     <vendor url="https://github.com/lavich"
             email="lobanov.andrey.lavich@gmail.com">Andrei Lobanov</vendor>
 
@@ -33,7 +33,7 @@
     <change-notes><![CDATA[
     <h2>0.3.0</h2>
     <ul>
-      <li>Rebranded the plugin as Domorium — GEDCOM Tools</li>
+      <li>Rebranded the plugin as Domorium: GEDCOM Tools</li>
       <li>Moved to the new <code>domorium.gedcom</code> plugin ID and <code>@domorium</code> package scope</li>
     </ul>
 
