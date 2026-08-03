@@ -21,7 +21,9 @@ export function parseGedstruct(text: string): ParsedGrammar {
 
   for (const line of text.split("\n")) {
     const trimmed = line.trimEnd();
-    if (trimmed.length === 0) continue;
+    if (trimmed.length === 0) {
+      continue;
+    }
 
     const structMatch = trimmed.match(/^(\w+)\s*:=/);
     if (structMatch) {
@@ -32,9 +34,13 @@ export function parseGedstruct(text: string): ParsedGrammar {
       continue;
     }
 
-    if (trimmed === "[" || trimmed === "]" || trimmed === "|") continue;
+    if (trimmed === "[" || trimmed === "]" || trimmed === "|") {
+      continue;
+    }
 
-    if (currentStructure === null) continue;
+    if (currentStructure === null) {
+      continue;
+    }
 
     const entry = parseLine(trimmed);
     if (entry) {
@@ -92,9 +98,11 @@ function resolveReferences(structures: Map<string, GrammarStructure[]>) {
 
 function parseLine(line: string): GrammarStructure | null {
   const match = line.match(
-    /^\s*(?:n|(\d+)|\+(\d+))\s+(?:@[^@]+@\s+)?(\S+)(?:\s+<[^>]*>)?\s+\{(\d+):(\d+|M)\}(?:\s+g7:(\S+))?$/
+    /^\s*(?:n|(\d+)|\+(\d+))\s+(?:@[^@]+@\s+)?(\S+)(?:\s+<[^>]*>)?\s+\{(\d+):(\d+|M)\}(?:\s+g7:(\S+))?$/,
   );
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   const level =
     match[1] !== undefined

@@ -52,7 +52,8 @@ const tokenModifiersMap: Record<TokenNames, (typeof tokenModifiers)[number][]> =
 
 export function tokenTypeIndex(kind: TokenNames): number {
   const semanticType = tokenMap[kind];
-  const idx = semanticType === undefined ? undefined : tokenTypeMap.get(semanticType);
+  const idx =
+    semanticType === undefined ? undefined : tokenTypeMap.get(semanticType);
   if (idx === undefined) {
     throw new Error(`No semantic token type for: ${kind}`);
   }
@@ -71,7 +72,9 @@ export function modifierMask(kind: TokenNames): number {
 }
 
 const tokenToSemanticToken = (token: ASTToken): SemanticToken | undefined => {
-  if (tokenMap[token.name] === undefined) return undefined;
+  if (tokenMap[token.name] === undefined) {
+    return undefined;
+  }
 
   return {
     line: token.range.start.line,

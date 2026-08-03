@@ -13,7 +13,10 @@ export function offsetToPosition(document: Text, offset: number): Position {
   return { line: line.number - 1, character: clamped - line.from };
 }
 
-export function rangeToOffsets(document: Text, range: Range): { from: number; to: number } {
+export function rangeToOffsets(
+  document: Text,
+  range: Range,
+): { from: number; to: number } {
   return {
     from: positionToOffset(document, range.start),
     to: positionToOffset(document, range.end),

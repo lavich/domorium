@@ -26,8 +26,7 @@ const VOID_POINTER = "@VOID@";
 
 // Hour may be 1 or 2 digits (both "8:38" and "08:38" are valid) per both
 // v5.5.1 (HOUR is {SIZE=1:2}) and v7; minute/second are always 2 digits.
-const TIME_BASE_SRC =
-  "(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?";
+const TIME_BASE_SRC = "(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?";
 // v5.5.1's TIME_VALUE has no UTC marker.
 const TIME_REGEXP = new RegExp(`^${TIME_BASE_SRC}$`);
 // v7's Time additionally allows a trailing "Z" for UTC.
@@ -235,9 +234,7 @@ export class RuleNode {
    * type->tag table instead.
    */
   private getUniversalType(tag: GedcomTag): GedcomType | undefined {
-    const entry = Object.entries(this.scheme.tag).find(
-      ([, t]) => t === tag,
-    );
+    const entry = Object.entries(this.scheme.tag).find(([, t]) => t === tag);
     return entry ? GedcomType(entry[0]) : undefined;
   }
 

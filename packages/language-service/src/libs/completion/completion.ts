@@ -1,5 +1,9 @@
 import type { GedcomCompletion, GedcomDocument } from "@gedcom/validator";
-import { CompletionItemKind, type CompletionItem, type Position } from "../../types";
+import {
+  CompletionItemKind,
+  type CompletionItem,
+  type Position,
+} from "../../types";
 
 const kinds: Record<GedcomCompletion["kind"], CompletionItemKind> = {
   tag: CompletionItemKind.Field,

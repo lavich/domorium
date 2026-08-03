@@ -37,9 +37,7 @@ describe("XREF navigation", () => {
   });
 
   it("highlights declarations as writes and usages as reads", () => {
-    expect(
-      service.getDocumentHighlights({ line: 0, character: 4 }),
-    ).toEqual([
+    expect(service.getDocumentHighlights({ line: 0, character: 4 })).toEqual([
       { range: declarationRange, kind: "write" },
       { range: usageRange, kind: "read" },
     ]);

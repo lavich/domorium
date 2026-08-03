@@ -65,9 +65,14 @@ jobs:
           fi
 
           if changed \
+            apps/jetbrains \
+            apps/vscode \
             apps/web-editor/src \
-            apps/vscode/src \
             packages \
+            docs \
+            scripts \
+            '*.md' \
+            .markdownlint-cli2.jsonc \
             eslint.config.mjs \
             tsconfig.json \
             vitest.config.ts \

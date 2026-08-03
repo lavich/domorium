@@ -13,9 +13,7 @@ export const documentSymbols = (nodes: ASTNode[]): DocumentSymbol[] => {
       name: tag,
       detail,
       kind:
-        node.level === 0
-          ? DocumentSymbolKind.Object
-          : DocumentSymbolKind.Field,
+        node.level === 0 ? DocumentSymbolKind.Object : DocumentSymbolKind.Field,
       range: node.range,
       selectionRange: node.tokens.TAG?.range ?? node.range,
       children: documentSymbols(node.children),

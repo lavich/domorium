@@ -4,7 +4,7 @@ pre-commit:
   parallel: false
   commands:
     prettier:
-      glob: "*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,yaml,yml,md,css,html}"
+      glob: "**/*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,yaml,yml,md,css,html}"
       exclude:
         - "**/dist/**"
         - "**/dist-stdio/**"
@@ -17,7 +17,7 @@ pre-commit:
       run: npx prettier --write {staged_files}
       stage_fixed: true
     eslint:
-      glob: "*.{js,jsx,ts,tsx,mjs,cjs}"
+      glob: "**/*.{js,jsx,ts,tsx,mjs,cjs}"
       exclude:
         - "**/dist/**"
         - "**/dist-stdio/**"
@@ -30,10 +30,23 @@ pre-commit:
       run: npx eslint --fix {staged_files}
       stage_fixed: true
     kotlin-format:
-      glob: "*.{kt,kts}"
-      run: ./apps/jetbrains/gradlew -p apps/jetbrains spotlessCheck
+      glob: "**/*.{kt,kts}"
+      # `java -version` and not `command -v java`: macOS ships a /usr/bin/java stub that
+      # exists with no runtime behind it.
+      run: |
+        if [ -n "$JAVA_HOME" ] || java -version >/dev/null 2>&1; then
+          ./apps/jetbrains/gradlew -p apps/jetbrains spotlessCheck
+        else
+          echo "lefthook: no JDK found, skipping spotlessCheck — CI will run it" >&2
+        fi
 
 pre-push:
   commands:
     quality:
-      run: npm run check
+      run: |
+        if [ -n "$JAVA_HOME" ] || java -version >/dev/null 2>&1; then
+          npm run check
+        else
+          echo "lefthook: no JDK found, skipping check:jetbrains — CI will run it" >&2
+          npm run check:typescript && npm run check:docs
+        fi

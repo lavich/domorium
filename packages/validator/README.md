@@ -13,6 +13,8 @@ npm install @gedcom/validator
 ```typescript
 import { GedcomDocument } from "@gedcom/validator";
 
+const gedcomString = "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 TRLR\n";
+
 const document = new GedcomDocument().createDocument(gedcomString);
 const errors = document.getErrors();
 ```

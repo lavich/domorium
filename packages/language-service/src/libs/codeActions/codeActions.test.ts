@@ -18,9 +18,7 @@ describe("code actions", () => {
       .getDiagnostics()
       .find(({ code }) => code === "unresolved-xref")!;
 
-    expect(
-      service.getCodeActions(diagnostic.range, [diagnostic], 3),
-    ).toEqual([
+    expect(service.getCodeActions(diagnostic.range, [diagnostic], 3)).toEqual([
       {
         title: "Replace @I9@ with @I1@",
         kind: "quickfix",
@@ -58,11 +56,7 @@ describe("code actions", () => {
     const diagnostic = service
       .getDiagnostics()
       .find(({ code }) => code === "unresolved-xref")!;
-    const actions = service.getCodeActions(
-      diagnostic.range,
-      [diagnostic],
-      1,
-    );
+    const actions = service.getCodeActions(diagnostic.range, [diagnostic], 1);
 
     expect(actions).toEqual(
       expect.arrayContaining([
@@ -93,9 +87,7 @@ describe("code actions", () => {
       .getDiagnostics()
       .find(({ code }) => code === "invalid-level")!;
 
-    expect(
-      service.getCodeActions(diagnostic.range, [diagnostic], 2),
-    ).toEqual([
+    expect(service.getCodeActions(diagnostic.range, [diagnostic], 2)).toEqual([
       {
         title: "Change level to 1",
         kind: "quickfix",
@@ -145,7 +137,9 @@ describe("code actions", () => {
     expect(
       service
         .getCodeActions(diagnostic.range, [diagnostic], 1)
-        .some((action) => "title" in action && action.title.startsWith("Create")),
+        .some(
+          (action) => "title" in action && action.title.startsWith("Create"),
+        ),
     ).toBe(false);
   });
 
@@ -191,7 +185,8 @@ describe("code actions", () => {
         (action) =>
           "title" in action && action.title === "Create SOUR record @S9@",
       )!;
-    const sourceEdit = "edit" in createSource ? createSource.edit.edits[0] : null;
+    const sourceEdit =
+      "edit" in createSource ? createSource.edit.edits[0] : null;
     expect(sourceEdit).not.toBeNull();
     const v7Text = [
       "0 HEAD",
@@ -271,11 +266,7 @@ describe("code actions", () => {
     const diagnostic = service
       .getDiagnostics()
       .find(({ code }) => code === "unresolved-xref")!;
-    const actions = service.getCodeActions(
-      diagnostic.range,
-      [diagnostic],
-      1,
-    );
+    const actions = service.getCodeActions(diagnostic.range, [diagnostic], 1);
     expect(
       actions.some(
         (action) =>

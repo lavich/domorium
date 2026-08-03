@@ -27,7 +27,9 @@ describe("GedcomLanguageService", () => {
 
     expect(service.getDiagnostics()).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ message: "Missing required tag GEDC in HEAD" }),
+        expect.objectContaining({
+          message: "Missing required tag GEDC in HEAD",
+        }),
       ]),
     );
   });

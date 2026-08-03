@@ -47,6 +47,7 @@ jobs:
           LEFTHOOK: 0
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run check:docs
 
   test:
     if: inputs.run_tests

@@ -9,10 +9,11 @@ import type { ReferenceIndex } from "../references/referenceIndex";
 
 const XREF_ID = /^@[A-Za-z0-9_]+@$/u;
 
-const refusal = (
-  code: EditRefusal["code"],
-  message: string,
-): EditRefusal => ({ ok: false, code, message });
+const refusal = (code: EditRefusal["code"], message: string): EditRefusal => ({
+  ok: false,
+  code,
+  message,
+});
 
 export function prepareRename(
   index: ReferenceIndex,

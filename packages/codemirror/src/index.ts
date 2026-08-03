@@ -30,4 +30,8 @@ export {
   renameReference,
   type GedcomCommandTarget,
 } from "./commands.js";
-export type { DocumentLink, Range, WorkspaceEdit } from "@gedcom/language-service";
+export type {
+  DocumentLink,
+  Range,
+  WorkspaceEdit,
+} from "@gedcom/language-service";

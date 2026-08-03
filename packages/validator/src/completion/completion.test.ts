@@ -184,9 +184,7 @@ describe("GedcomDocument.getCompletions", () => {
     expect(() =>
       doc.getCompletions({ line: 1, character: 6 }, "1 SEX "),
     ).not.toThrow();
-    expect(doc.getCompletions({ line: 1, character: 6 }, "1 SEX ")).toEqual(
-      [],
-    );
+    expect(doc.getCompletions({ line: 1, character: 6 }, "1 SEX ")).toEqual([]);
   });
 
   it("does not reuse an earlier sibling when the cached line level conflicts", () => {

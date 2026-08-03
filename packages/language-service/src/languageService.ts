@@ -157,7 +157,8 @@ export class GedcomLanguageService {
   }
 
   private getLinePrefix(position: Position): string {
-    const line = this.text.split(/\r?\n/, position.line + 1)[position.line] ?? "";
+    const line =
+      this.text.split(/\r?\n/, position.line + 1)[position.line] ?? "";
     return line.slice(0, position.character);
   }
 }

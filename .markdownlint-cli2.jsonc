@@ -1,0 +1,12 @@
+{
+  // Rules only — no globs. `npm run check:docs` passes the file list it derives from
+  // `git ls-files`, so what counts as "our Markdown" is decided in one place.
+  //
+  // MD013 (line-length) is off because Prettier lays out tables past 80 columns and
+  // will not wrap them, so the rule reports errors that cannot be fixed.
+  "customRules": ["markdownlint-rule-relative-links"],
+  "config": {
+    "MD013": false,
+    "relative-links": true,
+  },
+}

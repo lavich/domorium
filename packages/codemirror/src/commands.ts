@@ -13,19 +13,22 @@ export function findReferences(
   state: EditorState,
   language: EditorLanguageService,
 ): Range[] {
-  return language.update(state.sliceDoc()).getReferences(
-    offsetToPosition(state.doc, state.selection.main.head),
-    { includeDeclaration: true },
-  );
+  return language
+    .update(state.sliceDoc())
+    .getReferences(offsetToPosition(state.doc, state.selection.main.head), {
+      includeDeclaration: true,
+    });
 }
 
 export function getDefinitionOffset(
   state: EditorState,
   language: EditorLanguageService,
 ): number | null {
-  const definition = language.update(state.sliceDoc()).getDefinitionRanges(
-    offsetToPosition(state.doc, state.selection.main.head),
-  )[0];
+  const definition = language
+    .update(state.sliceDoc())
+    .getDefinitionRanges(
+      offsetToPosition(state.doc, state.selection.main.head),
+    )[0];
   return definition ? positionToOffset(state.doc, definition.start) : null;
 }
 
@@ -33,9 +36,9 @@ export function canRenameReference(
   state: EditorState,
   language: EditorLanguageService,
 ): boolean {
-  return language.update(state.sliceDoc()).prepareRename(
-    offsetToPosition(state.doc, state.selection.main.head),
-  ).ok;
+  return language
+    .update(state.sliceDoc())
+    .prepareRename(offsetToPosition(state.doc, state.selection.main.head)).ok;
 }
 
 export function goToDefinition(
@@ -60,7 +63,8 @@ export function goToNextReference(
   }
   const current = target.state.selection.main.head;
   const offsets = ranges.map((range) =>
-    positionToOffset(target.state.doc, range.start));
+    positionToOffset(target.state.doc, range.start),
+  );
   const offset = offsets.find((candidate) => candidate > current) ?? offsets[0];
   target.dispatch({ selection: { anchor: offset }, scrollIntoView: true });
   return ranges.length;

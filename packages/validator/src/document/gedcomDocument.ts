@@ -4,11 +4,7 @@ import { ConfigurableLexer, gedcomLexerDefinition } from "../parser/lexer";
 import { GedcomParser } from "../parser/parser";
 import { GedcomVisitor } from "../parser/visitor";
 import { GedcomValidator } from "../validator";
-import {
-  GedcomScheme,
-  GedcomTag,
-  GedcomType,
-} from "../schemes/schema-types";
+import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
 import { getGedcomVersion } from "../validator/getGedcomVersion";
 import {
@@ -118,7 +114,12 @@ export class GedcomDocument {
   }
 
   isRecordDeclaration(node: ASTNode): boolean {
-    if (!this.scheme || node.level !== 0 || node.parent || !node.tokens.POINTER) {
+    if (
+      !this.scheme ||
+      node.level !== 0 ||
+      node.parent ||
+      !node.tokens.POINTER
+    ) {
       return false;
     }
     const tag = node.tokens.TAG?.value;

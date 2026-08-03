@@ -16,11 +16,14 @@ describe("CodeMirror position conversion", () => {
   });
 
   it("clamps positions and ranges to the document", () => {
-    expect(rangeToOffsets(document, {
-      start: { line: 2, character: 2 },
-      end: { line: 2, character: 6 },
-    })).toEqual({ from: 16, to: 20 });
-    expect(positionToOffset(document, { line: 99, character: 99 }))
-      .toBe(document.length);
+    expect(
+      rangeToOffsets(document, {
+        start: { line: 2, character: 2 },
+        end: { line: 2, character: 6 },
+      }),
+    ).toEqual({ from: 16, to: 20 });
+    expect(positionToOffset(document, { line: 99, character: 99 })).toBe(
+      document.length,
+    );
   });
 });
