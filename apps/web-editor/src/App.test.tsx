@@ -95,6 +95,9 @@ describe("App", () => {
         name: /open, validate and edit GEDCOM locally/i,
       }),
     ).not.toBeNull();
+    expect(
+      screen.queryByRole("complementary", { name: /GEDCOM diagnostics/i }),
+    ).toBeNull();
   });
 
   it("loads a GEDCOM file and protects modified work before reset", async () => {

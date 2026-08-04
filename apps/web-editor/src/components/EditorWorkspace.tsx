@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import { type RefObject, useEffect, useState } from "react";
 import {
   DownloadIcon,
   ListChecksIcon,
@@ -61,8 +61,20 @@ export function EditorWorkspace({
   onDownload(): void;
   onReset(): void;
 }) {
+  const desktopDiagnostics = useMediaQuery("(min-width: 768px)");
   const selectDiagnostic = (diagnostic: WebDiagnostic) =>
     editorRef.current?.focusDiagnostic(diagnostic);
+
+  const editor = (
+    <GedcomEditor
+      ref={editorRef}
+      editorKey={session.editorKey}
+      initialText={session.text}
+      theme={theme}
+      onChange={onChange}
+      onDiagnosticsChange={onDiagnosticsChange}
+    />
+  );
 
   return (
     <Card className="h-full min-h-0 min-w-0 flex-1 overflow-hidden">
@@ -125,32 +137,41 @@ export function EditorWorkspace({
         </div>
       </CardHeader>
       <CardContent className="min-h-0 flex-1 px-0">
-        <ResizablePanelGroup orientation="horizontal">
-          <ResizablePanel defaultSize={75} minSize={45}>
-            <GedcomEditor
-              ref={editorRef}
-              editorKey={session.editorKey}
-              initialText={session.text}
-              theme={theme}
-              onChange={onChange}
-              onDiagnosticsChange={onDiagnosticsChange}
-            />
-          </ResizablePanel>
-          <ResizableHandle className="hidden md:flex" withHandle />
-          <ResizablePanel
-            defaultSize={25}
-            minSize={18}
-            className="hidden md:block"
-          >
-            <aside aria-label="GEDCOM diagnostics" className="h-full">
-              <DiagnosticsPanel
-                diagnostics={diagnostics}
-                onSelect={selectDiagnostic}
-              />
-            </aside>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        {desktopDiagnostics ? (
+          <ResizablePanelGroup orientation="horizontal">
+            <ResizablePanel defaultSize={75} minSize={45}>
+              {editor}
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={25} minSize={18}>
+              <aside aria-label="GEDCOM diagnostics" className="h-full">
+                <DiagnosticsPanel
+                  diagnostics={diagnostics}
+                  onSelect={selectDiagnostic}
+                />
+              </aside>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : (
+          editor
+        )}
       </CardContent>
     </Card>
   );
+}
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(
+    () => window.matchMedia(query).matches,
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(query);
+    const update = () => setMatches(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener("change", update);
+    return () => mediaQuery.removeEventListener("change", update);
+  }, [query]);
+
+  return matches;
 }
