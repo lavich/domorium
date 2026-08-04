@@ -1,6 +1,11 @@
 # Changelog
 
-All notable changes to the Domorium VS Code extension are documented here.
+All notable changes to the GEDCOM extension by Domorium are documented here.
+
+## 0.1.1
+
+- Present the extension as GEDCOM while retaining Domorium as the publisher and
+  ecosystem identity.
 
 ## 0.1.0
 

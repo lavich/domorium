@@ -1,11 +1,11 @@
 <idea-plugin url="https://github.com/lavich/domorium">
     <id>domorium.gedcom</id>
-    <name>Domorium: GEDCOM Tools</name>
+    <name>GEDCOM</name>
     <vendor url="https://github.com/lavich"
             email="lobanov.andrey.lavich@gmail.com">Andrei Lobanov</vendor>
 
     <description><![CDATA[
-    <p>Domorium helps you read and edit <code>.ged</code> and <code>.gedcom</code> files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.</p>
+    <p>GEDCOM language support by Domorium. Read and edit <code>.ged</code> and <code>.gedcom</code> files with confidence using structure-aware suggestions and diagnostics as you type.</p>
 
     <h2>Features</h2>
     <ul>
@@ -31,6 +31,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>0.3.1</h2>
+    <ul>
+      <li>Presented the plugin as GEDCOM while retaining Domorium as the ecosystem identity</li>
+    </ul>
+
     <h2>0.3.0</h2>
     <ul>
       <li>Rebranded the plugin as Domorium: GEDCOM Tools</li>
