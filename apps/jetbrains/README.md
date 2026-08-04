@@ -1,6 +1,7 @@
-# Domorium: GEDCOM Tools for JetBrains IDEs
+# GEDCOM for JetBrains IDEs
 
-Domorium helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
+GEDCOM language support by Domorium. Read and edit `.ged` and `.gedcom` files
+with confidence using structure-aware suggestions and diagnostics as you type.
 
 ![GEDCOM autocomplete, validation, hover, and navigation](../vscode/images/gedcom-demo.gif)
 
