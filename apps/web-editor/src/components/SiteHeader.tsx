@@ -39,7 +39,7 @@ export function SiteHeader() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="grid items-center gap-2 border-b px-4 py-3 md:grid-cols-[1fr_auto_1fr] lg:px-6">
+    <header className="grid shrink-0 items-center gap-2 border-b px-4 py-3 md:grid-cols-[1fr_auto_1fr] lg:px-6">
       <a
         href="/"
         className="flex items-center gap-2 justify-self-start font-heading font-semibold"

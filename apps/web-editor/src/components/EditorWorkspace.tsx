@@ -65,7 +65,7 @@ export function EditorWorkspace({
     editorRef.current?.focusDiagnostic(diagnostic);
 
   return (
-    <Card className="min-h-[42rem] min-w-0 lg:h-[calc(100svh-7rem)]">
+    <Card className="h-full min-h-0 min-w-0 flex-1 overflow-hidden">
       <CardHeader className="border-b">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">

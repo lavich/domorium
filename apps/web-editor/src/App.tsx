@@ -140,7 +140,7 @@ function AppContent() {
   };
 
   return (
-    <main className="min-h-svh bg-background text-foreground">
+    <main className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
       <SiteHeader />
       <input
         ref={fileInputRef}
@@ -150,8 +150,8 @@ function AppContent() {
         aria-label="Open GEDCOM file"
         onChange={handleFile}
       />
-      <div className="mx-auto max-w-[110rem] p-4 lg:p-6">
-        <div className="flex min-w-0 flex-col gap-3">
+      <div className="mx-auto flex min-h-0 w-full max-w-[110rem] flex-1 overflow-hidden p-4 lg:p-6">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
           {loadError ? (
             <Alert variant="destructive">
               <AlertTitle>Unable to open GEDCOM</AlertTitle>
@@ -160,7 +160,7 @@ function AppContent() {
           ) : null}
           {loading ? (
             <Skeleton
-              className="min-h-[42rem]"
+              className="min-h-0 flex-1"
               aria-label="Loading GEDCOM example"
             />
           ) : (
