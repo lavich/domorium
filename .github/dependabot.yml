@@ -8,11 +8,7 @@ updates:
       day: monday
       time: "09:00"
       timezone: Asia/Nicosia
-    open-pull-requests-limit: 5
-    groups:
-      npm-dependencies:
-        patterns:
-          - "*"
+    open-pull-requests-limit: 10
 
   - package-ecosystem: gradle
     directory: /apps/jetbrains
@@ -21,11 +17,7 @@ updates:
       day: monday
       time: "09:00"
       timezone: Asia/Nicosia
-    open-pull-requests-limit: 5
-    groups:
-      gradle-dependencies:
-        patterns:
-          - "*"
+    open-pull-requests-limit: 10
 
   - package-ecosystem: github-actions
     directory: /
@@ -34,8 +26,4 @@ updates:
       day: monday
       time: "09:00"
       timezone: Asia/Nicosia
-    open-pull-requests-limit: 5
-    groups:
-      github-actions:
-        patterns:
-          - "*"
+    open-pull-requests-limit: 10
