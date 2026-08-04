@@ -11,7 +11,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { EditorWorkspace } from "@/components/EditorWorkspace";
-import { IntroPanel } from "@/components/IntroPanel";
 import { ReplaceDocumentDialog } from "@/components/ReplaceDocumentDialog";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ThemeProvider, useTheme } from "@/components/ThemeProvider";
@@ -151,8 +150,7 @@ function AppContent() {
         aria-label="Open GEDCOM file"
         onChange={handleFile}
       />
-      <div className="mx-auto grid max-w-[110rem] gap-6 p-4 lg:grid-cols-[minmax(18rem,0.36fr)_minmax(0,0.64fr)] lg:p-6">
-        <IntroPanel onOpenFile={openFile} />
+      <div className="mx-auto max-w-[110rem] p-4 lg:p-6">
         <div className="flex min-w-0 flex-col gap-3">
           {loadError ? (
             <Alert variant="destructive">

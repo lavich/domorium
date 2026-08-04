@@ -91,7 +91,9 @@ describe("App", () => {
     ).toBe(LINKS.github);
     expect(screen.getByLabelText("GEDCOM editor")).not.toBeNull();
     expect(
-      screen.getByText(/your file never leaves this browser/i),
+      screen.getByRole("heading", {
+        name: /open, validate and edit GEDCOM locally/i,
+      }),
     ).not.toBeNull();
   });
 

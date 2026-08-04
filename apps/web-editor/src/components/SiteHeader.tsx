@@ -28,21 +28,44 @@ const themeItems: {
   { value: "system", label: "System", icon: SunMoonIcon },
 ];
 
+const productLinks = [
+  { label: "VS Code", href: LINKS.vscode },
+  { label: "Obsidian", href: LINKS.obsidian },
+  { label: "JetBrains", href: LINKS.jetbrains },
+] as const;
+
 export function SiteHeader() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="flex items-center justify-between gap-4 border-b px-4 py-3 lg:px-6">
+    <header className="grid items-center gap-2 border-b px-4 py-3 md:grid-cols-[1fr_auto_1fr] lg:px-6">
       <a
         href="/"
-        className="flex items-center gap-2 font-heading font-semibold"
+        className="flex items-center gap-2 justify-self-start font-heading font-semibold"
       >
         <img src="/favicon.svg" alt="" className="size-7" />
         <span>Domorium</span>
       </a>
-      <nav aria-label="Project" className="flex items-center gap-1">
+      <h1 className="text-center font-heading text-sm font-semibold sm:text-base">
+        Open, validate and edit GEDCOM locally
+      </h1>
+      <nav
+        aria-label="Domorium products and project links"
+        className="flex flex-wrap items-center justify-center gap-1 md:justify-self-end"
+      >
+        {productLinks.map((product) => (
+          <a
+            key={product.label}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+            href={product.href}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {product.label}
+          </a>
+        ))}
         <a
-          className={buttonVariants({ variant: "ghost" })}
+          className={buttonVariants({ variant: "ghost", size: "sm" })}
           href={LINKS.github}
           target="_blank"
           rel="noreferrer"

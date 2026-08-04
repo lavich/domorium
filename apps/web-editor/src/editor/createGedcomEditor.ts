@@ -1,4 +1,8 @@
 import { keymap } from "@codemirror/view";
+import {
+  defaultHighlightStyle,
+  syntaxHighlighting,
+} from "@codemirror/language";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
@@ -85,7 +89,7 @@ export function createGedcomEditor(
         options.onChange(update.state.sliceDoc());
         updateHost(update.view);
       }),
-      theme.of(options.theme === "dark" ? oneDark : []),
+      theme.of(editorTheme(options.theme)),
       webEditorLayout,
     ],
   });
@@ -107,10 +111,14 @@ export function createGedcomEditor(
     },
     setTheme: (value) => {
       editor?.dispatch({
-        effects: theme.reconfigure(value === "dark" ? oneDark : []),
+        effects: theme.reconfigure(editorTheme(value)),
       });
     },
   };
+}
+
+function editorTheme(theme: WebTheme) {
+  return theme === "dark" ? oneDark : syntaxHighlighting(defaultHighlightStyle);
 }
 
 function renameAtSelection(
