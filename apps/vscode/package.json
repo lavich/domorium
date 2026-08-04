@@ -1,10 +1,10 @@
 {
   "name": "gedcom",
   "license": "MIT",
-  "displayName": "Domorium — GEDCOM Tools",
-  "description": "Edit GEDCOM files with autocomplete, validation, navigation, and semantic highlighting",
+  "displayName": "GEDCOM",
+  "description": "GEDCOM language support by Domorium. Edit files with autocomplete, validation, navigation, and semantic highlighting",
   "publisher": "domorium",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Andrei Lobanov",
   "repository": "https://github.com/lavich/domorium.git",
   "icon": "images/extensionIcon.png",

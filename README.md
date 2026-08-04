@@ -1,10 +1,11 @@
 # Domorium
 
-Open, local-first GEDCOM editing tools for autocomplete, validation, navigation,
-and semantic highlighting. Domorium makes `.ged` and `.gedcom` files easier to
-understand and edit without memorizing the format.
+Domorium is an open, local-first ecosystem for GEDCOM editing. Its GEDCOM editor
+integrations provide autocomplete, validation, navigation, and semantic
+highlighting for `.ged` and `.gedcom` files.
 
-Use Domorium in your browser, Obsidian, Visual Studio Code, or a JetBrains IDE.
+Use GEDCOM by Domorium in your browser, Obsidian, Visual Studio Code, or a
+JetBrains IDE.
 
 [Open the web editor](https://lavich.github.io/domorium/) · [Obsidian plugin](https://github.com/lavich/domorium-obsidian) · [Install for VS Code](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom) · [JetBrains plugin details](apps/jetbrains/README.md)
 
@@ -26,7 +27,7 @@ Use Domorium in your browser, Obsidian, Visual Studio Code, or a JetBrains IDE.
 
 ## Obsidian
 
-Domorium edits source GEDCOM files directly in an Obsidian vault without
+GEDCOM by Domorium edits source files directly in an Obsidian vault without
 converting records to Markdown or uploading genealogy data. The desktop and
 mobile plugin is developed and released from the dedicated
 [lavich/domorium-obsidian](https://github.com/lavich/domorium-obsidian)

@@ -27,7 +27,7 @@ jobs:
       - name: Verify VS Code version
         run: test "${GITHUB_REF_NAME#vscode-v}" = "$(node -p "require('./apps/vscode/package.json').version")"
       - name: Publish extension
-        run: npx vsce publish
+        run: npx @vscode/vsce publish
         working-directory: apps/vscode
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

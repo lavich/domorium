@@ -18,6 +18,7 @@ number.
 | [0004](0004-standard-semantic-token-vocabulary.md)  | Use the standard LSP semantic token vocabulary | Accepted |
 | [0005](0005-obsidian-plugin-separate-repository.md) | Keep the Obsidian plugin in its own repository | Accepted |
 | [0006](0006-domorium-product-identity.md)           | Use Domorium as the product identity           | Accepted |
+| [0007](0007-present-editor-products-as-gedcom.md)   | Present editor products as GEDCOM              | Accepted |
 
 ## What belongs in an ADR
 
