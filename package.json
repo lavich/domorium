@@ -23,7 +23,7 @@
   ],
   "devDependencies": {
     "@eslint/js": "^9.34.0",
-    "@stylistic/eslint-plugin": "^5.2.3",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.34.0",
     "lefthook": "^2.1.10",
