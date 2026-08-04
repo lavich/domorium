@@ -30,9 +30,9 @@ const themeItems: {
 ];
 
 const productLinks = [
-  { label: "VS Code", href: LINKS.vscode },
-  { label: "Obsidian", href: LINKS.obsidian },
-  { label: "JetBrains", href: LINKS.jetbrains },
+  { label: "VS Code", href: LINKS.vscode, newTab: true },
+  { label: "Obsidian", href: LINKS.obsidian, newTab: false },
+  { label: "JetBrains", href: LINKS.jetbrains, newTab: true },
 ] as const;
 
 export function SiteHeader() {
@@ -59,8 +59,8 @@ export function SiteHeader() {
             key={product.label}
             className={buttonVariants({ variant: "ghost", size: "sm" })}
             href={product.href}
-            target="_blank"
-            rel="noreferrer"
+            target={product.newTab ? "_blank" : undefined}
+            rel={product.newTab ? "noreferrer" : undefined}
           >
             {product.label}
             <ExternalLinkIcon data-icon="inline-end" />
