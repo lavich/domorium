@@ -25,7 +25,7 @@
     <h2>Requirements</h2>
     <p>Requires Node.js on <code>PATH</code>. The GEDCOM language server is bundled with the plugin and runs locally.</p>
 
-    <p><a href="https://lavich.github.io/domorium/">Try Domorium in your browser</a> · <a href="https://github.com/lavich/domorium">Source code and issue tracker</a></p>
+    <p><a href="https://domorium.com/">Try Domorium in your browser</a> · <a href="https://github.com/lavich/domorium">Source code and issue tracker</a></p>
 
     <p>Domorium is an independent project and is not affiliated with or endorsed by FamilySearch or Intellectual Reserve, Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH® are trademarks of Intellectual Reserve, Inc.</p>
     ]]></description>

@@ -107,7 +107,7 @@ this package would break any host that already has its own copy.
 | ----------------- | --------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `apps/vscode`     | `@domorium/language-server` | Web extension: `browser` entry only, with a client and an in-worker server bundle                         |
 | `apps/jetbrains`  | `@domorium/language-server` | Gradle build runs `build:stdio` and bundles the result onto the plugin classpath as `server/stdio.cjs.js` |
-| `apps/web-editor` | `@domorium/codemirror`      | Vite app deployed to GitHub Pages from `main` when web-related paths change                               |
+| `apps/web-editor` | `@domorium/codemirror`      | Vite app deployed to `domorium.com` through GitHub Pages from `main` when web-related paths change        |
 
 The Obsidian plugin lives in a separate repository,
 [lavich/domorium-obsidian](https://github.com/lavich/domorium-obsidian), and will
@@ -133,14 +133,14 @@ iterative one.
 Each releasable unit is versioned and tagged independently. Pushing a tag
 triggers the matching workflow in `.github/workflows/`.
 
-| Unit                         | Tag pattern               | Target                          |
-| ---------------------------- | ------------------------- | ------------------------------- |
-| `@domorium/validator`        | `validator-v*.*.*`        | npm                             |
-| `@domorium/language-service` | `language-service-v*.*.*` | npm                             |
-| `@domorium/codemirror`       | `codemirror-v*.*.*`       | npm                             |
-| VS Code extension            | `vscode-v*.*.*`           | VS Code Marketplace             |
-| JetBrains plugin             | `jetbrains-v*.*.*`        | JetBrains Marketplace           |
-| Web editor                   | none                      | GitHub Pages on merge to `main` |
+| Unit                         | Tag pattern               | Target                                                 |
+| ---------------------------- | ------------------------- | ------------------------------------------------------ |
+| `@domorium/validator`        | `validator-v*.*.*`        | npm                                                    |
+| `@domorium/language-service` | `language-service-v*.*.*` | npm                                                    |
+| `@domorium/codemirror`       | `codemirror-v*.*.*`       | npm                                                    |
+| VS Code extension            | `vscode-v*.*.*`           | VS Code Marketplace                                    |
+| JetBrains plugin             | `jetbrains-v*.*.*`        | JetBrains Marketplace                                  |
+| Web editor                   | none                      | `domorium.com` through GitHub Pages on merge to `main` |
 
 ## Invariants
 
