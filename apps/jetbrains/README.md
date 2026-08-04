@@ -1,6 +1,9 @@
-# GEDCOM for JetBrains IDEs
+# GEDCOM (Legacy) for JetBrains IDEs
 
-GEDCOM helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
+> This plugin has moved to `domorium.gedcom`. Install GEDCOM by Domorium to
+> continue receiving updates.
+
+This legacy listing is retained to give existing users a migration path.
 
 ![GEDCOM autocomplete, validation, hover, and navigation](../vscode/images/gedcom-demo.gif)
 

@@ -1,11 +1,11 @@
 <idea-plugin url="https://github.com/lavich/gedcom">
     <id>gedcom.jetbrains</id>
-    <name>GEDCOM</name>
+    <name>GEDCOM (Legacy)</name>
     <vendor url="https://github.com/lavich"
             email="lobanov.andrey.lavich@gmail.com">Andrei Lobanov</vendor>
 
     <description><![CDATA[
-    <p>GEDCOM helps you read and edit <code>.ged</code> and <code>.gedcom</code> files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.</p>
+    <p>This legacy plugin has moved to <code>domorium.gedcom</code>. Install GEDCOM by Domorium to continue receiving updates.</p>
 
     <h2>Features</h2>
     <ul>
@@ -29,6 +29,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>0.2.2</h2>
+    <ul>
+      <li>Marked the plugin as legacy and directed users to <code>domorium.gedcom</code></li>
+    </ul>
+
     <h2>0.2.1</h2>
     <ul>
       <li>Renamed the plugin to GEDCOM and moved to the new <code>gedcom.jetbrains</code> plugin ID</li>
