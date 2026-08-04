@@ -70,6 +70,6 @@
   "devDependencies": {
     "@types/node": "^26.1.1",
     "@types/vscode": "^1.100.0",
-    "@vscode/test-web": "^0.0.51"
+    "@vscode/test-web": "^0.0.81"
   }
 }
