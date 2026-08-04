@@ -1,10 +1,10 @@
 {
   "name": "gedcom-vscode",
   "license": "MIT",
-  "displayName": "GEDCOM",
-  "description": "Edit GEDCOM files with autocomplete, validation, navigation, and semantic highlighting",
+  "displayName": "GEDCOM (Legacy)",
+  "description": "Legacy extension. Migrate to GEDCOM by Domorium at domorium.gedcom.",
   "publisher": "lavich",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "author": "Andrei Lobanov",
   "repository": "https://github.com/lavich/gedcom.git",
   "icon": "images/extensionIcon.png",

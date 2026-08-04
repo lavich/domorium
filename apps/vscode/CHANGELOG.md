@@ -1,3 +1,7 @@
+### 0.0.14
+
+- Mark the extension as legacy and direct users to `domorium.gedcom`.
+
 ### 0.0.12
 
 - Add Find All References and read/write XREF highlights

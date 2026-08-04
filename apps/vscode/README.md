@@ -1,6 +1,10 @@
-# GEDCOM for Visual Studio Code
+# GEDCOM (Legacy) for Visual Studio Code
 
-GEDCOM helps you read and edit `.ged` and `.gedcom` files with confidence. It understands the GEDCOM structure, suggests valid entries, and reports problems as you type.
+> This extension has moved to
+> [`domorium.gedcom`](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom).
+> Install the new GEDCOM extension by Domorium to continue receiving updates.
+
+This legacy listing is retained to give existing users a migration path.
 
 ![GEDCOM autocomplete, validation, hover, and navigation](images/gedcom-demo.gif)
 
