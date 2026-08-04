@@ -1,6 +1,7 @@
 import {
   CheckIcon,
   CodeIcon,
+  ExternalLinkIcon,
   MoonIcon,
   SunIcon,
   SunMoonIcon,
@@ -62,6 +63,7 @@ export function SiteHeader() {
             rel="noreferrer"
           >
             {product.label}
+            <ExternalLinkIcon data-icon="inline-end" />
           </a>
         ))}
         <a
@@ -72,6 +74,7 @@ export function SiteHeader() {
         >
           <CodeIcon data-icon="inline-start" />
           GitHub
+          <ExternalLinkIcon data-icon="inline-end" />
         </a>
         <DropdownMenu>
           <DropdownMenuTrigger
