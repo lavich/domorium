@@ -1,8 +1,13 @@
 # Domorium — GEDCOM Web Editor
 
-Browser editor for `.ged` and `.gedcom` files, deployed at
-[lavich.github.io/domorium](https://lavich.github.io/domorium/). No upload and no
-server: the file is parsed and validated entirely in the browser.
+The [Domorium homepage](https://domorium.com/) combines direct links to the
+VS Code, Obsidian, and JetBrains integrations with a working browser editor for
+`.ged` and `.gedcom` files. Files are read, parsed, validated, edited, and
+downloaded entirely in the browser; their contents are never uploaded.
+
+The interface is built with React, Tailwind CSS, and official shadcn components.
+It includes a preloaded example, local file opening, diagnostics navigation,
+light and dark themes, and a responsive editor workspace.
 
 It is also the reference host for [`@domorium/codemirror`](../../packages/codemirror)
 — whatever a CodeMirror host needs from the shared packages should be visible in
@@ -33,8 +38,10 @@ npm run build:libs                 # from the repository root
 
 ## Deployment
 
-Merging to `main` deploys to GitHub Pages when web-related paths change; there is
-no release tag. See the release topology in
+Merging to `main` deploys the site to GitHub Pages at `domorium.com` when
+web-related paths change; there is no release tag. The repository's Pages custom
+domain and the Cloudflare DNS records are configured outside the source tree.
+See the release topology in
 [docs/architecture.md](../../docs/architecture.md).
 
 ## Trademark notice
