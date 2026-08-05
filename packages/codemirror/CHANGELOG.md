@@ -2,6 +2,13 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## 1.0.0 - 2026-08-05
+
+- First stable release. The exported extension factories, commands, and position
+  helpers are now the package's committed public API: a breaking change to them
+  requires a major version.
+- No behavioral change from 0.2.0.
+
 ## 0.2.0 - 2026-08-03
 
 - Move the package from `@gedcom/codemirror` to `@domorium/codemirror` as part
