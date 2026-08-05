@@ -7,7 +7,7 @@ highlighting for `.ged` and `.gedcom` files.
 Use GEDCOM by Domorium in your browser, Obsidian, Visual Studio Code, or a
 JetBrains IDE.
 
-[Open the web editor](https://lavich.github.io/domorium/) · [Obsidian plugin](https://github.com/lavich/domorium-obsidian) · [Install for VS Code](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom) · [JetBrains plugin details](apps/jetbrains/README.md)
+[Open Domorium](https://domorium.com/) · [Install for Obsidian](https://community.obsidian.md/plugins/domorium) · [Install for VS Code](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom) · [Install for JetBrains](https://plugins.jetbrains.com/plugin/index?xmlId=domorium.gedcom)
 
 ![GEDCOM autocomplete, validation, hover, and navigation](apps/vscode/images/gedcom-demo.gif)
 
