@@ -19,7 +19,7 @@ with confidence using structure-aware suggestions and diagnostics as you type.
 
 Requires Node.js on `PATH`. The GEDCOM language server is bundled with the plugin and runs locally.
 
-[Try Domorium in your browser](https://lavich.github.io/domorium/) · [Source code and issue tracker](https://github.com/lavich/domorium)
+[Try Domorium in your browser](https://domorium.com/) · [Source code and issue tracker](https://github.com/lavich/domorium)
 
 ## Roadmap
 
