@@ -2,6 +2,13 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## 1.0.0 - 2026-08-05
+
+- First stable release. `GedcomLanguageService` and the protocol-shaped types in
+  `src/types.ts` are now the package's committed public API: a breaking change to
+  them requires a major version.
+- No behavioral change from 0.2.0.
+
 ## 0.2.0 - 2026-08-03
 
 - Move the package from `@gedcom/language-service` to

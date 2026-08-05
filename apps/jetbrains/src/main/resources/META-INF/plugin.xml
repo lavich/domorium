@@ -31,6 +31,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.0.0</h2>
+    <ul>
+      <li>First stable release: context-aware autocomplete, real-time validation against the GEDCOM 5.5.1 and 7.0 specifications, semantic highlighting, hover, go to definition, find all references, safe XREF rename, quick fixes, and folding</li>
+      <li>No functional change from 0.3.1</li>
+    </ul>
+
     <h2>0.3.1</h2>
     <ul>
       <li>Presented the plugin as GEDCOM while retaining Domorium as the ecosystem identity</li>

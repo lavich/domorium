@@ -2,6 +2,13 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## 1.0.0
+
+- First stable release: context-aware autocomplete, real-time validation against
+  the GEDCOM 5.5.1 and 7.0 specifications, semantic highlighting, hover, go to
+  definition, find all references, safe XREF rename, quick fixes, and folding.
+- No functional change from 0.1.1.
+
 ## 0.1.1
 
 - Present the extension as GEDCOM while retaining Domorium as the publisher and

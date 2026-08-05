@@ -1,6 +1,12 @@
 # @domorium/language-service
 
+[![npm](https://img.shields.io/npm/v/@domorium/language-service)](https://www.npmjs.com/package/@domorium/language-service)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/lavich/domorium/blob/main/LICENSE)
+
 Editor-independent GEDCOM language features built on `@domorium/validator`. It can power browser editors, IDE extensions, and note-taking plugins without depending on the Language Server Protocol runtime.
+
+Part of [Domorium](https://github.com/lavich/domorium) — GEDCOM editor tooling for
+the browser, Obsidian, VS Code, and JetBrains IDEs.
 
 ## Install
 

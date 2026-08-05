@@ -1,8 +1,14 @@
 # @domorium/codemirror
 
+[![npm](https://img.shields.io/npm/v/@domorium/codemirror)](https://www.npmjs.com/package/@domorium/codemirror)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/lavich/domorium/blob/main/LICENSE)
+
 CodeMirror 6 integration for GEDCOM completion, diagnostics, hover, folding,
 semantic highlighting, document links, definitions, references, and rename.
 The language behavior comes from `@domorium/language-service`.
+
+Part of [Domorium](https://github.com/lavich/domorium) — GEDCOM editor tooling for
+the browser, Obsidian, VS Code, and JetBrains IDEs.
 
 ## Install
 
