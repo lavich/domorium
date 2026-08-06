@@ -127,6 +127,23 @@ const DATE_VALUE_REGEXP = new RegExp(
 
 const DATE_PERIOD_REGEXP = new RegExp(`^(?:${DATE_PERIOD_SRC})$`);
 
+// Flattening every pointer in the document costs O(document), and a RuleNode
+// is built for each validated node — doing it in the constructor made
+// validation cost grow with nodes × pointers. The map is rebuilt by every
+// parse and never mutated afterwards, so the flattened form can be cached
+// against it without going stale. Consumers only read the array.
+const flattenedPointers = new WeakMap<Map<string, ASTNode[]>, ASTNode[]>();
+
+function flattenPointers(pointers: Map<string, ASTNode[]>): ASTNode[] {
+  const cached = flattenedPointers.get(pointers);
+  if (cached) {
+    return cached;
+  }
+  const flattened = Array.from(pointers.values()).flatMap((v) => v);
+  flattenedPointers.set(pointers, flattened);
+  return flattened;
+}
+
 export class RuleNode {
   pointers: ASTNode[];
 
@@ -134,7 +151,7 @@ export class RuleNode {
     private readonly scheme: GedcomScheme,
     pointers: Map<string, ASTNode[]>,
   ) {
-    this.pointers = Array.from(pointers.values()).flatMap((v) => v);
+    this.pointers = flattenPointers(pointers);
   }
 
   getFieldType(tagType: GedcomType): {

@@ -197,6 +197,31 @@ describe("validator", () => {
     expect(validator.validate(nodes)).toHaveLength(2);
   });
 
+  // Validation cost must not grow with records × nodes. The quadratic version
+  // — a RuleNode per node, each flattening the whole pointer map — needs tens
+  // of seconds at this size; a linear one needs tens of milliseconds. The
+  // budget is deliberately far from both so a loaded machine cannot flip it.
+  test("validates a document with many records without quadratic slowdown", async () => {
+    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
+    for (let i = 1; i <= 8000; i += 1) {
+      lines.push(
+        `0 @I${i}@ INDI`,
+        `1 NAME Person${i} /Family/`,
+        "1 SEX M",
+        "1 BIRT",
+        "2 DATE 2 JAN 1801",
+      );
+    }
+    lines.push("0 TRLR", "");
+    const { nodes, pointers } = astBuilder(lines.join("\n"));
+
+    const started = performance.now();
+    new GedcomValidator(pointers).validate(nodes);
+    const elapsed = performance.now() - started;
+
+    expect(elapsed).toBeLessThan(2000);
+  }, 120_000);
+
   test("accepts an extension record at level 0", async () => {
     const { nodes, validator } = validatorFor(`0 HEAD
 1 GEDC
