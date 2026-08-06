@@ -74,7 +74,7 @@ export function getReferenceHighlightSpecs(
   state: EditorState,
   language: EditorLanguageService,
 ): ReferenceHighlightSpec[] {
-  const service = language.update(state.sliceDoc());
+  const service = language.update(state.doc);
   return service
     .getDocumentHighlights(
       offsetToPosition(state.doc, state.selection.main.head),
@@ -139,7 +139,7 @@ function completionSource(
     return null;
   }
   const items = language
-    .update(context.state.sliceDoc())
+    .update(context.state.doc)
     .getCompletionItems(offsetToPosition(context.state.doc, context.pos));
   if (items.length === 0) {
     return null;
@@ -161,7 +161,7 @@ function diagnosticSource(
   return linter(
     (view) =>
       language
-        .update(view.state.sliceDoc())
+        .update(view.state.doc)
         .getDiagnostics()
         .map((diagnostic): CodeMirrorDiagnostic => {
           const range = rangeToOffsets(view.state.doc, diagnostic.range);
@@ -190,7 +190,7 @@ function diagnosticSource(
 function hoverSource(language: EditorLanguageService): Extension {
   return hoverTooltip((view, offset) => {
     const hover = language
-      .update(view.state.sliceDoc())
+      .update(view.state.doc)
       .getHover(offsetToPosition(view.state.doc, offset));
     if (!hover) {
       return null;
@@ -211,7 +211,7 @@ function foldingSource(language: EditorLanguageService): Extension {
   return foldService.of((state, lineStart) => {
     const line = state.doc.lineAt(lineStart);
     const range = language
-      .update(state.sliceDoc())
+      .update(state.doc)
       .getFoldingRanges()
       .find((candidate) => candidate.startLine === line.number - 1);
     if (!range) {
@@ -237,7 +237,7 @@ function navigation(
       if (offset === null) {
         return false;
       }
-      const service = language.update(view.state.sliceDoc());
+      const service = language.update(view.state.doc);
       const definition = service.getDefinitionRanges(
         offsetToPosition(view.state.doc, offset),
       )[0];
@@ -267,7 +267,7 @@ function navigation(
         return false;
       }
       const link = language
-        .update(view.state.sliceDoc())
+        .update(view.state.doc)
         .getDocumentLinks()
         .find((candidate) => {
           const range = rangeToOffsets(view.state.doc, candidate.range);
@@ -341,7 +341,7 @@ function semanticDecorations(
   language: EditorLanguageService,
   indentationHints: boolean,
 ): DecorationSet {
-  const service = language.update(state.sliceDoc());
+  const service = language.update(state.doc);
   const tokens = service
     .getSemanticTokens()
     .flatMap((token) => {

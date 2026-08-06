@@ -14,7 +14,7 @@ export function findReferences(
   language: EditorLanguageService,
 ): Range[] {
   return language
-    .update(state.sliceDoc())
+    .update(state.doc)
     .getReferences(offsetToPosition(state.doc, state.selection.main.head), {
       includeDeclaration: true,
     });
@@ -25,7 +25,7 @@ export function getDefinitionOffset(
   language: EditorLanguageService,
 ): number | null {
   const definition = language
-    .update(state.sliceDoc())
+    .update(state.doc)
     .getDefinitionRanges(
       offsetToPosition(state.doc, state.selection.main.head),
     )[0];
@@ -37,7 +37,7 @@ export function canRenameReference(
   language: EditorLanguageService,
 ): boolean {
   return language
-    .update(state.sliceDoc())
+    .update(state.doc)
     .prepareRename(offsetToPosition(state.doc, state.selection.main.head)).ok;
 }
 
@@ -75,7 +75,7 @@ export function renameReference(
   language: EditorLanguageService,
   newName: string,
 ): boolean {
-  language.update(target.state.sliceDoc());
+  language.update(target.state.doc);
   const result = language.service.rename(
     offsetToPosition(target.state.doc, target.state.selection.main.head),
     newName,

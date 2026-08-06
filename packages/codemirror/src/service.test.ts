@@ -1,9 +1,35 @@
 import { Text } from "@codemirror/state";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { EditorLanguageService, toCodeMirrorChanges } from "./service";
 
 describe("EditorLanguageService", () => {
+  // Every hover, completion and highlight asks the service to update. Reading
+  // the document out as a string to discover it has not changed costs the
+  // whole document each time; CodeMirror's Text is immutable, so identity
+  // answers the same question without touching the content.
+  it("does not read out the document when handed the same text object", () => {
+    const language = new EditorLanguageService();
+    const doc = Text.of(["0 HEAD", "0 TRLR"]);
+    language.update(doc);
+
+    const toString = vi.spyOn(doc, "toString");
+    const service = language.update(doc);
+
+    expect(toString).not.toHaveBeenCalled();
+    expect(service).toBe(language.service);
+  });
+
+  it("keeps the version when a different text object holds the same content", () => {
+    const language = new EditorLanguageService();
+    language.update(Text.of(["0 HEAD", "0 TRLR"]));
+    const version = language.getVersion();
+
+    language.update(Text.of(["0 HEAD", "0 TRLR"]));
+
+    expect(language.getVersion()).toBe(version);
+  });
+
   it("reuses an unchanged snapshot and increments versions only on changes", () => {
     const language = new EditorLanguageService();
     const first = language.update("0 HEAD\n0 TRLR");
