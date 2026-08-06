@@ -1,6 +1,7 @@
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { ASTNode, resolveValue } from "../parser";
 import { GedcomError } from "../types/errors";
+import { parseTagDef } from "./extensions";
 
 type FieldType =
   | "boolean"
@@ -17,6 +18,7 @@ type FieldType =
   | "personal-name"
   | "media-type"
   | "language-tag"
+  | "tag-def"
   | null;
 
 // Reserved GEDCOM 7 pointer meaning "deliberately empty" — valid in the
@@ -156,6 +158,9 @@ export class RuleNode {
         break;
       case "http://www.w3.org/ns/dcat#mediaType":
         type = "media-type";
+        break;
+      case "https://gedcom.io/terms/v7/type-TagDef":
+        type = "tag-def";
         break;
       case "https://gedcom.io/terms/v7/type-Name":
       case "https://gedcom.io/terms/v5.5.1/type-NAME_PERSONAL":
@@ -340,6 +345,16 @@ export class RuleNode {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be a valid RFC 5646 language tag (e.g. "en", "en-US")`,
+            range: VALUE?.range || node.range,
+            level: "error",
+          });
+        }
+        break;
+      case "tag-def":
+        if (!parseTagDef(value)) {
+          errors.push({
+            code: "VAL",
+            message: `Value for ${TAG?.value} should be an extension tag and its URI (e.g. "_SKYPEID http://xmlns.com/foaf/0.1/skypeID")`,
             range: VALUE?.range || node.range,
             level: "error",
           });

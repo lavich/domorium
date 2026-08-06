@@ -731,6 +731,52 @@ describe("payload for VERS 7", () => {
       expect(errs.length).toBe(0);
     });
   });
+
+  describe("rule TagDef", () => {
+    test("should pass a declaration with a tag and an absolute URI", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _SKYPEID http://xmlns.com/foaf/0.1/skypeID
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const TAG = nodes[0].children[1].children[0];
+      const errs = ruleEngine.validate(TAG);
+      expect(errs.length).toBe(0);
+    });
+
+    test("should return error because the declaration has no URI", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _SKYPEID
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const TAG = nodes[0].children[1].children[0];
+      const errs = ruleEngine.validate(TAG);
+      expect(errs.length).toBe(1);
+      expect(errs[0].level).toBe("error");
+    });
+
+    test("should return error because the tag has no underscore prefix", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG SKYPEID http://xmlns.com/foaf/0.1/skypeID
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const TAG = nodes[0].children[1].children[0];
+      const errs = ruleEngine.validate(TAG);
+      expect(errs.length).toBe(1);
+      expect(errs[0].level).toBe("error");
+    });
+  });
 });
 
 describe("payload for VERS 5.5.1", () => {
