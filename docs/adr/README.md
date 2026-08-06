@@ -10,15 +10,16 @@ never reuse a number. The table below is part of the record: `npm run check:docs
 fails if a file in this directory is missing from it, or if two records share a
 number.
 
-| ADR                                                 | Title                                          | Status   |
-| --------------------------------------------------- | ---------------------------------------------- | -------- |
-| [0001](0001-record-architecture-decisions.md)       | Record architecture decisions                  | Accepted |
-| [0002](0002-documentation-in-repository.md)         | Documentation lives in the repository          | Accepted |
-| [0003](0003-independent-package-publishing.md)      | Publish shared packages independently via OIDC | Accepted |
-| [0004](0004-standard-semantic-token-vocabulary.md)  | Use the standard LSP semantic token vocabulary | Accepted |
-| [0005](0005-obsidian-plugin-separate-repository.md) | Keep the Obsidian plugin in its own repository | Accepted |
-| [0006](0006-domorium-product-identity.md)           | Use Domorium as the product identity           | Accepted |
-| [0007](0007-present-editor-products-as-gedcom.md)   | Present editor products as GEDCOM              | Accepted |
+| ADR                                                 | Title                                                      | Status   |
+| --------------------------------------------------- | ---------------------------------------------------------- | -------- |
+| [0001](0001-record-architecture-decisions.md)       | Record architecture decisions                              | Accepted |
+| [0002](0002-documentation-in-repository.md)         | Documentation lives in the repository                      | Accepted |
+| [0003](0003-independent-package-publishing.md)      | Publish shared packages independently via OIDC             | Accepted |
+| [0004](0004-standard-semantic-token-vocabulary.md)  | Use the standard LSP semantic token vocabulary             | Accepted |
+| [0005](0005-obsidian-plugin-separate-repository.md) | Keep the Obsidian plugin in its own repository             | Accepted |
+| [0006](0006-domorium-product-identity.md)           | Use Domorium as the product identity                       | Accepted |
+| [0007](0007-present-editor-products-as-gedcom.md)   | Present editor products as GEDCOM                          | Accepted |
+| [0008](0008-extension-tag-validation.md)            | Accept extension tags and leave their subtrees unvalidated | Accepted |
 
 ## What belongs in an ADR
 
