@@ -31,6 +31,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.1.0</h2>
+    <ul>
+      <li>Accepted application-defined extension tags (<code>_XXXX</code>) instead of reporting every one of them as an unknown tag, so files exported by other genealogy applications no longer fill the problems view with false warnings</li>
+      <li>Read extension tag declarations from <code>HEAD.SCHMA</code> in GEDCOM 7 documents: hover shows the URI a tag is bound to, and autocomplete offers the declared tags</li>
+      <li>Warned when a GEDCOM 7 document uses an extension tag it never declares in <code>HEAD.SCHMA</code>; GEDCOM 5.5.1 files, which have no such structure, are unaffected</li>
+      <li>Stopped offering top-level record tags as completions inside a structure whose type cannot be resolved</li>
+    </ul>
+
     <h2>1.0.0</h2>
     <ul>
       <li>First stable release: context-aware autocomplete, real-time validation against the GEDCOM 5.5.1 and 7.0 specifications, semantic highlighting, hover, go to definition, find all references, safe XREF rename, quick fixes, and folding</li>
