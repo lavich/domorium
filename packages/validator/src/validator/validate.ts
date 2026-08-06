@@ -11,6 +11,12 @@ import { ASTNode } from "../parser";
 import { GedcomError } from "../types/errors";
 import { getGedcomVersion } from "./getGedcomVersion";
 import { RuleNode } from "./rule-node";
+import {
+  emptyExtensions,
+  ExtensionContext,
+  ExtensionErrorCode,
+  isExtensionTag,
+} from "./extensions";
 
 enum ValidationErrorCode {
   UnknownTag = "VAL001",
@@ -39,6 +45,7 @@ export class GedcomValidator {
       string,
       ASTNode[]
     >(),
+    private readonly extensions: ExtensionContext = emptyExtensions(),
   ) {}
 
   setScheme(nodes: ASTNode[]): GedcomScheme {
@@ -95,6 +102,24 @@ export class GedcomValidator {
       }
 
       const tagToken = node.tokens.TAG;
+
+      // An extension defines its own payload and substructures, so there is
+      // nothing to check the subtree against. See ADR-0008.
+      if (isExtensionTag(tag)) {
+        if (
+          this.extensions.requireDeclaration &&
+          !this.extensions.tags.has(tag)
+        ) {
+          errors.push({
+            code: ExtensionErrorCode.UndocumentedTag,
+            message: `Extension tag ${tag} is not declared in HEAD.SCHMA`,
+            range: tagToken?.range || node.range,
+            level: "warning",
+          });
+        }
+        continue;
+      }
+
       const rule = rules.get(tag);
 
       if (!rule) {

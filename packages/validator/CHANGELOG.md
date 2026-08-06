@@ -2,6 +2,22 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## 1.1.0 - 2026-08-06
+
+- Accept application-defined extension tags (`_XXXX`) instead of reporting them
+  as unknown. Their subtrees are not validated: an extension's payload and
+  permitted substructures are defined by whoever authored it. See
+  [ADR-0008](../../docs/adr/0008-extension-tag-validation.md).
+- Read `HEAD.SCHMA` declarations, and report a GEDCOM 7 extension tag that is
+  used without one as `VAL008`. GEDCOM 5.5.1 documents, which have no SCHMA
+  structure, are unaffected.
+- Report a tag declared twice in `HEAD.SCHMA` as `VAL009`, and validate that
+  each declaration is an underscore-prefixed tag followed by an absolute URI.
+- Resolve the declared URI of an extension tag through `getLabel`, and offer
+  declared extension tags from `getCompletions`.
+- Stop offering root record tags as completions inside a subtree whose parent
+  type cannot be resolved.
+
 ## 1.0.0 - 2026-08-05
 
 - First stable release. `GedcomDocument` and the diagnostic shapes it returns are

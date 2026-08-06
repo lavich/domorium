@@ -1,17 +1,16 @@
 0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _WIKI https://domorium.com/terms/wikipediaPage
+2 TAG _VOICE https://domorium.com/terms/voiceActor
 1 SOUR GRAMPS
 2 VERS 2.2.6-1
 2 NAME GRAMPS
-1 DEST GEDCOM 5.5
 1 DATE 9 MAR 2007
 2 TIME 15:12
-1 CHAR UTF-8
 1 SUBM @SUBM@
-1 FILE simpson.ged
 1 COPR Copyright (c) 2007 .
-1 GEDC
-2 VERS 5.5
-2 FORM LINEAGE-LINKED
 0 @SUBM@ SUBM
 1 NAME Not Provided
 1 ADDR Not Provided
@@ -22,6 +21,7 @@
 2 SURN Simpson
 1 SEX M
 1 FAMS @F0002@
+1 _VOICE Dan Castellaneta
 1 CHAN
 2 DATE 11 FEB 2007
 3 TIME 15:05:36
@@ -31,9 +31,8 @@
 2 SURN Simpson
 1 SEX M
 1 FAMC @F0000@
-1 OBJE
-2 FORM URL
-2 FILE http://en.wikipedia.org/wiki/Bart_Simpson
+1 _WIKI http://en.wikipedia.org/wiki/Bart_Simpson
+1 _VOICE Nancy Cartwright
 1 CHAN
 2 DATE 11 FEB 2007
 3 TIME 15:04:14
@@ -53,12 +52,10 @@
 1 SEX M
 1 FAMC @F0002@
 1 FAMS @F0000@
-1 OBJE
-2 FORM URL
-2 FILE http://en.wikipedia.org/wiki/Homer_Simpson
-1 OBJE
-2 FORM URL
-2 FILE safety.officer@springfieldnuclear.com
+1 OCCU Safety Inspector
+2 EMAIL safety.officer@springfieldnuclear.com
+1 _WIKI http://en.wikipedia.org/wiki/Homer_Simpson
+1 _VOICE Dan Castellaneta
 1 CHAN
 2 DATE 11 FEB 2007
 3 TIME 15:05:36
@@ -77,9 +74,7 @@
 2 SURN Simpson
 1 SEX F
 1 FAMC @F0000@
-1 OBJE
-2 FORM URL
-2 FILE lisa@springfieldhigh.edu
+1 _VOICE Yeardley Smith
 1 CHAN
 2 DATE 11 FEB 2007
 3 TIME 15:04:14
@@ -89,9 +84,7 @@
 2 SURN Simpson
 1 SEX F
 1 FAMC @F0000@
-1 OBJE
-2 FORM URL
-2 FILE http://en.wikipedia.org/wiki/Maggie_Simpson
+1 _WIKI http://en.wikipedia.org/wiki/Maggie_Simpson
 1 CHAN
 2 DATE 11 FEB 2007
 3 TIME 15:04:14
@@ -102,9 +95,8 @@
 1 SEX F
 1 FAMC @F0003@
 1 FAMS @F0000@
-1 OBJE
-2 FORM URL
-2 FILE http://en.wikipedia.org/wiki/Marge_Simpson
+1 _WIKI http://en.wikipedia.org/wiki/Marge_Simpson
+1 _VOICE Julie Kavner
 1 CHAN
 2 DATE 11 FEB 2007
 3 TIME 15:13:45
@@ -123,9 +115,7 @@
 2 SURN Bouvier
 1 SEX F
 1 FAMC @F0003@
-1 OBJE
-2 FORM URL
-2 FILE http://en.wikipedia.org/wiki/Patty_and_Selma_Bouvier
+1 _WIKI http://en.wikipedia.org/wiki/Patty_and_Selma_Bouvier
 1 CHAN
 2 DATE 11 FEB 2007
 3 TIME 15:13:45
@@ -135,9 +125,7 @@
 2 SURN Bouvier
 1 SEX F
 1 FAMC @F0003@
-1 OBJE
-2 FORM URL
-2 FILE http://en.wikipedia.org/wiki/Patty_and_Selma_Bouvier
+1 _WIKI http://en.wikipedia.org/wiki/Patty_and_Selma_Bouvier
 1 CHAN
 2 DATE 11 FEB 2007
 3 TIME 15:13:45

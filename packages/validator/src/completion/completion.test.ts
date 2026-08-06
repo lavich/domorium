@@ -200,4 +200,42 @@ describe("GedcomDocument.getCompletions", () => {
 
     expect(doc.getCompletions({ line: 6, character: 2 }, "2 ")).toEqual([]);
   });
+
+  it("offers extension tags declared in SCHMA", () => {
+    const doc = document(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _SKYPEID http://xmlns.com/foaf/0.1/skypeID
+0 @U1@ SUBM
+1 NAME Submitter
+
+0 TRLR
+`);
+
+    const items = doc.getCompletions({ line: 7, character: 2 }, "1 ");
+
+    expect(items).toContainEqual({
+      label: "_SKYPEID",
+      kind: "tag",
+      detail: "http://xmlns.com/foaf/0.1/skypeID",
+    });
+    // Not NAME: SUBM allows one and the fixture already spends it.
+    expect(items.map((item) => item.label)).toContain("EMAIL");
+  });
+
+  it("offers no root tags inside an extension subtree", () => {
+    const doc = document(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _SKYPEID http://xmlns.com/foaf/0.1/skypeID
+0 @U1@ SUBM
+1 _SKYPEID example.person
+
+0 TRLR
+`);
+
+    expect(doc.getCompletions({ line: 7, character: 2 }, "2 ")).toEqual([]);
+  });
 });
