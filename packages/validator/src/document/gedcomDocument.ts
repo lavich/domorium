@@ -75,8 +75,6 @@ export class GedcomDocument {
     this.pointers = pointers;
     this.xRefs = xrefs;
     this.errors.push(...this.validateLevels(nodes));
-    // A document with no discoverable GEDC.VERS is treated as GEDCOM 7, the
-    // same default setScheme applies one line below.
     const version = getGedcomVersion(nodes);
     const { context, errors } = collectExtensions(
       nodes,

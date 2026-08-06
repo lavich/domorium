@@ -131,8 +131,7 @@ function completeTags(
       detail: context.scheme.label[entry.type]?.["en-US"],
     }));
 
-  // Extension tags are legal in any context, so every declared one is offered
-  // wherever a tag can go.
+  // Extension tags are legal in any context.
   const extensionTags: GedcomCompletion[] = [...context.extensions.tags].map(
     ([label, uri]) => ({ label, kind: "tag", detail: uri }),
   );

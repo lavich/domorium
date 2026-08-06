@@ -103,9 +103,8 @@ export class GedcomValidator {
 
       const tagToken = node.tokens.TAG;
 
-      // An extension's payload and permitted substructures are defined by
-      // whoever authored it, so there is nothing here to check it against:
-      // accept the tag, and descend no further.
+      // An extension defines its own payload and substructures, so there is
+      // nothing to check the subtree against. See ADR-0008.
       if (isExtensionTag(tag)) {
         if (
           this.extensions.requireDeclaration &&

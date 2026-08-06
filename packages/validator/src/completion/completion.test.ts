@@ -220,9 +220,7 @@ describe("GedcomDocument.getCompletions", () => {
       kind: "tag",
       detail: "http://xmlns.com/foaf/0.1/skypeID",
     });
-    // A standard tag still comes through alongside it. Not NAME: SUBM allows
-    // one, the fixture already spends it, and the cardinality filter correctly
-    // drops it.
+    // Not NAME: SUBM allows one and the fixture already spends it.
     expect(items.map((item) => item.label)).toContain("EMAIL");
   });
 
