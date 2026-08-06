@@ -12,7 +12,7 @@ const astBuilder = (text: string) => {
   const parser = new GedcomParser(gedcomLexerDefinition);
   parser.input = lexingResult.tokens;
   const cst = parser.root();
-  const visitor = new GedcomVisitor();
+  const visitor = new GedcomVisitor(text);
   return visitor.root(cst);
 };
 

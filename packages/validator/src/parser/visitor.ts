@@ -2,6 +2,7 @@ import { CstNode } from "chevrotain";
 import { CstElement, IToken } from "@chevrotain/types";
 import { GedcomParser } from "./parser";
 import { gedcomLexerDefinition, TokenNames } from "./lexer";
+import { createLineIndex, offsetToPosition, type LineIndex } from "./lineIndex";
 
 const parser = new GedcomParser(gedcomLexerDefinition);
 const BaseGedcomVisitor = parser.getBaseCstVisitorConstructor();
@@ -18,16 +19,66 @@ export interface Range {
 
 export interface ASTToken {
   name: TokenNames;
-  range: Range;
+  /** Character offset of the first character. */
+  startOffset: number;
+  /** Character offset just past the last character. */
+  endOffset: number;
+  /** Derived from the offsets; see the note on ASTNode. */
+  readonly range: Range;
   value: string;
 }
 
 export interface ASTNode {
-  range: Range;
+  startOffset: number;
+  endOffset: number;
+  /**
+   * Line and character are computed on access rather than stored. A large
+   * document has millions of tokens, and a stored range costs three objects
+   * apiece — that alone was most of the syntax tree's memory. Reading `range`
+   * in a tight loop allocates; prefer the offsets there.
+   */
+  readonly range: Range;
   tokens: Partial<Record<TokenNames, ASTToken>>;
   parent?: ASTNode;
   children: ASTNode[];
   level: number;
+}
+
+class Token implements ASTToken {
+  constructor(
+    readonly name: TokenNames,
+    readonly value: string,
+    readonly startOffset: number,
+    readonly endOffset: number,
+    private readonly lines: LineIndex,
+  ) {}
+
+  get range(): Range {
+    return {
+      start: offsetToPosition(this.lines, this.startOffset),
+      end: offsetToPosition(this.lines, this.endOffset),
+    };
+  }
+}
+
+class Node implements ASTNode {
+  parent?: ASTNode;
+  readonly children: ASTNode[] = [];
+
+  constructor(
+    readonly level: number,
+    public startOffset: number,
+    public endOffset: number,
+    readonly tokens: Partial<Record<TokenNames, ASTToken>>,
+    private readonly lines: LineIndex,
+  ) {}
+
+  get range(): Range {
+    return {
+      start: offsetToPosition(this.lines, this.startOffset),
+      end: offsetToPosition(this.lines, this.endOffset),
+    };
+  }
 }
 
 export interface VisitorResult {
@@ -58,8 +109,11 @@ export function resolveValue(node: ASTNode): string {
 }
 
 export class GedcomVisitor extends BaseGedcomVisitor {
-  constructor() {
+  private readonly lines: LineIndex;
+
+  constructor(text = "") {
     super();
+    this.lines = createLineIndex(text);
     this.validateVisitor();
   }
 
@@ -81,24 +135,14 @@ export class GedcomVisitor extends BaseGedcomVisitor {
   line({ children }: CstNode): ASTNode {
     const tokens: ASTNode["tokens"] = {};
 
-    let start: Position | undefined;
-    let end: Position | undefined;
+    let start = Infinity;
+    let end = -Infinity;
 
     for (const [tokenName, elements] of Object.entries(children)) {
       const tokenList = this.getTokens(elements);
       for (const token of tokenList) {
-        if (!start || !end) {
-          start = { ...token.range.start };
-          end = { ...token.range.end };
-        } else {
-          start.line = Math.min(start.line, token.range.start.line);
-          start.character = Math.min(
-            start.character,
-            token.range.start.character,
-          );
-          end.line = Math.max(end.line, token.range.end.line);
-          end.character = Math.max(end.character, token.range.end.character);
-        }
+        start = Math.min(start, token.startOffset);
+        end = Math.max(end, token.endOffset);
         // last token wins for this name
         tokens[tokenName as TokenNames] = token;
       }
@@ -108,15 +152,13 @@ export class GedcomVisitor extends BaseGedcomVisitor {
     const level =
       levelValue && /^\d+$/.test(levelValue) ? parseInt(levelValue, 10) : 0;
 
-    return {
+    return new Node(
       level,
-      range: {
-        start: start ?? { line: 0, character: 0 },
-        end: end ?? { line: 0, character: 0 },
-      },
+      Number.isFinite(start) ? start : 0,
+      Number.isFinite(end) ? end : 0,
       tokens,
-      children: [],
-    };
+      this.lines,
+    );
   }
 
   getTokens(elements?: CstElement[]): ASTToken[] {
@@ -126,14 +168,15 @@ export class GedcomVisitor extends BaseGedcomVisitor {
     const tokens: ASTToken[] = [];
     for (const el of elements) {
       if (isIToken(el)) {
-        tokens.push({
-          name: el.tokenType.name as TokenNames,
-          value: el.image,
-          range: {
-            start: { line: el.startLine ?? 0, character: el.startColumn ?? 0 },
-            end: { line: el.endLine ?? 0, character: 1 + (el.endColumn ?? 0) },
-          },
-        });
+        tokens.push(
+          new Token(
+            el.tokenType.name as TokenNames,
+            el.image,
+            el.startOffset,
+            (el.endOffset ?? el.startOffset) + 1,
+            this.lines,
+          ),
+        );
       }
     }
     return tokens;
@@ -172,14 +215,8 @@ export class GedcomVisitor extends BaseGedcomVisitor {
         node.parent = parent;
 
         let current: ASTNode | undefined = parent;
-        while (current) {
-          if (
-            node.range.end.line > current.range.end.line ||
-            (node.range.end.line === current.range.end.line &&
-              node.range.end.character > current.range.end.character)
-          ) {
-            current.range.end = { ...node.range.end };
-          }
+        while (current && node.endOffset > current.endOffset) {
+          current.endOffset = node.endOffset;
           current = current.parent;
         }
       }
