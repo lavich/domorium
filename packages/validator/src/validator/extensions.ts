@@ -27,8 +27,10 @@ export function emptyExtensions(): ExtensionContext {
 
 // "_SKYPEID http://xmlns.com/foaf/0.1/skypeID" — an extension tag, then the
 // absolute URI defining it. The tag half matches what the lexer accepts as a
-// tag, so a lowercase name is rejected here as it would be there.
-const TAG_DEF_REGEXP = /^(_[A-Z0-9_]*)\s+([A-Za-z][A-Za-z0-9+.-]*:\S*)$/;
+// tag, so a lowercase name is rejected here as it would be there; the
+// underscore must be followed by at least one character, so a bare "_" is not
+// a declarable tag.
+const TAG_DEF_REGEXP = /^(_[A-Z0-9_]+)\s+([A-Za-z][A-Za-z0-9+.-]*:\S*)$/;
 
 export function parseTagDef(
   value: string,

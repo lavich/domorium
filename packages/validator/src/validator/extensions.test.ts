@@ -50,6 +50,10 @@ describe("parseTagDef", () => {
   it("rejects a relative URI", () => {
     expect(parseTagDef("_SKYPEID /terms/skypeID")).toBeNull();
   });
+
+  it("rejects a bare underscore", () => {
+    expect(parseTagDef("_ http://example.com/x")).toBeNull();
+  });
 });
 
 describe("collectExtensions", () => {
