@@ -84,4 +84,62 @@ describe("validator", () => {
       }),
     );
   });
+
+  test("labels a declared extension tag with its URI", () => {
+    const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _SKYPEID http://xmlns.com/foaf/0.1/skypeID
+0 @U1@ SUBM
+1 NAME Submitter
+1 _SKYPEID example.person
+0 TRLR
+`);
+
+    const subm = gedcomDocument
+      .getNodes()
+      .find((node) => node.tokens.TAG?.value === "SUBM");
+    const skype = subm?.children.find(
+      (node) => node.tokens.TAG?.value === "_SKYPEID",
+    );
+
+    expect(gedcomDocument.getLabel(skype!)).toBe(
+      "Extension tag (http://xmlns.com/foaf/0.1/skypeID)",
+    );
+  });
+
+  test("labels an undeclared extension tag without a URI", () => {
+    const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @U1@ SUBM
+1 NAME Submitter
+1 _SKYPEID example.person
+0 TRLR
+`);
+
+    const subm = gedcomDocument
+      .getNodes()
+      .find((node) => node.tokens.TAG?.value === "SUBM");
+    const skype = subm?.children.find(
+      (node) => node.tokens.TAG?.value === "_SKYPEID",
+    );
+
+    expect(gedcomDocument.getLabel(skype!)).toBe("Extension tag");
+  });
+
+  test("reports a tag declared twice in SCHMA", () => {
+    const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _X http://example.com/first
+2 TAG _X http://example.com/second
+0 TRLR
+`);
+
+    const codes = gedcomDocument.getErrors().map((error) => error.code);
+    expect(codes).toContain("VAL009");
+  });
 });

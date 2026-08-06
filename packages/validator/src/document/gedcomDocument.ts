@@ -8,6 +8,12 @@ import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
 import { getGedcomVersion } from "../validator/getGedcomVersion";
 import {
+  collectExtensions,
+  emptyExtensions,
+  ExtensionContext,
+  isExtensionTag,
+} from "../validator/extensions";
+import {
   getGedcomCompletions,
   type GedcomCompletion,
 } from "../completion/completion";
@@ -19,6 +25,7 @@ export class GedcomDocument {
   public xRefs = new Map<string, ASTToken[]>();
   private errors: GedcomError[] = [];
   private scheme: GedcomScheme | undefined;
+  private extensions: ExtensionContext = emptyExtensions();
 
   private parseGedcom(input: string) {
     const gedcomLexer = new ConfigurableLexer({ zeroBased: true });
@@ -68,7 +75,16 @@ export class GedcomDocument {
     this.pointers = pointers;
     this.xRefs = xrefs;
     this.errors.push(...this.validateLevels(nodes));
-    const validator = new GedcomValidator(pointers);
+    // A document with no discoverable GEDC.VERS is treated as GEDCOM 7, the
+    // same default setScheme applies one line below.
+    const version = getGedcomVersion(nodes);
+    const { context, errors } = collectExtensions(
+      nodes,
+      !version?.startsWith("5"),
+    );
+    this.extensions = context;
+    this.errors.push(...errors);
+    const validator = new GedcomValidator(pointers, context);
     this.scheme = validator.setScheme(this.nodes);
     this.errors.push(...validator.validate(this.nodes));
     return this;
@@ -95,6 +111,11 @@ export class GedcomDocument {
   }
 
   getLabel(node: ASTNode): string | undefined {
+    const tag = node.tokens.TAG?.value;
+    if (tag && isExtensionTag(tag)) {
+      const uri = this.extensions.tags.get(GedcomTag(tag));
+      return uri ? `Extension tag (${uri})` : "Extension tag";
+    }
     if (!this.scheme) {
       return undefined;
     }
