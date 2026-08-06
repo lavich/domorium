@@ -163,6 +163,7 @@ export class GedcomDocument {
       nodes: this.nodes,
       pointers: this.pointers,
       scheme: this.scheme,
+      extensions: this.extensions,
       isGedcom7: !version?.startsWith("5"),
       position,
       lineText,

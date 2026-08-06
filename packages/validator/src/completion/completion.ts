@@ -6,6 +6,7 @@ import {
   type GedcomScheme,
 } from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
+import type { ExtensionContext } from "../validator/extensions";
 
 export interface GedcomCompletion {
   label: string;
@@ -17,6 +18,7 @@ interface CompletionContext {
   nodes: ASTNode[];
   pointers: Map<string, ASTNode[]>;
   scheme: GedcomScheme;
+  extensions: ExtensionContext;
   isGedcom7: boolean;
   position: Position;
   lineText: string;
@@ -86,12 +88,17 @@ function resolveParent(context: CompletionContext, level: number) {
     return null;
   }
 
-  return {
-    parentType: new RuleNode(context.scheme, context.pointers).getNodeType(
-      parent,
-    ),
-    siblings: parent.children,
-  };
+  const parentType = new RuleNode(context.scheme, context.pointers).getNodeType(
+    parent,
+  );
+  // An empty type means the parent could not be resolved through the schema —
+  // inside an extension subtree, for instance. substructure[""] is the root
+  // context, so returning it here would suggest HEAD/INDI/TRLR mid-record.
+  if (!parentType) {
+    return null;
+  }
+
+  return { parentType, siblings: parent.children };
 }
 
 function completeTags(
@@ -103,7 +110,9 @@ function completeTags(
     return [];
   }
 
-  return Object.entries(context.scheme.substructure[parent.parentType] ?? {})
+  const standardTags: GedcomCompletion[] = Object.entries(
+    context.scheme.substructure[parent.parentType] ?? {},
+  )
     .filter(([tag, entry]) => {
       const maximum = parseMax(entry.cardinality);
       if (maximum === null || maximum === Infinity) {
@@ -121,6 +130,14 @@ function completeTags(
       kind: "tag",
       detail: context.scheme.label[entry.type]?.["en-US"],
     }));
+
+  // Extension tags are legal in any context, so every declared one is offered
+  // wherever a tag can go.
+  const extensionTags: GedcomCompletion[] = [...context.extensions.tags].map(
+    ([label, uri]) => ({ label, kind: "tag", detail: uri }),
+  );
+
+  return [...standardTags, ...extensionTags];
 }
 
 function completeValues(
