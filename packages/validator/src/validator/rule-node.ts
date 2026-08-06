@@ -144,14 +144,61 @@ function flattenPointers(pointers: Map<string, ASTNode[]>): ASTNode[] {
   return flattened;
 }
 
+// Which xrefs a pointer may name, grouped by the record tag it points at.
+// Checking that used to filter every pointer in the document and build a fresh
+// array of candidates for each pointer-bearing node, so a file whose records
+// reference each other — which is every real one — cost records × pointers.
+const pointerTargets = new WeakMap<
+  Map<string, ASTNode[]>,
+  Map<string, Set<string>>
+>();
+
+function targetsByTag(
+  pointers: Map<string, ASTNode[]>,
+): Map<string, Set<string>> {
+  const cached = pointerTargets.get(pointers);
+  if (cached) {
+    return cached;
+  }
+  const index = new Map<string, Set<string>>();
+  for (const node of flattenPointers(pointers)) {
+    const tag = node.tokens.TAG?.value;
+    const xref = node.tokens.POINTER?.value;
+    if (!tag || !xref) {
+      continue;
+    }
+    let targets = index.get(tag);
+    if (!targets) {
+      targets = new Set();
+      index.set(tag, targets);
+    }
+    targets.add(xref);
+  }
+  pointerTargets.set(pointers, index);
+  return index;
+}
+
 export class RuleNode {
   pointers: ASTNode[];
+  private readonly pointerMap: Map<string, ASTNode[]>;
 
   constructor(
     private readonly scheme: GedcomScheme,
     pointers: Map<string, ASTNode[]>,
   ) {
+    this.pointerMap = pointers;
     this.pointers = flattenPointers(pointers);
+  }
+
+  /** Whether `xref` names a record of the kind this pointer type expects. */
+  private isPointerTarget(tagType: GedcomType, xref: string): boolean {
+    const { to } = this.getFieldType(tagType);
+    if (!to) {
+      return false;
+    }
+    return (
+      targetsByTag(this.pointerMap).get(this.scheme.tag[to])?.has(xref) ?? false
+    );
   }
 
   getFieldType(tagType: GedcomType): {
@@ -240,10 +287,7 @@ export class RuleNode {
     }
     if (fieldType.type === "pointer" && fieldType.to) {
       const pointerTag = this.scheme.tag[fieldType.to];
-      const pointersNode = this.pointers.filter(
-        (pointer) => pointer.tokens.TAG?.value === pointerTag,
-      );
-      return pointersNode.map((node) => node.tokens.POINTER?.value || "");
+      return [...(targetsByTag(this.pointerMap).get(pointerTag) ?? [])];
     }
     return null;
   }
@@ -478,16 +522,17 @@ export class RuleNode {
         }
         break;
       case "pointer": {
-        const availableValues = this.getAvailableValues(tagType);
-
         const XREF = node.tokens.XREF;
         const isXrefExist = !!XREF?.value;
         const isXrefValid =
           isXrefExist &&
-          (XREF?.value === VOID_POINTER ||
-            availableValues?.includes(XREF?.value));
+          (XREF.value === VOID_POINTER ||
+            this.isPointerTarget(tagType, XREF.value));
         const hasChildren = node.children.length !== 0;
         if ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren)) {
+          // Only needed to name the candidates in the message, so it is built
+          // here rather than for every pointer in the document.
+          const availableValues = this.getAvailableValues(tagType);
           errors.push({
             code:
               isXrefExist && XREF?.value !== VOID_POINTER

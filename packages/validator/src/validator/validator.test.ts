@@ -258,6 +258,42 @@ describe("validator", () => {
     expect(elapsed).toBeLessThan(2000);
   }, 120_000);
 
+  // Resolving a pointer used to scan every pointer in the document and build a
+  // fresh array of candidates, once per pointer-bearing node — so a file where
+  // people are related to each other cost records × pointers. That is the
+  // shape of real genealogy data, and the guard above misses it entirely: its
+  // records have no cross-references.
+  test("validates a document full of cross-references without quadratic slowdown", async () => {
+    const families = 4000;
+    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
+    for (let i = 1; i <= families; i += 1) {
+      lines.push(
+        `0 @I${i * 2 - 1}@ INDI`,
+        "1 SEX M",
+        `1 FAMS @F${i}@`,
+        `0 @I${i * 2}@ INDI`,
+        "1 SEX F",
+        `1 FAMS @F${i}@`,
+      );
+    }
+    for (let i = 1; i <= families; i += 1) {
+      lines.push(
+        `0 @F${i}@ FAM`,
+        `1 HUSB @I${i * 2 - 1}@`,
+        `1 WIFE @I${i * 2}@`,
+      );
+    }
+    lines.push("0 TRLR", "");
+    const { nodes, pointers } = astBuilder(lines.join("\n"));
+
+    const started = performance.now();
+    const errs = new GedcomValidator(pointers).validate(nodes);
+    const elapsed = performance.now() - started;
+
+    expect(errs).toEqual([]);
+    expect(elapsed).toBeLessThan(2000);
+  }, 300_000);
+
   test("accepts an extension record at level 0", async () => {
     const { nodes, validator } = validatorFor(`0 HEAD
 1 GEDC
