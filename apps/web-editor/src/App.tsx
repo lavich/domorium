@@ -54,7 +54,7 @@ function AppContent() {
 
   useEffect(() => {
     let active = true;
-    fetch(`${import.meta.env.BASE_URL}simpsons55.ged`)
+    fetch(`${import.meta.env.BASE_URL}simpsons70.ged`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Example request failed: ${response.status}`);
