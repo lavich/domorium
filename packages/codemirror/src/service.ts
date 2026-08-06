@@ -69,19 +69,40 @@ export function applyWorkspaceEdit(
 export class EditorLanguageService {
   readonly service = new GedcomLanguageService();
   private text = "";
+  private doc: Text | undefined;
   private version = 0;
 
-  update(text: string): GedcomLanguageService {
-    if (text !== this.text) {
-      this.text = text;
+  /**
+   * Prefer passing the editor's `state.doc`. Hover, completion, highlighting
+   * and folding all update before answering, and almost always with a document
+   * that has not changed — reading it out as a string to find that out costs
+   * the whole document every time. CodeMirror's Text is immutable, so identity
+   * settles it without touching the content. A string is still accepted, and
+   * content is still compared when a different Text arrives, so a document
+   * rebuilt with the same content does not look like an edit.
+   */
+  update(source: string | Text): GedcomLanguageService {
+    if (typeof source !== "string") {
+      if (source === this.doc) {
+        return this.service;
+      }
+      this.doc = source;
+      source = source.toString();
+    } else {
+      this.doc = undefined;
+    }
+
+    if (source !== this.text) {
+      this.text = source;
       this.version += 1;
-      this.service.update(text, this.version);
+      this.service.update(source, this.version);
     }
     return this.service;
   }
 
   clear(): void {
     this.text = "";
+    this.doc = undefined;
     this.version += 1;
     this.service.update("", this.version);
   }

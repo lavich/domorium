@@ -12,7 +12,7 @@ const astBuilder = (text: string) => {
   const parser = new GedcomParser(gedcomLexerDefinition);
   parser.input = lexingResult.tokens;
   const cst = parser.root();
-  const visitor = new GedcomVisitor();
+  const visitor = new GedcomVisitor(text);
   return visitor.root(cst);
 };
 
@@ -196,6 +196,103 @@ describe("validator", () => {
 
     expect(validator.validate(nodes)).toHaveLength(2);
   });
+
+  test("reports a tag that exceeds its maximum cardinality", async () => {
+    const { nodes, validator } = validatorFor(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 SEX M
+1 SEX F
+0 TRLR
+`);
+
+    const errs = validator.validate(nodes);
+
+    expect(errs).toHaveLength(1);
+    expect(errs[0].code).toBe("VAL007");
+    expect(errs[0].message).toContain("SEX");
+  });
+
+  // The cardinality counters are per parent. A cached rule table must hand each
+  // record its own counters, or the second record inherits the first's spent
+  // budget and is wrongly reported.
+  test("counts cardinality separately for each record", async () => {
+    const { nodes, validator } = validatorFor(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 SEX M
+0 @I2@ INDI
+1 SEX F
+0 @I3@ INDI
+1 SEX M
+0 TRLR
+`);
+
+    expect(validator.validate(nodes)).toEqual([]);
+  });
+
+  // Validation cost must not grow with records × nodes. The quadratic version
+  // — a RuleNode per node, each flattening the whole pointer map — needs tens
+  // of seconds at this size; a linear one needs tens of milliseconds. The
+  // budget is deliberately far from both so a loaded machine cannot flip it.
+  test("validates a document with many records without quadratic slowdown", async () => {
+    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
+    for (let i = 1; i <= 8000; i += 1) {
+      lines.push(
+        `0 @I${i}@ INDI`,
+        `1 NAME Person${i} /Family/`,
+        "1 SEX M",
+        "1 BIRT",
+        "2 DATE 2 JAN 1801",
+      );
+    }
+    lines.push("0 TRLR", "");
+    const { nodes, pointers } = astBuilder(lines.join("\n"));
+
+    const started = performance.now();
+    new GedcomValidator(pointers).validate(nodes);
+    const elapsed = performance.now() - started;
+
+    expect(elapsed).toBeLessThan(2000);
+  }, 120_000);
+
+  // Resolving a pointer used to scan every pointer in the document and build a
+  // fresh array of candidates, once per pointer-bearing node — so a file where
+  // people are related to each other cost records × pointers. That is the
+  // shape of real genealogy data, and the guard above misses it entirely: its
+  // records have no cross-references.
+  test("validates a document full of cross-references without quadratic slowdown", async () => {
+    const families = 4000;
+    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
+    for (let i = 1; i <= families; i += 1) {
+      lines.push(
+        `0 @I${i * 2 - 1}@ INDI`,
+        "1 SEX M",
+        `1 FAMS @F${i}@`,
+        `0 @I${i * 2}@ INDI`,
+        "1 SEX F",
+        `1 FAMS @F${i}@`,
+      );
+    }
+    for (let i = 1; i <= families; i += 1) {
+      lines.push(
+        `0 @F${i}@ FAM`,
+        `1 HUSB @I${i * 2 - 1}@`,
+        `1 WIFE @I${i * 2}@`,
+      );
+    }
+    lines.push("0 TRLR", "");
+    const { nodes, pointers } = astBuilder(lines.join("\n"));
+
+    const started = performance.now();
+    const errs = new GedcomValidator(pointers).validate(nodes);
+    const elapsed = performance.now() - started;
+
+    expect(errs).toEqual([]);
+    expect(elapsed).toBeLessThan(2000);
+  }, 300_000);
 
   test("accepts an extension record at level 0", async () => {
     const { nodes, validator } = validatorFor(`0 HEAD

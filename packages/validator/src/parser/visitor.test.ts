@@ -10,7 +10,7 @@ function parseGedcom(input: string) {
   const parser = new GedcomParser(gedcomLexerDefinition);
   parser.input = lexingResult.tokens;
   const cst = parser.root();
-  const visitor = new GedcomVisitor();
+  const visitor = new GedcomVisitor(input);
   return visitor.root(cst);
 }
 
@@ -113,12 +113,14 @@ describe("AstVisitor", () => {
   });
 
   it("should throw on AST cycles", () => {
-    const visitor = new GedcomVisitor();
+    const visitor = new GedcomVisitor("0 HEAD\n");
     // Fake nodes with cycle
     const fakeNode: ASTNode = {
+      startOffset: 0,
+      endOffset: 6,
       range: {
-        start: { line: 1, character: 1 },
-        end: { line: 1, character: 5 },
+        start: { line: 0, character: 0 },
+        end: { line: 0, character: 6 },
       },
       tokens: {},
       children: [],

@@ -39,6 +39,57 @@ function parseCardinality(str: string): { min: number; max: number } | null {
   return { min, max };
 }
 
+interface Rule {
+  min: number;
+  max: number;
+  type: GedcomType;
+  payload: Payload;
+}
+
+// What a parent type permits is fixed by the schema, so the table is built
+// once per type rather than once per node. Rebuilding it per node meant a
+// document of 200k records ran the cardinality regexp twenty million times.
+// The tables are immutable; occurrences are counted separately per parent.
+const ruleTables = new WeakMap<
+  GedcomScheme,
+  Map<GedcomType, Map<GedcomTag, Rule>>
+>();
+
+function getRules(
+  scheme: GedcomScheme,
+  parentType: GedcomType,
+): Map<GedcomTag, Rule> | undefined {
+  let byType = ruleTables.get(scheme);
+  if (!byType) {
+    byType = new Map();
+    ruleTables.set(scheme, byType);
+  }
+
+  const cached = byType.get(parentType);
+  if (cached) {
+    return cached;
+  }
+
+  const substructure = scheme.substructure[parentType];
+  if (!substructure) {
+    return undefined;
+  }
+
+  const rules = new Map<GedcomTag, Rule>();
+  for (const [tagStr, { cardinality, type }] of Object.entries(substructure)) {
+    const parsed = parseCardinality(cardinality);
+    if (parsed) {
+      rules.set(GedcomTag(tagStr), {
+        ...parsed,
+        type,
+        payload: scheme.payload[type],
+      });
+    }
+  }
+  byType.set(parentType, rules);
+  return rules;
+}
+
 export class GedcomValidator {
   constructor(
     private readonly pointers: Map<string, ASTNode[]> = new Map<
@@ -60,28 +111,17 @@ export class GedcomValidator {
   ): GedcomError[] {
     const scheme = _scheme || this.setScheme(nodes);
 
-    const substructure = scheme.substructure[parentType];
-    if (!substructure) {
+    const rules = getRules(scheme, parentType);
+    if (!rules) {
       return [];
     }
 
-    const rules = new Map<
-      GedcomTag,
-      { min: number; max: number; type: GedcomType; payload: Payload }
-    >();
-
-    for (const [tagStr, { cardinality, type }] of Object.entries(
-      substructure,
-    )) {
-      const tag = GedcomTag(tagStr);
-      const parsed = parseCardinality(cardinality);
-      if (parsed) {
-        rules.set(tag, { ...parsed, type, payload: scheme.payload[type] });
-      }
-    }
-
+    // The rule table is shared, so occurrences are tallied here instead of
+    // being subtracted from it.
+    const occurrences = new Map<GedcomTag, number>();
     const errors: GedcomError[] = [];
     const parentTag = scheme.tag[GedcomType(parentType)];
+    const ruleNode = new RuleNode(scheme, this.pointers);
 
     for (const node of nodes) {
       const tag = node.tokens.TAG?.value
@@ -132,32 +172,24 @@ export class GedcomValidator {
         continue;
       }
 
-      if (rule.max === 0) {
+      const seen = (occurrences.get(tag) ?? 0) + 1;
+      occurrences.set(tag, seen);
+      if (seen > rule.max) {
         errors.push({
           code: ValidationErrorCode.ManyOccurrences,
           message: `Too many occurrences of ${tag} in parent ${parentTag}`,
           range: tagToken?.range || node.range,
           level: "error",
         });
-      } else {
-        rule.max--;
       }
 
-      if (rule.min > 0) {
-        rule.min--;
-      }
-
-      const substr = scheme.substructure[parentType];
-      const nodeType = substr[GedcomTag(node.tokens.TAG!.value)].type;
-
-      const ruleNode = new RuleNode(scheme, this.pointers);
-      errors.push(...ruleNode.validate(node, nodeType));
+      errors.push(...ruleNode.validate(node, rule.type));
 
       errors.push(...this.validate(node.children, rule.type, scheme));
     }
 
     for (const [tag, rule] of rules) {
-      if (rule.min > 0) {
+      if ((occurrences.get(tag) ?? 0) < rule.min) {
         errors.push({
           code: ValidationErrorCode.MissingTag,
           message: `Missing required tag ${tag} in ${parentTag || "root"}`,

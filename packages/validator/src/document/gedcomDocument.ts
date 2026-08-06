@@ -65,7 +65,7 @@ export class GedcomDocument {
         level: "warning",
       });
     });
-    const visitor = new GedcomVisitor();
+    const visitor = new GedcomVisitor(input);
     return visitor.root(cst);
   }
 
