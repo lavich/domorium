@@ -197,6 +197,42 @@ describe("validator", () => {
     expect(validator.validate(nodes)).toHaveLength(2);
   });
 
+  test("reports a tag that exceeds its maximum cardinality", async () => {
+    const { nodes, validator } = validatorFor(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 SEX M
+1 SEX F
+0 TRLR
+`);
+
+    const errs = validator.validate(nodes);
+
+    expect(errs).toHaveLength(1);
+    expect(errs[0].code).toBe("VAL007");
+    expect(errs[0].message).toContain("SEX");
+  });
+
+  // The cardinality counters are per parent. A cached rule table must hand each
+  // record its own counters, or the second record inherits the first's spent
+  // budget and is wrongly reported.
+  test("counts cardinality separately for each record", async () => {
+    const { nodes, validator } = validatorFor(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 SEX M
+0 @I2@ INDI
+1 SEX F
+0 @I3@ INDI
+1 SEX M
+0 TRLR
+`);
+
+    expect(validator.validate(nodes)).toEqual([]);
+  });
+
   // Validation cost must not grow with records × nodes. The quadratic version
   // — a RuleNode per node, each flattening the whole pointer map — needs tens
   // of seconds at this size; a linear one needs tens of milliseconds. The
