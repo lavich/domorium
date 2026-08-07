@@ -97,8 +97,7 @@ jobs:
 
           if changed \
             apps/web-editor \
-            packages/language-server \
-            packages/validator \
+            packages \
             tsconfig.json \
             package.json \
             package-lock.json; then
@@ -109,8 +108,7 @@ jobs:
 
           if changed \
             apps/vscode \
-            packages/language-server \
-            packages/validator \
+            packages \
             tsconfig.json \
             package.json \
             package-lock.json; then
