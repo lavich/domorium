@@ -71,27 +71,37 @@ export function modifierMask(kind: TokenNames): number {
   return mask;
 }
 
-const tokenToSemanticToken = (token: ASTToken): SemanticToken | undefined => {
+/**
+ * `range` is derived from the syntax tree's offsets on every access, so it is
+ * read once and the length is taken from the offsets — which is also the only
+ * correct length for a token that spans lines.
+ */
+const collect = (token: ASTToken, into: SemanticToken[]): void => {
   if (tokenMap[token.name] === undefined) {
-    return undefined;
+    return;
   }
 
-  return {
-    line: token.range.start.line,
-    char: token.range.start.character,
-    length: token.range.end.character - token.range.start.character,
+  const { start } = token.range;
+  into.push({
+    line: start.line,
+    char: start.character,
+    length: token.endOffset - token.startOffset,
     tokenType: tokenTypeIndex(token.name),
     tokenModifiers: modifierMask(token.name),
-  };
+  });
+};
+
+const walk = (nodes: ASTNode[], into: SemanticToken[]): void => {
+  for (const node of nodes) {
+    for (const token of Object.values(node.tokens)) {
+      collect(token, into);
+    }
+    walk(node.children, into);
+  }
 };
 
 export function semanticTokens(nodes: ASTNode[]): SemanticToken[] {
-  return nodes.flatMap((node) => {
-    return [
-      ...Object.values(node.tokens)
-        .map(tokenToSemanticToken)
-        .filter((token): token is SemanticToken => token !== undefined),
-      ...semanticTokens(node.children),
-    ];
-  });
+  const tokens: SemanticToken[] = [];
+  walk(nodes, tokens);
+  return tokens;
 }
