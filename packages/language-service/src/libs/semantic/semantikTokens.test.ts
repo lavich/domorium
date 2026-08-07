@@ -107,32 +107,6 @@ describe("semanticTokens", () => {
 
     expect(semanticTokens([nodeOf(token)])[0].length).toBe(15);
   });
-
-  // A coarse backstop against a catastrophic regression only: the exact
-  // invariants above guard the twofold differences.
-  it("converts a large document's tokens in linear time", () => {
-    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
-    for (let i = 1; i <= 40000; i += 1) {
-      lines.push(
-        `0 @I${i}@ INDI`,
-        `1 NAME Person${i} /Family/`,
-        "1 SEX M",
-        "1 BIRT",
-        "2 DATE 2 JAN 1801",
-      );
-    }
-    lines.push("0 TRLR", "");
-    const document = new GedcomDocument();
-    document.createDocument(lines.join("\n"));
-    const nodes = document.getNodes();
-
-    const started = performance.now();
-    const tokens = semanticTokens(nodes);
-    const elapsed = performance.now() - started;
-
-    expect(tokens.length).toBeGreaterThan(400_000);
-    expect(elapsed).toBeLessThan(1000);
-  }, 300_000);
 });
 
 function countingToken(onRead: () => void): ASTToken {

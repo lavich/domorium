@@ -1,5 +1,40 @@
 import { describe, expect, it } from "vitest";
+import { TokenNames, type ASTNode, type ASTToken } from "@domorium/validator";
 import { GedcomLanguageService } from "../../languageService";
+import { ReferenceIndex } from "./referenceIndex";
+
+/** A level-0 record declaration, one per line, whose range reports on access. */
+function declarationNode(line: number, onRead: () => void): ASTNode {
+  const at = (character: number, length: number) => ({
+    start: { line, character },
+    end: { line, character: character + length },
+  });
+  const tag: ASTToken = {
+    name: TokenNames.TAG,
+    value: "INDI",
+    startOffset: 7,
+    endOffset: 11,
+    range: at(7, 4),
+  };
+  const pointer: ASTToken = {
+    name: TokenNames.POINTER,
+    value: `@I${line}@`,
+    startOffset: 2,
+    endOffset: 2 + `@I${line}@`.length,
+    get range() {
+      onRead();
+      return at(2, `@I${line}@`.length);
+    },
+  };
+  return {
+    level: 0,
+    startOffset: 0,
+    endOffset: 11,
+    range: at(0, 11),
+    tokens: { [TokenNames.TAG]: tag, [TokenNames.POINTER]: pointer },
+    children: [],
+  };
+}
 
 describe("ReferenceIndex", () => {
   it("indexes declarations and usages without matching XREF-shaped note text", () => {
@@ -135,43 +170,24 @@ describe("ReferenceIndex", () => {
     }
   });
 
-  // Cursor movement asks this question on every keystroke and every click. A
-  // linear scan over a document's occurrences takes seconds across a session's
-  // worth of lookups; a binary search takes microseconds. The budget sits far
-  // from both so a loaded machine cannot flip it.
-  it("resolves the cursor without scanning every occurrence", () => {
-    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
-    const families = 8000;
-    for (let i = 1; i <= families; i += 1) {
-      lines.push(
-        `0 @I${i * 2 - 1}@ INDI`,
-        "1 SEX M",
-        `0 @I${i * 2}@ INDI`,
-        "1 SEX F",
-      );
-    }
-    for (let i = 1; i <= families; i += 1) {
-      lines.push(
-        `0 @F${i}@ FAM`,
-        `1 HUSB @I${i * 2 - 1}@`,
-        `1 WIFE @I${i * 2}@`,
-      );
-    }
-    lines.push("0 TRLR", "");
-    const service = new GedcomLanguageService(lines.join("\n"));
-    // The last WIFE line: the worst case for a scan that starts at the front.
-    const line = lines.length - 3;
+  // Cursor movement asks this question on every keystroke and every click, and
+  // the index is rebuilt on every change. Counting how many times a range is
+  // derived covers both halves: a scan touches every occurrence, and an index
+  // that materialized its ranges would touch every one at build time. A wall
+  // clock cannot separate the two honestly — a slow runner's good number
+  // exceeds a fast machine's bad one.
+  it("neither materializes every range nor scans them to find the cursor", () => {
+    let reads = 0;
+    const declarations = Array.from({ length: 2000 }, (_, line) =>
+      declarationNode(line, () => (reads += 1)),
+    );
 
-    const started = performance.now();
-    for (let i = 0; i < 5000; i += 1) {
-      expect(
-        service.getReferenceIndex().at({ line, character: 7 }),
-      ).toBeDefined();
-    }
-    const elapsed = performance.now() - started;
+    const index = new ReferenceIndex(declarations);
 
-    expect(elapsed).toBeLessThan(500);
-  }, 300_000);
+    expect(index.at({ line: 1999, character: 3 })?.id).toBe("@I1999@");
+    // Twelve today: log2(2000) probes plus the containment test.
+    expect(reads).toBeLessThan(40);
+  });
 
   it("does not index HEAD or TRLR as XREF record declarations", () => {
     const service = new GedcomLanguageService(
