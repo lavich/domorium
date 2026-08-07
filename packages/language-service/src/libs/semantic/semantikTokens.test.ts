@@ -14,17 +14,23 @@ describe("semanticTokens", () => {
   it("parse SAMPLE", () => {
     const res = semanticTokens(gedcomDocument.getNodes());
 
-    expect(res[0]).toStrictEqual({
+    // Checked field by field: line and char are derived on access rather
+    // than stored, so the token is not a plain object.
+    expect(res[0]).toMatchObject({
       line: 0,
       char: 0,
       length: 1,
+      startOffset: 0,
+      endOffset: 1,
       tokenType: tokenTypeIndex(TokenNames.LEVEL),
       tokenModifiers: 0,
     });
-    expect(res[1]).toStrictEqual({
+    expect(res[1]).toMatchObject({
       line: 0,
       char: 2,
       length: 17,
+      startOffset: 2,
+      endOffset: 19,
       tokenType: tokenTypeIndex(TokenNames.POINTER),
       tokenModifiers: 1,
     });
@@ -49,28 +55,20 @@ describe("semanticTokens", () => {
       (token) => token.tokenType === tokenTypeIndex(TokenNames.TAG),
     );
 
-    expect(tags).toEqual([
-      {
-        line: 0,
-        char: 7,
-        length: 4,
-        tokenType: tags[0].tokenType,
-        tokenModifiers: 0,
-      },
-      {
-        line: 1,
-        char: 2,
-        length: 3,
-        tokenType: tags[0].tokenType,
-        tokenModifiers: 0,
-      },
-      {
-        line: 2,
-        char: 2,
-        length: 4,
-        tokenType: tags[0].tokenType,
-        tokenModifiers: 0,
-      },
+    // The offsets and the derived positions must agree across the carriage
+    // returns: "0 @I1@ INDI\r\n1 SEX M\r\n0 TRLR".
+    expect(
+      tags.map(({ line, char, length, startOffset, endOffset }) => ({
+        line,
+        char,
+        length,
+        startOffset,
+        endOffset,
+      })),
+    ).toEqual([
+      { line: 0, char: 7, length: 4, startOffset: 7, endOffset: 11 },
+      { line: 1, char: 2, length: 3, startOffset: 15, endOffset: 18 },
+      { line: 2, char: 2, length: 4, startOffset: 24, endOffset: 28 },
     ]);
   });
 
@@ -84,9 +82,26 @@ describe("semanticTokens", () => {
     let reads = 0;
     const token = countingToken(() => (reads += 1));
 
-    semanticTokens([nodeOf(token)]);
+    const [semantic] = semanticTokens([nodeOf(token)]);
+    // Both, and more than once each: still one derivation.
+    void [semantic.line, semantic.char, semantic.line, semantic.char];
 
     expect(reads).toBeLessThanOrEqual(1);
+  });
+
+  // Two of the four hosts address everything by offset, and the syntax tree
+  // holds offsets. Deriving a position for them, so the adapter can convert it
+  // straight back, cost 387 ms on a 15.6 MB document — see #68.
+  it("carries offsets, and derives no position for a caller that wants them", () => {
+    let reads = 0;
+    const token = countingToken(() => (reads += 1));
+
+    const [semantic] = semanticTokens([nodeOf(token)]);
+
+    expect(semantic.startOffset).toBe(7);
+    expect(semantic.endOffset).toBe(11);
+    expect(semantic.length).toBe(4);
+    expect(reads).toBe(0);
   });
 
   // `end.character - start.character` is only a length while the token stays

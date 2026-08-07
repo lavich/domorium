@@ -1,4 +1,5 @@
 import type { ASTNode, ASTToken, TokenNames } from "@domorium/validator";
+import type { Position } from "../../types";
 
 const SemanticTokenTypes = {
   comment: "comment",
@@ -11,9 +12,15 @@ const SemanticTokenModifiers = {
 } as const;
 
 export interface SemanticToken {
-  line: number;
-  char: number;
+  /** Character offset of the first character. */
+  startOffset: number;
+  /** Character offset just past the last character. */
+  endOffset: number;
   length: number;
+  /** Derived from the offsets on access; see the note on Token below. */
+  line: number;
+  /** Derived from the offsets on access; see the note on Token below. */
+  char: number;
   tokenType: number;
   tokenModifiers: number;
 }
@@ -72,23 +79,57 @@ export function modifierMask(kind: TokenNames): number {
 }
 
 /**
- * `range` is derived from the syntax tree's offsets on every access, so it is
- * read once and the length is taken from the offsets — which is also the only
- * correct length for a token that spans lines.
+ * Carries the offsets it was built from and derives a line and character only
+ * if asked.
+ *
+ * The syntax tree stores offsets; the CodeMirror hosts address everything by
+ * offset; only the LSP hosts need a line and character, because that is how
+ * the protocol's delta encoding is defined. Deriving one for every token so
+ * that an adapter could convert it straight back cost 387 ms on a 15.6 MB
+ * document, on top of the derivation itself.
  */
+class Token implements SemanticToken {
+  private start: Position | undefined;
+
+  constructor(
+    private readonly token: ASTToken,
+    readonly tokenType: number,
+    readonly tokenModifiers: number,
+  ) {}
+
+  get startOffset(): number {
+    return this.token.startOffset;
+  }
+
+  get endOffset(): number {
+    return this.token.endOffset;
+  }
+
+  /** From the offsets, so it is right for a token spanning lines too. */
+  get length(): number {
+    return this.token.endOffset - this.token.startOffset;
+  }
+
+  get line(): number {
+    return this.position().line;
+  }
+
+  get char(): number {
+    return this.position().character;
+  }
+
+  private position(): Position {
+    return (this.start ??= this.token.range.start);
+  }
+}
+
 const collect = (token: ASTToken, into: SemanticToken[]): void => {
   if (tokenMap[token.name] === undefined) {
     return;
   }
-
-  const { start } = token.range;
-  into.push({
-    line: start.line,
-    char: start.character,
-    length: token.endOffset - token.startOffset,
-    tokenType: tokenTypeIndex(token.name),
-    tokenModifiers: modifierMask(token.name),
-  });
+  into.push(
+    new Token(token, tokenTypeIndex(token.name), modifierMask(token.name)),
+  );
 };
 
 const walk = (nodes: ASTNode[], into: SemanticToken[]): void => {

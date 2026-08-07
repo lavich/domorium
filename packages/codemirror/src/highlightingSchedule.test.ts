@@ -74,6 +74,36 @@ describe("highlighting schedule", () => {
     view.destroy();
   });
 
+  // Decorations are placed from the syntax tree's offsets rather than by
+  // converting a line and character back into one. The two only agree because
+  // the service is fed the document CodeMirror holds, which has already had
+  // its line endings normalized — so a CRLF source is the case to pin down.
+  it.each([
+    ["LF", "\n"],
+    ["CRLF", "\r\n"],
+  ])("decorates the xref itself, %s", (_name, separator) => {
+    const language = new EditorLanguageService();
+    const view = new EditorView({
+      parent: document.body,
+      state: EditorState.create({
+        doc: ["0 @I1@ INDI", "1 NAME Ada /Lovelace/", "0 TRLR"].join(separator),
+        extensions: [
+          ...createGedcomExtensions({
+            actions: { applyWorkspaceEdit: () => true },
+            language,
+            settings: { diagnostics: false },
+          }),
+          ...createStandaloneEditorExtensions(),
+        ],
+      }),
+    });
+
+    const decorated = [...view.dom.querySelectorAll(".gedcom-token-declaration")];
+
+    expect(decorated.map((node) => node.textContent)).toEqual(["@I1@"]);
+    view.destroy();
+  });
+
   it("reparses once after the typing stops, not once per keystroke", () => {
     vi.useFakeTimers();
     const language = new EditorLanguageService();
