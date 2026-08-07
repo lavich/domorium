@@ -2,6 +2,29 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## 1.2.0 - 2026-08-07
+
+- Keep the spaces that belong to a value. The lexer treated the delimiter after
+  a tag as whitespace to skip, so a `NOTE` whose text began with spaces lost
+  them, and `CONC` continuations silently changed the text they rejoined.
+- Report a value that begins with a leading space or ends with a trailing one
+  correctly rather than validating a string the document never contained.
+- Name at most ten candidates when a payload is not in its permitted set, and
+  count the rest, joining them with `", "`. The full list is every matching
+  xref in the document, and interpolating it produced a message tens of
+  thousands of characters long with no break opportunity in it — enough to
+  stretch an editor's diagnostic tooltip past the edge of the screen.
+- `ASTNode` and `ASTToken` now carry `startOffset` and `endOffset`, and their
+  `range` is derived from those on access rather than stored. This is what makes
+  a large document affordable: a stored range costs three objects per token, and
+  that was most of the syntax tree's memory. `range` is `readonly` as a result —
+  code that assigned to it must set the offsets instead, and code in a tight loop
+  should read the offsets, because reading `range` allocates.
+- Build the syntax tree straight from the token stream instead of walking a
+  Chevrotain parse tree first, and index pointer targets once per document
+  rather than scanning every pointer for each one. Validation cost no longer
+  grows with records times nodes.
+
 ## 1.1.0 - 2026-08-06
 
 - Accept application-defined extension tags (`_XXXX`) instead of reporting them
