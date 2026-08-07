@@ -71,6 +71,32 @@ describe("code actions", () => {
     );
   });
 
+  // Hosts flatten the choices into one flat menu — CodeMirror renders them as
+  // buttons inside the diagnostic tooltip — so a document-sized list of them
+  // becomes a wall of UI. Completion still offers every xref.
+  it("caps the replacement choices in a document full of candidates", () => {
+    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
+    for (let index = 1; index <= 40; index += 1) {
+      lines.push(`0 @I${index}@ INDI`);
+    }
+    lines.push("0 @F1@ FAM", "1 WIFE @I999@", "0 TRLR");
+    const service = new GedcomLanguageService(lines.join("\n"), 1);
+    const diagnostic = service
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+
+    const actions = service.getCodeActions(diagnostic.range, [diagnostic], 1);
+
+    const replacement = Array.isArray(actions)
+      ? actions.find((action) => action.choices)
+      : undefined;
+    expect(replacement?.choices).toHaveLength(10);
+    expect(replacement?.choices?.[0].title).toBe("Replace with @I1@");
+    expect(replacement?.title).toBe(
+      "Replace @I999@ with an existing INDI record",
+    );
+  });
+
   it("offers a one-token correction for an invalid level", () => {
     const service = new GedcomLanguageService(
       [
