@@ -20,6 +20,21 @@ describe("EditorLanguageService", () => {
     expect(service).toBe(language.service);
   });
 
+  // The fold gutter runs on the input path and cannot force a reparse, but a
+  // stale parse would put its markers on the wrong lines. It gets an answer
+  // only while the parse still matches the document.
+  it("hands out the current service only while the document matches", () => {
+    const language = new EditorLanguageService();
+    const doc = Text.of(["0 HEAD", "0 TRLR"]);
+    language.update(doc);
+
+    expect(language.current(doc)).toBe(language.service);
+    expect(language.current(Text.of(["0 HEAD", "1 NOTE", "0 TRLR"]))).toBe(
+      undefined,
+    );
+    expect(language.getVersion()).toBe(1);
+  });
+
   it("keeps the version when a different text object holds the same content", () => {
     const language = new EditorLanguageService();
     language.update(Text.of(["0 HEAD", "0 TRLR"]));

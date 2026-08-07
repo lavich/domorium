@@ -4,6 +4,7 @@ export {
   getDiagnosticActions,
   getReferenceHighlightSpecs,
   semanticTokenTag,
+  SETTLE_DELAY_MS,
   type GedcomEditorActions,
   type GedcomEditorOptions,
   type GedcomEditorSettings,

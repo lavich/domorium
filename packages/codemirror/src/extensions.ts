@@ -20,7 +20,7 @@ import {
   lintGutter,
   type Diagnostic as CodeMirrorDiagnostic,
 } from "@codemirror/lint";
-import { EditorState, type Extension } from "@codemirror/state";
+import { EditorState, StateEffect, type Extension } from "@codemirror/state";
 import {
   Decoration,
   EditorView,
@@ -118,6 +118,14 @@ export function getDiagnosticActions(
     }));
 }
 
+/**
+ * How long after the last edit the editor catches up with the document.
+ * Shared so that diagnostics and decorations settle at one moment rather than
+ * two, and so whichever runs first pays for the reparse and the other reuses
+ * it.
+ */
+export const SETTLE_DELAY_MS = 250;
+
 const completionType: Record<number, string> = {
   5: "property",
   18: "variable",
@@ -183,7 +191,7 @@ function diagnosticSource(
             ),
           };
         }),
-    { delay: 250 },
+    { delay: SETTLE_DELAY_MS },
   );
 }
 
@@ -209,11 +217,14 @@ function hoverSource(language: EditorLanguageService): Extension {
 
 function foldingSource(language: EditorLanguageService): Extension {
   return foldService.of((state, lineStart) => {
+    // Asked for every visible line on every view update, so it must neither
+    // force a reparse nor walk the document. See EditorLanguageService.current.
+    const service = language.current(state.doc);
+    if (!service) {
+      return null;
+    }
     const line = state.doc.lineAt(lineStart);
-    const range = language
-      .update(state.doc)
-      .getFoldingRanges()
-      .find((candidate) => candidate.startLine === line.number - 1);
+    const range = service.getFoldingRangeAt(line.number - 1);
     if (!range) {
       return null;
     }
@@ -287,22 +298,85 @@ function navigation(
   });
 }
 
-function referenceHighlights(language: EditorLanguageService): Extension {
+const rebuildDecorations = StateEffect.define<null>();
+
+/**
+ * A decoration plugin that rebuilds off the input path.
+ *
+ * Building either of this file's decoration sets starts with
+ * `language.update`, which reparses and revalidates the whole document — 447
+ * ms of a keystroke's 590 ms on a 3.1 MB file. Doing that inside `update()`
+ * is what made typing lag, and both plugins did it.
+ *
+ * On an edit the existing set is mapped through the change instead, which
+ * costs the size of the edit rather than the size of the document, and the
+ * rebuild is scheduled. Text already on screen keeps its decorations and
+ * moves with the edit; text just typed has none until the pause. The linter
+ * has made the same trade since it was added.
+ */
+function deferredDecorations(
+  build: (view: EditorView) => DecorationSet,
+  { onSelectionChange = false }: { onSelectionChange?: boolean } = {},
+): Extension {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
+      private timer: ReturnType<typeof setTimeout> | undefined;
 
       constructor(view: EditorView) {
-        this.decorations = buildReferenceDecorations(view, language);
+        this.decorations = build(view);
       }
 
       update(update: ViewUpdate): void {
-        if (update.docChanged || update.selectionSet) {
-          this.decorations = buildReferenceDecorations(update.view, language);
+        const rebuild = update.transactions.some(
+          (transaction) =>
+            transaction.reconfigured ||
+            transaction.effects.some((effect) => effect.is(rebuildDecorations)),
+        );
+        if (rebuild) {
+          this.cancel();
+          this.decorations = build(update.view);
+          return;
+        }
+        if (update.docChanged) {
+          this.decorations = this.decorations.map(update.changes);
+          this.schedule(update.view);
+          return;
+        }
+        // The document has not changed, so the service answers from its
+        // existing parse and this costs a lookup.
+        if (onSelectionChange && update.selectionSet) {
+          this.decorations = build(update.view);
+        }
+      }
+
+      destroy(): void {
+        this.cancel();
+      }
+
+      private schedule(view: EditorView): void {
+        this.cancel();
+        this.timer = setTimeout(() => {
+          this.timer = undefined;
+          view.dispatch({ effects: rebuildDecorations.of(null) });
+        }, SETTLE_DELAY_MS);
+      }
+
+      private cancel(): void {
+        if (this.timer !== undefined) {
+          clearTimeout(this.timer);
+          this.timer = undefined;
         }
       }
     },
     { decorations: (plugin) => plugin.decorations },
+  );
+}
+
+function referenceHighlights(language: EditorLanguageService): Extension {
+  return deferredDecorations(
+    (view) => buildReferenceDecorations(view, language),
+    { onSelectionChange: true },
   );
 }
 
@@ -398,32 +472,8 @@ function semanticFeatures(
   language: EditorLanguageService,
   indentationHints: boolean,
 ): Extension {
-  return ViewPlugin.fromClass(
-    class {
-      decorations: DecorationSet;
-
-      constructor(view: EditorView) {
-        this.decorations = semanticDecorations(
-          view.state,
-          language,
-          indentationHints,
-        );
-      }
-
-      update(update: ViewUpdate): void {
-        if (
-          update.docChanged ||
-          update.transactions.some((transaction) => transaction.reconfigured)
-        ) {
-          this.decorations = semanticDecorations(
-            update.state,
-            language,
-            indentationHints,
-          );
-        }
-      }
-    },
-    { decorations: (plugin) => plugin.decorations },
+  return deferredDecorations((view) =>
+    semanticDecorations(view.state, language, indentationHints),
   );
 }
 

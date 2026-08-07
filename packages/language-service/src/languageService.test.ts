@@ -69,4 +69,30 @@ describe("GedcomLanguageService", () => {
       ]),
     );
   });
+
+  // The fold gutter asks for every visible line on every view update, so
+  // walking the tree per call cost tens of milliseconds per line on a large
+  // document. Identity is the exact way to say "computed once".
+  it("computes the folding ranges once per parse", () => {
+    const service = new GedcomLanguageService(GEDCOM);
+
+    const ranges = service.getFoldingRanges();
+    expect(service.getFoldingRanges()).toBe(ranges);
+
+    service.update(GEDCOM + "\n0 @I9@ INDI\n1 SEX F");
+    expect(service.getFoldingRanges()).not.toBe(ranges);
+  });
+
+  it("answers a fold by start line without scanning the ranges", () => {
+    const service = new GedcomLanguageService(GEDCOM);
+
+    for (const range of service.getFoldingRanges()) {
+      expect(service.getFoldingRangeAt(range.startLine)).toEqual(
+        service
+          .getFoldingRanges()
+          .find((candidate) => candidate.startLine === range.startLine),
+      );
+    }
+    expect(service.getFoldingRangeAt(-1)).toBeUndefined();
+  });
 });

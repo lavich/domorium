@@ -100,6 +100,21 @@ export class EditorLanguageService {
     return this.service;
   }
 
+  /**
+   * The service as it already stands, or undefined when the document has
+   * moved on since the last parse.
+   *
+   * For callers that run on the input path and cannot afford to force a
+   * reparse. The fold gutter is one: it asks for every visible line on every
+   * view update, so calling `update` there put a full reparse back on every
+   * keystroke no matter what the decoration plugins did. Answering from a
+   * stale parse would put the markers on the wrong lines, so it declines to
+   * answer until the parse catches up.
+   */
+  current(doc: Text): GedcomLanguageService | undefined {
+    return doc === this.doc ? this.service : undefined;
+  }
+
   clear(): void {
     this.text = "";
     this.doc = undefined;
