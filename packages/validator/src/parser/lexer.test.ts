@@ -74,8 +74,6 @@ describe("positive tests", () => {
     expect(tokens.length).toBe(2);
   });
 
-  // The delimiter moves the lexer into a mode of its own, so this is the pair
-  // that breaks if that mode stops reaching Xref.
   it("still reads an xref rather than a value", () => {
     const { tokens, errors } = gedcomLexer.tokenize("1 HUSB @I1@");
     expect(errors.length).toBe(0);

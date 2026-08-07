@@ -74,9 +74,6 @@ describe("buildAst", () => {
     expect(resolveValue(nodes[0].children[0])).toBe("first\n\nlast");
   });
 
-  // One space delimits the tag from the value; every further space belongs to
-  // the value. A NOTE holding a transcription, an address block or verse has
-  // to come back out of the tree as the text the file contained.
   it("keeps the indentation of a continued note", () => {
     const { nodes } = build(
       [
