@@ -217,11 +217,14 @@ function hoverSource(language: EditorLanguageService): Extension {
 
 function foldingSource(language: EditorLanguageService): Extension {
   return foldService.of((state, lineStart) => {
+    // Asked for every visible line on every view update, so it must neither
+    // force a reparse nor walk the document. See EditorLanguageService.current.
+    const service = language.current(state.doc);
+    if (!service) {
+      return null;
+    }
     const line = state.doc.lineAt(lineStart);
-    const range = language
-      .update(state.doc)
-      .getFoldingRanges()
-      .find((candidate) => candidate.startLine === line.number - 1);
+    const range = service.getFoldingRangeAt(line.number - 1);
     if (!range) {
       return null;
     }

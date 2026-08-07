@@ -3,7 +3,10 @@ import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { describe, expect, it, vi } from "vitest";
 
-import { createGedcomExtensions } from "./extensions";
+import {
+  createGedcomExtensions,
+  createStandaloneEditorExtensions,
+} from "./extensions";
 import { EditorLanguageService } from "./service";
 
 const text = [
@@ -22,12 +25,18 @@ const editorWith = (language: EditorLanguageService, parent?: HTMLElement) =>
     parent,
     state: EditorState.create({
       doc: text,
-      extensions: createGedcomExtensions({
-        actions: { applyWorkspaceEdit: () => true },
-        language,
-        // The linter has its own debounce; this is about the view plugins.
-        settings: { diagnostics: false },
-      }),
+      // The same set a host assembles, so that anything asking the language
+      // service on the input path is in scope. The fold gutter lives in the
+      // standalone half, and leaving it out is how it went unnoticed.
+      extensions: [
+        ...createGedcomExtensions({
+          actions: { applyWorkspaceEdit: () => true },
+          language,
+          // The linter has its own debounce; this is about everything else.
+          settings: { diagnostics: false },
+        }),
+        ...createStandaloneEditorExtensions(),
+      ],
     }),
   });
 

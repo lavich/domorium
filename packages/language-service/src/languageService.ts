@@ -41,6 +41,8 @@ export class GedcomLanguageService {
   private document = new GedcomDocument();
   private referenceIndex = new ReferenceIndex([]);
   private version: DocumentVersion = 0;
+  private foldingRanges: FoldingRange[] | undefined;
+  private foldingByStartLine: Map<number, FoldingRange> | undefined;
 
   constructor(text = "", version: DocumentVersion = 0) {
     this.update(text, version);
@@ -49,6 +51,8 @@ export class GedcomLanguageService {
   update(text: string, version: DocumentVersion = this.version + 1): void {
     this.text = text;
     this.version = version;
+    this.foldingRanges = undefined;
+    this.foldingByStartLine = undefined;
     const document = new GedcomDocument();
     document.createDocument(text);
     this.document = document;
@@ -95,8 +99,28 @@ export class GedcomLanguageService {
     return documentSymbols(this.document.getNodes());
   }
 
+  /**
+   * Computed once per parse. The fold gutter asks for every visible line on
+   * every view update, and walking the tree each time cost tens of
+   * milliseconds per line on a large document.
+   */
   getFoldingRanges(): FoldingRange[] {
-    return levelFolding(this.document.getNodes());
+    this.foldingRanges ??= levelFolding(this.document.getNodes());
+    return this.foldingRanges;
+  }
+
+  /** The fold starting on this line, if any. A lookup, not a scan. */
+  getFoldingRangeAt(line: number): FoldingRange | undefined {
+    if (!this.foldingByStartLine) {
+      this.foldingByStartLine = new Map();
+      for (const range of this.getFoldingRanges()) {
+        // The outermost fold starting on a line wins, as the first match did.
+        if (!this.foldingByStartLine.has(range.startLine)) {
+          this.foldingByStartLine.set(range.startLine, range);
+        }
+      }
+    }
+    return this.foldingByStartLine.get(line);
   }
 
   getInlayHints(): InlayHint[] {
