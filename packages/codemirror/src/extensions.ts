@@ -124,7 +124,7 @@ export function getDiagnosticActions(
  * two, and so whichever runs first pays for the reparse and the other reuses
  * it.
  */
-const SETTLE_DELAY_MS = 250;
+export const SETTLE_DELAY_MS = 250;
 
 const completionType: Record<number, string> = {
   5: "property",

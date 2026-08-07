@@ -17,6 +17,7 @@ import {
   offsetToPosition,
   rangeToOffsets,
   renameReference,
+  SETTLE_DELAY_MS,
 } from "@domorium/codemirror";
 
 import type { GedcomEditorHandle, WebDiagnostic, WebTheme } from "./types";
@@ -36,9 +37,27 @@ export function createGedcomEditor(
   const language = new EditorLanguageService();
   let editor: EditorView | null = null;
 
+  /**
+   * Refreshing the problems panel reparses and revalidates the whole
+   * document, which is the most expensive thing the editor does. Running it
+   * from the update listener put that back on every keystroke and undid the
+   * scheduling the editor's own plugins do, so it waits for the same pause
+   * they wait for.
+   */
+  let settle: ReturnType<typeof setTimeout> | undefined;
+  const scheduleHostUpdate = (view: EditorView): void => {
+    if (settle !== undefined) {
+      clearTimeout(settle);
+    }
+    settle = setTimeout(() => {
+      settle = undefined;
+      updateHost(view);
+    }, SETTLE_DELAY_MS);
+  };
+
   const updateHost = (view: EditorView): void => {
-    const text = view.state.sliceDoc();
-    const service = language.update(text);
+    // The document, not a string: an unchanged one then costs nothing.
+    const service = language.update(view.state.doc);
     options.onDiagnosticsChange(
       service.getDiagnostics().map((diagnostic) => {
         const offsets = rangeToOffsets(view.state.doc, diagnostic.range);
@@ -87,7 +106,7 @@ export function createGedcomEditor(
           return;
         }
         options.onChange(update.state.sliceDoc());
-        updateHost(update.view);
+        scheduleHostUpdate(update.view);
       }),
       theme.of(editorTheme(options.theme)),
       webEditorLayout,
@@ -99,6 +118,10 @@ export function createGedcomEditor(
 
   return {
     destroy: () => {
+      if (settle !== undefined) {
+        clearTimeout(settle);
+        settle = undefined;
+      }
       editor?.destroy();
       editor = null;
     },
