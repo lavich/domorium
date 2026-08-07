@@ -21,12 +21,22 @@ describe("getHover", () => {
     });
 
     expect(hover).toStrictEqual({
-      contents: { kind: "markdown", value: "**BIRT** — Birth" },
+      contents: { kind: "plaintext", value: "BIRT — Birth" },
       range: {
         start: { line: 4, character: 2 },
         end: { line: 4, character: 6 },
       },
     });
+  });
+
+  // Emphasis emitted here reached the CodeMirror hosts as literal asterisks.
+  it("emits no markup for a host to interpret", () => {
+    const hover = getHover(gedcomDocument, gedcomDocument.getNodes(), {
+      line: 4,
+      character: 3,
+    });
+
+    expect(hover?.contents.value).not.toMatch(/[*_`[\]<>]/);
   });
 
   it("returns null when not hovering over a TAG", () => {
