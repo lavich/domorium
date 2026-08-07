@@ -26,7 +26,8 @@ export interface CreateGedcomEditorOptions {
   parent: HTMLElement;
   initialText: string;
   theme: WebTheme;
-  onChange(text: string): void;
+  /** An edit happened. Deliberately carries no text — see GedcomEditorHandle.getText. */
+  onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
 }
 
@@ -105,7 +106,7 @@ export function createGedcomEditor(
         if (!update.docChanged) {
           return;
         }
-        options.onChange(update.state.sliceDoc());
+        options.onChange();
         scheduleHostUpdate(update.view);
       }),
       theme.of(editorTheme(options.theme)),
@@ -117,6 +118,7 @@ export function createGedcomEditor(
   updateHost(editor);
 
   return {
+    getText: () => editor?.state.sliceDoc() ?? options.initialText,
     destroy: () => {
       if (settle !== undefined) {
         clearTimeout(settle);

@@ -7,7 +7,7 @@ export interface GedcomEditorProps {
   editorKey: number;
   initialText: string;
   theme: WebTheme;
-  onChange(text: string): void;
+  onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
 }
 
@@ -32,7 +32,7 @@ export const GedcomEditor = forwardRef<GedcomEditorHandle, GedcomEditorProps>(
         parent: rootRef.current,
         initialText,
         theme,
-        onChange: (text) => onChangeRef.current(text),
+        onChange: () => onChangeRef.current(),
         onDiagnosticsChange: (diagnostics) =>
           onDiagnosticsChangeRef.current(diagnostics),
       });
@@ -50,6 +50,7 @@ export const GedcomEditor = forwardRef<GedcomEditorHandle, GedcomEditorProps>(
     useImperativeHandle(
       forwardedRef,
       () => ({
+        getText: () => handleRef.current?.getText() ?? "",
         destroy: () => handleRef.current?.destroy(),
         focusDiagnostic: (diagnostic) =>
           handleRef.current?.focusDiagnostic(diagnostic),

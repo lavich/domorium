@@ -9,16 +9,32 @@ import {
 } from "./documentSession";
 
 describe("documentSession", () => {
-  it("tracks edits and a downloaded baseline", () => {
+  // An edit says only that one happened. Carrying the document here meant a
+  // copy of it per keystroke, and a second copy held to compare against.
+  it("marks the session modified without being given the document", () => {
     const demo = createDemoSession("0 HEAD\n0 TRLR\n");
-    const edited = documentSessionReducer(demo, {
-      type: "edit",
-      text: "0 HEAD\n1 GEDC\n0 TRLR\n",
-    });
+    const edited = documentSessionReducer(demo, { type: "edit" });
 
     expect(isModified(edited)).toBe(true);
+    expect(edited.initialText).toBe(demo.initialText);
     expect(
       isModified(documentSessionReducer(edited, { type: "downloaded" })),
+    ).toBe(false);
+  });
+
+  it("clears the modified mark when a new document replaces the old one", () => {
+    const edited = documentSessionReducer(createDemoSession("demo"), {
+      type: "edit",
+    });
+
+    expect(
+      isModified(
+        documentSessionReducer(edited, {
+          type: "file-loaded",
+          fileName: "family.ged",
+          text: "family",
+        }),
+      ),
     ).toBe(false);
   });
 
@@ -33,7 +49,7 @@ describe("documentSession", () => {
     expect(loaded).toMatchObject({
       source: "file",
       fileName: "family.ged",
-      text: "family",
+      initialText: "family",
     });
     expect(loaded.editorKey).toBeGreaterThan(demo.editorKey);
   });
@@ -54,8 +70,8 @@ describe("documentSession", () => {
       editorKey: 2,
       source: "demo",
       fileName: "example.ged",
-      text: "new demo",
-      downloadedText: "new demo",
+      initialText: "new demo",
+      modified: false,
     });
   });
 

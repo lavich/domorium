@@ -55,7 +55,7 @@ export function EditorWorkspace({
   diagnostics: WebDiagnostic[];
   theme: WebTheme;
   editorRef: RefObject<GedcomEditorHandle | null>;
-  onChange(text: string): void;
+  onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
   onOpenFile(): void;
   onDownload(): void;
@@ -69,7 +69,7 @@ export function EditorWorkspace({
     <GedcomEditor
       ref={editorRef}
       editorKey={session.editorKey}
-      initialText={session.text}
+      initialText={session.initialText}
       theme={theme}
       onChange={onChange}
       onDiagnosticsChange={onDiagnosticsChange}
