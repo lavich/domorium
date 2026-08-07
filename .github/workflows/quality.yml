@@ -123,3 +123,15 @@ jobs:
           LEFTHOOK: 0
       - run: ./gradlew spotlessCheck test buildPlugin verifyPlugin
         working-directory: apps/jetbrains
+      # The IntelliJ Platform plugin unpacks a whole IDE here, which grew the
+      # cache entry to 4.9 GB. Restoring it has cost between 1m35s and a
+      # 10-minute stall that timed out and was thrown away, against the 24
+      # seconds of build time it saves; it also filled half the repository's
+      # 10 GB quota. gradle-home-cache-excludes does not reach this entry —
+      # it is extracted and keyed separately by the caching provider — so
+      # delete the directory instead, before the post-action step saves it.
+      # The IDE archive stays cached under modules-2, making the next unpack
+      # local work rather than a transfer.
+      - name: Drop the unpacked IDE before the cache is saved
+        if: always()
+        run: rm -rf ~/.gradle/caches/transforms-* ~/.gradle/caches/*/transforms
