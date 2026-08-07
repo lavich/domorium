@@ -1,6 +1,9 @@
 import type { ASTNode } from "@domorium/validator";
 import type { Position, Range } from "../../types";
 
+export const comparePositions = (left: Position, right: Position): number =>
+  left.line - right.line || left.character - right.character;
+
 export const isPositionInRange = (
   position: Position,
   range: Range,

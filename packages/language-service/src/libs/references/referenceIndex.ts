@@ -1,14 +1,36 @@
-import { TokenNames, type ASTNode } from "@domorium/validator";
+import { TokenNames, type ASTNode, type ASTToken } from "@domorium/validator";
 import type {
   Position,
+  Range,
   ReferenceEntry,
   ReferenceOccurrence,
+  ReferenceRole,
 } from "../../types";
-import { isPositionInRange } from "../position/position";
+import { comparePositions, isPositionInRange } from "../position/position";
+
+/**
+ * Holds the token rather than a materialized range. The token is already
+ * retained by the syntax tree, so this costs one reference; a stored range
+ * costs three objects per occurrence, and a document of 200k individuals has
+ * on the order of a million of them.
+ */
+class Occurrence implements ReferenceOccurrence {
+  constructor(
+    readonly id: string,
+    readonly role: ReferenceRole,
+    readonly fieldTag: string,
+    readonly recordTag: string | undefined,
+    private readonly token: ASTToken,
+  ) {}
+
+  get range(): Range {
+    return this.token.range;
+  }
+}
 
 export class ReferenceIndex {
   private readonly byId = new Map<string, ReferenceEntry>();
-  private readonly occurrences: ReferenceOccurrence[] = [];
+  private readonly occurrences: Occurrence[] = [];
 
   constructor(
     nodes: ASTNode[],
@@ -23,10 +45,36 @@ export class ReferenceIndex {
     }
   }
 
+  /**
+   * Occurrences are appended by a pre-order walk, so they are already in
+   * document order and cannot overlap. Finding the last one that starts at or
+   * before the cursor, then testing that one for containment, answers the
+   * question in log time — this runs on every cursor move.
+   */
   at(position: Position): ReferenceOccurrence | undefined {
-    return this.occurrences.find((occurrence) =>
-      isPositionInRange(position, occurrence.range),
-    );
+    let low = 0;
+    let high = this.occurrences.length - 1;
+    let candidate = -1;
+
+    while (low <= high) {
+      const middle = (low + high) >>> 1;
+      if (
+        comparePositions(this.occurrences[middle].range.start, position) <= 0
+      ) {
+        candidate = middle;
+        low = middle + 1;
+      } else {
+        high = middle - 1;
+      }
+    }
+
+    if (candidate < 0) {
+      return undefined;
+    }
+    const occurrence = this.occurrences[candidate];
+    return isPositionInRange(position, occurrence.range)
+      ? occurrence
+      : undefined;
   }
 
   get(id: string): ReferenceEntry | undefined {
@@ -43,23 +91,21 @@ export class ReferenceIndex {
     const usage = node.tokens[TokenNames.XREF];
 
     if (fieldTag && declaration && this.isValidDeclaration(node)) {
-      this.add({
-        id: declaration.value,
-        role: "declaration",
-        range: declaration.range,
-        recordTag: fieldTag,
-        fieldTag,
-      });
+      this.add(
+        new Occurrence(
+          declaration.value,
+          "declaration",
+          fieldTag,
+          fieldTag,
+          declaration,
+        ),
+      );
     }
 
     if (fieldTag && usage && this.getPointerTargetTag(node)) {
-      this.add({
-        id: usage.value,
-        role: "usage",
-        range: usage.range,
-        recordTag,
-        fieldTag,
-      });
+      this.add(
+        new Occurrence(usage.value, "usage", fieldTag, recordTag, usage),
+      );
     }
 
     const childRecordTag =
@@ -69,7 +115,7 @@ export class ReferenceIndex {
     }
   }
 
-  private add(occurrence: ReferenceOccurrence): void {
+  private add(occurrence: Occurrence): void {
     let entry = this.byId.get(occurrence.id);
     if (!entry) {
       entry = {
