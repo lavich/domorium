@@ -15,6 +15,18 @@ const WhiteSpace = createToken({
   group: Lexer.SKIPPED,
 });
 
+// Exactly one space delimits a tag from its value; the rest belong to the
+// value. Hence one character, and a mode without this rule to move into —
+// staying would match again and eat the indentation. Popping as well as
+// pushing keeps the mode stack from growing a frame per line.
+const Delimiter = createToken({
+  name: "Delimiter",
+  pattern: /[ \t]/,
+  group: Lexer.SKIPPED,
+  pop_mode: true,
+  push_mode: "afterDelimiter",
+});
+
 const Newline = createToken({
   name: "Newline",
   pattern: /\r?\n/,
@@ -73,7 +85,8 @@ export const gedcomLexerDefinition: IMultiModeLexerDefinition = {
     // TAG here pushes into the same "hasNotPointer" mode rather than
     // popping straight back, or a trailing value would be mis-tokenized.
     hasPointer: [Newline, WhiteSpace, { ...Tag, PUSH_MODE: "hasNotPointer" }],
-    hasNotPointer: [Newline, WhiteSpace, Xref, Value],
+    hasNotPointer: [Newline, Delimiter, Xref, Value],
+    afterDelimiter: [Newline, Xref, Value],
   },
 };
 
