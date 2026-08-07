@@ -1,8 +1,7 @@
 import { GedcomError } from "../types/errors";
 import { ASTNode, ASTToken } from "../parser";
-import { ConfigurableLexer, gedcomLexerDefinition } from "../parser/lexer";
-import { GedcomParser } from "../parser/parser";
-import { GedcomVisitor } from "../parser/visitor";
+import { buildAst } from "../parser/ast";
+import { ConfigurableLexer } from "../parser/lexer";
 import { GedcomValidator } from "../validator";
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
@@ -45,28 +44,16 @@ export class GedcomDocument {
         level: "warning",
       });
     });
-    const parser = new GedcomParser(gedcomLexerDefinition);
-    parser.input = lexingResult.tokens;
-    const cst = parser.root();
-    parser.errors.forEach((error) => {
+    const result = buildAst(lexingResult.tokens, input);
+    result.malformed.forEach((node) => {
       this.errors.push({
         code: "PARSER",
-        message: error.message,
-        range: {
-          start: {
-            line: error.token.startLine ?? 0,
-            character: error.token.startColumn ?? 0,
-          },
-          end: {
-            line: error.token.endLine ?? 0,
-            character: error.token.endColumn ?? 0,
-          },
-        },
+        message: "Every GEDCOM line must begin with a level number",
+        range: node.range,
         level: "warning",
       });
     });
-    const visitor = new GedcomVisitor(input);
-    return visitor.root(cst);
+    return result;
   }
 
   createDocument(text: string): GedcomDocument {

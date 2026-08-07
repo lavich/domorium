@@ -1,2 +1,2 @@
-export type { ASTNode, ASTToken } from "./visitor";
-export { resolveValue } from "./visitor";
+export type { ASTNode, ASTToken } from "./ast";
+export { resolveValue } from "./ast";

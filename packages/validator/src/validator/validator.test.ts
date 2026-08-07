@@ -1,19 +1,15 @@
 import { describe, expect, test } from "vitest";
 import { GedcomValidator } from "./validate";
-import { ConfigurableLexer, gedcomLexerDefinition } from "../parser/lexer";
-import { GedcomParser } from "../parser/parser";
-import { GedcomVisitor } from "../parser/visitor";
+import { ConfigurableLexer } from "../parser/lexer";
+import { buildAst } from "../parser/ast";
 import { collectExtensions } from "./extensions";
 import { getGedcomVersion } from "./getGedcomVersion";
 
 const astBuilder = (text: string) => {
-  const gedcomLexer = new ConfigurableLexer({ zeroBased: true });
-  const lexingResult = gedcomLexer.tokenize(text);
-  const parser = new GedcomParser(gedcomLexerDefinition);
-  parser.input = lexingResult.tokens;
-  const cst = parser.root();
-  const visitor = new GedcomVisitor(text);
-  return visitor.root(cst);
+  const lexingResult = new ConfigurableLexer({ zeroBased: true }).tokenize(
+    text,
+  );
+  return buildAst(lexingResult.tokens, text);
 };
 
 describe("validator", () => {
