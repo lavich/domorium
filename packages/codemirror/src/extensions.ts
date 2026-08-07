@@ -118,6 +118,14 @@ export function getDiagnosticActions(
     }));
 }
 
+/**
+ * How long after the last edit the editor catches up with the document.
+ * Shared so that diagnostics and decorations settle at one moment rather than
+ * two, and so whichever runs first pays for the reparse and the other reuses
+ * it.
+ */
+const SETTLE_DELAY_MS = 250;
+
 const completionType: Record<number, string> = {
   5: "property",
   18: "variable",
@@ -183,7 +191,7 @@ function diagnosticSource(
             ),
           };
         }),
-    { delay: 250 },
+    { delay: SETTLE_DELAY_MS },
   );
 }
 
@@ -289,9 +297,6 @@ function navigation(
 
 const rebuildDecorations = StateEffect.define<null>();
 
-/** Long enough to sit out a burst of typing, short enough to go unnoticed. */
-const REBUILD_DELAY_MS = 300;
-
 /**
  * A decoration plugin that rebuilds off the input path.
  *
@@ -351,7 +356,7 @@ function deferredDecorations(
         this.timer = setTimeout(() => {
           this.timer = undefined;
           view.dispatch({ effects: rebuildDecorations.of(null) });
-        }, REBUILD_DELAY_MS);
+        }, SETTLE_DELAY_MS);
       }
 
       private cancel(): void {
