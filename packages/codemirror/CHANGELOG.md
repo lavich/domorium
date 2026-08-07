@@ -2,6 +2,20 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## 1.1.0 - 2026-08-07
+
+- Cap the hover tooltip at `min(40rem, 90vw)` by `min(20rem, 60vh)` and let it
+  scroll. A tooltip sizes itself to its content, and a diagnostic carries text
+  whose length the editor does not control, so a long one covered the document.
+- Build decorations for the viewport rather than for the whole document, and
+  rebuild them once the typing stops instead of on every keystroke.
+- Keep the fold gutter off the input path, and settle "has the document changed"
+  by identity rather than by reading the text out of the editor.
+- Give diagnostics and decorations a single settle delay, so the two land at one
+  moment and whichever runs first pays for the reparse.
+- Requires `@domorium/language-service` 1.1.0 or newer: highlighting reads the
+  token offsets that release adds.
+
 ## 1.0.0 - 2026-08-05
 
 - First stable release. The exported extension factories, commands, and position

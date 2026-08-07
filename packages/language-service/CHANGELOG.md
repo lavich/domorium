@@ -2,6 +2,26 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## 1.1.0 - 2026-08-07
+
+- `Hover.contents.kind` is now `"plaintext"` where it was `"markdown"`. This
+  narrows a published type, which ordinarily calls for a major version; it is a
+  minor here because the old value was never true. Two of the four hosts render
+  hover text by assigning it to `textContent`, so markup arrived as literal
+  asterisks on screen. Code that compares the field against `"markdown"` will no
+  longer type-check — the comparison was already describing something the
+  package did not do. Widening it back means answering for those two hosts first.
+- Offer at most ten replacements for an unresolved xref. Every host flattens the
+  choices into one flat action menu, so a document-sized list of them was a wall
+  of UI; completion still offers every xref, filtered as you type.
+- Give semantic tokens character offsets and derive line and character only when
+  asked, so a caller that works in offsets — every editor adapter does — never
+  pays for the conversion.
+- Find the occurrence under the cursor by binary search rather than by scanning,
+  and read a token's range once when colouring it.
+- Requires `@domorium/validator` 1.2.0 or newer: semantic tokens read the
+  `startOffset` that release adds.
+
 ## 1.0.0 - 2026-08-05
 
 - First stable release. `GedcomLanguageService` and the protocol-shaped types in

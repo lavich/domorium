@@ -31,6 +31,15 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.2.0</h2>
+    <ul>
+      <li>Kept the spaces that belong to a value: a <code>NOTE</code> beginning with spaces no longer loses them, and <code>CONC</code> continuations no longer change the text they rejoin</li>
+      <li>Stopped the hint for a broken pointer from covering the editor; it listed every matching record in the file and offered a quick fix for each, and now names ten and says how many more there are, with completion still offering all of them</li>
+      <li>Coloured and validated large files without the editor stalling: highlighting is built for the visible lines, the problems view refreshes once typing pauses, and validation cost no longer grows with records times lines</li>
+      <li>Drew the file icon on the 16 pixel grid, so it no longer looks blurred beside the platform's own icons</li>
+      <li>Rebuilt the bundled language server when the language service changes, so a plugin build can no longer ship a stale server</li>
+    </ul>
+
     <h2>1.1.0</h2>
     <ul>
       <li>Accepted application-defined extension tags (<code>_XXXX</code>) instead of reporting every one of them as an unknown tag, so files exported by other genealogy applications no longer fill the problems view with false warnings</li>
