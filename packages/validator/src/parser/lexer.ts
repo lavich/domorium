@@ -15,6 +15,17 @@ const WhiteSpace = createToken({
   group: Lexer.SKIPPED,
 });
 
+// GEDCOM delimits a tag from its value with exactly one space; every further
+// space belongs to the value. Hence a single character, and a mode with no
+// delimiter rule to move into — matching one at a time in a mode that still
+// has this rule would just go round again and eat the value's indentation.
+const Delimiter = createToken({
+  name: "Delimiter",
+  pattern: /[ \t]/,
+  group: Lexer.SKIPPED,
+  push_mode: "afterDelimiter",
+});
+
 const Newline = createToken({
   name: "Newline",
   pattern: /\r?\n/,
@@ -73,7 +84,8 @@ export const gedcomLexerDefinition: IMultiModeLexerDefinition = {
     // TAG here pushes into the same "hasNotPointer" mode rather than
     // popping straight back, or a trailing value would be mis-tokenized.
     hasPointer: [Newline, WhiteSpace, { ...Tag, PUSH_MODE: "hasNotPointer" }],
-    hasNotPointer: [Newline, WhiteSpace, Xref, Value],
+    hasNotPointer: [Newline, Delimiter, Xref, Value],
+    afterDelimiter: [Newline, Xref, Value],
   },
 };
 

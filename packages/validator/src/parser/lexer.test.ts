@@ -56,6 +56,32 @@ describe("positive tests", () => {
     expect(tokens[3].image).toBe("Shared note");
   });
 
+  it("keeps every space past the one that delimits the value", () => {
+    const { tokens, errors } = gedcomLexer.tokenize("1 NOTE     indented");
+    expect(errors.length).toBe(0);
+    expect(tokens[2].image).toBe("    indented");
+  });
+
+  it("reads a value that is only spaces", () => {
+    const { tokens, errors } = gedcomLexer.tokenize("2 CONT  ");
+    expect(errors.length).toBe(0);
+    expect(tokens[2].image).toBe(" ");
+  });
+
+  it("gives a tag no value when only the delimiter follows", () => {
+    const { tokens, errors } = gedcomLexer.tokenize("2 CONT ");
+    expect(errors.length).toBe(0);
+    expect(tokens.length).toBe(2);
+  });
+
+  // The delimiter moves the lexer into a mode of its own, so this is the pair
+  // that breaks if that mode stops reaching Xref.
+  it("still reads an xref rather than a value", () => {
+    const { tokens, errors } = gedcomLexer.tokenize("1 HUSB @I1@");
+    expect(errors.length).toBe(0);
+    expect(tokens[2].tokenType.name).toBe("XREF");
+  });
+
   it("parse SAMPLE", () => {
     const SAMPLE = `0 @I1@ INDI
 1 NAME John /Doe/
