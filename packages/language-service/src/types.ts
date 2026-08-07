@@ -133,9 +133,14 @@ export interface CompletionItem {
   detail?: string;
 }
 
+/**
+ * Two of the four hosts render this by assigning it to `textContent`, so
+ * anything a host would have to interpret arrives as literal characters
+ * there. Widening this back to markdown means answering for those two first.
+ */
 export interface Hover {
   contents: {
-    kind: "markdown";
+    kind: "plaintext";
     value: string;
   };
   range: Range;

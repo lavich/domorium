@@ -8,6 +8,8 @@ import type {
 } from "../../types";
 import type { ReferenceIndex } from "../references/referenceIndex";
 
+const MAX_REPLACEMENT_CHOICES = 10;
+
 interface CodeActionContext {
   text: string;
   index: ReferenceIndex;
@@ -97,10 +99,16 @@ function unresolvedXrefActions(
       title: `Replace ${xref} with an existing ${recordTag} record`,
       kind: "quickfix",
       diagnostics: [diagnostic],
-      choices: candidates.map((candidate) => ({
-        title: `Replace with ${candidate.id}`,
-        edit: replacementEdit(context.version, diagnostic.range, candidate.id),
-      })),
+      choices: candidates
+        .slice(0, MAX_REPLACEMENT_CHOICES)
+        .map((candidate) => ({
+          title: `Replace with ${candidate.id}`,
+          edit: replacementEdit(
+            context.version,
+            diagnostic.range,
+            candidate.id,
+          ),
+        })),
     });
   }
 

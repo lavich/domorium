@@ -63,7 +63,7 @@ describe("buildAst", () => {
       "CONC",
     ]);
     expect(note.children[0].tokens.VALUE?.value).toBe("0 HEAD");
-    expect(resolveValue(note)).toBe("first\n0 HEADand more");
+    expect(resolveValue(note)).toBe("first\n0 HEAD and more");
   });
 
   it("keeps a continuation that carries no value", () => {
@@ -72,6 +72,21 @@ describe("buildAst", () => {
     );
 
     expect(resolveValue(nodes[0].children[0])).toBe("first\n\nlast");
+  });
+
+  it("keeps the indentation of a continued note", () => {
+    const { nodes } = build(
+      [
+        "0 @I1@ INDI",
+        "1 NOTE Recipe:",
+        "2 CONT     take two eggs",
+        "2 CONT     and stir",
+      ].join("\n"),
+    );
+
+    expect(resolveValue(nodes[0].children[0])).toBe(
+      "Recipe:\n    take two eggs\n    and stir",
+    );
   });
 
   it("widens a record to cover its whole subtree", () => {
