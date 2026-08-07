@@ -23,6 +23,10 @@ const Delimiter = createToken({
   name: "Delimiter",
   pattern: /[ \t]/,
   group: Lexer.SKIPPED,
+  // Popping as well as pushing makes this a transition rather than a descent,
+  // so the mode stack does not grow by a frame per line, and a value pops back
+  // to the mode the tag was read in.
+  pop_mode: true,
   push_mode: "afterDelimiter",
 });
 
