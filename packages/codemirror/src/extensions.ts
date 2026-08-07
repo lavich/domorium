@@ -554,6 +554,12 @@ export function createStandaloneEditorExtensions(): Extension[] {
 }
 
 const gedcomBaseTheme = EditorView.baseTheme({
+  ".cm-tooltip-hover": {
+    maxWidth: "min(40rem, 90vw)",
+    maxHeight: "min(20rem, 60vh)",
+    overflow: "auto",
+    overflowWrap: "anywhere",
+  },
   ".gedcom-reference-read": {
     backgroundColor: "color-mix(in srgb, currentColor 12%, transparent)",
   },

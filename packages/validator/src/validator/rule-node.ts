@@ -26,6 +26,17 @@ type FieldType =
 // record type, and doesn't correspond to any real declared record.
 const VOID_POINTER = "@VOID@";
 
+const MAX_LISTED_VALUES = 10;
+
+function formatValueSet(values: string[] | null): string {
+  if (!values?.length) {
+    return "";
+  }
+  const listed = values.slice(0, MAX_LISTED_VALUES).join(", ");
+  const omitted = values.length - MAX_LISTED_VALUES;
+  return omitted > 0 ? `${listed}, … ${omitted} more` : listed;
+}
+
 // Hour may be 1 or 2 digits (both "8:38" and "08:38" are valid) per both
 // v5.5.1 (HOUR is {SIZE=1:2}) and v7; minute/second are always 2 digits.
 const TIME_BASE_SRC = "(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?";
@@ -437,7 +448,7 @@ export class RuleNode {
         if (!value || !availableValues?.includes(value)) {
           errors.push({
             code: "VAL",
-            message: `Value for ${TAG?.value} should be in set [${availableValues}]`,
+            message: `Value for ${TAG?.value} should be in set [${formatValueSet(availableValues)}]`,
             range: VALUE?.range || node.range,
             level: "error",
           });
@@ -453,7 +464,7 @@ export class RuleNode {
         if (!isValid) {
           errors.push({
             code: "VAL",
-            message: `Value for ${TAG?.value} should be in set [${availableValues}]`,
+            message: `Value for ${TAG?.value} should be in set [${formatValueSet(availableValues)}]`,
             range: VALUE?.range || node.range,
             level: "error",
           });
@@ -539,7 +550,7 @@ export class RuleNode {
                 ? "unresolved-xref"
                 : "VAL",
             message: hasChildren
-              ? `Value for ${TAG?.value} should be in set [${availableValues}]`
+              ? `Value for ${TAG?.value} should be in set [${formatValueSet(availableValues)}]`
               : `Value for ${TAG?.value} should be POINTER`,
             data:
               isXrefExist && XREF?.value !== VOID_POINTER

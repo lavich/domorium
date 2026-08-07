@@ -728,6 +728,48 @@ describe("payload for VERS 7", () => {
     });
   });
 
+  describe("candidate list in a message", () => {
+    // The message ends up in an editor tooltip, which sizes itself to its
+    // content. An uncapped list of every xref in the document made that
+    // tooltip wider than the screen.
+    test("should list only the first candidates and count the rest", async () => {
+      const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
+      for (let index = 1; index <= 60; index += 1) {
+        lines.push(`0 @I${index}@ INDI`);
+      }
+      lines.push("0 @I99@ INDI", "1 ASSO @NOBODY@", "2 ROLE FRIEND", "0 TRLR");
+      const { nodes, pointers } = astBuilder(lines.join("\n"));
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const ASSO = nodes[61].children[0];
+
+      const errs = ruleEngine.validate(ASSO);
+
+      expect(errs).toHaveLength(1);
+      expect(errs[0].message).toBe(
+        "Value for ASSO should be in set [@I1@, @I2@, @I3@, @I4@, @I5@, " +
+          "@I6@, @I7@, @I8@, @I9@, @I10@, … 51 more]",
+      );
+    });
+
+    test("should list a short set in full", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 SEX NOPE
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const SEX = nodes[1].children[0];
+
+      const errs = ruleEngine.validate(SEX);
+
+      expect(errs[0].message).toBe(
+        "Value for SEX should be in set [F, M, U, X]",
+      );
+    });
+  });
+
   describe("rule TagDef", () => {
     test("should pass a declaration with a tag and an absolute URI", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
