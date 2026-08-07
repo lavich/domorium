@@ -18,8 +18,8 @@ export const getHover = (
   }
   return {
     contents: {
-      kind: "markdown",
-      value: `**${tag.value}** — ${label}`,
+      kind: "plaintext",
+      value: `${tag.value} — ${label}`,
     },
     range: tag.range,
   };
