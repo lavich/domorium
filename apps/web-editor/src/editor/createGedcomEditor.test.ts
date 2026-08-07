@@ -57,4 +57,32 @@ describe("createGedcomEditor", () => {
     vi.advanceTimersByTime(1000);
     expect(onDiagnosticsChange).toHaveBeenCalledOnce();
   });
+
+  // A copy of the whole document per keystroke costs in proportion to the
+  // document — 37 ms per character at 15.6 MB — and the application does not
+  // need it while the user types. It needs to know an edit happened, which
+  // the event itself says.
+  it("does not copy the document out on a keystroke", () => {
+    const onChange = vi.fn();
+    const parent = editor({ onChange });
+    const view = EditorView.findFromDOM(parent)!;
+    const sliceDoc = vi.spyOn(view.state.constructor.prototype, "sliceDoc");
+
+    view.dispatch({ changes: { from: 0, insert: "0 NOTE typed\n" } });
+
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(sliceDoc).not.toHaveBeenCalled();
+    sliceDoc.mockRestore();
+  });
+
+  // Download reads the text when it needs it, which is the reason the app can
+  // stop being handed a copy on every keystroke.
+  it("hands out the current text on request", () => {
+    const parent = editor({});
+    const view = EditorView.findFromDOM(parent)!;
+
+    view.dispatch({ changes: { from: 0, insert: "0 NOTE typed\n" } });
+
+    expect(handle!.getText()).toBe("0 NOTE typed\n" + text);
+  });
 });

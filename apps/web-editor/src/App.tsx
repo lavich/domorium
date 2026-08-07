@@ -135,7 +135,11 @@ function AppContent() {
 
   const openFile = () => fileInputRef.current?.click();
   const download = () => {
-    downloadGedcom(session.text, session.fileName);
+    // Read now rather than track: the editor owns the document.
+    downloadGedcom(
+      editorRef.current?.getText() ?? session.initialText,
+      session.fileName,
+    );
     dispatch({ type: "downloaded" });
   };
 
@@ -170,7 +174,7 @@ function AppContent() {
               diagnostics={diagnostics}
               theme={resolvedTheme}
               editorRef={editorRef}
-              onChange={(text) => dispatch({ type: "edit", text })}
+              onChange={() => dispatch({ type: "edit" })}
               onDiagnosticsChange={setDiagnostics}
               onOpenFile={openFile}
               onDownload={download}

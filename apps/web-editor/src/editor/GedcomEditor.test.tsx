@@ -11,12 +11,14 @@ import type { GedcomEditorHandle } from "./types";
 vi.mock("./createGedcomEditor");
 
 const firstHandle: GedcomEditorHandle = {
+  getText: vi.fn(() => ""),
   destroy: vi.fn(),
   focusDiagnostic: vi.fn(),
   setTheme: vi.fn(),
 };
 
 const secondHandle: GedcomEditorHandle = {
+  getText: vi.fn(() => ""),
   destroy: vi.fn(),
   focusDiagnostic: vi.fn(),
   setTheme: vi.fn(),

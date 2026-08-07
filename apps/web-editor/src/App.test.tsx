@@ -2,7 +2,7 @@
 
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle, useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "./App";
@@ -14,24 +14,29 @@ vi.mock("./editor/GedcomEditor", () => ({
     GedcomEditorHandle,
     {
       initialText: string;
-      onChange(text: string): void;
+      onChange(): void;
       onDiagnosticsChange(diagnostics: []): void;
     }
   >(function MockGedcomEditor(
     { initialText, onChange, onDiagnosticsChange },
     ref,
   ) {
+    // The real editor owns the document and hands it over on request, so the
+    // mock does too — the change event carries nothing.
+    const area = useRef<HTMLTextAreaElement>(null);
     useImperativeHandle(ref, () => ({
+      getText: () => area.current?.value ?? initialText,
       destroy: vi.fn(),
       focusDiagnostic: vi.fn(),
       setTheme: vi.fn(),
     }));
     return (
       <textarea
+        ref={area}
         aria-label="GEDCOM editor"
         defaultValue={initialText}
-        onChange={(event) => {
-          onChange(event.target.value);
+        onChange={() => {
+          onChange();
           onDiagnosticsChange([]);
         }}
       />
@@ -98,6 +103,35 @@ describe("App", () => {
     expect(
       screen.queryByRole("complementary", { name: /GEDCOM diagnostics/i }),
     ).toBeNull();
+  });
+
+  // The application is no longer handed the text on every edit, so download
+  // reads it from the editor. If that wiring is wrong the user silently saves
+  // the document they started with.
+  it("downloads what the editor holds now, not what it was opened with", async () => {
+    const user = userEvent.setup();
+    const written: string[] = [];
+    vi.stubGlobal(
+      "URL",
+      Object.assign(Object.create(URL), {
+        createObjectURL: (blob: Blob) => {
+          written.push("pending");
+          void blob.text().then((text) => {
+            written[written.length - 1] = text;
+          });
+          return "blob:test";
+        },
+        revokeObjectURL: () => {},
+      }),
+    );
+    render(<App />);
+
+    const area = await screen.findByLabelText("GEDCOM editor");
+    await user.clear(area);
+    await user.type(area, "0 HEAD");
+    await user.click(screen.getByRole("button", { name: /download/i }));
+
+    await waitFor(() => expect(written[0]).toBe("0 HEAD"));
   });
 
   it("loads a GEDCOM file and protects modified work before reset", async () => {
