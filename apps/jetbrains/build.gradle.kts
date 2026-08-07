@@ -62,13 +62,19 @@ intellijPlatform {
 // without requiring consumers to check out/npm-install the whole repo.
 val lspPackageDir = layout.projectDirectory.dir("../../packages/language-server")
 val validatorPackageDir = layout.projectDirectory.dir("../../packages/validator")
+val languageServicePackageDir =
+    layout.projectDirectory.dir("../../packages/language-service")
 
 val buildLspStdioBundle =
     tasks.register<Exec>("buildLspStdioBundle") {
         workingDir = lspPackageDir.asFile
         commandLine("npm", "run", "build:stdio")
+        // Everything the bundle contains. Leaving language-service out meant a
+        // change confined to it was reported up to date and the plugin kept
+        // running the previous build.
         inputs.dir(lspPackageDir.dir("src"))
         inputs.dir(validatorPackageDir.dir("src"))
+        inputs.dir(languageServicePackageDir.dir("src"))
         outputs.file(lspPackageDir.file("dist-stdio/stdio.cjs.js"))
     }
 

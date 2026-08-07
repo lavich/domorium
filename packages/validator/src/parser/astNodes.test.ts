@@ -1,20 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { ASTNode, GedcomVisitor, resolveValue } from "./visitor";
-import { ConfigurableLexer, gedcomLexerDefinition } from "./lexer";
-import { GedcomParser } from "./parser";
+import { buildAst, resolveValue } from "./ast";
+import { ConfigurableLexer } from "./lexer";
 
-// Helper to parse GEDCOM snippet and build AST
 function parseGedcom(input: string) {
-  const gedcomLexer = new ConfigurableLexer({ zeroBased: true });
-  const lexingResult = gedcomLexer.tokenize(input);
-  const parser = new GedcomParser(gedcomLexerDefinition);
-  parser.input = lexingResult.tokens;
-  const cst = parser.root();
-  const visitor = new GedcomVisitor(input);
-  return visitor.root(cst);
+  const lexingResult = new ConfigurableLexer({ zeroBased: true }).tokenize(
+    input,
+  );
+  return buildAst(lexingResult.tokens, input);
 }
 
-describe("AstVisitor", () => {
+describe("syntax tree", () => {
   it("should parse a single line with correct tokens and range", () => {
     const ast = parseGedcom("0 HEAD\n");
     expect(ast.nodes.length).toBe(1);
@@ -110,26 +105,5 @@ describe("AstVisitor", () => {
     const { nodes } = parseGedcom(gedcom);
     const note = nodes[0].children[0];
     expect(resolveValue(note)).toBe("\nFirst line\nSecond line");
-  });
-
-  it("should throw on AST cycles", () => {
-    const visitor = new GedcomVisitor("0 HEAD\n");
-    // Fake nodes with cycle
-    const fakeNode: ASTNode = {
-      startOffset: 0,
-      endOffset: 6,
-      range: {
-        start: { line: 0, character: 0 },
-        end: { line: 0, character: 6 },
-      },
-      tokens: {},
-      children: [],
-      level: 0,
-    };
-    fakeNode.parent = fakeNode; // introduce cycle
-
-    expect(() => visitor.buildHierarchy([fakeNode])).toThrow(
-      "AST cycle detected",
-    );
   });
 });
