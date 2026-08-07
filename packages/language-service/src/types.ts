@@ -8,6 +8,18 @@ export interface Range {
   end: Position;
 }
 
+/**
+ * A half-open span of the document in character offsets.
+ *
+ * Used where a caller wants an answer about part of the document rather than
+ * all of it — a viewport is forty lines and a document can be two hundred
+ * thousand records.
+ */
+export interface OffsetRange {
+  from: number;
+  to: number;
+}
+
 export type DocumentVersion = number;
 
 export type ReferenceRole = "declaration" | "usage";

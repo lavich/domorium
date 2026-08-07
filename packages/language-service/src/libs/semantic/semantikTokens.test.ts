@@ -104,6 +104,34 @@ describe("semanticTokens", () => {
     expect(reads).toBe(0);
   });
 
+  // A viewport is forty lines; a document can be two hundred thousand
+  // records. Converting all of them to answer about the visible ones is what
+  // is left of the pause after an edit — 821 ms on a 15.6 MB file. Counting
+  // the records reached says whether the walk was actually narrowed, which
+  // filtering the output afterwards would not.
+  it("reaches only the records overlapping the requested range", () => {
+    let visited = 0;
+    const records = Array.from({ length: 100 }, (_, index) =>
+      countingRecord(index, () => (visited += 1)),
+    );
+
+    // Record 42 occupies offsets 504 to 515.
+    const tokens = semanticTokens(records, { from: 506, to: 510 });
+
+    expect(visited).toBe(1);
+    expect(tokens.map((token) => token.startOffset)).toEqual([511]);
+  });
+
+  it("returns every record when no range is asked for", () => {
+    let visited = 0;
+    const records = Array.from({ length: 100 }, (_, index) =>
+      countingRecord(index, () => (visited += 1)),
+    );
+
+    expect(semanticTokens(records)).toHaveLength(100);
+    expect(visited).toBe(100);
+  });
+
   // `end.character - start.character` is only a length while the token stays
   // on one line. No token type that gets coloured spans lines today, so this
   // is latent rather than visible — but the offsets give the right answer
@@ -123,6 +151,35 @@ describe("semanticTokens", () => {
     expect(semanticTokens([nodeOf(token)])[0].length).toBe(15);
   });
 });
+
+// Records whose children cannot be reached without being counted, so a walk
+// that visits the whole document is distinguishable from one that does not.
+function countingRecord(index: number, onVisit: () => void): ASTNode {
+  const startOffset = index * 12;
+  const at = (offset: number, length: number) => ({
+    start: { line: index, character: offset - startOffset },
+    end: { line: index, character: offset - startOffset + length },
+  });
+  return {
+    level: 0,
+    startOffset,
+    endOffset: startOffset + 11,
+    range: at(startOffset, 11),
+    tokens: {
+      [TokenNames.TAG]: {
+        name: TokenNames.TAG,
+        value: "INDI",
+        startOffset: startOffset + 7,
+        endOffset: startOffset + 11,
+        range: at(startOffset + 7, 4),
+      },
+    },
+    get children() {
+      onVisit();
+      return [];
+    },
+  };
+}
 
 function countingToken(onRead: () => void): ASTToken {
   return {

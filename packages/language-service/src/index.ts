@@ -24,6 +24,7 @@ export {
   type InlayHint,
   type Position,
   type PrepareRenameResult,
+  type OffsetRange,
   type Range,
   type ReferenceEntry,
   type ReferenceOccurrence,

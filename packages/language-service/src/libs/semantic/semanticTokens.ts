@@ -1,5 +1,6 @@
 import type { ASTNode, ASTToken, TokenNames } from "@domorium/validator";
-import type { Position } from "../../types";
+import type { OffsetRange, Position } from "../../types";
+import { rootsInRange } from "../range/rootsInRange";
 
 const SemanticTokenTypes = {
   comment: "comment",
@@ -141,8 +142,11 @@ const walk = (nodes: ASTNode[], into: SemanticToken[]): void => {
   }
 };
 
-export function semanticTokens(nodes: ASTNode[]): SemanticToken[] {
+export function semanticTokens(
+  nodes: ASTNode[],
+  range?: OffsetRange,
+): SemanticToken[] {
   const tokens: SemanticToken[] = [];
-  walk(nodes, tokens);
+  walk(rootsInRange(nodes, range), tokens);
   return tokens;
 }
