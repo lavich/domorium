@@ -1,10 +1,14 @@
 import { ASTNode } from "@domorium/validator";
-import type { InlayHint } from "../../types";
+import type { InlayHint, OffsetRange } from "../../types";
+import { rootsInRange } from "../range/rootsInRange";
 
 const INDENT = "  ";
 
-export const levelIndent = (nodes: ASTNode[]): InlayHint[] => {
-  return nodes.flatMap((node) => {
+export const levelIndent = (
+  nodes: ASTNode[],
+  range?: OffsetRange,
+): InlayHint[] => {
+  return rootsInRange(nodes, range).flatMap((node) => {
     const hint = levelIndent(node.children);
     if (node.level > 0) {
       const indent = INDENT.repeat(node.level);

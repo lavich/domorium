@@ -29,6 +29,7 @@ import type {
   FoldingRange,
   Hover,
   InlayHint,
+  OffsetRange,
   Position,
   PrepareRenameResult,
   Range,
@@ -91,8 +92,13 @@ export class GedcomLanguageService {
       : [];
   }
 
-  getSemanticTokens(): SemanticToken[] {
-    return semanticTokens(this.document.getNodes());
+  /**
+   * Pass a range to be answered about part of the document. A viewport is
+   * forty lines, and converting a whole document to paint them was most of
+   * what remained of the pause after an edit.
+   */
+  getSemanticTokens(range?: OffsetRange): SemanticToken[] {
+    return semanticTokens(this.document.getNodes(), range);
   }
 
   getDocumentSymbols(): DocumentSymbol[] {
@@ -123,8 +129,8 @@ export class GedcomLanguageService {
     return this.foldingByStartLine.get(line);
   }
 
-  getInlayHints(): InlayHint[] {
-    return levelIndent(this.document.getNodes());
+  getInlayHints(range?: OffsetRange): InlayHint[] {
+    return levelIndent(this.document.getNodes(), range);
   }
 
   getReferenceIndex(): ReferenceIndex {

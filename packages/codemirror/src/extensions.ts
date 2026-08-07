@@ -20,7 +20,12 @@ import {
   lintGutter,
   type Diagnostic as CodeMirrorDiagnostic,
 } from "@codemirror/lint";
-import { EditorState, StateEffect, type Extension } from "@codemirror/state";
+import {
+  EditorState,
+  type Range as CodeMirrorRange,
+  StateEffect,
+  type Extension,
+} from "@codemirror/state";
 import {
   Decoration,
   EditorView,
@@ -36,6 +41,7 @@ import {
   type CompletionItem,
   type Diagnostic,
   type DocumentLink,
+  type GedcomLanguageService,
   semanticTokenLegend,
   type WorkspaceEdit,
 } from "@domorium/language-service";
@@ -74,7 +80,13 @@ export function getReferenceHighlightSpecs(
   state: EditorState,
   language: EditorLanguageService,
 ): ReferenceHighlightSpec[] {
-  const service = language.update(state.doc);
+  return referenceHighlightSpecs(state, language.update(state.doc));
+}
+
+function referenceHighlightSpecs(
+  state: EditorState,
+  service: GedcomLanguageService,
+): ReferenceHighlightSpec[] {
   return service
     .getDocumentHighlights(
       offsetToPosition(state.doc, state.selection.main.head),
@@ -315,8 +327,12 @@ const rebuildDecorations = StateEffect.define<null>();
  * has made the same trade since it was added.
  */
 function deferredDecorations(
-  build: (view: EditorView) => DecorationSet,
-  { onSelectionChange = false }: { onSelectionChange?: boolean } = {},
+  language: EditorLanguageService,
+  build: (view: EditorView, service: GedcomLanguageService) => DecorationSet,
+  {
+    onSelectionChange = false,
+    onViewportChange = false,
+  }: { onSelectionChange?: boolean; onViewportChange?: boolean } = {},
 ): Extension {
   return ViewPlugin.fromClass(
     class {
@@ -324,7 +340,7 @@ function deferredDecorations(
       private timer: ReturnType<typeof setTimeout> | undefined;
 
       constructor(view: EditorView) {
-        this.decorations = build(view);
+        this.decorations = build(view, language.update(view.state.doc));
       }
 
       update(update: ViewUpdate): void {
@@ -335,7 +351,10 @@ function deferredDecorations(
         );
         if (rebuild) {
           this.cancel();
-          this.decorations = build(update.view);
+          this.decorations = build(
+            update.view,
+            language.update(update.state.doc),
+          );
           return;
         }
         if (update.docChanged) {
@@ -343,10 +362,18 @@ function deferredDecorations(
           this.schedule(update.view);
           return;
         }
-        // The document has not changed, so the service answers from its
-        // existing parse and this costs a lookup.
-        if (onSelectionChange && update.selectionSet) {
-          this.decorations = build(update.view);
+        if (
+          (onSelectionChange && update.selectionSet) ||
+          (onViewportChange && update.viewportChanged)
+        ) {
+          // Never force a reparse here. Scrolling and moving the cursor both
+          // land in this branch, and in the pause after an edit the parse is
+          // deliberately behind — forcing it would put the whole cost back on
+          // an interaction. What is already painted stays until it catches up.
+          const service = language.current(update.state.doc);
+          if (service) {
+            this.decorations = build(update.view, service);
+          }
         }
       }
 
@@ -375,17 +402,18 @@ function deferredDecorations(
 
 function referenceHighlights(language: EditorLanguageService): Extension {
   return deferredDecorations(
-    (view) => buildReferenceDecorations(view, language),
+    language,
+    (view, service) => buildReferenceDecorations(view, service),
     { onSelectionChange: true },
   );
 }
 
 function buildReferenceDecorations(
   view: EditorView,
-  language: EditorLanguageService,
+  service: GedcomLanguageService,
 ): DecorationSet {
   return Decoration.set(
-    getReferenceHighlightSpecs(view.state, language).map((highlight) =>
+    referenceHighlightSpecs(view.state, service).map((highlight) =>
       Decoration.mark({
         class: `gedcom-reference-${highlight.kind}`,
       }).range(highlight.from, highlight.to),
@@ -410,49 +438,56 @@ class IndentHintWidget extends WidgetType {
   }
 }
 
+/**
+ * Only the visible ranges are asked for.
+ *
+ * CodeMirror renders the viewport and nothing else, so decorations outside it
+ * are built and thrown away. On a 15.6 MB document that was 2.2 million
+ * tokens and 800 000 indent hints to paint forty lines. `viewportChanged`
+ * brings this back as the user scrolls.
+ */
 function semanticDecorations(
-  state: EditorState,
-  language: EditorLanguageService,
+  view: EditorView,
+  service: GedcomLanguageService,
   indentationHints: boolean,
 ): DecorationSet {
-  const service = language.update(state.doc);
-  const tokens = service
-    .getSemanticTokens()
-    .flatMap((token) => {
+  const { state } = view;
+  const decorations: CodeMirrorRange<Decoration>[] = [];
+
+  for (const { from, to } of view.visibleRanges) {
+    for (const token of service.getSemanticTokens({ from, to })) {
       // Offsets, not a line and character: CodeMirror addresses everything by
-      // offset, and so does the syntax tree the tokens come from. Converting
-      // between the two and back cost 387 ms on a 15.6 MB document.
-      const from = token.startOffset;
+      // offset, and so does the syntax tree the tokens come from.
       const tag = semanticTokenTag(token.tokenType);
       const themeClass = tag ? highlightingFor(state, [tag]) : null;
       const classes = [
         themeClass,
         token.tokenModifiers === 0 ? null : "gedcom-token-declaration",
       ].filter((value): value is string => value !== null);
-      return classes.length === 0
-        ? []
-        : [
-            Decoration.mark({ class: classes.join(" ") }).range(
-              from,
-              Math.min(from + token.length, state.doc.length),
-            ),
-          ];
-    })
-    .filter(({ from, to }) => from < to);
-  const hints = indentationHints
-    ? service.getInlayHints().map((hint) =>
-        Decoration.widget({
-          widget: new IndentHintWidget(hint.label),
-          side: -1,
-        }).range(positionToOffset(state.doc, hint.position)),
-      )
-    : [];
-  return Decoration.set(
-    [...tokens, ...hints].sort(
-      (left, right) => left.from - right.from || left.to - right.to,
-    ),
-    true,
-  );
+      const end = Math.min(token.startOffset + token.length, state.doc.length);
+      if (classes.length > 0 && token.startOffset < end) {
+        decorations.push(
+          Decoration.mark({ class: classes.join(" ") }).range(
+            token.startOffset,
+            end,
+          ),
+        );
+      }
+    }
+
+    if (indentationHints) {
+      for (const hint of service.getInlayHints({ from, to })) {
+        decorations.push(
+          Decoration.widget({
+            widget: new IndentHintWidget(hint.label),
+            side: -1,
+          }).range(positionToOffset(state.doc, hint.position)),
+        );
+      }
+    }
+  }
+
+  return Decoration.set(decorations, true);
 }
 
 export function semanticTokenTag(tokenType: number): Tag | null {
@@ -472,8 +507,10 @@ function semanticFeatures(
   language: EditorLanguageService,
   indentationHints: boolean,
 ): Extension {
-  return deferredDecorations((view) =>
-    semanticDecorations(view.state, language, indentationHints),
+  return deferredDecorations(
+    language,
+    (view, service) => semanticDecorations(view, service, indentationHints),
+    { onViewportChange: true },
   );
 }
 
