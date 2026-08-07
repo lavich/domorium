@@ -78,8 +78,34 @@ them; move the code instead.
 - Prefer focused commits at meaningful checkpoints over one large commit.
 - Never discard uncommitted work you did not write. Several worktrees may hold
   work in progress; preserve local changes in all of them.
-- Match the surrounding code. This repository has consistent naming and comment
-  density; a change that reads as foreign is a change to redo.
+- Match the surrounding code. This repository has consistent naming and
+  structure; a change that reads as foreign is a change to redo.
+
+### Comments
+
+A comment earns its place by saying something the code cannot. Before writing
+one, name which of the two it is:
+
+- **A rule from outside the code** — the GEDCOM spec, an LSP requirement, a
+  platform constraint. No amount of reading the code harder recovers it.
+- **A trap** — why the obvious simplification is wrong, so the next reader does
+  not helpfully undo it.
+
+If it is neither, it belongs somewhere else:
+
+- **What the code used to do, and why it changed** → the commit message. In the
+  source it describes an absence, and it rots the moment the next change lands.
+- **Measurements** — timings, memory, token counts → the changelog, or the issue
+  that motivated the work. A number in a comment is never re-measured; it is
+  wrong within a release and nobody notices.
+- **A restatement of the line below it** → delete it.
+
+Tests are the exception. A comment naming the bug a test was written to catch is
+that test's reason to exist; without it the test reads as redundant and someone
+deletes it.
+
+Comment density is not a thing to match. Where the surrounding code
+over-explains, do not add to it.
 
 ## Releases
 
