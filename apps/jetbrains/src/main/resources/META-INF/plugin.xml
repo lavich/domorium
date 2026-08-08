@@ -31,6 +31,15 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.3.0</h2>
+    <ul>
+      <li>Stopped marking dates that name their calendar: <code>JULIAN 1401</code>, <code>HEBREW 1 TSH 5761</code> and even <code>GREGORIAN 1 JAN 2000</code> were all underlined in a GEDCOM 7 file. Each calendar's own months and epochs now apply, so a Hebrew date carrying a Gregorian month is still caught</li>
+      <li><b>Three older date forms are now marked in a 7.0 file</b>, so a file that was clean may not be: the <code>@#DGREGORIAN@</code> calendar escape, a slashed year such as <code>1 JAN 1857/58</code>, and phrases like <code>INT 1950 (around 1950)</code> or <code>(unknown)</code>. Version 7.0 removed all three — a date phrase belongs in a <code>PHRASE</code> line beneath the date. GEDCOM 5.5.1 files are unaffected</li>
+      <li>Stopped reporting a missing value where the specification allows the payload to be left out: <code>1 EVEN</code> with only a <code>TYPE</code> beneath it was flagged, along with 60 other kinds of line, and so were <code>AGE</code> and <code>DATE</code> left empty with a <code>PHRASE</code> instead</li>
+      <li>Stopped warning on the first line of a file that begins with a byte order mark</li>
+      <li>Reworded the message for a source citation that carries text instead of a pointer, so it says what belongs there rather than naming the rule</li>
+    </ul>
+
     <h2>1.2.0</h2>
     <ul>
       <li>Kept the spaces that belong to a value: a <code>NOTE</code> beginning with spaces no longer loses them, and <code>CONC</code> continuations no longer change the text they rejoin</li>
