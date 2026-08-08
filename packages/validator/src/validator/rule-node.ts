@@ -117,9 +117,8 @@ const DATE_EXACT_REGEXP = new RegExp(
 // escape name is accepted with just a non-empty-remainder check, so
 // real-world non-Gregorian files aren't blocked.
 //
-// This is v5.5.1 syntax and everything below it is the v5.5.1 reader. GEDCOM 7
-// replaced the escape with a bare calendar word and dropped the slashed year;
-// it is parsed in date-v7.ts against the calendars the schema carries.
+// v5.5.1 syntax, and everything below it is the v5.5.1 reader. GEDCOM 7 dates
+// are parsed in date-v7.ts.
 const CALENDAR_ESCAPE_REGEXP = /^@#D([A-Z][A-Z ]*)@\s*/;
 
 function stripCalendarEscape(value: string): {
@@ -319,19 +318,14 @@ export class RuleNode {
     return { type, isList, to };
   }
 
-  /**
-   * Both versions call this payload a date, and their grammars differ: v7 names
-   * the calendar as a bare word and dropped the slashed year, v5.5.1 uses the
-   * `@#D…@` escape and keeps it. The payload URI is versioned, so it is what
-   * chooses the reader.
-   */
+  // Both versions call this payload a date and mean different grammars by it.
+  // The payload URI is versioned, so it is what chooses the reader.
   private isGedcom7Payload(tagType: GedcomType): boolean {
     return (this.scheme.payload[tagType]?.type ?? "").startsWith(
       GEDCOM_7_TYPE_PREFIX,
     );
   }
 
-  /** Whether the specification allows this structure to carry no payload. */
   private mayOmitPayload(tagType: GedcomType): boolean {
     return (
       tagType.startsWith(GEDCOM_7_TYPE_PREFIX) &&

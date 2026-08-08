@@ -110,7 +110,22 @@ If it is neither, it belongs somewhere else:
 - **Measurements** — timings, memory, token counts → the changelog, or the issue
   that motivated the work. A number in a comment is never re-measured; it is
   wrong within a release and nobody notices.
-- **A restatement of the line below it** → delete it.
+- **A restatement of the line below it, or of the name above it** → delete it. A
+  docblock that repeats the signature is worse than none: it is one more thing
+  that has to be kept true.
+
+Two questions catch nearly every comment that should not have been written:
+
+- **Would this sentence fit in the commit message?** Then put it there. Arguing
+  a change to a reviewer is what the commit and the pull request are for. A
+  comment that does it says the same thing twice, and the copy that stays in the
+  source is the one nobody updates when it stops being true.
+- **Is it in the past tense?** `used to`, `previously`, `was`, `before this`,
+  `now` — all tells that it is history. So is any number.
+
+Keep a comment as short as the rule it states. If the rule is one line, so is
+the comment. Two paragraphs on one decision means the second is justification,
+and justification goes in the commit.
 
 Tests are the exception. A comment naming the bug a test was written to catch is
 that test's reason to exist; without it the test reads as redundant and someone
