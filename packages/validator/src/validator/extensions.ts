@@ -1,6 +1,7 @@
 import { ASTNode, resolveValue } from "../parser";
 import { GedcomTag } from "../schemes/schema-types";
 import { GedcomError } from "../types/errors";
+import { Range } from "../types/position";
 
 export enum ExtensionErrorCode {
   UndocumentedTag = "VAL008",
@@ -21,6 +22,17 @@ export interface ExtensionContext {
 
 export function emptyExtensions(): ExtensionContext {
   return { tags: new Map(), requireDeclaration: false };
+}
+
+// An extTag is an extension tag wherever it appears — as a tag, a calendar, a
+// month, an epoch or an enumerated value.
+export function undocumentedTag(tag: GedcomTag, range: Range): GedcomError {
+  return {
+    code: ExtensionErrorCode.UndocumentedTag,
+    message: `Extension tag ${tag} is not declared in HEAD.SCHMA`,
+    range,
+    level: "warning",
+  };
 }
 
 // "_SKYPEID http://xmlns.com/foaf/0.1/skypeID" — an extension tag, then the

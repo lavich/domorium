@@ -2,12 +2,7 @@
   "source": "https://gedcom.io/testfiles/gedcom70/",
   "known": [
     {
-      "note": "Twenty of the twenty-two files are now diagnostic-free. Everything below is one of four things, and six of the thirteen are correct."
-    },
-    {
-      "issue": 93,
-      "where": "extensions.ged 59, 61, 70, 88",
-      "what": "An extension enumeration value is rejected wherever an Enum is expected."
+      "note": "Twenty of the twenty-two files are diagnostic-free. Everything below is one of three things, and seven of the ten are correct."
     },
     {
       "issue": 94,
@@ -21,8 +16,8 @@
     },
     {
       "correct": true,
-      "where": "extension-record.ged 10, 11, 15 and extensions.ged 62, 77, 82",
-      "what": "VAL008 is right here: those tags really are undocumented, and the specification recommends against that. Not everything recorded below is a bug."
+      "where": "extension-record.ged 10, 11, 15 and extensions.ged 61, 62, 77, 82",
+      "what": "VAL008 is right here: those tags really are undocumented, and the specification recommends against that. Line 61 is an enumerated value rather than a tag, which the specification counts as an extension tag all the same. Not everything recorded below is a bug."
     }
   ],
   "files": {
@@ -50,15 +45,12 @@
       "sha256": "1a3ae5f2602f8cd72efae01af496fca6fc2e471ecae542f6254b666b32178482",
       "expected": [
         "18 warning VAL009",
-        "59 error VAL",
-        "61 error VAL",
+        "61 warning VAL008",
         "62 warning VAL008",
         "67 error unresolved-xref",
-        "70 error VAL",
         "72 error VAL",
         "77 warning VAL008",
-        "82 warning VAL008",
-        "88 error VAL"
+        "82 warning VAL008"
       ]
     },
     "filename-1.ged": {

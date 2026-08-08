@@ -142,4 +142,35 @@ describe("validator", () => {
     const codes = gedcomDocument.getErrors().map((error) => error.code);
     expect(codes).toContain("VAL009");
   });
+
+  test("accepts a declared extension tag used as an enumeration value", () => {
+    const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _ENUMVAL http://example.com/enumeration-value
+0 @I1@ INDI
+1 FAMC @VOID@
+2 PEDI _ENUMVAL
+0 TRLR
+`);
+
+    expect(gedcomDocument.getErrors()).toEqual([]);
+  });
+
+  test("reports an undeclared extension tag used as an enumeration value", () => {
+    const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 FAMC @VOID@
+2 PEDI _ENUM2
+0 TRLR
+`);
+
+    const errors = gedcomDocument.getErrors();
+    expect(errors).toHaveLength(1);
+    expect(errors[0].code).toBe("VAL008");
+    expect(errors[0].level).toBe("warning");
+  });
 });

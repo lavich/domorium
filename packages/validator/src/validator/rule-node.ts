@@ -1,7 +1,13 @@
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { ASTNode, resolveValue } from "../parser";
 import { GedcomError } from "../types/errors";
-import { parseTagDef } from "./extensions";
+import {
+  emptyExtensions,
+  ExtensionContext,
+  isExtensionTag,
+  parseTagDef,
+  undocumentedTag,
+} from "./extensions";
 import {
   isValidDateExact,
   isValidDatePeriod,
@@ -227,6 +233,7 @@ export class RuleNode {
   constructor(
     private readonly scheme: GedcomScheme,
     pointers: Map<string, ASTNode[]>,
+    private readonly extensions: ExtensionContext = emptyExtensions(),
   ) {
     this.pointerMap = pointers;
     this.pointers = flattenPointers(pointers);
@@ -331,6 +338,45 @@ export class RuleNode {
       tagType.startsWith(GEDCOM_7_TYPE_PREFIX) &&
       OMITTABLE_PAYLOADS.has(this.scheme.payload[tagType]?.type ?? "")
     );
+  }
+
+  // An enumeration may be extended with values matching extTag, but may not
+  // borrow a standard value belonging to another enumeration set. Only the two
+  // GEDCOM 7 Enum payloads reach here; v5.5.1 declares no enumerated sets.
+  private validateEnumeration(
+    values: string[],
+    tagType: GedcomType,
+    node: ASTNode,
+  ): GedcomError[] {
+    const range = node.tokens.VALUE?.range || node.range;
+    const availableValues = this.getAvailableValues(tagType);
+    const errors: GedcomError[] = [];
+
+    const undocumented = new Set(
+      values.filter(
+        (value) =>
+          isExtensionTag(value) &&
+          this.extensions.requireDeclaration &&
+          !this.extensions.tags.has(GedcomTag(value)),
+      ),
+    );
+    for (const value of undocumented) {
+      errors.push(undocumentedTag(GedcomTag(value), range));
+    }
+
+    const borrowed = values.some(
+      (value) => !isExtensionTag(value) && !availableValues?.includes(value),
+    );
+    if (borrowed) {
+      errors.push({
+        code: "VAL",
+        message: `Value for ${node.tokens.TAG?.value} should be in set [${formatValueSet(availableValues)}]`,
+        range,
+        level: "error",
+      });
+    }
+
+    return errors;
   }
 
   getAvailableValues(tagType: GedcomType): string[] | null {
@@ -494,34 +540,18 @@ export class RuleNode {
         }
         break;
 
-      case "select": {
-        const availableValues = this.getAvailableValues(tagType);
-        if (!value || !availableValues?.includes(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be in set [${formatValueSet(availableValues)}]`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
-        }
+      case "select":
+        errors.push(...this.validateEnumeration([value], tagType, node));
         break;
-      }
-      case "multiselect": {
-        const availableValues = this.getAvailableValues(tagType);
-        const values = value?.split(",").map((v) => v.trim());
-        const isValid = values?.every((v) =>
-          availableValues?.includes(v.trim()),
+      case "multiselect":
+        errors.push(
+          ...this.validateEnumeration(
+            value.split(",").map((item) => item.trim()),
+            tagType,
+            node,
+          ),
         );
-        if (!isValid) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be in set [${formatValueSet(availableValues)}]`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
-        }
         break;
-      }
       case "date": {
         const isGedcom7 = this.isGedcom7Payload(tagType);
         const isValid = isGedcom7

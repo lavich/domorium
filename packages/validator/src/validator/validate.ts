@@ -14,8 +14,8 @@ import { RuleNode } from "./rule-node";
 import {
   emptyExtensions,
   ExtensionContext,
-  ExtensionErrorCode,
   isExtensionTag,
+  undocumentedTag,
 } from "./extensions";
 
 enum ValidationErrorCode {
@@ -121,7 +121,7 @@ export class GedcomValidator {
     const occurrences = new Map<GedcomTag, number>();
     const errors: GedcomError[] = [];
     const parentTag = scheme.tag[GedcomType(parentType)];
-    const ruleNode = new RuleNode(scheme, this.pointers);
+    const ruleNode = new RuleNode(scheme, this.pointers, this.extensions);
 
     for (const node of nodes) {
       const tag = node.tokens.TAG?.value
@@ -150,12 +150,7 @@ export class GedcomValidator {
           this.extensions.requireDeclaration &&
           !this.extensions.tags.has(tag)
         ) {
-          errors.push({
-            code: ExtensionErrorCode.UndocumentedTag,
-            message: `Extension tag ${tag} is not declared in HEAD.SCHMA`,
-            range: tagToken?.range || node.range,
-            level: "warning",
-          });
+          errors.push(undocumentedTag(tag, tagToken?.range || node.range));
         }
         continue;
       }
