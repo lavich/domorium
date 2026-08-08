@@ -33,6 +33,7 @@ Run from the repository root.
 | `npm run check`                  | Full gate: TypeScript, docs, JetBrains      |
 | `npm run check:typescript`       | Lint, typecheck, tests                      |
 | `npm run check:docs`             | Documentation checks (see below)            |
+| `npm run check:conformance`      | Validator against the official GEDCOM files |
 | `npx prettier --write <files>`   | Fix formatting the checks complain about    |
 | `npm run test:run`               | Vitest, single run                          |
 | `npm run build:libs`             | Rebuild `language-server` and `codemirror`  |
@@ -48,6 +49,17 @@ that the stage did not run locally; skipped is not the same as passed.
 
 After changing a lower-layer package, rebuild it — consumers import from `dist`
 and will otherwise use stale output.
+
+`check:conformance` is deliberately outside `npm run check`: it fetches the
+official FamilySearch test files from gedcom.io, so it needs the network and
+`npm run check` must not. CI runs it as its own job. The files are never written
+to disk — they live in a repository that states no licence, so this one does not
+carry a copy. What is committed is
+[scripts/conformance-corpus.json](scripts/conformance-corpus.json): a SHA-256 per
+file and the diagnostics it is expected to produce, so an upstream edit fails
+loudly rather than passing unnoticed. After a change that fixes or adds a
+diagnostic, re-record with `npm run check:conformance -- --update` and read the
+diff — that diff is the evidence, and reviewing it is the point.
 
 ## Invariants
 
@@ -98,7 +110,22 @@ If it is neither, it belongs somewhere else:
 - **Measurements** — timings, memory, token counts → the changelog, or the issue
   that motivated the work. A number in a comment is never re-measured; it is
   wrong within a release and nobody notices.
-- **A restatement of the line below it** → delete it.
+- **A restatement of the line below it, or of the name above it** → delete it. A
+  docblock that repeats the signature is worse than none: it is one more thing
+  that has to be kept true.
+
+Two questions catch nearly every comment that should not have been written:
+
+- **Would this sentence fit in the commit message?** Then put it there. Arguing
+  a change to a reviewer is what the commit and the pull request are for. A
+  comment that does it says the same thing twice, and the copy that stays in the
+  source is the one nobody updates when it stops being true.
+- **Is it in the past tense?** `used to`, `previously`, `was`, `before this`,
+  `now` — all tells that it is history. So is any number.
+
+Keep a comment as short as the rule it states. If the rule is one line, so is
+the comment. Two paragraphs on one decision means the second is justification,
+and justification goes in the commit.
 
 Tests are the exception. A comment naming the bug a test was written to catch is
 that test's reason to exist; without it the test reads as redundant and someone

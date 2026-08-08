@@ -2,6 +2,11 @@ import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { ASTNode, resolveValue } from "../parser";
 import { GedcomError } from "../types/errors";
 import { parseTagDef } from "./extensions";
+import {
+  isValidDateExact,
+  isValidDatePeriod,
+  isValidDateValue,
+} from "./date-v7";
 
 type FieldType =
   | "boolean"
@@ -25,6 +30,29 @@ type FieldType =
 // value slot of any pointer-type payload, regardless of the target
 // record type, and doesn't correspond to any real declared record.
 const VOID_POINTER = "@VOID@";
+
+// A payload may be omitted whenever its data type admits the empty string, and
+// an empty payload and a missing one are the same thing. These are the GEDCOM 7
+// data types whose grammar matches the empty string:
+//
+//   Text       = *anychar                             (and Special = Text)
+//   List:Text  = listItem *(listDelim listItem), listItem = [ … ]
+//   DateValue  = [ date / DatePeriod / dateRange / dateApprox ]
+//   DatePeriod = [ %s"TO" D date ] / %s"FROM" D date [ D %s"TO" D date ]
+//   Age        = [[ageBound D] ageDuration]
+//
+// v5.5.1 shares the xsd:string payload URI but sizes its string payloads
+// {SIZE=1:…}, so there an omitted payload really is missing. The structure type
+// is namespaced per version, which is what gates the set below.
+const OMITTABLE_PAYLOADS = new Set([
+  "http://www.w3.org/2001/XMLSchema#string",
+  "https://gedcom.io/terms/v7/type-List#Text",
+  "https://gedcom.io/terms/v7/type-Date",
+  "https://gedcom.io/terms/v7/type-Date#period",
+  "https://gedcom.io/terms/v7/type-Age",
+]);
+
+const GEDCOM_7_TYPE_PREFIX = "https://gedcom.io/terms/v7/";
 
 const MAX_LISTED_VALUES = 10;
 
@@ -88,6 +116,9 @@ const DATE_EXACT_REGEXP = new RegExp(
 // Gregorian calendar's grammar is validated (see design doc); any other
 // escape name is accepted with just a non-empty-remainder check, so
 // real-world non-Gregorian files aren't blocked.
+//
+// v5.5.1 syntax, and everything below it is the v5.5.1 reader. GEDCOM 7 dates
+// are parsed in date-v7.ts.
 const CALENDAR_ESCAPE_REGEXP = /^@#D([A-Z][A-Z ]*)@\s*/;
 
 function stripCalendarEscape(value: string): {
@@ -287,6 +318,21 @@ export class RuleNode {
     return { type, isList, to };
   }
 
+  // Both versions call this payload a date and mean different grammars by it.
+  // The payload URI is versioned, so it is what chooses the reader.
+  private isGedcom7Payload(tagType: GedcomType): boolean {
+    return (this.scheme.payload[tagType]?.type ?? "").startsWith(
+      GEDCOM_7_TYPE_PREFIX,
+    );
+  }
+
+  private mayOmitPayload(tagType: GedcomType): boolean {
+    return (
+      tagType.startsWith(GEDCOM_7_TYPE_PREFIX) &&
+      OMITTABLE_PAYLOADS.has(this.scheme.payload[tagType]?.type ?? "")
+    );
+  }
+
   getAvailableValues(tagType: GedcomType): string[] | null {
     const fieldType = this.getFieldType(tagType);
     const payload = this.scheme.payload[tagType];
@@ -351,6 +397,11 @@ export class RuleNode {
     const VALUE = node.tokens.VALUE;
     const value = resolveValue(node).trim();
     const TAG = node.tokens.TAG;
+
+    if (!value && this.mayOmitPayload(tagType)) {
+      return errors;
+    }
+
     switch (fieldType.type) {
       case "boolean":
         if (value !== "Y" && (value || node.children.length === 0)) {
@@ -472,10 +523,16 @@ export class RuleNode {
         break;
       }
       case "date": {
-        if (!isValidGregorianDate(value, DATE_VALUE_REGEXP)) {
+        const isGedcom7 = this.isGedcom7Payload(tagType);
+        const isValid = isGedcom7
+          ? isValidDateValue(value, this.scheme)
+          : isValidGregorianDate(value, DATE_VALUE_REGEXP);
+        if (!isValid) {
           errors.push({
             code: "VAL",
-            message: `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
+            message: isGedcom7
+              ? `Value for ${TAG?.value} should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`
+              : `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
             range: VALUE?.range || node.range,
             level: "error",
           });
@@ -483,7 +540,10 @@ export class RuleNode {
         break;
       }
       case "date-period": {
-        if (!isValidGregorianDate(value, DATE_PERIOD_REGEXP)) {
+        const isValid = this.isGedcom7Payload(tagType)
+          ? isValidDatePeriod(value, this.scheme)
+          : isValidGregorianDate(value, DATE_PERIOD_REGEXP);
+        if (!isValid) {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
@@ -494,7 +554,10 @@ export class RuleNode {
         break;
       }
       case "date-exact": {
-        if (!isValidGregorianDate(value, DATE_EXACT_REGEXP)) {
+        const isValid = this.isGedcom7Payload(tagType)
+          ? isValidDateExact(value, this.scheme)
+          : isValidGregorianDate(value, DATE_EXACT_REGEXP);
+        if (!isValid) {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be an exact date in day month year order (e.g. "1 APR 1911")`,
@@ -541,17 +604,25 @@ export class RuleNode {
             this.isPointerTarget(tagType, XREF.value));
         const hasChildren = node.children.length !== 0;
         if ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren)) {
-          // Only needed to name the candidates in the message, so it is built
-          // here rather than for every pointer in the document.
-          const availableValues = this.getAvailableValues(tagType);
+          const targetTag = fieldType.to
+            ? this.scheme.tag[fieldType.to]
+            : undefined;
+          // An xref that names nothing is a different problem from a payload
+          // that is not an xref at all. The second is what a program writes
+          // when it puts a URL or a title where a citation belongs, and there
+          // the candidates are no help — the shape is what's wrong.
+          //
+          // getAvailableValues is only needed to name those candidates, so it
+          // runs here rather than for every pointer in the document.
+          const message = isXrefExist
+            ? `Value for ${TAG?.value} should be in set [${formatValueSet(this.getAvailableValues(tagType))}]`
+            : `Value for ${TAG?.value} should be a pointer to a ${targetTag ? `${targetTag} record` : "record"}, written as "@xref@"`;
           errors.push({
             code:
               isXrefExist && XREF?.value !== VOID_POINTER
                 ? "unresolved-xref"
                 : "VAL",
-            message: hasChildren
-              ? `Value for ${TAG?.value} should be in set [${formatValueSet(availableValues)}]`
-              : `Value for ${TAG?.value} should be POINTER`,
+            message,
             data:
               isXrefExist && XREF?.value !== VOID_POINTER
                 ? {

@@ -80,6 +80,53 @@ describe("positive tests", () => {
     expect(tokens[2].tokenType.name).toBe("XREF");
   });
 
+  // Issue #95: the specification permits a byte order mark, and 19 of the 22
+  // official test files carry one. The character is invisible in a diff, so it
+  // is written as an escape here on purpose.
+  describe("byte order mark", () => {
+    const BOM = "\uFEFF";
+
+    it("skips one at the start of the document", () => {
+      const { tokens, errors } = gedcomLexer.tokenize(`${BOM}0 HEAD`);
+      expect(errors).toEqual([]);
+      expect(tokens.length).toBe(2);
+    });
+
+    it("leaves every offset where it was", () => {
+      const source = "0 HEAD\n1 GEDC\n2 VERS 7.0";
+      const plain = gedcomLexer.tokenize(source);
+      const marked = gedcomLexer.tokenize(BOM + source);
+
+      // The one thing that would break if the mark were stripped from the text
+      // instead: each range would slide by a character, and diagnostics are
+      // placed by offset.
+      expect(marked.errors).toEqual([]);
+      expect(marked.tokens.map((t) => t.startOffset)).toEqual(
+        plain.tokens.map((t) => t.startOffset + 1),
+      );
+      // Only the first line is pushed along by it; columns restart after a
+      // newline, so every later line reads exactly as it did.
+      expect(marked.tokens.map((t) => [t.startLine, t.startColumn])).toEqual(
+        plain.tokens.map((t) => [
+          t.startLine,
+          t.startLine === 0 ? t.startColumn! + 1 : t.startColumn,
+        ]),
+      );
+    });
+
+    it("still reports one at the start of a later line", () => {
+      const { errors } = gedcomLexer.tokenize(`0 HEAD\n${BOM}0 TRLR`);
+      expect(errors.length).toBe(1);
+      expect(errors[0].line).toBe(1);
+    });
+
+    it("keeps one inside a payload, where it is an ordinary character", () => {
+      const { tokens, errors } = gedcomLexer.tokenize(`1 NAME A${BOM}B`);
+      expect(errors).toEqual([]);
+      expect(tokens[2].image).toBe(`A${BOM}B`);
+    });
+  });
+
   it("parse SAMPLE", () => {
     const SAMPLE = `0 @I1@ INDI
 1 NAME John /Doe/

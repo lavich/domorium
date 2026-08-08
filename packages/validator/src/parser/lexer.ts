@@ -35,6 +35,24 @@ const Newline = createToken({
   push_mode: "main",
 });
 
+// A UTF-8 byte order mark, which the specification permits and most real files
+// carry. Skipping it as a token rather than stripping it from the text is what
+// keeps every offset in the document truthful: removing one character up front
+// would move every range after it by one, and diagnostics are placed by offset.
+//
+// Matched only at offset 0. Elsewhere U+FEFF is a zero-width no-break space and
+// belongs to whatever it sits in — `anychar` is %x09-10FFFF, so it is legal
+// inside a payload, and one at the start of some line in the middle of a file is
+// worth reporting rather than silently eating.
+const ByteOrderMark = createToken({
+  name: "ByteOrderMark",
+  pattern: (text, startOffset) =>
+    startOffset === 0 && text.charCodeAt(0) === 0xfeff ? ["﻿"] : null,
+  start_chars_hint: ["﻿"],
+  line_breaks: false,
+  group: Lexer.SKIPPED,
+});
+
 // --- GEDCOM ---
 export const Level = createToken({
   name: TokenNames.LEVEL,
@@ -73,6 +91,7 @@ export const gedcomLexerDefinition: IMultiModeLexerDefinition = {
   defaultMode: "main",
   modes: {
     main: [
+      ByteOrderMark,
       Newline,
       WhiteSpace,
       Level,

@@ -1,0 +1,133 @@
+{
+  "source": "https://gedcom.io/testfiles/gedcom70/",
+  "known": [
+    {
+      "note": "Twenty of the twenty-two files are now diagnostic-free. Everything below is one of four things, and six of the thirteen are correct."
+    },
+    {
+      "issue": 93,
+      "where": "extensions.ged 59, 61, 70, 88",
+      "what": "An extension enumeration value is rejected wherever an Enum is expected."
+    },
+    {
+      "issue": 94,
+      "where": "extensions.ged 67 and 72",
+      "what": "A HEAD.SCHMA tag aliased to a standard URI is not resolved. Line 67 makes an aliased SUBM record invisible to the pointer check; line 72 writes a standard French Republican month under a calendar aliased to cal-FRENCH_R, and without the alias that reads as an extension calendar using a standard month, which the specification forbids."
+    },
+    {
+      "issue": 96,
+      "where": "extensions.ged 18",
+      "what": "A tag declared twice in SCHMA with different URIs is reported, which the specification example itself does."
+    },
+    {
+      "correct": true,
+      "where": "extension-record.ged 10, 11, 15 and extensions.ged 62, 77, 82",
+      "what": "VAL008 is right here: those tags really are undocumented, and the specification recommends against that. Not everything recorded below is a bug."
+    }
+  ],
+  "files": {
+    "age.ged": {
+      "sha256": "6e05b6978ecd958e3547910928b88300c7acce7bd438c5f4801a026685daf777",
+      "expected": []
+    },
+    "date.ged": {
+      "sha256": "9da631efc18cedb32c08bf15f81f22183520e9fb9388d58263f8179d61232274",
+      "expected": []
+    },
+    "escapes.ged": {
+      "sha256": "f01b48ad6ee8b90586dd641b85773cb9d6ea5e260ddfb8f77cf5050e6334fe36",
+      "expected": []
+    },
+    "extension-record.ged": {
+      "sha256": "10fa20739535688fe7deab54ed8cf8b10683411c6a4b1ed3d0b15916acd4481d",
+      "expected": [
+        "10 warning VAL008",
+        "11 warning VAL008",
+        "15 warning VAL008"
+      ]
+    },
+    "extensions.ged": {
+      "sha256": "1a3ae5f2602f8cd72efae01af496fca6fc2e471ecae542f6254b666b32178482",
+      "expected": [
+        "18 warning VAL009",
+        "59 error VAL",
+        "61 error VAL",
+        "62 warning VAL008",
+        "67 error unresolved-xref",
+        "70 error VAL",
+        "72 error VAL",
+        "77 warning VAL008",
+        "82 warning VAL008",
+        "88 error VAL"
+      ]
+    },
+    "filename-1.ged": {
+      "sha256": "33c5f090a63b1b6da409afb4ea435e50b9daca2f83ddbf05574c1d208192b7d2",
+      "expected": []
+    },
+    "lang.ged": {
+      "sha256": "5e5e27adae90ba146fb4f976b9bbdf44de9a876bab89bd46f81549cb3c393768",
+      "expected": []
+    },
+    "long-url.ged": {
+      "sha256": "91cb27e7bc154d248d761f544cb8da19a75256e9cce4c0b06b70cff4cac6eed0",
+      "expected": []
+    },
+    "maximal70-lds.ged": {
+      "sha256": "bfd497b95651da440e1524bf8fe08daa0b23e8a3f81d6799954fc1e0c38bb48f",
+      "expected": []
+    },
+    "maximal70-memories1.ged": {
+      "sha256": "644732ef0f62c106ab844870b2f4cbb56f6603770b86cf8723cf47faed405c27",
+      "expected": []
+    },
+    "maximal70-memories2.ged": {
+      "sha256": "99f33a277ef9bfd08b09930ec28dfd386939fdf4cc48a7efe4974407fc46eca0",
+      "expected": []
+    },
+    "maximal70-tree1.ged": {
+      "sha256": "94be2a7640c19f57b1d5fc4d06aa8e18c534a83f7f9eb6ed0d187965dc0a7b66",
+      "expected": []
+    },
+    "maximal70-tree2.ged": {
+      "sha256": "e825230514e542efe2800a66909409e317e0ed1b52eecdff1cc4c03293b2612a",
+      "expected": []
+    },
+    "maximal70.ged": {
+      "sha256": "398c32b357a5cb2b00e27015bd563dfd306dbbf2997a047cd714f7905b4b88eb",
+      "expected": []
+    },
+    "minimal70.ged": {
+      "sha256": "c29a542c38668265a2424d962e2f159641252125607c2f9c06ff90b9d99c69f1",
+      "expected": []
+    },
+    "notes-1.ged": {
+      "sha256": "1b9113ce387698e9e88d8f034ec0cb35b7fdfa504091d47c1b8e4c05049481ca",
+      "expected": []
+    },
+    "obje-1.ged": {
+      "sha256": "8765570338300e760264d28778a2b25ed2d41932f5646aeb31ca7ef119ec8854",
+      "expected": []
+    },
+    "remarriage1.ged": {
+      "sha256": "bdee4ef611e5999530bdb9a335bcaa6b676548d56b635432e25a3e3412c98018",
+      "expected": []
+    },
+    "remarriage2.ged": {
+      "sha256": "68500c3d3debeaf8c56adc4250bbdf5d135658751febd34ba5666cac62f7f32e",
+      "expected": []
+    },
+    "same-sex-marriage.ged": {
+      "sha256": "d3ef711e2ee0f47ebf0fa8ff52977f9f3063034a124dc32a9fdd293d16e26281",
+      "expected": []
+    },
+    "voidptr.ged": {
+      "sha256": "ca8f022dcb87d3ddec53b4fb8d6aa7603e5227a20178db6329e062aee9df39f8",
+      "expected": []
+    },
+    "xref.ged": {
+      "sha256": "c194630901c65e13724b47ecd0f11818ac6d4b089757c916506caa08ab8c0870",
+      "expected": []
+    }
+  }
+}
