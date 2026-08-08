@@ -8,19 +8,13 @@
 // The default output lands in `tmp/`, which .gitignore already excludes — a file
 // this size must never become committable by accident.
 //
-// Records reference each other through HUSB/WIFE/CHIL/FAMS/FAMC, and that is the
-// point. A document whose records stand alone never exercises pointer
-// resolution, which is where the worst quadratic behaviour lived; the benchmark
-// that missed it is described in the pull request that fixed it (#62).
+// Records reference each other through HUSB/WIFE/CHIL/FAMS/FAMC. A document
+// whose records stand alone never exercises pointer resolution, which is where
+// the cost of a large tree concentrates.
 //
-// The planted errors are reported with the line they landed on, so a validator's
-// diagnostics can be checked against what the document actually contains rather
-// than against a count.
-//
-// This is a tool to run by hand. Tests must not import it: `scripts/` is outside
-// the tsconfig `include`, so a package test reaching in here would take its own
-// type-check down with it. Performance guards build their own documents inline,
-// as the ones in packages/validator already do.
+// A tool to run by hand. Tests must not import it: `scripts/` is outside the
+// tsconfig `include`, so a package test reaching in here would take its own
+// type-check down with it. Performance guards build their own documents inline.
 
 import console from "node:console";
 import process from "node:process";
@@ -110,8 +104,7 @@ while (bytes < targetBytes) {
 
     await write("1 BIRT\n");
 
-    // A day the calendar does not have. Currently reported by nothing — the date
-    // grammar accepts it, see the issue about DATE and calendar validity.
+    // Planted but not reported: nothing checks a day against its calendar (#88).
     if (id === 5) {
       plant(`impossible DATE: 32 FEB ${birthYear}`);
       await write(`2 DATE 32 FEB ${birthYear}\n`);
