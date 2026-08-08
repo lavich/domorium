@@ -241,6 +241,20 @@ describe("payload for VERS 7", () => {
       const errs = ruleEngine.validate(SEX);
       expect(errs.length).toBe(1);
     });
+
+    test("should pass an enumeration value that is an extension tag", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 SEX _INTERSEX
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const SEX = nodes[1].children[0];
+      const errs = ruleEngine.validate(SEX);
+      expect(errs.length).toBe(0);
+    });
   });
 
   describe("rule Multiselect", () => {
@@ -264,6 +278,36 @@ describe("payload for VERS 7", () => {
 2 VERS 7.0
 0 @I1@ INDI
 1 RESN non_correct_value
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const RESN = nodes[1].children[0];
+      const errs = ruleEngine.validate(RESN);
+      expect(errs.length).toBe(1);
+    });
+
+    test("should pass a list mixing standard and extension values", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 RESN LOCKED, _MINE
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const RESN = nodes[1].children[0];
+      const errs = ruleEngine.validate(RESN);
+      expect(errs.length).toBe(0);
+    });
+
+    // The specification's own counter-example: PARENT is a standard value of
+    // ROLE, not of RESN.
+    test("should return error for a standard value from another set", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 RESN PARENT
 0 TRLR
 `);
       const ruleEngine = new RuleNode(g7validationJson, pointers);
