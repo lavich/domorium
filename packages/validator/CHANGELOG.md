@@ -2,6 +2,34 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## 1.3.0 - 2026-08-08
+
+- Read GEDCOM 7 dates against the calendar they name. `JULIAN 1401`,
+  `HEBREW 1 TSH 5761`, `FRENCH_R 2 VEND 8` and even `GREGORIAN 1 JAN 2000` were
+  all reported as invalid, because only v5.5.1's `@#D…@` escape was understood.
+  Each calendar's own months and epochs now apply, so `HEBREW 1 JAN 5761` is
+  refused and `BCE` is confined to the two calendars that permit it. A calendar
+  binds to the date after it, so `FROM JULIAN 1670 TO GREGORIAN 1800` is two
+  dates in two calendars.
+- **Three v5.5.1 date forms are now refused inside a 7.0 document**, which may
+  make a file that was quiet noisy: the `@#D…@` calendar escape, a slashed year
+  such as `1 JAN 1857/58`, and the `INT 1950 (around 1950)` and `(unknown)`
+  phrase forms. Version 7.0 removed all three; a date phrase belongs in a
+  `PHRASE` substructure. GEDCOM 5.5.1 documents keep them.
+- Stop reporting a payload the specification allows to be omitted. A payload may
+  be left out whenever its data type admits the empty string, which covers 61 of
+  the 182 payload types — `1 EVEN` with only a `TYPE` beneath it was being
+  flagged. `AGE`, `DateValue` and `DatePeriod` have their own explicit
+  permission: omitting the payload and giving a `PHRASE` instead is the
+  specification's own way to record that something happened but not what.
+- Accept a leading UTF-8 byte order mark instead of reporting it as an
+  unexpected character. This was invisible in a browser, which strips the mark
+  while decoding, and affected anyone reading a file from disk.
+- Say what belongs in a pointer slot. `Value for SOUR should be POINTER` named
+  the rule rather than the problem; a payload that is not a pointer at all now
+  reads `should be a pointer to a SOUR record, written as "@xref@"`, while an
+  xref that resolves to nothing names the records it could have meant.
+
 ## 1.2.0 - 2026-08-07
 
 - Keep the spaces that belong to a value. The lexer treated the delimiter after
