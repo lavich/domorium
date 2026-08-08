@@ -13,6 +13,11 @@ on:
         required: false
         type: boolean
         default: true
+      run_conformance:
+        description: Run the validator against the official GEDCOM 7.0 test files
+        required: false
+        type: boolean
+        default: true
       run_web:
         description: Build the web editor
         required: false
@@ -68,6 +73,23 @@ jobs:
           name: coverage-report
           path: coverage/
           if-no-files-found: error
+
+  conformance:
+    if: inputs.run_conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        env:
+          LEFTHOOK: 0
+      # Fetches the official test files from gedcom.io, so unlike every other
+      # job here it needs the network. See scripts/check-conformance.mjs for why
+      # they are not carried in the repository.
+      - run: npm run check:conformance
 
   build-web:
     if: inputs.run_web

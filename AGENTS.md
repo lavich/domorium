@@ -33,6 +33,7 @@ Run from the repository root.
 | `npm run check`                  | Full gate: TypeScript, docs, JetBrains      |
 | `npm run check:typescript`       | Lint, typecheck, tests                      |
 | `npm run check:docs`             | Documentation checks (see below)            |
+| `npm run check:conformance`      | Validator against the official GEDCOM files |
 | `npx prettier --write <files>`   | Fix formatting the checks complain about    |
 | `npm run test:run`               | Vitest, single run                          |
 | `npm run build:libs`             | Rebuild `language-server` and `codemirror`  |
@@ -48,6 +49,17 @@ that the stage did not run locally; skipped is not the same as passed.
 
 After changing a lower-layer package, rebuild it — consumers import from `dist`
 and will otherwise use stale output.
+
+`check:conformance` is deliberately outside `npm run check`: it fetches the
+official FamilySearch test files from gedcom.io, so it needs the network and
+`npm run check` must not. CI runs it as its own job. The files are never written
+to disk — they live in a repository that states no licence, so this one does not
+carry a copy. What is committed is
+[scripts/conformance-corpus.json](scripts/conformance-corpus.json): a SHA-256 per
+file and the diagnostics it is expected to produce, so an upstream edit fails
+loudly rather than passing unnoticed. After a change that fixes or adds a
+diagnostic, re-record with `npm run check:conformance -- --update` and read the
+diff — that diff is the evidence, and reviewing it is the point.
 
 ## Invariants
 
