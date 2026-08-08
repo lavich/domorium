@@ -2,6 +2,11 @@ import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { ASTNode, resolveValue } from "../parser";
 import { GedcomError } from "../types/errors";
 import { parseTagDef } from "./extensions";
+import {
+  isValidDateExact,
+  isValidDatePeriod,
+  isValidDateValue,
+} from "./date-v7";
 
 type FieldType =
   | "boolean"
@@ -111,6 +116,10 @@ const DATE_EXACT_REGEXP = new RegExp(
 // Gregorian calendar's grammar is validated (see design doc); any other
 // escape name is accepted with just a non-empty-remainder check, so
 // real-world non-Gregorian files aren't blocked.
+//
+// This is v5.5.1 syntax and everything below it is the v5.5.1 reader. GEDCOM 7
+// replaced the escape with a bare calendar word and dropped the slashed year;
+// it is parsed in date-v7.ts against the calendars the schema carries.
 const CALENDAR_ESCAPE_REGEXP = /^@#D([A-Z][A-Z ]*)@\s*/;
 
 function stripCalendarEscape(value: string): {
@@ -308,6 +317,18 @@ export class RuleNode {
         type = "string";
     }
     return { type, isList, to };
+  }
+
+  /**
+   * Both versions call this payload a date, and their grammars differ: v7 names
+   * the calendar as a bare word and dropped the slashed year, v5.5.1 uses the
+   * `@#D…@` escape and keeps it. The payload URI is versioned, so it is what
+   * chooses the reader.
+   */
+  private isGedcom7Payload(tagType: GedcomType): boolean {
+    return (this.scheme.payload[tagType]?.type ?? "").startsWith(
+      GEDCOM_7_TYPE_PREFIX,
+    );
   }
 
   /** Whether the specification allows this structure to carry no payload. */
@@ -508,10 +529,16 @@ export class RuleNode {
         break;
       }
       case "date": {
-        if (!isValidGregorianDate(value, DATE_VALUE_REGEXP)) {
+        const isGedcom7 = this.isGedcom7Payload(tagType);
+        const isValid = isGedcom7
+          ? isValidDateValue(value, this.scheme)
+          : isValidGregorianDate(value, DATE_VALUE_REGEXP);
+        if (!isValid) {
           errors.push({
             code: "VAL",
-            message: `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
+            message: isGedcom7
+              ? `Value for ${TAG?.value} should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`
+              : `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
             range: VALUE?.range || node.range,
             level: "error",
           });
@@ -519,7 +546,10 @@ export class RuleNode {
         break;
       }
       case "date-period": {
-        if (!isValidGregorianDate(value, DATE_PERIOD_REGEXP)) {
+        const isValid = this.isGedcom7Payload(tagType)
+          ? isValidDatePeriod(value, this.scheme)
+          : isValidGregorianDate(value, DATE_PERIOD_REGEXP);
+        if (!isValid) {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
@@ -530,7 +560,10 @@ export class RuleNode {
         break;
       }
       case "date-exact": {
-        if (!isValidGregorianDate(value, DATE_EXACT_REGEXP)) {
+        const isValid = this.isGedcom7Payload(tagType)
+          ? isValidDateExact(value, this.scheme)
+          : isValidGregorianDate(value, DATE_EXACT_REGEXP);
+        if (!isValid) {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be an exact date in day month year order (e.g. "1 APR 1911")`,
