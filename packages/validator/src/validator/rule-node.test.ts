@@ -105,6 +105,114 @@ describe("payload for VERS 7", () => {
     });
   });
 
+  // Issue #90: Text is *anychar, so an omitted payload is valid and was being
+  // reported as missing across 61 of the 182 payload types.
+  describe("omitted payload", () => {
+    test.each(["EVEN", "NOTE", "OCCU", "TITL"])(
+      "should pass %s with no payload",
+      async (tag) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 ${tag}
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const node = nodes[1].children[0];
+        const errs = ruleEngine.validate(node);
+        expect(errs).toEqual([]);
+      },
+    );
+
+    test("should pass AGE with no payload and a PHRASE instead", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 DEAT
+2 AGE
+3 PHRASE in his early twenties
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const AGE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(AGE);
+      expect(errs).toEqual([]);
+    });
+
+    test("should pass DATE with no payload and a PHRASE instead", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 DEAT
+2 DATE
+3 PHRASE during the war
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs).toEqual([]);
+    });
+
+    test("should pass SOUR DATA EVEN DATE period with no payload", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 DATA
+2 EVEN BIRT
+3 DATE
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[1].children[0].children[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs).toEqual([]);
+    });
+
+    test("should pass PLAC with no payload", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 DEAT
+2 PLAC
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const PLAC = nodes[1].children[0].children[0];
+      const errs = ruleEngine.validate(PLAC);
+      expect(errs).toEqual([]);
+    });
+
+    // Language, Name and DateExact do not admit the empty string, so the
+    // permission must not spread to every payload that happens to be absent.
+    test("should still report LANG with no payload", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 LANG
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const LANG = nodes[0].children[0];
+      const errs = ruleEngine.validate(LANG);
+      expect(errs.length).toBe(1);
+    });
+
+    test("should still report DATE exact with no payload", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const DATE = nodes[0].children[0];
+      const errs = ruleEngine.validate(DATE);
+      expect(errs.length).toBe(1);
+    });
+  });
+
   describe("rule Select", () => {
     test("should pass SEX with payload", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
@@ -698,6 +806,39 @@ describe("payload for VERS 7", () => {
       expect(errs.length).toBe(1);
     });
 
+    // Issue #90: "should be POINTER" told two users nothing. A program that
+    // writes a URL where a citation belongs needs to hear what belongs there.
+    test("should name the record kind when the payload is not a pointer", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 SOUR https://www.openarchieven.nl/saa:5833c92c
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const SOUR = nodes[1].children[0];
+
+      const errs = ruleEngine.validate(SOUR);
+
+      expect(errs).toHaveLength(1);
+      expect(errs[0].message).toBe(
+        'Value for SOUR should be a pointer to a SOUR record, written as "@xref@"',
+      );
+    });
+
+    test("should name the candidates when the xref resolves to nothing", async () => {
+      const WIFE = nodes[2].children[1];
+
+      const errs = ruleEngine.validate(WIFE);
+
+      expect(errs).toHaveLength(1);
+      expect(errs[0].code).toBe("unresolved-xref");
+      expect(errs[0].message).toBe(
+        "Value for WIFE should be in set [@Homer_Simpson@]",
+      );
+    });
+
     test("should pass @VOID@ pointer with no children (deliberately empty reference)", async () => {
       const { nodes: voidNodes, pointers: voidPointers } = astBuilder(`0 HEAD
 1 GEDC
@@ -908,6 +1049,27 @@ describe("payload for VERS 5.5.1", () => {
       const errs = ruleEngine.validate(NAME);
       expect(errs.length).toBe(1);
     });
+
+    // GEDCOM 7's "a payload may be omitted if its data type allows the empty
+    // string" has no counterpart here: v5.5.1 sizes its string payloads
+    // {SIZE=1:…}. Both versions share the xsd:string payload URI, so this
+    // guards the version boundary rather than the tag.
+    test.each(["OCCU", "TITL"])(
+      "should return error because %s has no payload",
+      async (tag) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 ${tag}
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g551validation, pointers);
+        const node = nodes[1].children[0];
+        const errs = ruleEngine.validate(node);
+        expect(errs.length).toBe(1);
+      },
+    );
   });
 
   describe("rule Time", () => {

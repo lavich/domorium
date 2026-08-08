@@ -89,6 +89,25 @@ describe("validator", () => {
     expect(errs.length).toBe(0);
   });
 
+  // Issue #90, from a user's real export: EVEN carries a Text payload, and
+  // Text is *anychar, so an omitted payload is valid and the TYPE beneath it
+  // is where the meaning lives.
+  test("should accept an event with no payload and a TYPE beneath it", async () => {
+    const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @i1@ INDI
+1 EVEN
+2 TYPE Emigration
+2 DATE
+3 PHRASE some time before the war
+0 TRLR
+`);
+    const validator = new GedcomValidator();
+    const errs = validator.validate(nodes);
+    expect(errs).toEqual([]);
+  });
+
   test("should return error because WIFE has not pointer", async () => {
     const SAMPLE = `
 0 HEAD
