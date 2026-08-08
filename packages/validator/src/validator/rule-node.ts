@@ -26,6 +26,29 @@ type FieldType =
 // record type, and doesn't correspond to any real declared record.
 const VOID_POINTER = "@VOID@";
 
+// A payload may be omitted whenever its data type admits the empty string, and
+// an empty payload and a missing one are the same thing. These are the GEDCOM 7
+// data types whose grammar matches the empty string:
+//
+//   Text       = *anychar                             (and Special = Text)
+//   List:Text  = listItem *(listDelim listItem), listItem = [ … ]
+//   DateValue  = [ date / DatePeriod / dateRange / dateApprox ]
+//   DatePeriod = [ %s"TO" D date ] / %s"FROM" D date [ D %s"TO" D date ]
+//   Age        = [[ageBound D] ageDuration]
+//
+// v5.5.1 shares the xsd:string payload URI but sizes its string payloads
+// {SIZE=1:…}, so there an omitted payload really is missing. The structure type
+// is namespaced per version, which is what gates the set below.
+const OMITTABLE_PAYLOADS = new Set([
+  "http://www.w3.org/2001/XMLSchema#string",
+  "https://gedcom.io/terms/v7/type-List#Text",
+  "https://gedcom.io/terms/v7/type-Date",
+  "https://gedcom.io/terms/v7/type-Date#period",
+  "https://gedcom.io/terms/v7/type-Age",
+]);
+
+const GEDCOM_7_TYPE_PREFIX = "https://gedcom.io/terms/v7/";
+
 const MAX_LISTED_VALUES = 10;
 
 function formatValueSet(values: string[] | null): string {
@@ -287,6 +310,14 @@ export class RuleNode {
     return { type, isList, to };
   }
 
+  /** Whether the specification allows this structure to carry no payload. */
+  private mayOmitPayload(tagType: GedcomType): boolean {
+    return (
+      tagType.startsWith(GEDCOM_7_TYPE_PREFIX) &&
+      OMITTABLE_PAYLOADS.has(this.scheme.payload[tagType]?.type ?? "")
+    );
+  }
+
   getAvailableValues(tagType: GedcomType): string[] | null {
     const fieldType = this.getFieldType(tagType);
     const payload = this.scheme.payload[tagType];
@@ -351,6 +382,11 @@ export class RuleNode {
     const VALUE = node.tokens.VALUE;
     const value = resolveValue(node).trim();
     const TAG = node.tokens.TAG;
+
+    if (!value && this.mayOmitPayload(tagType)) {
+      return errors;
+    }
+
     switch (fieldType.type) {
       case "boolean":
         if (value !== "Y" && (value || node.children.length === 0)) {
@@ -541,17 +577,25 @@ export class RuleNode {
             this.isPointerTarget(tagType, XREF.value));
         const hasChildren = node.children.length !== 0;
         if ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren)) {
-          // Only needed to name the candidates in the message, so it is built
-          // here rather than for every pointer in the document.
-          const availableValues = this.getAvailableValues(tagType);
+          const targetTag = fieldType.to
+            ? this.scheme.tag[fieldType.to]
+            : undefined;
+          // An xref that names nothing is a different problem from a payload
+          // that is not an xref at all. The second is what a program writes
+          // when it puts a URL or a title where a citation belongs, and there
+          // the candidates are no help — the shape is what's wrong.
+          //
+          // getAvailableValues is only needed to name those candidates, so it
+          // runs here rather than for every pointer in the document.
+          const message = isXrefExist
+            ? `Value for ${TAG?.value} should be in set [${formatValueSet(this.getAvailableValues(tagType))}]`
+            : `Value for ${TAG?.value} should be a pointer to a ${targetTag ? `${targetTag} record` : "record"}, written as "@xref@"`;
           errors.push({
             code:
               isXrefExist && XREF?.value !== VOID_POINTER
                 ? "unresolved-xref"
                 : "VAL",
-            message: hasChildren
-              ? `Value for ${TAG?.value} should be in set [${formatValueSet(availableValues)}]`
-              : `Value for ${TAG?.value} should be POINTER`,
+            message,
             data:
               isXrefExist && XREF?.value !== VOID_POINTER
                 ? {

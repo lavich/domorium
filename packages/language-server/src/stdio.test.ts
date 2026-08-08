@@ -375,7 +375,7 @@ describe("stdio entry point", () => {
             diagnostics: [
               {
                 code: "unresolved-xref",
-                message: "Value for WIFE should be POINTER",
+                message: "Value for WIFE should be in set [@I1@]",
                 range: {
                   start: { line: 8, character: 7 },
                   end: { line: 8, character: 11 },
