@@ -19,18 +19,9 @@ import { isExtensionTag } from "./extensions";
  * epoch       = %s"BCE" / extTag ; constrained by calendar
  * ```
  *
- * Two properties of that grammar do the work here. A calendar is a bare word in
- * front of the date rather than v5.5.1's `@#D…@` escape, and it binds to the
- * `date` that follows it, not to the payload — so `FROM JULIAN 1670 TO 1800` is
- * two dates in two calendars. An absent calendar means `GREGORIAN`.
- *
- * The months and epochs each calendar permits come from the schema, which
- * already carries them. Nothing read that section before this parser existed.
- *
- * Parsing rather than matching: a regexp large enough to cover four calendars,
- * their month sets, their epochs and the range forms is one nobody can read, and
- * the one that used to stand here silently rejected every date that named its
- * calendar. See issue #92.
+ * A calendar is a bare word rather than v5.5.1's `@#D…@` escape, and it binds to
+ * the `date` that follows it, not to the payload — so `FROM JULIAN 1670 TO 1800`
+ * is two dates in two calendars. An absent calendar means `GREGORIAN`.
  */
 
 const INTEGER = /^\d+$/;
@@ -53,8 +44,7 @@ interface Vocabulary {
 const EXTENSION_VOCABULARY: Vocabulary = { months: null, epochs: null };
 
 // What a calendar permits is fixed by the schema, so the sets are built once per
-// calendar rather than once per date. Building them inline cost two allocations
-// for every DATE in the document, and a large tree has hundreds of thousands.
+// calendar rather than once per date.
 const vocabularies = new WeakMap<GedcomScheme, Map<GedcomTag, Vocabulary>>();
 
 function vocabularyOf(scheme: GedcomScheme, calendar: GedcomTag): Vocabulary {
@@ -94,7 +84,6 @@ function permits(vocabulary: Set<string> | null, token: string): boolean {
     : vocabulary.has(token) || isExtensionTag(token);
 }
 
-/** Reads one `date`, returning the index after it or `NOT_A_DATE`. */
 function readDate(
   tokens: string[],
   start: number,
@@ -187,8 +176,6 @@ function readDateValue(
   return readDate(tokens, start, scheme);
 }
 
-// Trim before splitting rather than filtering after it: this runs once per DATE
-// in the document, and the filter was a second array each time.
 function tokenize(value: string): string[] {
   return value.trim().split(/\s+/);
 }
