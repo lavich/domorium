@@ -73,6 +73,40 @@ describe("payload for VERS 7", () => {
       expect(errs.length).toBe(1);
       expect(errs[0].range.start.line).toBe(4);
     });
+
+    // The payload is optional, so an empty MARR is not an error; but a line
+    // with neither a value nor a subordinate line is what the Y convention
+    // exists to protect against, so it is not silent either.
+    test("should warn on MARR with neither payload nor substructures", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const MARR = nodes[1].children[0];
+      const errs = ruleEngine.validate(MARR);
+      expect(errs).toHaveLength(1);
+      expect(errs[0].code).toBe("VAL010");
+      expect(errs[0].level).toBe("warning");
+    });
+
+    test("should pass MARR with a NOTE and no payload", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @F1@ FAM
+1 MARR
+2 NOTE No record found in the parish register
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const MARR = nodes[1].children[0];
+      const errs = ruleEngine.validate(MARR);
+      expect(errs).toEqual([]);
+    });
   });
 
   describe("rule String", () => {
@@ -315,6 +349,32 @@ describe("payload for VERS 7", () => {
       const errs = ruleEngine.validate(RESN);
       expect(errs.length).toBe(1);
     });
+  });
+
+  describe("rule nonNegativeInteger", () => {
+    const validate = (payload: string) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NCHI ${payload}
+0 TRLR
+`);
+      return new RuleNode(g7validationJson, pointers).validate(
+        nodes[1].children[0],
+      );
+    };
+
+    test.each(["3", "0", "007"])("should pass %s", async (payload) => {
+      expect(validate(payload)).toEqual([]);
+    });
+
+    test.each(["-1", "abc", "3.7", "12abc", "1e3", "Infinity", ""])(
+      "should return error for %s",
+      async (payload) => {
+        expect(validate(payload)).toHaveLength(1);
+      },
+    );
   });
 
   describe("rule Time", () => {
@@ -939,6 +999,24 @@ describe("payload for VERS 7", () => {
 
       expect(errs[0].message).toBe(
         "Value for SEX should be in set [F, M, U, X]",
+      );
+    });
+
+    test("should not offer an empty set when the document declares none", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 SOUR @S1@
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const SOUR = nodes[1].children[0];
+
+      const errs = ruleEngine.validate(SOUR);
+
+      expect(errs[0].message).toBe(
+        "Value for SOUR names no SOUR record, and this document declares none",
       );
     });
   });

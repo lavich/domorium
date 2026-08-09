@@ -21,9 +21,13 @@ type FieldType =
   | "select"
   | "multiselect"
   | "date"
+  | "date-v7"
   | "date-period"
+  | "date-period-v7"
   | "date-exact"
+  | "date-exact-v7"
   | "time"
+  | "time-v7"
   | "pointer"
   | "age"
   | "personal-name"
@@ -60,6 +64,8 @@ const OMITTABLE_PAYLOADS = new Set([
 
 const GEDCOM_7_TYPE_PREFIX = "https://gedcom.io/terms/v7/";
 
+const EMPTY_EVENT = "VAL010";
+
 const MAX_LISTED_VALUES = 10;
 
 function formatValueSet(values: string[] | null): string {
@@ -69,6 +75,15 @@ function formatValueSet(values: string[] | null): string {
   const listed = values.slice(0, MAX_LISTED_VALUES).join(", ");
   const omitted = values.length - MAX_LISTED_VALUES;
   return omitted > 0 ? `${listed}, … ${omitted} more` : listed;
+}
+
+function valueError(node: ASTNode, message: string): GedcomError {
+  return {
+    code: "VAL",
+    message: `Value for ${node.tokens.TAG?.value} ${message}`,
+    range: node.tokens.VALUE?.range || node.range,
+    level: "error",
+  };
 }
 
 // Hour may be 1 or 2 digits (both "8:38" and "08:38" are valid) per both
@@ -87,6 +102,7 @@ const PERSONAL_NAME_REGEXP = /^[^/]*(?:\/[^/]*\/[^/]*)?$/;
 // type/subtype[; parameter=value ...], per RFC 6838 restricted-name tokens.
 const MEDIA_TYPE_REGEXP =
   /^[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*\/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*(;\s*[\w-]+=[^;]+)*$/;
+const NON_NEGATIVE_INTEGER_REGEXP = /^\d+$/;
 const LATITUDE_REGEXP = /^[NS]\d+(\.\d+)?$/;
 const LONGITUDE_REGEXP = /^[EW]\d+(\.\d+)?$/;
 // RFC 5646 (BCP 47) language tag, adapted from the official ABNF in
@@ -175,27 +191,10 @@ const DATE_VALUE_REGEXP = new RegExp(
 
 const DATE_PERIOD_REGEXP = new RegExp(`^(?:${DATE_PERIOD_SRC})$`);
 
-// Flattening every pointer in the document costs O(document), and a RuleNode
-// is built for each validated node — doing it in the constructor made
-// validation cost grow with nodes × pointers. The map is rebuilt by every
-// parse and never mutated afterwards, so the flattened form can be cached
-// against it without going stale. Consumers only read the array.
-const flattenedPointers = new WeakMap<Map<string, ASTNode[]>, ASTNode[]>();
-
-function flattenPointers(pointers: Map<string, ASTNode[]>): ASTNode[] {
-  const cached = flattenedPointers.get(pointers);
-  if (cached) {
-    return cached;
-  }
-  const flattened = Array.from(pointers.values()).flatMap((v) => v);
-  flattenedPointers.set(pointers, flattened);
-  return flattened;
-}
-
 // Which xrefs a pointer may name, grouped by the record tag it points at.
-// Checking that used to filter every pointer in the document and build a fresh
-// array of candidates for each pointer-bearing node, so a file whose records
-// reference each other — which is every real one — cost records × pointers.
+// A RuleNode is built for each validated node, so indexing per node would cost
+// records × pointers. The map is rebuilt by every parse and never mutated
+// afterwards, so the index can be cached against it without going stale.
 const pointerTargets = new WeakMap<
   Map<string, ASTNode[]>,
   Map<string, Set<string>>
@@ -209,7 +208,7 @@ function targetsByTag(
     return cached;
   }
   const index = new Map<string, Set<string>>();
-  for (const node of flattenPointers(pointers)) {
+  for (const node of pointers.values().flatMap((nodes) => nodes)) {
     const tag = node.tokens.TAG?.value;
     const xref = node.tokens.POINTER?.value;
     if (!tag || !xref) {
@@ -227,17 +226,11 @@ function targetsByTag(
 }
 
 export class RuleNode {
-  pointers: ASTNode[];
-  private readonly pointerMap: Map<string, ASTNode[]>;
-
   constructor(
     private readonly scheme: GedcomScheme,
-    pointers: Map<string, ASTNode[]>,
+    private readonly pointerMap: Map<string, ASTNode[]>,
     private readonly extensions: ExtensionContext = emptyExtensions(),
-  ) {
-    this.pointerMap = pointers;
-    this.pointers = flattenPointers(pointers);
-  }
+  ) {}
 
   /** Whether `xref` names a record of the kind this pointer type expects. */
   private isPointerTarget(tagType: GedcomType, xref: string): boolean {
@@ -252,12 +245,10 @@ export class RuleNode {
 
   getFieldType(tagType: GedcomType): {
     type: FieldType;
-    isList: boolean;
     to: GedcomType | undefined;
   } {
     const payload = this.scheme.payload[tagType];
     let type: FieldType;
-    let isList = false;
     let to: GedcomType | undefined = undefined;
     switch (payload?.type) {
       case "Y|<NULL>":
@@ -281,7 +272,6 @@ export class RuleNode {
         break;
       case "https://gedcom.io/terms/v7/type-List#Text":
         type = "string";
-        isList = true;
         break;
       case "http://www.w3.org/2001/XMLSchema#nonNegativeInteger":
         type = "nonNegativeInteger";
@@ -293,18 +283,26 @@ export class RuleNode {
         type = "multiselect";
         break;
       case "https://gedcom.io/terms/v7/type-Date":
+        type = "date-v7";
+        break;
       case "https://gedcom.io/terms/v5.5.1/type-DATE_VALUE":
         type = "date";
         break;
       case "https://gedcom.io/terms/v7/type-Date#period":
+        type = "date-period-v7";
+        break;
       case "https://gedcom.io/terms/v5.5.1/type-DATE_PERIOD":
         type = "date-period";
         break;
       case "https://gedcom.io/terms/v7/type-Date#exact":
+        type = "date-exact-v7";
+        break;
       case "https://gedcom.io/terms/v5.5.1/type-DATE_EXACT":
         type = "date-exact";
         break;
       case "https://gedcom.io/terms/v7/type-Time":
+        type = "time-v7";
+        break;
       case "https://gedcom.io/terms/v5.5.1/type-TIME_VALUE":
         type = "time";
         break;
@@ -322,15 +320,7 @@ export class RuleNode {
       default:
         type = "string";
     }
-    return { type, isList, to };
-  }
-
-  // Both versions call this payload a date and mean different grammars by it.
-  // The payload URI is versioned, so it is what chooses the reader.
-  private isGedcom7Payload(tagType: GedcomType): boolean {
-    return (this.scheme.payload[tagType]?.type ?? "").startsWith(
-      GEDCOM_7_TYPE_PREFIX,
-    );
+    return { type, to };
   }
 
   private mayOmitPayload(tagType: GedcomType): boolean {
@@ -368,12 +358,12 @@ export class RuleNode {
       (value) => !isExtensionTag(value) && !availableValues?.includes(value),
     );
     if (borrowed) {
-      errors.push({
-        code: "VAL",
-        message: `Value for ${node.tokens.TAG?.value} should be in set [${formatValueSet(availableValues)}]`,
-        range,
-        level: "error",
-      });
+      errors.push(
+        valueError(
+          node,
+          `should be in set [${formatValueSet(availableValues)}]`,
+        ),
+      );
     }
 
     return errors;
@@ -439,8 +429,7 @@ export class RuleNode {
   validate(node: ASTNode, _tagType?: GedcomType): GedcomError[] {
     const errors: GedcomError[] = [];
     const tagType = _tagType || this.getNodeType(node);
-    const fieldType = this.getFieldType(tagType || this.getNodeType(node));
-    const VALUE = node.tokens.VALUE;
+    const fieldType = this.getFieldType(tagType);
     const value = resolveValue(node).trim();
     const TAG = node.tokens.TAG;
 
@@ -450,12 +439,17 @@ export class RuleNode {
 
     switch (fieldType.type) {
       case "boolean":
-        if (value !== "Y" && (value || node.children.length === 0)) {
+        if (value && value !== "Y") {
+          errors.push(valueError(node, "should be Y or null"));
+        } else if (!value && node.children.length === 0) {
+          // The Y convention exists so that processors which prune lines
+          // having neither a value nor a subordinate line cannot drop the
+          // assertion. Such a line is what they prune.
           errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be Y or null`,
-            range: VALUE?.range || node.range,
-            level: "error",
+            code: EMPTY_EVENT,
+            message: `${TAG?.value} has neither a payload nor substructures, so it asserts nothing and other software may drop it — write "Y" to assert the event happened, or give it a DATE, PLAC or NOTE`,
+            range: TAG?.range || node.range,
+            level: "warning",
           });
         }
         break;
@@ -468,14 +462,14 @@ export class RuleNode {
           const isLati = rawTag === "LATI";
           const re = isLati ? LATITUDE_REGEXP : LONGITUDE_REGEXP;
           if (!value || !re.test(value)) {
-            errors.push({
-              code: "VAL",
-              message: `Value for ${TAG?.value} should be correct ${
-                isLati ? "latitude" : "longitude"
-              } (e.g. "${isLati ? "N18.150944" : "W46.6"}")`,
-              range: VALUE?.range || node.range,
-              level: "error",
-            });
+            errors.push(
+              valueError(
+                node,
+                `should be correct ${
+                  isLati ? "latitude" : "longitude"
+                } (e.g. "${isLati ? "N18.150944" : "W46.6"}")`,
+              ),
+            );
           }
           break;
         }
@@ -491,52 +485,49 @@ export class RuleNode {
       }
       case "personal-name":
         if (!value || !PERSONAL_NAME_REGEXP.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a name, with the surname (if any) wrapped in a single pair of slashes (e.g. "John /Doe/")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a name, with the surname (if any) wrapped in a single pair of slashes (e.g. "John /Doe/")`,
+            ),
+          );
         }
         break;
       case "media-type":
         if (!value || !MEDIA_TYPE_REGEXP.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a media type in the form "type/subtype" (e.g. "image/jpeg")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a media type in the form "type/subtype" (e.g. "image/jpeg")`,
+            ),
+          );
         }
         break;
       case "language-tag":
         if (!value || !LANGUAGE_TAG_REGEXP.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a valid RFC 5646 language tag (e.g. "en", "en-US")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a valid RFC 5646 language tag (e.g. "en", "en-US")`,
+            ),
+          );
         }
         break;
       case "tag-def":
         if (!parseTagDef(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be an extension tag and its URI (e.g. "_SKYPEID http://xmlns.com/foaf/0.1/skypeID")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be an extension tag and its URI (e.g. "_SKYPEID http://xmlns.com/foaf/0.1/skypeID")`,
+            ),
+          );
         }
         break;
       case "nonNegativeInteger":
-        if (!value || parseInt(value) < 0) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be number and greater than 0`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+        if (!NON_NEGATIVE_INTEGER_REGEXP.test(value)) {
+          errors.push(
+            valueError(node, "should be a whole number, zero or greater"),
+          );
         }
         break;
 
@@ -552,77 +543,76 @@ export class RuleNode {
           ),
         );
         break;
-      case "date": {
-        const isGedcom7 = this.isGedcom7Payload(tagType);
-        const isValid = isGedcom7
-          ? isValidDateValue(value, this.scheme)
-          : isValidGregorianDate(value, DATE_VALUE_REGEXP);
-        if (!isValid) {
-          errors.push({
-            code: "VAL",
-            message: isGedcom7
-              ? `Value for ${TAG?.value} should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`
-              : `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+      case "date-v7":
+        if (!isValidDateValue(value, this.scheme)) {
+          errors.push(
+            valueError(
+              node,
+              `should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`,
+            ),
+          );
         }
         break;
-      }
+      case "date":
+        if (!isValidGregorianDate(value, DATE_VALUE_REGEXP)) {
+          errors.push(
+            valueError(
+              node,
+              `should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
+            ),
+          );
+        }
+        break;
+      case "date-period-v7":
       case "date-period": {
-        const isValid = this.isGedcom7Payload(tagType)
-          ? isValidDatePeriod(value, this.scheme)
-          : isValidGregorianDate(value, DATE_PERIOD_REGEXP);
+        const isValid =
+          fieldType.type === "date-period-v7"
+            ? isValidDatePeriod(value, this.scheme)
+            : isValidGregorianDate(value, DATE_PERIOD_REGEXP);
         if (!isValid) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
+            ),
+          );
         }
         break;
       }
+      case "date-exact-v7":
       case "date-exact": {
-        const isValid = this.isGedcom7Payload(tagType)
-          ? isValidDateExact(value, this.scheme)
-          : isValidGregorianDate(value, DATE_EXACT_REGEXP);
+        const isValid =
+          fieldType.type === "date-exact-v7"
+            ? isValidDateExact(value, this.scheme)
+            : isValidGregorianDate(value, DATE_EXACT_REGEXP);
         if (!isValid) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be an exact date in day month year order (e.g. "1 APR 1911")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be an exact date in day month year order (e.g. "1 APR 1911")`,
+            ),
+          );
         }
         break;
       }
+      case "time-v7":
       case "time": {
-        // Only v7's type-Time allows a trailing "Z" (UTC); v5.5.1's
-        // TIME_VALUE has no such marker, so the check is keyed off the
-        // raw payload URI rather than the shared "time" field type.
-        const isV7Time =
-          this.scheme.payload[tagType]?.type ===
-          "https://gedcom.io/terms/v7/type-Time";
-        const regexp = isV7Time ? TIME_REGEXP_V7 : TIME_REGEXP;
+        // Only v7's Time allows a trailing "Z" for UTC.
+        const regexp =
+          fieldType.type === "time-v7" ? TIME_REGEXP_V7 : TIME_REGEXP;
         if (!value || !regexp.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be correct time`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(valueError(node, "should be correct time"));
         }
         break;
       }
       case "age":
         if (!value || !AGE_REGEXP.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
+            ),
+          );
         }
         break;
       case "pointer": {
@@ -637,6 +627,7 @@ export class RuleNode {
           const targetTag = fieldType.to
             ? this.scheme.tag[fieldType.to]
             : undefined;
+          const target = targetTag ? `${targetTag} record` : "record";
           // An xref that names nothing is a different problem from a payload
           // that is not an xref at all. The second is what a program writes
           // when it puts a URL or a title where a citation belongs, and there
@@ -644,9 +635,17 @@ export class RuleNode {
           //
           // getAvailableValues is only needed to name those candidates, so it
           // runs here rather than for every pointer in the document.
-          const message = isXrefExist
-            ? `Value for ${TAG?.value} should be in set [${formatValueSet(this.getAvailableValues(tagType))}]`
-            : `Value for ${TAG?.value} should be a pointer to a ${targetTag ? `${targetTag} record` : "record"}, written as "@xref@"`;
+          const candidates = isXrefExist
+            ? this.getAvailableValues(tagType)
+            : null;
+          let message: string;
+          if (candidates?.length) {
+            message = `Value for ${TAG?.value} should be in set [${formatValueSet(candidates)}]`;
+          } else if (isXrefExist) {
+            message = `Value for ${TAG?.value} names no ${target}, and this document declares none`;
+          } else {
+            message = `Value for ${TAG?.value} should be a pointer to a ${target}, written as "@xref@"`;
+          }
           errors.push({
             code:
               isXrefExist && XREF?.value !== VOID_POINTER
