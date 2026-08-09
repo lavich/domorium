@@ -753,7 +753,7 @@
       "type": null
     },
     "https://gedcom.io/terms/v5.5.1/FAM-EVEN": {
-      "type": "http://www.w3.org/2001/XMLSchema#string"
+      "type": null
     },
     "https://gedcom.io/terms/v5.5.1/FAM-HUSB": {
       "to": "https://gedcom.io/terms/v5.5.1/record-INDI",
@@ -860,7 +860,7 @@
       "type": null
     },
     "https://gedcom.io/terms/v5.5.1/INDI-EVEN": {
-      "type": "http://www.w3.org/2001/XMLSchema#string"
+      "type": null
     },
     "https://gedcom.io/terms/v5.5.1/INDI-FAMC": {
       "to": "https://gedcom.io/terms/v5.5.1/record-FAM",
