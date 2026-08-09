@@ -21,9 +21,13 @@ type FieldType =
   | "select"
   | "multiselect"
   | "date"
+  | "date-v7"
   | "date-period"
+  | "date-period-v7"
   | "date-exact"
+  | "date-exact-v7"
   | "time"
+  | "time-v7"
   | "pointer"
   | "age"
   | "personal-name"
@@ -270,18 +274,26 @@ export class RuleNode {
         type = "multiselect";
         break;
       case "https://gedcom.io/terms/v7/type-Date":
+        type = "date-v7";
+        break;
       case "https://gedcom.io/terms/v5.5.1/type-DATE_VALUE":
         type = "date";
         break;
       case "https://gedcom.io/terms/v7/type-Date#period":
+        type = "date-period-v7";
+        break;
       case "https://gedcom.io/terms/v5.5.1/type-DATE_PERIOD":
         type = "date-period";
         break;
       case "https://gedcom.io/terms/v7/type-Date#exact":
+        type = "date-exact-v7";
+        break;
       case "https://gedcom.io/terms/v5.5.1/type-DATE_EXACT":
         type = "date-exact";
         break;
       case "https://gedcom.io/terms/v7/type-Time":
+        type = "time-v7";
+        break;
       case "https://gedcom.io/terms/v5.5.1/type-TIME_VALUE":
         type = "time";
         break;
@@ -300,14 +312,6 @@ export class RuleNode {
         type = "string";
     }
     return { type, to };
-  }
-
-  // Both versions call this payload a date and mean different grammars by it.
-  // The payload URI is versioned, so it is what chooses the reader.
-  private isGedcom7Payload(tagType: GedcomType): boolean {
-    return (this.scheme.payload[tagType]?.type ?? "").startsWith(
-      GEDCOM_7_TYPE_PREFIX,
-    );
   }
 
   private mayOmitPayload(tagType: GedcomType): boolean {
@@ -539,27 +543,32 @@ export class RuleNode {
           ),
         );
         break;
-      case "date": {
-        const isGedcom7 = this.isGedcom7Payload(tagType);
-        const isValid = isGedcom7
-          ? isValidDateValue(value, this.scheme)
-          : isValidGregorianDate(value, DATE_VALUE_REGEXP);
-        if (!isValid) {
+      case "date-v7":
+        if (!isValidDateValue(value, this.scheme)) {
           errors.push({
             code: "VAL",
-            message: isGedcom7
-              ? `Value for ${TAG?.value} should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`
-              : `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
+            message: `Value for ${TAG?.value} should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`,
             range: VALUE?.range || node.range,
             level: "error",
           });
         }
         break;
-      }
+      case "date":
+        if (!isValidGregorianDate(value, DATE_VALUE_REGEXP)) {
+          errors.push({
+            code: "VAL",
+            message: `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
+            range: VALUE?.range || node.range,
+            level: "error",
+          });
+        }
+        break;
+      case "date-period-v7":
       case "date-period": {
-        const isValid = this.isGedcom7Payload(tagType)
-          ? isValidDatePeriod(value, this.scheme)
-          : isValidGregorianDate(value, DATE_PERIOD_REGEXP);
+        const isValid =
+          fieldType.type === "date-period-v7"
+            ? isValidDatePeriod(value, this.scheme)
+            : isValidGregorianDate(value, DATE_PERIOD_REGEXP);
         if (!isValid) {
           errors.push({
             code: "VAL",
@@ -570,10 +579,12 @@ export class RuleNode {
         }
         break;
       }
+      case "date-exact-v7":
       case "date-exact": {
-        const isValid = this.isGedcom7Payload(tagType)
-          ? isValidDateExact(value, this.scheme)
-          : isValidGregorianDate(value, DATE_EXACT_REGEXP);
+        const isValid =
+          fieldType.type === "date-exact-v7"
+            ? isValidDateExact(value, this.scheme)
+            : isValidGregorianDate(value, DATE_EXACT_REGEXP);
         if (!isValid) {
           errors.push({
             code: "VAL",
@@ -584,14 +595,11 @@ export class RuleNode {
         }
         break;
       }
+      case "time-v7":
       case "time": {
-        // Only v7's type-Time allows a trailing "Z" (UTC); v5.5.1's
-        // TIME_VALUE has no such marker, so the check is keyed off the
-        // raw payload URI rather than the shared "time" field type.
-        const isV7Time =
-          this.scheme.payload[tagType]?.type ===
-          "https://gedcom.io/terms/v7/type-Time";
-        const regexp = isV7Time ? TIME_REGEXP_V7 : TIME_REGEXP;
+        // Only v7's Time allows a trailing "Z" for UTC.
+        const regexp =
+          fieldType.type === "time-v7" ? TIME_REGEXP_V7 : TIME_REGEXP;
         if (!value || !regexp.test(value)) {
           errors.push({
             code: "VAL",
