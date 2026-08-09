@@ -178,27 +178,10 @@ const DATE_VALUE_REGEXP = new RegExp(
 
 const DATE_PERIOD_REGEXP = new RegExp(`^(?:${DATE_PERIOD_SRC})$`);
 
-// Flattening every pointer in the document costs O(document), and a RuleNode
-// is built for each validated node — doing it in the constructor made
-// validation cost grow with nodes × pointers. The map is rebuilt by every
-// parse and never mutated afterwards, so the flattened form can be cached
-// against it without going stale. Consumers only read the array.
-const flattenedPointers = new WeakMap<Map<string, ASTNode[]>, ASTNode[]>();
-
-function flattenPointers(pointers: Map<string, ASTNode[]>): ASTNode[] {
-  const cached = flattenedPointers.get(pointers);
-  if (cached) {
-    return cached;
-  }
-  const flattened = Array.from(pointers.values()).flatMap((v) => v);
-  flattenedPointers.set(pointers, flattened);
-  return flattened;
-}
-
 // Which xrefs a pointer may name, grouped by the record tag it points at.
-// Checking that used to filter every pointer in the document and build a fresh
-// array of candidates for each pointer-bearing node, so a file whose records
-// reference each other — which is every real one — cost records × pointers.
+// A RuleNode is built for each validated node, so indexing per node would cost
+// records × pointers. The map is rebuilt by every parse and never mutated
+// afterwards, so the index can be cached against it without going stale.
 const pointerTargets = new WeakMap<
   Map<string, ASTNode[]>,
   Map<string, Set<string>>
@@ -212,7 +195,7 @@ function targetsByTag(
     return cached;
   }
   const index = new Map<string, Set<string>>();
-  for (const node of flattenPointers(pointers)) {
+  for (const node of pointers.values().flatMap((nodes) => nodes)) {
     const tag = node.tokens.TAG?.value;
     const xref = node.tokens.POINTER?.value;
     if (!tag || !xref) {
@@ -230,17 +213,11 @@ function targetsByTag(
 }
 
 export class RuleNode {
-  pointers: ASTNode[];
-  private readonly pointerMap: Map<string, ASTNode[]>;
-
   constructor(
     private readonly scheme: GedcomScheme,
-    pointers: Map<string, ASTNode[]>,
+    private readonly pointerMap: Map<string, ASTNode[]>,
     private readonly extensions: ExtensionContext = emptyExtensions(),
-  ) {
-    this.pointerMap = pointers;
-    this.pointers = flattenPointers(pointers);
-  }
+  ) {}
 
   /** Whether `xref` names a record of the kind this pointer type expects. */
   private isPointerTarget(tagType: GedcomType, xref: string): boolean {
@@ -255,12 +232,10 @@ export class RuleNode {
 
   getFieldType(tagType: GedcomType): {
     type: FieldType;
-    isList: boolean;
     to: GedcomType | undefined;
   } {
     const payload = this.scheme.payload[tagType];
     let type: FieldType;
-    let isList = false;
     let to: GedcomType | undefined = undefined;
     switch (payload?.type) {
       case "Y|<NULL>":
@@ -284,7 +259,6 @@ export class RuleNode {
         break;
       case "https://gedcom.io/terms/v7/type-List#Text":
         type = "string";
-        isList = true;
         break;
       case "http://www.w3.org/2001/XMLSchema#nonNegativeInteger":
         type = "nonNegativeInteger";
@@ -325,7 +299,7 @@ export class RuleNode {
       default:
         type = "string";
     }
-    return { type, isList, to };
+    return { type, to };
   }
 
   // Both versions call this payload a date and mean different grammars by it.
@@ -442,7 +416,7 @@ export class RuleNode {
   validate(node: ASTNode, _tagType?: GedcomType): GedcomError[] {
     const errors: GedcomError[] = [];
     const tagType = _tagType || this.getNodeType(node);
-    const fieldType = this.getFieldType(tagType || this.getNodeType(node));
+    const fieldType = this.getFieldType(tagType);
     const VALUE = node.tokens.VALUE;
     const value = resolveValue(node).trim();
     const TAG = node.tokens.TAG;
