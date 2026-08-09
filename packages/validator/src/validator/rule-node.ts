@@ -60,6 +60,8 @@ const OMITTABLE_PAYLOADS = new Set([
 
 const GEDCOM_7_TYPE_PREFIX = "https://gedcom.io/terms/v7/";
 
+const EMPTY_EVENT = "VAL010";
+
 const MAX_LISTED_VALUES = 10;
 
 function formatValueSet(values: string[] | null): string {
@@ -451,12 +453,22 @@ export class RuleNode {
 
     switch (fieldType.type) {
       case "boolean":
-        if (value !== "Y" && (value || node.children.length === 0)) {
+        if (value && value !== "Y") {
           errors.push({
             code: "VAL",
             message: `Value for ${TAG?.value} should be Y or null`,
             range: VALUE?.range || node.range,
             level: "error",
+          });
+        } else if (!value && node.children.length === 0) {
+          // The Y convention exists so that processors which prune lines
+          // having neither a value nor a subordinate line cannot drop the
+          // assertion. Such a line is what they prune.
+          errors.push({
+            code: EMPTY_EVENT,
+            message: `${TAG?.value} has neither a payload nor substructures, so it asserts nothing and other software may drop it — write "Y" to assert the event happened, or give it a DATE, PLAC or NOTE`,
+            range: TAG?.range || node.range,
+            level: "warning",
           });
         }
         break;
