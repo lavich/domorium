@@ -2,7 +2,7 @@ import { GedcomError } from "../types/errors";
 import { ASTNode, ASTToken } from "../parser";
 import { buildAst } from "../parser/ast";
 import { ConfigurableLexer } from "../parser/lexer";
-import { GedcomValidator } from "../validator";
+import { GedcomValidator, schemeFor } from "../validator";
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
 import { getGedcomVersion } from "../validator/getGedcomVersion";
@@ -63,14 +63,15 @@ export class GedcomDocument {
     this.xRefs = xrefs;
     this.errors.push(...this.validateLevels(nodes));
     const version = getGedcomVersion(nodes);
+    this.scheme = schemeFor(nodes);
     const { context, errors } = collectExtensions(
       nodes,
       !version?.startsWith("5"),
+      this.scheme,
     );
     this.extensions = context;
     this.errors.push(...errors);
     const validator = new GedcomValidator(pointers, context);
-    this.scheme = validator.setScheme(this.nodes);
     this.errors.push(...validator.validate(this.nodes));
     return this;
   }

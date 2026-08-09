@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { GedcomValidator } from "./validate";
+import { GedcomValidator, schemeFor } from "./validate";
 import { ConfigurableLexer } from "../parser/lexer";
 import { buildAst } from "../parser/ast";
 import { collectExtensions } from "./extensions";
@@ -128,7 +128,11 @@ describe("validator", () => {
   const validatorFor = (text: string) => {
     const { nodes, pointers } = astBuilder(text);
     const version = getGedcomVersion(nodes);
-    const { context } = collectExtensions(nodes, !version?.startsWith("5"));
+    const { context } = collectExtensions(
+      nodes,
+      !version?.startsWith("5"),
+      schemeFor(nodes),
+    );
     return { nodes, validator: new GedcomValidator(pointers, context) };
   };
 

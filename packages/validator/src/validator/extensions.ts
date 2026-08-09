@@ -1,5 +1,5 @@
 import { ASTNode, resolveValue } from "../parser";
-import { GedcomTag } from "../schemes/schema-types";
+import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { GedcomError } from "../types/errors";
 import { Range } from "../types/position";
 
@@ -15,13 +15,24 @@ export function isExtensionTag(tag: string): boolean {
 export interface ExtensionContext {
   // Declared tag -> its URI, from HEAD.SCHMA.
   tags: Map<GedcomTag, string>;
+  // Declared tag -> the standard tag its URI names, when the URI is a
+  // standard one and the tag is therefore an abbreviation for it.
+  aliases: Map<GedcomTag, GedcomTag>;
   // GEDCOM 7 requires every extension tag to be given a URI in SCHMA; 5.5.1
   // has no such structure, so there is nothing to hold those documents to.
   requireDeclaration: boolean;
 }
 
 export function emptyExtensions(): ExtensionContext {
-  return { tags: new Map(), requireDeclaration: false };
+  return { tags: new Map(), aliases: new Map(), requireDeclaration: false };
+}
+
+/** The standard tag `tag` abbreviates, or `tag` itself. */
+export function resolveTag(
+  extensions: ExtensionContext,
+  tag: string,
+): GedcomTag {
+  return extensions.aliases.get(GedcomTag(tag)) ?? GedcomTag(tag);
 }
 
 // An extTag is an extension tag wherever it appears — as a tag, a calendar, a
@@ -50,8 +61,10 @@ export function parseTagDef(
 export function collectExtensions(
   nodes: ASTNode[],
   requireDeclaration: boolean,
+  scheme: GedcomScheme,
 ): { context: ExtensionContext; errors: GedcomError[] } {
   const tags = new Map<GedcomTag, string>();
+  const aliases = new Map<GedcomTag, GedcomTag>();
   const errors: GedcomError[] = [];
 
   const HEAD = nodes.find((node) => node.tokens.TAG?.value === "HEAD");
@@ -79,7 +92,13 @@ export function collectExtensions(
       continue;
     }
     tags.set(def.tag, def.uri);
+    // One table covers every kind of alias: scheme.tag maps the URI of a
+    // structure, enumeration value, calendar or month to the tag naming it.
+    const standard = scheme.tag[GedcomType(def.uri)];
+    if (standard) {
+      aliases.set(def.tag, standard);
+    }
   }
 
-  return { context: { tags, requireDeclaration }, errors };
+  return { context: { tags, aliases, requireDeclaration }, errors };
 }
