@@ -25,6 +25,54 @@ const document = new GedcomDocument().createDocument(gedcomString);
 const errors = document.getErrors();
 ```
 
+## Diagnostics
+
+`getErrors()` returns `GedcomError[]`:
+
+```typescript
+import type { GedcomError, Position, Range } from "@domorium/validator";
+
+interface GedcomError {
+  code: string;
+  message: string;
+  hint?: string;
+  data?: { xref?: string; requiredRecordTag?: string; expectedLevel?: number };
+  range: Range;
+  level: "error" | "warning" | "info";
+}
+```
+
+`data` carries the facts a quick fix is built from — which xref failed to
+resolve, and what record tag it needed.
+
+Match on `code` rather than on `message`; messages are written for people and
+change. `GedcomErrorCode` is exported for this:
+
+```typescript
+import { GedcomErrorCode } from "@domorium/validator";
+
+const unresolved = errors.filter(
+  (error) => error.code === GedcomErrorCode.UnresolvedXref,
+);
+```
+
+| Code              | Member                 | Reported when                                               |
+| ----------------- | ---------------------- | ----------------------------------------------------------- |
+| `VAL001`          | `UnknownTag`           | a tag the schema does not define in this position           |
+| `VAL002`          | `MissingTag`           | a structure the schema requires is absent                   |
+| `VAL003`          | `MissingValue`         | the payload is absent where one is required                 |
+| `VAL004`          | `IncorrectValue`       | the payload does not match its data type                    |
+| `VAL005`          | `ShouldBeSetValue`     | the payload is not one of the permitted values              |
+| `VAL006`          | `MissingRef`           | a pointer payload that is not written as a pointer          |
+| `VAL007`          | `ManyOccurrences`      | more occurrences than the cardinality allows                |
+| `VAL008`          | `UndocumentedTag`      | a GEDCOM 7 extension tag with no `HEAD`.`SCHMA` declaration |
+| `VAL009`          | `DuplicateDeclaration` | a tag declared more than once in `HEAD`.`SCHMA`             |
+| `VAL010`          | `EmptyEvent`           | an event with neither a payload nor substructures           |
+| `unresolved-xref` | `UnresolvedXref`       | an xref naming no record of the required type               |
+| `invalid-level`   | `InvalidLevel`         | a level that cannot follow the line above it                |
+| `LEXER`           | `Lexer`                | the text could not be tokenized                             |
+| `PARSER`          | `Parser`               | the tokens could not be assembled into a tree               |
+
 ## Scripts
 
 | Command             | Description                                              |

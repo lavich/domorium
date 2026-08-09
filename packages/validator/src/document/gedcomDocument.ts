@@ -1,4 +1,4 @@
-import { GedcomError } from "../types/errors";
+import { GedcomError, GedcomErrorCode } from "../types/errors";
 import { ASTNode, ASTToken } from "../parser";
 import { buildAst } from "../parser/ast";
 import { ConfigurableLexer } from "../parser/lexer";
@@ -32,7 +32,7 @@ export class GedcomDocument {
     this.errors = [];
     lexingResult.errors.forEach((error) => {
       this.errors.push({
-        code: "LEXER",
+        code: GedcomErrorCode.Lexer,
         message: error.message,
         range: {
           start: { line: error.line ?? 0, character: error.column ?? 0 },
@@ -47,7 +47,7 @@ export class GedcomDocument {
     const result = buildAst(lexingResult.tokens, input);
     result.malformed.forEach((node) => {
       this.errors.push({
-        code: "PARSER",
+        code: GedcomErrorCode.Parser,
         message: "Every GEDCOM line must begin with a level number",
         range: node.range,
         level: "warning",
@@ -81,7 +81,7 @@ export class GedcomDocument {
     for (const node of nodes) {
       if (node.level !== expectedLevel) {
         errors.push({
-          code: "invalid-level",
+          code: GedcomErrorCode.InvalidLevel,
           message: `Level ${node.level} should be ${expectedLevel}`,
           data: { expectedLevel },
           range: node.tokens.LEVEL?.range ?? {

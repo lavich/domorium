@@ -1,14 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { schemeFor } from "./validate";
+import { GedcomErrorCode } from "../types/errors";
 import { ConfigurableLexer } from "../parser/lexer";
 import { buildAst } from "../parser/ast";
 import { GedcomTag } from "../schemes/schema-types";
-import {
-  collectExtensions,
-  isExtensionTag,
-  parseTagDef,
-  ExtensionErrorCode,
-} from "./extensions";
+import { collectExtensions, isExtensionTag, parseTagDef } from "./extensions";
 
 const astBuilder = (text: string) => {
   const lexingResult = new ConfigurableLexer({ zeroBased: true }).tokenize(
@@ -114,7 +110,7 @@ describe("collectExtensions", () => {
     );
 
     expect(errors).toHaveLength(1);
-    expect(errors[0].code).toBe(ExtensionErrorCode.DuplicateDeclaration);
+    expect(errors[0].code).toBe(GedcomErrorCode.DuplicateDeclaration);
     expect(errors[0].level).toBe("warning");
     expect(context.tags.get(GedcomTag("_X"))).toBe("http://example.com/first");
   });

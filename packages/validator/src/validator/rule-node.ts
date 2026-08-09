@@ -1,6 +1,6 @@
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { ASTNode, resolveValue } from "../parser";
-import { GedcomError } from "../types/errors";
+import { GedcomError, GedcomErrorCode } from "../types/errors";
 import {
   emptyExtensions,
   ExtensionContext,
@@ -65,8 +65,6 @@ const OMITTABLE_PAYLOADS = new Set([
 
 const GEDCOM_7_TYPE_PREFIX = "https://gedcom.io/terms/v7/";
 
-const EMPTY_EVENT = "VAL010";
-
 const MAX_LISTED_VALUES = 10;
 
 function formatValueSet(values: string[] | null): string {
@@ -78,9 +76,15 @@ function formatValueSet(values: string[] | null): string {
   return omitted > 0 ? `${listed}, … ${omitted} more` : listed;
 }
 
-function valueError(node: ASTNode, message: string): GedcomError {
+// An absent payload is one problem whatever type was expected, so it keeps its
+// own code and every rule reports it alike.
+function valueError(
+  node: ASTNode,
+  message: string,
+  code: GedcomErrorCode = GedcomErrorCode.IncorrectValue,
+): GedcomError {
   return {
-    code: "VAL",
+    code: resolveValue(node).trim() ? code : GedcomErrorCode.MissingValue,
     message: `Value for ${node.tokens.TAG?.value} ${message}`,
     range: node.tokens.VALUE?.range || node.range,
     level: "error",
@@ -370,6 +374,7 @@ export class RuleNode {
         valueError(
           node,
           `should be in set [${formatValueSet(availableValues)}]`,
+          GedcomErrorCode.ShouldBeSetValue,
         ),
       );
     }
@@ -457,7 +462,7 @@ export class RuleNode {
           // having neither a value nor a subordinate line cannot drop the
           // assertion. Such a line is what they prune.
           errors.push({
-            code: EMPTY_EVENT,
+            code: GedcomErrorCode.EmptyEvent,
             message: `${TAG?.value} has neither a payload nor substructures, so it asserts nothing and other software may drop it — write "Y" to assert the event happened, or give it a DATE, PLAC or NOTE`,
             range: TAG?.range || node.range,
             level: "warning",
@@ -486,7 +491,7 @@ export class RuleNode {
         }
         if (!value) {
           errors.push({
-            code: "VAL",
+            code: GedcomErrorCode.MissingValue,
             message: `Missing value for ${TAG?.value}`,
             range: TAG?.range || node.range,
             level: "error",
@@ -660,8 +665,8 @@ export class RuleNode {
           errors.push({
             code:
               isXrefExist && XREF?.value !== VOID_POINTER
-                ? "unresolved-xref"
-                : "VAL",
+                ? GedcomErrorCode.UnresolvedXref
+                : GedcomErrorCode.MissingRef,
             message,
             data:
               isXrefExist && XREF?.value !== VOID_POINTER
