@@ -1,12 +1,7 @@
 import { ASTNode, resolveValue } from "../parser";
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
-import { GedcomError } from "../types/errors";
+import { GedcomError, GedcomErrorCode } from "../types/errors";
 import { Range } from "../types/position";
-
-export enum ExtensionErrorCode {
-  UndocumentedTag = "VAL008",
-  DuplicateDeclaration = "VAL009",
-}
 
 export function isExtensionTag(tag: string): boolean {
   return tag.startsWith("_");
@@ -39,7 +34,7 @@ export function resolveTag(
 // month, an epoch or an enumerated value.
 export function undocumentedTag(tag: GedcomTag, range: Range): GedcomError {
   return {
-    code: ExtensionErrorCode.UndocumentedTag,
+    code: GedcomErrorCode.UndocumentedTag,
     message: `Extension tag ${tag} is not declared in HEAD.SCHMA`,
     range,
     level: "warning",
@@ -84,7 +79,7 @@ export function collectExtensions(
     }
     if (tags.has(def.tag)) {
       errors.push({
-        code: ExtensionErrorCode.DuplicateDeclaration,
+        code: GedcomErrorCode.DuplicateDeclaration,
         message: `Extension tag ${def.tag} is declared more than once`,
         range: node.tokens.VALUE?.range ?? node.range,
         level: "warning",

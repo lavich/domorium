@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { GedcomDocument } from "./gedcomDocument";
+import { GedcomErrorCode } from "../types/errors";
 
 describe("validator", () => {
   test("accepts a partial line while an editor is initializing", () => {
@@ -141,6 +142,30 @@ describe("validator", () => {
 
     const codes = gedcomDocument.getErrors().map((error) => error.code);
     expect(codes).toContain("VAL009");
+  });
+
+  // Every payload problem used to ship as the bare code "VAL", so a consumer
+  // could not tell a missing value from a malformed one.
+  describe("diagnostic codes", () => {
+    const codeFor = (body: string) =>
+      new GedcomDocument()
+        .createDocument(`0 HEAD\n1 GEDC\n2 VERS 7.0\n${body}0 TRLR\n`)
+        .getErrors()
+        .map((error) => error.code);
+
+    test.each([
+      ["0 @I1@ INDI\n1 NAME\n", GedcomErrorCode.MissingValue],
+      ["0 @I1@ INDI\n1 SEX NOPE\n", GedcomErrorCode.ShouldBeSetValue],
+      [
+        "0 @I1@ INDI\n1 BIRT\n2 DATE nonsense\n",
+        GedcomErrorCode.IncorrectValue,
+      ],
+      ["0 @I1@ INDI\n1 SUBM not a pointer\n", GedcomErrorCode.MissingRef],
+      ["0 @I1@ INDI\n1 DEAT\n", GedcomErrorCode.EmptyEvent],
+      ["0 @I1@ INDI\n1 BOGUS x\n", GedcomErrorCode.UnknownTag],
+    ])("reports %s as %s", async (body, code) => {
+      expect(codeFor(body)).toContain(code);
+    });
   });
 
   // Written for #94.

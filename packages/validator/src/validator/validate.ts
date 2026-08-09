@@ -8,7 +8,7 @@ import g7validationJson from "../schemes/g7validation.json";
 
 import g551validationJson from "../schemes/g551validation.json";
 import { ASTNode } from "../parser";
-import { GedcomError } from "../types/errors";
+import { GedcomError, GedcomErrorCode } from "../types/errors";
 import { getGedcomVersion } from "./getGedcomVersion";
 import { RuleNode } from "./rule-node";
 import {
@@ -17,16 +17,6 @@ import {
   isExtensionTag,
   undocumentedTag,
 } from "./extensions";
-
-enum ValidationErrorCode {
-  UnknownTag = "VAL001",
-  MissingTag = "VAL002",
-  MissingValue = "VAL003",
-  IncorrectValue = "VAL004",
-  ShouldBeSetValue = "VAL005",
-  MissingRef = "VAL006",
-  ManyOccurrences = "VAL007",
-}
 
 function parseCardinality(str: string): { min: number; max: number } | null {
   const re = /^\{(?<a>\d+):(?<b>\d+|M)}$/;
@@ -144,7 +134,7 @@ export class GedcomValidator {
         : undefined;
       if (!tag) {
         errors.push({
-          code: ValidationErrorCode.MissingTag,
+          code: GedcomErrorCode.MissingTag,
           message: `Missing required tag`,
           range: { start: node.range.start, end: node.range.start },
           level: "error",
@@ -183,7 +173,7 @@ export class GedcomValidator {
 
       if (!rule) {
         errors.push({
-          code: ValidationErrorCode.UnknownTag,
+          code: GedcomErrorCode.UnknownTag,
           message: `Unknown tag ${tag} in parent ${parentTag}`,
           range: tagToken?.range || node.range,
           level: "warning",
@@ -195,7 +185,7 @@ export class GedcomValidator {
       occurrences.set(tag, seen);
       if (seen > rule.max) {
         errors.push({
-          code: ValidationErrorCode.ManyOccurrences,
+          code: GedcomErrorCode.ManyOccurrences,
           message: `Too many occurrences of ${tag} in parent ${parentTag}`,
           range: tagToken?.range || node.range,
           level: "error",
@@ -210,7 +200,7 @@ export class GedcomValidator {
     for (const [tag, rule] of rules) {
       if ((occurrences.get(tag) ?? 0) < rule.min) {
         errors.push({
-          code: ValidationErrorCode.MissingTag,
+          code: GedcomErrorCode.MissingTag,
           message: `Missing required tag ${tag} in ${parentTag || "root"}`,
           range: nodes[0]?.parent?.range ?? {
             start: { line: 0, character: 0 },
