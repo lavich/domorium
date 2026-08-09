@@ -77,6 +77,15 @@ function formatValueSet(values: string[] | null): string {
   return omitted > 0 ? `${listed}, … ${omitted} more` : listed;
 }
 
+function valueError(node: ASTNode, message: string): GedcomError {
+  return {
+    code: "VAL",
+    message: `Value for ${node.tokens.TAG?.value} ${message}`,
+    range: node.tokens.VALUE?.range || node.range,
+    level: "error",
+  };
+}
+
 // Hour may be 1 or 2 digits (both "8:38" and "08:38" are valid) per both
 // v5.5.1 (HOUR is {SIZE=1:2}) and v7; minute/second are always 2 digits.
 const TIME_BASE_SRC = "(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?";
@@ -349,12 +358,12 @@ export class RuleNode {
       (value) => !isExtensionTag(value) && !availableValues?.includes(value),
     );
     if (borrowed) {
-      errors.push({
-        code: "VAL",
-        message: `Value for ${node.tokens.TAG?.value} should be in set [${formatValueSet(availableValues)}]`,
-        range,
-        level: "error",
-      });
+      errors.push(
+        valueError(
+          node,
+          `should be in set [${formatValueSet(availableValues)}]`,
+        ),
+      );
     }
 
     return errors;
@@ -421,7 +430,6 @@ export class RuleNode {
     const errors: GedcomError[] = [];
     const tagType = _tagType || this.getNodeType(node);
     const fieldType = this.getFieldType(tagType);
-    const VALUE = node.tokens.VALUE;
     const value = resolveValue(node).trim();
     const TAG = node.tokens.TAG;
 
@@ -432,12 +440,7 @@ export class RuleNode {
     switch (fieldType.type) {
       case "boolean":
         if (value && value !== "Y") {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be Y or null`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(valueError(node, "should be Y or null"));
         } else if (!value && node.children.length === 0) {
           // The Y convention exists so that processors which prune lines
           // having neither a value nor a subordinate line cannot drop the
@@ -459,14 +462,14 @@ export class RuleNode {
           const isLati = rawTag === "LATI";
           const re = isLati ? LATITUDE_REGEXP : LONGITUDE_REGEXP;
           if (!value || !re.test(value)) {
-            errors.push({
-              code: "VAL",
-              message: `Value for ${TAG?.value} should be correct ${
-                isLati ? "latitude" : "longitude"
-              } (e.g. "${isLati ? "N18.150944" : "W46.6"}")`,
-              range: VALUE?.range || node.range,
-              level: "error",
-            });
+            errors.push(
+              valueError(
+                node,
+                `should be correct ${
+                  isLati ? "latitude" : "longitude"
+                } (e.g. "${isLati ? "N18.150944" : "W46.6"}")`,
+              ),
+            );
           }
           break;
         }
@@ -482,52 +485,49 @@ export class RuleNode {
       }
       case "personal-name":
         if (!value || !PERSONAL_NAME_REGEXP.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a name, with the surname (if any) wrapped in a single pair of slashes (e.g. "John /Doe/")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a name, with the surname (if any) wrapped in a single pair of slashes (e.g. "John /Doe/")`,
+            ),
+          );
         }
         break;
       case "media-type":
         if (!value || !MEDIA_TYPE_REGEXP.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a media type in the form "type/subtype" (e.g. "image/jpeg")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a media type in the form "type/subtype" (e.g. "image/jpeg")`,
+            ),
+          );
         }
         break;
       case "language-tag":
         if (!value || !LANGUAGE_TAG_REGEXP.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a valid RFC 5646 language tag (e.g. "en", "en-US")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a valid RFC 5646 language tag (e.g. "en", "en-US")`,
+            ),
+          );
         }
         break;
       case "tag-def":
         if (!parseTagDef(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be an extension tag and its URI (e.g. "_SKYPEID http://xmlns.com/foaf/0.1/skypeID")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be an extension tag and its URI (e.g. "_SKYPEID http://xmlns.com/foaf/0.1/skypeID")`,
+            ),
+          );
         }
         break;
       case "nonNegativeInteger":
         if (!NON_NEGATIVE_INTEGER_REGEXP.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a whole number, zero or greater`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(node, "should be a whole number, zero or greater"),
+          );
         }
         break;
 
@@ -545,22 +545,22 @@ export class RuleNode {
         break;
       case "date-v7":
         if (!isValidDateValue(value, this.scheme)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`,
+            ),
+          );
         }
         break;
       case "date":
         if (!isValidGregorianDate(value, DATE_VALUE_REGEXP)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
+            ),
+          );
         }
         break;
       case "date-period-v7":
@@ -570,12 +570,12 @@ export class RuleNode {
             ? isValidDatePeriod(value, this.scheme)
             : isValidGregorianDate(value, DATE_PERIOD_REGEXP);
         if (!isValid) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
+            ),
+          );
         }
         break;
       }
@@ -586,12 +586,12 @@ export class RuleNode {
             ? isValidDateExact(value, this.scheme)
             : isValidGregorianDate(value, DATE_EXACT_REGEXP);
         if (!isValid) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be an exact date in day month year order (e.g. "1 APR 1911")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be an exact date in day month year order (e.g. "1 APR 1911")`,
+            ),
+          );
         }
         break;
       }
@@ -601,23 +601,18 @@ export class RuleNode {
         const regexp =
           fieldType.type === "time-v7" ? TIME_REGEXP_V7 : TIME_REGEXP;
         if (!value || !regexp.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be correct time`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(valueError(node, "should be correct time"));
         }
         break;
       }
       case "age":
         if (!value || !AGE_REGEXP.test(value)) {
-          errors.push({
-            code: "VAL",
-            message: `Value for ${TAG?.value} should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
-            range: VALUE?.range || node.range,
-            level: "error",
-          });
+          errors.push(
+            valueError(
+              node,
+              `should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
+            ),
+          );
         }
         break;
       case "pointer": {
