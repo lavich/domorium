@@ -90,6 +90,22 @@ function getRules(
   return rules;
 }
 
+/** The structure type a tag definition names, when its URI is a standard one. */
+function aliasedType(
+  extensions: ExtensionContext,
+  tag: GedcomTag,
+  scheme: GedcomScheme,
+): GedcomType | undefined {
+  const uri = extensions.tags.get(tag);
+  const type = uri ? GedcomType(uri) : undefined;
+  return type && scheme.payload[type] ? type : undefined;
+}
+
+export function schemeFor(nodes: ASTNode[]): GedcomScheme {
+  const version = getGedcomVersion(nodes);
+  return version?.startsWith("5") ? g551validationJson : g7validationJson;
+}
+
 export class GedcomValidator {
   constructor(
     private readonly pointers: Map<string, ASTNode[]> = new Map<
@@ -100,8 +116,7 @@ export class GedcomValidator {
   ) {}
 
   setScheme(nodes: ASTNode[]): GedcomScheme {
-    const version = getGedcomVersion(nodes);
-    return version?.startsWith("5") ? g551validationJson : g7validationJson;
+    return schemeFor(nodes);
   }
 
   validate(
@@ -143,8 +158,6 @@ export class GedcomValidator {
 
       const tagToken = node.tokens.TAG;
 
-      // An extension defines its own payload and substructures, so there is
-      // nothing to check the subtree against. See ADR-0008.
       if (isExtensionTag(tag)) {
         if (
           this.extensions.requireDeclaration &&
@@ -152,6 +165,17 @@ export class GedcomValidator {
         ) {
           errors.push(undocumentedTag(tag, tagToken?.range || node.range));
         }
+        // An aliased tag is that structure, so its payload and substructures
+        // follow the standard definition. Its position does not: a relocated
+        // standard structure may only appear under a superstructure that does
+        // not document it, so this parent's rule table is not consulted.
+        const aliased = aliasedType(this.extensions, tag, scheme);
+        if (aliased) {
+          errors.push(...ruleNode.validate(node, aliased));
+          errors.push(...this.validate(node.children, aliased, scheme));
+        }
+        // An undocumented extension defines its own payload and substructures,
+        // so there is nothing to check its subtree against. See ADR-0008.
         continue;
       }
 

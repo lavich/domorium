@@ -143,6 +143,88 @@ describe("validator", () => {
     expect(codes).toContain("VAL009");
   });
 
+  // Written for #94.
+  describe("SCHMA aliases", () => {
+    const HEAD = `0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _USER https://gedcom.io/terms/v7/record-SUBM
+2 TAG _CREATOR https://gedcom.io/terms/v7/SUBM
+2 TAG _PHRASE https://gedcom.io/terms/v7/PHRASE
+2 TAG _CALENDRIER https://gedcom.io/terms/v7/cal-FRENCH_R
+2 TAG _JOUR https://gedcom.io/terms/v7/month-COMP
+2 TAG _OPAQUE http://example.com/whatever
+`;
+    const errorsFor = (body: string) =>
+      new GedcomDocument().createDocument(`${HEAD}${body}0 TRLR\n`).getErrors();
+
+    test("resolves a pointer to a record written under an alias", () => {
+      expect(
+        errorsFor(`0 @U1@ _USER
+1 NAME Aliased record
+0 @I1@ INDI
+1 SUBM @U1@
+`),
+      ).toEqual([]);
+    });
+
+    test("validates the subtree of an aliased record as the standard one", () => {
+      const errors = errorsFor(`0 @U1@ _USER
+`);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].code).toBe("VAL002");
+      expect(errors[0].message).toContain("NAME");
+    });
+
+    test("validates the payload of an aliased substructure", () => {
+      const errors = errorsFor(`0 @U1@ _USER
+1 NAME Aliased record
+0 @I1@ INDI
+1 _CREATOR not a pointer
+`);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain("should be a pointer");
+    });
+
+    test("accepts an aliased structure where the standard tag is not allowed", () => {
+      expect(
+        errorsFor(`0 @I1@ INDI
+1 _PHRASE relocated here
+`),
+      ).toEqual([]);
+    });
+
+    test("reads a date in a calendar named by an alias", () => {
+      expect(
+        errorsFor(`0 @I1@ INDI
+1 BIRT
+2 DATE _CALENDRIER 4 COMP 8
+`),
+      ).toEqual([]);
+    });
+
+    test("reads a month named by an alias in a standard calendar", () => {
+      expect(
+        errorsFor(`0 @I1@ INDI
+1 BIRT
+2 DATE FRENCH_R 2 _JOUR 8
+`),
+      ).toEqual([]);
+    });
+
+    // BOGUS would be an unknown tag under any standard type, so a clean run
+    // is what proves the subtree was left alone.
+    test("leaves an extension whose URI is not a standard one opaque", () => {
+      expect(
+        errorsFor(`0 @I1@ INDI
+1 _OPAQUE whatever it likes
+2 BOGUS nested
+`),
+      ).toEqual([]);
+    });
+  });
+
   test("accepts a declared extension tag used as an enumeration value", () => {
     const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
 1 GEDC

@@ -2,12 +2,7 @@
   "source": "https://gedcom.io/testfiles/gedcom70/",
   "known": [
     {
-      "note": "Twenty of the twenty-two files are diagnostic-free. Everything below is one of three things, and seven of the ten are correct."
-    },
-    {
-      "issue": 94,
-      "where": "extensions.ged 67 and 72",
-      "what": "A HEAD.SCHMA tag aliased to a standard URI is not resolved. Line 67 makes an aliased SUBM record invisible to the pointer check; line 72 writes a standard French Republican month under a calendar aliased to cal-FRENCH_R, and without the alias that reads as an extension calendar using a standard month, which the specification forbids."
+      "note": "Twenty of the twenty-two files are diagnostic-free. Eight diagnostics remain and seven of them are correct."
     },
     {
       "issue": 96,
@@ -47,8 +42,6 @@
         "18 warning VAL009",
         "61 warning VAL008",
         "62 warning VAL008",
-        "67 error unresolved-xref",
-        "72 error VAL",
         "77 warning VAL008",
         "82 warning VAL008"
       ]

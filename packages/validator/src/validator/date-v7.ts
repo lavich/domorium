@@ -1,5 +1,10 @@
 import { GedcomScheme, GedcomTag } from "../schemes/schema-types";
-import { isExtensionTag } from "./extensions";
+import {
+  emptyExtensions,
+  ExtensionContext,
+  isExtensionTag,
+  resolveTag,
+} from "./extensions";
 
 /**
  * GEDCOM 7 dates, from gedcom-2-data-types.md:
@@ -72,11 +77,11 @@ function vocabularyOf(scheme: GedcomScheme, calendar: GedcomTag): Vocabulary {
 }
 
 /**
- * An extension tag is accepted in any of the three slots a calendar constrains.
- * Whether a given one is meaningful is a question for the schema it was declared
- * with — an extension calendar defines its own months, and a documented
- * extension month may be an alias for a standard one (#94). Rejecting them here
- * would report files this validator cannot prove wrong.
+ * An extension tag that is not an alias is accepted in any of the three slots a
+ * calendar constrains: an extension calendar defines its own months and epochs,
+ * and rejecting an undeclared one here would report files this validator cannot
+ * prove wrong. An alias resolves to the standard tag it abbreviates and is held
+ * to the calendar's own vocabulary like any other standard tag.
  */
 function permits(vocabulary: Set<string> | null, token: string): boolean {
   return vocabulary === null
@@ -180,32 +185,51 @@ function tokenize(value: string): string[] {
   return value.trim().split(/\s+/);
 }
 
+// Only an extension tag can be aliased, and nothing else in a date begins with
+// an underscore, so the whole token list can be resolved at once.
+function tokenizeResolved(
+  value: string,
+  extensions: ExtensionContext,
+): string[] {
+  return tokenize(value).map((token) => resolveTag(extensions, token));
+}
+
 function isWholeValue(
   value: string,
   scheme: GedcomScheme,
+  extensions: ExtensionContext,
   read: (tokens: string[], start: number, scheme: GedcomScheme) => number,
 ): boolean {
-  const tokens = tokenize(value);
+  const tokens = tokenizeResolved(value, extensions);
   return tokens.length > 0 && read(tokens, 0, scheme) === tokens.length;
 }
 
-export function isValidDateValue(value: string, scheme: GedcomScheme): boolean {
-  return isWholeValue(value, scheme, readDateValue);
+export function isValidDateValue(
+  value: string,
+  scheme: GedcomScheme,
+  extensions: ExtensionContext = emptyExtensions(),
+): boolean {
+  return isWholeValue(value, scheme, extensions, readDateValue);
 }
 
 export function isValidDatePeriod(
   value: string,
   scheme: GedcomScheme,
+  extensions: ExtensionContext = emptyExtensions(),
 ): boolean {
-  return isWholeValue(value, scheme, readDatePeriod);
+  return isWholeValue(value, scheme, extensions, readDatePeriod);
 }
 
 /**
  * `DateExact` names no calendar and takes no epoch: it is day, month and year in
  * the Gregorian calendar, and all three are required.
  */
-export function isValidDateExact(value: string, scheme: GedcomScheme): boolean {
-  const tokens = tokenize(value);
+export function isValidDateExact(
+  value: string,
+  scheme: GedcomScheme,
+  extensions: ExtensionContext = emptyExtensions(),
+): boolean {
+  const tokens = tokenizeResolved(value, extensions);
   if (tokens.length !== 3) {
     return false;
   }

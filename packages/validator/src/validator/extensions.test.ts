@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { schemeFor } from "./validate";
 import { ConfigurableLexer } from "../parser/lexer";
 import { buildAst } from "../parser/ast";
 import { GedcomTag } from "../schemes/schema-types";
@@ -63,7 +64,11 @@ describe("collectExtensions", () => {
 0 TRLR
 `);
 
-    const { context, errors } = collectExtensions(nodes, true);
+    const { context, errors } = collectExtensions(
+      nodes,
+      true,
+      schemeFor(nodes),
+    );
 
     expect(errors).toEqual([]);
     expect(context.requireDeclaration).toBe(true);
@@ -82,7 +87,11 @@ describe("collectExtensions", () => {
 0 TRLR
 `);
 
-    const { context, errors } = collectExtensions(nodes, true);
+    const { context, errors } = collectExtensions(
+      nodes,
+      true,
+      schemeFor(nodes),
+    );
 
     expect(errors).toEqual([]);
     expect(context.tags.size).toBe(0);
@@ -98,7 +107,11 @@ describe("collectExtensions", () => {
 0 TRLR
 `);
 
-    const { context, errors } = collectExtensions(nodes, true);
+    const { context, errors } = collectExtensions(
+      nodes,
+      true,
+      schemeFor(nodes),
+    );
 
     expect(errors).toHaveLength(1);
     expect(errors[0].code).toBe(ExtensionErrorCode.DuplicateDeclaration);
@@ -115,7 +128,11 @@ describe("collectExtensions", () => {
 0 TRLR
 `);
 
-    const { context, errors } = collectExtensions(nodes, true);
+    const { context, errors } = collectExtensions(
+      nodes,
+      true,
+      schemeFor(nodes),
+    );
 
     expect(errors).toEqual([]);
     expect(context.tags.size).toBe(0);

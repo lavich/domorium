@@ -1,1 +1,1 @@
-export { GedcomValidator } from "./validate";
+export { GedcomValidator, schemeFor } from "./validate";

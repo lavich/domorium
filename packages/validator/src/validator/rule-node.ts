@@ -6,6 +6,7 @@ import {
   ExtensionContext,
   isExtensionTag,
   parseTagDef,
+  resolveTag,
   undocumentedTag,
 } from "./extensions";
 import {
@@ -202,6 +203,7 @@ const pointerTargets = new WeakMap<
 
 function targetsByTag(
   pointers: Map<string, ASTNode[]>,
+  extensions: ExtensionContext,
 ): Map<string, Set<string>> {
   const cached = pointerTargets.get(pointers);
   if (cached) {
@@ -214,12 +216,16 @@ function targetsByTag(
     if (!tag || !xref) {
       continue;
     }
-    let targets = index.get(tag);
-    if (!targets) {
-      targets = new Set();
-      index.set(tag, targets);
+    // A record written under an aliased tag is a record of the standard type,
+    // so a pointer naming either tag finds it.
+    for (const key of new Set([tag, resolveTag(extensions, tag)])) {
+      let targets = index.get(key);
+      if (!targets) {
+        targets = new Set();
+        index.set(key, targets);
+      }
+      targets.add(xref);
     }
-    targets.add(xref);
   }
   pointerTargets.set(pointers, index);
   return index;
@@ -239,7 +245,9 @@ export class RuleNode {
       return false;
     }
     return (
-      targetsByTag(this.pointerMap).get(this.scheme.tag[to])?.has(xref) ?? false
+      targetsByTag(this.pointerMap, this.extensions)
+        .get(this.scheme.tag[to])
+        ?.has(xref) ?? false
     );
   }
 
@@ -380,7 +388,10 @@ export class RuleNode {
     }
     if (fieldType.type === "pointer" && fieldType.to) {
       const pointerTag = this.scheme.tag[fieldType.to];
-      return [...(targetsByTag(this.pointerMap).get(pointerTag) ?? [])];
+      return [
+        ...(targetsByTag(this.pointerMap, this.extensions).get(pointerTag) ??
+          []),
+      ];
     }
     return null;
   }
@@ -544,7 +555,7 @@ export class RuleNode {
         );
         break;
       case "date-v7":
-        if (!isValidDateValue(value, this.scheme)) {
+        if (!isValidDateValue(value, this.scheme, this.extensions)) {
           errors.push(
             valueError(
               node,
@@ -567,7 +578,7 @@ export class RuleNode {
       case "date-period": {
         const isValid =
           fieldType.type === "date-period-v7"
-            ? isValidDatePeriod(value, this.scheme)
+            ? isValidDatePeriod(value, this.scheme, this.extensions)
             : isValidGregorianDate(value, DATE_PERIOD_REGEXP);
         if (!isValid) {
           errors.push(
@@ -583,7 +594,7 @@ export class RuleNode {
       case "date-exact": {
         const isValid =
           fieldType.type === "date-exact-v7"
-            ? isValidDateExact(value, this.scheme)
+            ? isValidDateExact(value, this.scheme, this.extensions)
             : isValidGregorianDate(value, DATE_EXACT_REGEXP);
         if (!isValid) {
           errors.push(
