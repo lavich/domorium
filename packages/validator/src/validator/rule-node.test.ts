@@ -1053,6 +1053,43 @@ describe("payload for VERS 5.5.1", () => {
     });
   });
 
+  // Written for #109: the grammar gives INDI's EVEN no payload at all, and
+  // spells the family one `[<EVENT_DESCRIPTOR> | <NULL>]`. Both were declared
+  // as strings, and a string payload in v5.5.1 is a required one.
+  describe("rule EVEN", () => {
+    test.each([["0 @I1@ INDI"], ["0 @F1@ FAM"]])(
+      "should pass a bare EVEN under %s",
+      async (record) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+${record}
+1 EVEN
+2 TYPE Unknown
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g551validation, pointers);
+        const EVEN = nodes[1].children[0];
+        const errs = ruleEngine.validate(EVEN);
+        expect(errs).toEqual([]);
+      },
+    );
+
+    test("should pass a FAM EVEN carrying a descriptor", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 EVEN Marriage banns read
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      const EVEN = nodes[1].children[0];
+      const errs = ruleEngine.validate(EVEN);
+      expect(errs).toEqual([]);
+    });
+  });
+
   describe("rule String", () => {
     test("should pass NAME with payload", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
