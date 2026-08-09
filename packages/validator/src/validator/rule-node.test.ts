@@ -317,6 +317,32 @@ describe("payload for VERS 7", () => {
     });
   });
 
+  describe("rule nonNegativeInteger", () => {
+    const validate = (payload: string) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NCHI ${payload}
+0 TRLR
+`);
+      return new RuleNode(g7validationJson, pointers).validate(
+        nodes[1].children[0],
+      );
+    };
+
+    test.each(["3", "0", "007"])("should pass %s", async (payload) => {
+      expect(validate(payload)).toEqual([]);
+    });
+
+    test.each(["-1", "abc", "3.7", "12abc", "1e3", "Infinity", ""])(
+      "should return error for %s",
+      async (payload) => {
+        expect(validate(payload)).toHaveLength(1);
+      },
+    );
+  });
+
   describe("rule Time", () => {
     test("should pass TIME with payload", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD

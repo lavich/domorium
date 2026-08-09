@@ -87,6 +87,7 @@ const PERSONAL_NAME_REGEXP = /^[^/]*(?:\/[^/]*\/[^/]*)?$/;
 // type/subtype[; parameter=value ...], per RFC 6838 restricted-name tokens.
 const MEDIA_TYPE_REGEXP =
   /^[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*\/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*(;\s*[\w-]+=[^;]+)*$/;
+const NON_NEGATIVE_INTEGER_REGEXP = /^\d+$/;
 const LATITUDE_REGEXP = /^[NS]\d+(\.\d+)?$/;
 const LONGITUDE_REGEXP = /^[EW]\d+(\.\d+)?$/;
 // RFC 5646 (BCP 47) language tag, adapted from the official ABNF in
@@ -530,10 +531,10 @@ export class RuleNode {
         }
         break;
       case "nonNegativeInteger":
-        if (!value || parseInt(value) < 0) {
+        if (!NON_NEGATIVE_INTEGER_REGEXP.test(value)) {
           errors.push({
             code: "VAL",
-            message: `Value for ${TAG?.value} should be number and greater than 0`,
+            message: `Value for ${TAG?.value} should be a whole number, zero or greater`,
             range: VALUE?.range || node.range,
             level: "error",
           });
