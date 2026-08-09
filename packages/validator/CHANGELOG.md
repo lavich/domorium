@@ -2,6 +2,41 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## 1.4.0 - 2026-08-09
+
+- Read a `HEAD.SCHMA` tag whose URI is a standard one as the structure it names.
+  A tag definition makes its tag an abbreviation for that URI, so a record
+  written under an alias now answers a pointer to the standard tag, a date in an
+  aliased calendar carries that calendar's months, and an aliased structure is
+  validated as the standard one — payload and substructures alike. Its position
+  is not checked: a relocated standard structure may only appear under a
+  superstructure the specification does not document it under.
+- Accept an extension tag as an enumeration value. Every one was reported as an
+  error, though the specification permits extending an enumeration with values
+  matching `extTag`. A value borrowed from another standard set, which the same
+  paragraph forbids, is still refused. An undocumented extension value reports
+  `VAL008`, as an undocumented tag already did.
+- Stop requiring a payload GEDCOM 5.5.1 does not define. `1 EVEN` with a `TYPE`
+  beneath it was reported as missing a value; the individual event structure
+  gives it no payload at all, and the family one spells it
+  `[<EVENT_DESCRIPTOR> | <NULL>]`.
+- **Reject a whole-number payload that is not a number.** `1 NCHI abc` was
+  accepted, and so were `3.7`, `12abc`, `1e3` and `Infinity`: the check compared
+  `parseInt(value) < 0`, and `NaN` fails every comparison.
+- An event with neither a payload nor substructures is a warning, `VAL010`,
+  rather than an error reading "should be Y or null" — null is what it had, and
+  the payload is optional. It is not silent either: 5.5.1 introduces the `Y`
+  convention precisely to protect against processors that prune lines having
+  neither a value nor a subordinate line.
+- A pointer whose target record type appears nowhere in the document no longer
+  reads `should be in set []`.
+- **Each kind of problem now has its own code.** Every payload problem shipped as
+  the bare string `VAL`, so a consumer could not tell a missing value from a
+  malformed one, and `VAL003` to `VAL006` sat declared and unused. See the code
+  table in the README. `unresolved-xref` and `invalid-level` keep their strings.
+- Export `GedcomError`, `GedcomErrorCode`, `Range` and `Position`. `getErrors()`
+  returns `GedcomError[]` and the type could not be named by a consumer.
+
 ## 1.3.0 - 2026-08-08
 
 - Read GEDCOM 7 dates against the calendar they name. `JULIAN 1401`,
