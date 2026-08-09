@@ -1001,6 +1001,24 @@ describe("payload for VERS 7", () => {
         "Value for SEX should be in set [F, M, U, X]",
       );
     });
+
+    test("should not offer an empty set when the document declares none", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 SOUR @S1@
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const SOUR = nodes[1].children[0];
+
+      const errs = ruleEngine.validate(SOUR);
+
+      expect(errs[0].message).toBe(
+        "Value for SOUR names no SOUR record, and this document declares none",
+      );
+    });
   });
 
   describe("rule TagDef", () => {
