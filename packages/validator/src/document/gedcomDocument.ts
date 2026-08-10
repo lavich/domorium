@@ -116,7 +116,12 @@ export class GedcomDocument {
     this.extensions = context;
     this.errors.push(...errors);
     const validator = new GedcomValidator(pointers, context);
-    this.errors.push(...validator.validate(this.nodes));
+    // Passed rather than left to be re-derived: validate() falls back to
+    // choosing a schema itself, which is the second opinion ADR-0009 exists to
+    // remove.
+    this.errors.push(
+      ...validator.validate(this.nodes, GedcomType(""), this.scheme),
+    );
     return this;
   }
 
