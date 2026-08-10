@@ -1,5 +1,11 @@
 import { keymap } from "@codemirror/view";
 import {
+  highlightSelectionMatches,
+  openSearchPanel,
+  search,
+  searchKeymap,
+} from "@codemirror/search";
+import {
   defaultHighlightStyle,
   syntaxHighlighting,
 } from "@codemirror/language";
@@ -20,7 +26,12 @@ import {
   SETTLE_DELAY_MS,
 } from "@domorium/codemirror";
 
-import type { GedcomEditorHandle, WebDiagnostic, WebTheme } from "./types";
+import type {
+  GedcomEditorHandle,
+  WebDiagnostic,
+  WebEditorStatus,
+  WebTheme,
+} from "./types";
 
 export interface CreateGedcomEditorOptions {
   parent: HTMLElement;
@@ -29,6 +40,7 @@ export interface CreateGedcomEditorOptions {
   /** An edit happened. Deliberately carries no text — see GedcomEditorHandle.getText. */
   onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
+  onStatusChange(status: WebEditorStatus): void;
 }
 
 export function createGedcomEditor(
@@ -64,6 +76,7 @@ export function createGedcomEditor(
         const offsets = rangeToOffsets(view.state.doc, diagnostic.range);
         return {
           severity: diagnostic.severity,
+          code: String(diagnostic.code),
           message: diagnostic.message,
           from: offsets.from,
           to: offsets.to,
@@ -72,6 +85,27 @@ export function createGedcomEditor(
         };
       }),
     );
+    reportStatus(view, service.getVersionResolution());
+  };
+
+  /**
+   * The caret moves far more often than the document changes, so this is not
+   * behind the settle delay; the resolution it reports is the last one the
+   * validator produced rather than a fresh parse.
+   */
+  let lastResolution: WebEditorStatus["resolution"];
+  const reportStatus = (
+    view: EditorView,
+    resolution: WebEditorStatus["resolution"] = lastResolution,
+  ): void => {
+    lastResolution = resolution;
+    const head = view.state.selection.main.head;
+    const position = offsetToPosition(view.state.doc, head);
+    options.onStatusChange({
+      line: position.line,
+      character: position.character,
+      resolution,
+    });
   };
 
   const state = EditorState.create({
@@ -102,7 +136,13 @@ export function createGedcomEditor(
           run: (view) => renameAtSelection(view, language),
         },
       ]),
+      search({ top: true }),
+      highlightSelectionMatches(),
+      keymap.of(searchKeymap),
       EditorView.updateListener.of((update) => {
+        if (update.selectionSet && !update.docChanged) {
+          reportStatus(update.view);
+        }
         if (!update.docChanged) {
           return;
         }
@@ -138,6 +178,12 @@ export function createGedcomEditor(
       editor?.dispatch({
         effects: theme.reconfigure(editorTheme(value)),
       });
+    },
+    openSearch: () => {
+      if (editor) {
+        openSearchPanel(editor);
+        editor.focus();
+      }
     },
   };
 }

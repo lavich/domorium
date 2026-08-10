@@ -29,6 +29,7 @@ vi.mock("./editor/GedcomEditor", () => ({
       destroy: vi.fn(),
       focusDiagnostic: vi.fn(),
       setTheme: vi.fn(),
+      openSearch: vi.fn(),
     }));
     return (
       <textarea
@@ -96,12 +97,10 @@ describe("App", () => {
     ).toBe(LINKS.github);
     expect(screen.getByLabelText("GEDCOM editor")).not.toBeNull();
     expect(
-      screen.getByRole("heading", {
-        name: /open, validate and edit GEDCOM locally/i,
-      }),
+      screen.getByRole("heading", { name: /example\.ged/i }),
     ).not.toBeNull();
     expect(
-      screen.queryByRole("complementary", { name: /GEDCOM diagnostics/i }),
+      screen.queryByRole("complementary", { name: /GEDCOM problems/i }),
     ).toBeNull();
   });
 
@@ -129,7 +128,10 @@ describe("App", () => {
     const area = await screen.findByLabelText("GEDCOM editor");
     await user.clear(area);
     await user.type(area, "0 HEAD");
-    await user.click(screen.getByRole("button", { name: /download/i }));
+    await user.click(screen.getByRole("button", { name: "File" }));
+    await user.click(
+      await screen.findByRole("menuitem", { name: /download copy/i }),
+    );
 
     await waitFor(() => expect(written[0]).toBe("0 HEAD"));
   });
@@ -141,21 +143,37 @@ describe("App", () => {
 
     const input = screen.getByLabelText("Open GEDCOM file");
     await user.upload(input, new File(["0 HEAD\n0 TRLR"], "family.ged"));
-    expect(await screen.findByText("family.ged")).not.toBeNull();
+    expect(
+      await screen.findByRole("heading", { name: /family\.ged/i }),
+    ).not.toBeNull();
 
     await user.clear(screen.getByLabelText("GEDCOM editor"));
     await user.type(screen.getByLabelText("GEDCOM editor"), "0 HEAD");
-    expect(screen.getByText("Modified")).not.toBeNull();
+    expect(screen.getAllByLabelText("Unsaved changes").length).toBeGreaterThan(
+      0,
+    );
 
-    await user.click(screen.getByRole("button", { name: "Reset demo" }));
+    await user.click(screen.getByRole("button", { name: "File" }));
+    await user.click(
+      await screen.findByRole("menuitem", { name: /reset to the example/i }),
+    );
     expect(
       screen.getByRole("alertdialog", { name: /discard your changes/i }),
     ).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(screen.getByText("family.ged")).not.toBeNull();
+    expect(
+      screen.getByRole("heading", { name: /family\.ged/i }),
+    ).not.toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "Reset demo" }));
+    await user.click(screen.getByRole("button", { name: "File" }));
+    await user.click(
+      await screen.findByRole("menuitem", { name: /reset to the example/i }),
+    );
     await user.click(screen.getByRole("button", { name: "Discard changes" }));
-    await waitFor(() => expect(screen.getByText("Demo")).not.toBeNull());
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: /example\.ged/i }),
+      ).not.toBeNull(),
+    );
   });
 });
