@@ -136,7 +136,7 @@ describe("validator", () => {
     });
 
     test("reports a child of TRLR in GEDCOM 5.5.1, which is such a structure", async () => {
-      const { nodes } = astBuilder(`0 HEAD
+      const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
 2 VERS 5.5.1
 2 FORM LINEAGE-LINKED
@@ -148,19 +148,16 @@ describe("validator", () => {
 0 TRLR
 1 ANYTHING at all
 `);
-      const validator = new GedcomValidator();
+      const validator = new GedcomValidator(pointers);
 
       const errs = validator.validate(nodes);
 
-      // Asserted by containment, not equality: HEAD.SUBM does not resolve in
-      // 5.5.1 even when the record is declared, so this document cannot be
-      // made otherwise clean. That is a separate defect from this one.
-      expect(errs).toContainEqual(
+      expect(errs).toEqual([
         expect.objectContaining({
           code: GedcomErrorCode.UnknownTag,
           message: "Unknown tag ANYTHING in parent TRLR",
         }),
-      );
+      ]);
     });
 
     test("still accepts the continuation lines its payload allows", async () => {
@@ -291,6 +288,109 @@ describe("validator", () => {
 `);
 
     expect(validator.validate(nodes)).toEqual([]);
+  });
+
+  // Issue #132: the inline form of a multimedia link warned on its own children.
+  // GEDCOM 5.5.1 gives OBJE two shapes in a link position — a pointer, or FILE
+  // and TITL beneath it — and puts FORM beneath FILE, where 5.5 put it beneath
+  // OBJE.
+  describe("a 5.5.1 multimedia link", () => {
+    const in551 = (body: string) =>
+      validatorFor(`0 HEAD
+1 SOUR TestApp
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Submitter
+${body}0 TRLR
+`);
+
+    test("accepts the inline form", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FILE http://example.org/portrait.jpg
+3 FORM jpeg
+`);
+
+      expect(validator.validate(nodes)).toEqual([]);
+    });
+
+    test("accepts MEDI beneath that FORM", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FILE http://example.org/portrait.jpg
+3 FORM jpeg
+4 MEDI photo
+`);
+
+      expect(validator.validate(nodes)).toEqual([]);
+    });
+
+    test("accepts a TITL alongside the FILE", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FILE http://example.org/portrait.jpg
+3 FORM jpeg
+2 TITL A portrait
+`);
+
+      expect(validator.validate(nodes)).toEqual([]);
+    });
+
+    // FORM is {1:1} beneath FILE in both OBJE shapes.
+    test("requires a FORM beneath the FILE", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FILE http://example.org/portrait.jpg
+`);
+
+      expect(validator.validate(nodes)).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.MissingTag,
+          message: "Missing required tag FORM in FILE",
+        }),
+      ]);
+    });
+
+    test("still rejects FORM directly beneath OBJE, which is the 5.5 layout", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FORM URL
+`);
+
+      expect(validator.validate(nodes)).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.UnknownTag,
+          message: "Unknown tag FORM in parent OBJE",
+        }),
+      ]);
+    });
+
+    // The two shapes share one type, so FILE cannot be required without the
+    // pointer form reporting it absent.
+    test("accepts the pointer form with no children", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE @M1@
+0 @M1@ OBJE
+1 FILE portrait.jpg
+2 FORM jpeg
+`);
+
+      expect(validator.validate(nodes)).toEqual([]);
+    });
+
+    test("still requires one shape or the other", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+`);
+
+      expect(validator.validate(nodes)).toEqual([
+        expect.objectContaining({ code: GedcomErrorCode.MissingRef }),
+      ]);
+    });
   });
 
   test("does not validate inside an extension subtree", async () => {
