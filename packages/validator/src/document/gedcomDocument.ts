@@ -192,9 +192,6 @@ export class GedcomDocument {
     return this.resolution;
   }
 
-  // An unsupported version has no dialect, and a feature that reads one is
-  // saying what the specification requires. It may not answer for a file whose
-  // specification we do not have.
   getDialect(): GedcomDialect | undefined {
     return this.resolution && "dialect" in this.resolution
       ? this.resolution.dialect

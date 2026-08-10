@@ -147,8 +147,6 @@ function canCreateBareRecord(
   dialect: GedcomDialect | undefined,
   recordTag: string,
 ): boolean {
-  // Which records exist is what the specification says, so an unsupported
-  // version is offered none rather than another version's set.
   if (dialect === undefined) {
     return false;
   }

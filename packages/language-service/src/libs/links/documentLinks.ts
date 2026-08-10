@@ -13,8 +13,6 @@ export function documentLinks(
   dialect: GedcomDialect | undefined,
 ): DocumentLink[] {
   const links: DocumentLink[] = [];
-  // Which payloads name a file, and which forms of path are legal, is what the
-  // specification says. Without one there is nothing to say it about.
   if (dialect === undefined) {
     return links;
   }

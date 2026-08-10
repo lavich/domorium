@@ -5,7 +5,6 @@ import g551validationJson from "../schemes/g551validation.json";
 import type { Range } from "../types/position";
 import { getGedcomVersion } from "./getGedcomVersion";
 
-/** The versions a schema in this repository describes the rules of. */
 export type GedcomDialect = "7.0" | "5.5.1";
 
 interface SchemaChoice {

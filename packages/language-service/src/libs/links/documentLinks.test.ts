@@ -90,9 +90,6 @@ describe("document links", () => {
     ]);
   });
 
-  // Names #143: this read the VERS token itself, and the delimiter after a tag
-  // belongs to the payload, so a second space made a 5.5.1 file look like 7.0
-  // and its absolute path stopped being a link.
   it("classifies a 5.5.1 path whatever follows the VERS tag", () => {
     const service = new GedcomLanguageService(
       [
@@ -117,7 +114,6 @@ describe("document links", () => {
     ]);
   });
 
-  // Names #143: a version with no schema was given GEDCOM 7 path rules.
   it("offers nothing for a version it cannot judge", () => {
     const service = new GedcomLanguageService(
       [

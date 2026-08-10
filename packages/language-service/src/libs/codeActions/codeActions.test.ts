@@ -302,10 +302,6 @@ describe("code actions", () => {
     ).toBe(false);
   });
 
-  // Names #143. Reached directly: an unsupported version has no schema, so no
-  // unresolved reference is reported and the service never asks for actions on
-  // one. The record set is still a claim about a specification, and there is
-  // none, so creation is withheld while replacement stays.
   it("creates no record for a version with no dialect", () => {
     const text = [
       "0 HEAD",
