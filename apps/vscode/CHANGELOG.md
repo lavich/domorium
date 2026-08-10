@@ -2,6 +2,29 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## 1.5.0
+
+- **A file whose version cannot be checked no longer looks clean.** `2 VERS 4.0`,
+  a misspelled version and a file with no version line were all checked against
+  GEDCOM 7 and reported nothing, because none of those rules applied to them.
+  They now carry one error saying so, and the rest of the checking goes quiet
+  rather than judging the file by the wrong specification. Levels, syntax and
+  highlighting still work, and so do folding and navigation.
+- **`2 VERS 5.5`, `5.5.5` and `5.5EL` are checked against the 5.5.1 rules with a
+  warning** that says the two differ, so some marks may not apply and others may
+  be missing. Those files previously collected the 5.5.1 marks with no
+  explanation of where they came from.
+- Completions and file links go quiet for a version with no rules, and a
+  4.0 file is no longer offered GEDCOM 7 record creation.
+- **Anything written under a structure that cannot hold it is now marked.** A
+  line beneath `1 TITL`, or beneath the trailer in a 5.5.1 file, was accepted
+  without comment.
+- `2 VERS  5.5.1` written with two spaces was read as GEDCOM 7, so a 5.5.1 file
+  was checked against the wrong rules and an absolute media path stopped being a
+  clickable link. Both are fixed.
+- `1 OBJE` with `FILE` and `TITL` written beneath it, the inline form of a 5.5.1
+  media link, no longer reports `Unknown tag FILE`.
+
 ## 1.4.0
 
 - An extension tag used as an enumeration value is no longer marked as an error.

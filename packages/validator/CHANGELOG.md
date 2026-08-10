@@ -2,6 +2,47 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## 1.5.0 - 2026-08-10
+
+- **The GEDCOM version is resolved against a table by longest match, and a
+  version we hold no schema for no longer validates against the newest one.**
+  `2 VERS 4.0`, a garbage version and a document with no `VERS` line were all
+  checked against GEDCOM 7 and reported clean, because nothing they were checked
+  against applied to them. Three codes replace that silence: `VAL011` for a
+  version no schema describes, `VAL012` for a document whose version cannot be
+  read, `VAL013` for one checked against another version's schema. The first two
+  suppress every schema-derived diagnostic, while lexing, tree assembly and
+  level validation still run — a 4.0 file with a level that cannot follow the
+  line above it still says so. `5.5`, `5.5.5` and `5.5 EL` are checked against
+  the 5.5.1 schema with a warning naming the substitution; `5.6`, `5.4`, `5.3`,
+  `5.0` and `4` are not, because the difference runs the wrong way and the
+  substitution would report false errors on correct lines.
+- **A structure the specification gives no substructures accepted any child.**
+  `getRules` answered `undefined` both for a leaf and for a type it could not
+  resolve, and the permissive reading of the two won: 57 structures in GEDCOM 7
+  and 89 in 5.5.1 accepted anything at all, `TRLR` among them in 5.5.1. So
+
+      0 @S1@ SOUR
+      1 TITL Open Archieven
+      2 BOGUS whatever
+
+  reported nothing. A child of a leaf structure is now an unknown tag.
+
+- `2 VERS  5.5.1`, with more than one space after the tag, selected the GEDCOM 7
+  schema and the file came back clean. The delimiter after a tag belongs to the
+  payload, so the version is trimmed before it selects anything. Present since
+  1.2.0.
+- The inline form of a 5.5.1 multimedia link was unreachable, so `1 OBJE` with
+  `FILE` and `TITL` written beneath it reported `FILE` as an unknown tag. Both
+  shapes now resolve. One type serves both, so a pointer carrying children and an
+  inline form with only a `TITL` are accepted where the specification allows
+  neither; telling them apart needs a schema that can offer two types for one
+  tag.
+- New on `GedcomDocument`: `getVersionResolution()` returns the outcome above
+  without parsing a message, and `getDialect()` names the version whose rules
+  apply — or nothing, for a version we cannot judge. `VersionResolution` and
+  `GedcomDialect` are exported alongside them.
+
 ## 1.4.0 - 2026-08-09
 
 - Read a `HEAD.SCHMA` tag whose URI is a standard one as the structure it names.
