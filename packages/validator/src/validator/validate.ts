@@ -61,12 +61,18 @@ function getRules(
   }
 
   const substructure = scheme.substructure[parentType];
-  if (!substructure) {
+  // A leaf carries no substructure entry, and neither does a type the schema
+  // never describes. One means every child is an error, the other means say
+  // nothing, so they are told apart by the payload table, which every
+  // described structure appears in.
+  if (!substructure && !(parentType in scheme.payload)) {
     return undefined;
   }
 
   const rules = new Map<GedcomTag, Rule>();
-  for (const [tagStr, { cardinality, type }] of Object.entries(substructure)) {
+  for (const [tagStr, { cardinality, type }] of Object.entries(
+    substructure ?? {},
+  )) {
     const parsed = parseCardinality(cardinality);
     if (parsed) {
       rules.set(GedcomTag(tagStr), {
