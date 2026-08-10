@@ -9,9 +9,22 @@ const execArgv =
 
 export default defineConfig({
   resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./apps/web-editor/src", import.meta.url)),
-    },
+    alias: [
+      {
+        find: "@",
+        replacement: fileURLToPath(
+          new URL("./apps/web-editor/src", import.meta.url),
+        ),
+      },
+      // A workspace package resolves through its exports field to dist, so
+      // without this a suite checks the last build, not the working tree.
+      {
+        find: /^@domorium\/([^/]+)$/,
+        replacement: fileURLToPath(
+          new URL("./packages/$1/src/index.ts", import.meta.url),
+        ),
+      },
+    ],
   },
   test: {
     poolOptions: {

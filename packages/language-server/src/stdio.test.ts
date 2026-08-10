@@ -1,9 +1,25 @@
 import { describe, expect, it, vi } from "vitest";
-import { build } from "esbuild";
+import { build, type Plugin } from "esbuild";
 import { spawn } from "child_process";
 import { mkdtempSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
+
+// esbuild resolves a workspace package to dist, and this bundle is outside the
+// reach of vitest's own alias.
+const workspaceSource: Plugin = {
+  name: "workspace-source",
+  setup(build) {
+    build.onResolve({ filter: /^@domorium\/[^/]+$/ }, ({ path }) => ({
+      path: join(
+        __dirname,
+        "../..",
+        path.slice("@domorium/".length),
+        "src/index.ts",
+      ),
+    }));
+  },
+};
 
 // stdio.ts wires createServer() to real process.stdin/stdout and calls
 // connection.listen() at import time, so it can't be safely imported
@@ -21,6 +37,7 @@ async function bundleStdio(): Promise<string> {
     target: "node18",
     format: "cjs",
     outfile,
+    plugins: [workspaceSource],
   });
   return outfile;
 }
