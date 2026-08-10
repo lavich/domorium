@@ -24,7 +24,9 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const editor = (overrides: Partial<Parameters<typeof createGedcomEditor>[0]>) => {
+const editor = (
+  overrides: Partial<Parameters<typeof createGedcomEditor>[0]>,
+) => {
   const parent = document.createElement("div");
   document.body.append(parent);
   handle = createGedcomEditor({
@@ -32,6 +34,7 @@ const editor = (overrides: Partial<Parameters<typeof createGedcomEditor>[0]>) =>
     initialText: text,
     theme: "light",
     onChange: () => {},
+    onStatusChange: () => {},
     onDiagnosticsChange: () => {},
     ...overrides,
   });

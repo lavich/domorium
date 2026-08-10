@@ -1,10 +1,14 @@
 import {
   CheckIcon,
+  ChevronDownIcon,
   CodeIcon,
+  DownloadIcon,
   ExternalLinkIcon,
   MoonIcon,
+  RotateCcwIcon,
   SunIcon,
   SunMoonIcon,
+  UploadIcon,
 } from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -13,6 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LINKS } from "@/constants/links";
@@ -29,24 +34,68 @@ const themeItems: {
   { value: "system", label: "System", icon: SunMoonIcon },
 ];
 
+const modifierKey =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
+    ? "\u2318"
+    : "Ctrl+";
+
 const productLinks = [
   { label: "VS Code", href: LINKS.vscode },
   { label: "Obsidian", href: LINKS.obsidian },
   { label: "JetBrains", href: LINKS.jetbrains },
 ] as const;
 
-export function SiteHeader() {
+export interface SiteHeaderProps {
+  onOpenFile(): void;
+  onDownload(): void;
+  onReset(): void;
+}
+
+export function SiteHeader({
+  onOpenFile,
+  onDownload,
+  onReset,
+}: SiteHeaderProps) {
   const { theme, setTheme } = useTheme();
 
   return (
     <header className="grid shrink-0 items-center gap-2 border-b px-4 py-3 md:grid-cols-[1fr_auto_1fr] lg:px-6">
-      <a
-        href="/"
-        className="flex items-center gap-2 justify-self-start font-heading font-semibold"
-      >
-        <img src="/favicon.svg" alt="" className="size-7" />
-        <span>Domorium</span>
-      </a>
+      <div className="flex items-center gap-1 justify-self-start">
+        <a
+          href="/"
+          className="flex items-center gap-2 font-heading font-semibold"
+        >
+          <img src="/favicon.svg" alt="" className="size-7" />
+          <span>Domorium</span>
+        </a>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
+            File
+            <ChevronDownIcon data-icon="inline-end" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={onOpenFile}>
+              <UploadIcon />
+              Open…
+              <span className="ml-auto font-mono text-xs text-muted-foreground">
+                {modifierKey}O
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onDownload}>
+              <DownloadIcon />
+              Download copy
+              <span className="ml-auto font-mono text-xs text-muted-foreground">
+                {modifierKey}S
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onReset}>
+              <RotateCcwIcon />
+              Reset to the example
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <h1 className="text-center font-heading text-sm font-semibold sm:text-base">
         Open, validate and edit GEDCOM locally
       </h1>

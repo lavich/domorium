@@ -1,7 +1,12 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 import { createGedcomEditor } from "./createGedcomEditor";
-import type { GedcomEditorHandle, WebDiagnostic, WebTheme } from "./types";
+import type {
+  GedcomEditorHandle,
+  WebDiagnostic,
+  WebEditorStatus,
+  WebTheme,
+} from "./types";
 
 export interface GedcomEditorProps {
   editorKey: number;
@@ -9,20 +14,30 @@ export interface GedcomEditorProps {
   theme: WebTheme;
   onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
+  onStatusChange(status: WebEditorStatus): void;
 }
 
 export const GedcomEditor = forwardRef<GedcomEditorHandle, GedcomEditorProps>(
   function GedcomEditor(
-    { editorKey, initialText, theme, onChange, onDiagnosticsChange },
+    {
+      editorKey,
+      initialText,
+      theme,
+      onChange,
+      onDiagnosticsChange,
+      onStatusChange,
+    },
     forwardedRef,
   ) {
     const rootRef = useRef<HTMLDivElement>(null);
     const handleRef = useRef<GedcomEditorHandle | null>(null);
     const onChangeRef = useRef(onChange);
     const onDiagnosticsChangeRef = useRef(onDiagnosticsChange);
+    const onStatusChangeRef = useRef(onStatusChange);
 
     onChangeRef.current = onChange;
     onDiagnosticsChangeRef.current = onDiagnosticsChange;
+    onStatusChangeRef.current = onStatusChange;
 
     useEffect(() => {
       if (!rootRef.current) {
@@ -35,6 +50,7 @@ export const GedcomEditor = forwardRef<GedcomEditorHandle, GedcomEditorProps>(
         onChange: () => onChangeRef.current(),
         onDiagnosticsChange: (diagnostics) =>
           onDiagnosticsChangeRef.current(diagnostics),
+        onStatusChange: (status) => onStatusChangeRef.current(status),
       });
       handleRef.current = handle;
       return () => {
@@ -55,6 +71,7 @@ export const GedcomEditor = forwardRef<GedcomEditorHandle, GedcomEditorProps>(
         focusDiagnostic: (diagnostic) =>
           handleRef.current?.focusDiagnostic(diagnostic),
         setTheme: (value) => handleRef.current?.setTheme(value),
+        openSearch: () => handleRef.current?.openSearch(),
       }),
       [],
     );

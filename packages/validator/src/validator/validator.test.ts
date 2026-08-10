@@ -4,6 +4,7 @@ import { ConfigurableLexer } from "../parser/lexer";
 import { buildAst } from "../parser/ast";
 import { collectExtensions } from "./extensions";
 import { getGedcomVersion } from "./getGedcomVersion";
+import { GedcomErrorCode } from "../types/errors";
 
 const astBuilder = (text: string) => {
   const lexingResult = new ConfigurableLexer({ zeroBased: true }).tokenize(
@@ -87,6 +88,109 @@ describe("validator", () => {
     const validator = new GedcomValidator();
     const errs = validator.validate(nodes);
     expect(errs.length).toBe(0);
+  });
+
+  // Issue #116: a leaf structure accepted any child, silently, to any depth.
+  describe("a structure the schema gives no substructures", () => {
+    test("reports a child of it as an unknown tag", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL Open Archieven
+2 BOGUS whatever
+0 TRLR
+`);
+      const validator = new GedcomValidator();
+
+      const errs = validator.validate(nodes);
+
+      expect(errs).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.UnknownTag,
+          message: "Unknown tag BOGUS in parent TITL",
+        }),
+      ]);
+    });
+
+    // Reported once, at the outermost unknown tag; its subtree is left alone,
+    // as under any other parent. ADR-0008 gives the reason for extensions:
+    // there is no definition to check a subtree against.
+    test("reports the outermost child once and leaves its subtree alone", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL Open Archieven
+2 BOGUS whatever
+3 ALSO nested
+0 TRLR
+`);
+      const validator = new GedcomValidator();
+
+      const errs = validator.validate(nodes);
+
+      expect(errs.map((e) => e.message)).toEqual([
+        "Unknown tag BOGUS in parent TITL",
+      ]);
+    });
+
+    test("reports a child of TRLR in GEDCOM 5.5.1, which is such a structure", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SOUR Domorium
+1 SUBM @SUBM1@
+0 @SUBM1@ SUBM
+1 NAME Someone
+0 TRLR
+1 ANYTHING at all
+`);
+      const validator = new GedcomValidator(pointers);
+
+      const errs = validator.validate(nodes);
+
+      expect(errs).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.UnknownTag,
+          message: "Unknown tag ANYTHING in parent TRLR",
+        }),
+      ]);
+    });
+
+    test("still accepts the continuation lines its payload allows", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL A title long enough to wrap
+2 CONT onto a second line
+2 CONC and further still
+0 TRLR
+`);
+      const validator = new GedcomValidator();
+
+      const errs = validator.validate(nodes);
+
+      expect(errs).toEqual([]);
+    });
+
+    test("says nothing when it has no children", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL Open Archieven
+0 TRLR
+`);
+      const validator = new GedcomValidator();
+
+      const errs = validator.validate(nodes);
+
+      expect(errs).toEqual([]);
+    });
   });
 
   // Issue #90, from a user's real export: EVEN carries a Text payload, and
@@ -184,6 +288,109 @@ describe("validator", () => {
 `);
 
     expect(validator.validate(nodes)).toEqual([]);
+  });
+
+  // Issue #132: the inline form of a multimedia link warned on its own children.
+  // GEDCOM 5.5.1 gives OBJE two shapes in a link position — a pointer, or FILE
+  // and TITL beneath it — and puts FORM beneath FILE, where 5.5 put it beneath
+  // OBJE.
+  describe("a 5.5.1 multimedia link", () => {
+    const in551 = (body: string) =>
+      validatorFor(`0 HEAD
+1 SOUR TestApp
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Submitter
+${body}0 TRLR
+`);
+
+    test("accepts the inline form", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FILE http://example.org/portrait.jpg
+3 FORM jpeg
+`);
+
+      expect(validator.validate(nodes)).toEqual([]);
+    });
+
+    test("accepts MEDI beneath that FORM", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FILE http://example.org/portrait.jpg
+3 FORM jpeg
+4 MEDI photo
+`);
+
+      expect(validator.validate(nodes)).toEqual([]);
+    });
+
+    test("accepts a TITL alongside the FILE", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FILE http://example.org/portrait.jpg
+3 FORM jpeg
+2 TITL A portrait
+`);
+
+      expect(validator.validate(nodes)).toEqual([]);
+    });
+
+    // FORM is {1:1} beneath FILE in both OBJE shapes.
+    test("requires a FORM beneath the FILE", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FILE http://example.org/portrait.jpg
+`);
+
+      expect(validator.validate(nodes)).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.MissingTag,
+          message: "Missing required tag FORM in FILE",
+        }),
+      ]);
+    });
+
+    test("still rejects FORM directly beneath OBJE, which is the 5.5 layout", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+2 FORM URL
+`);
+
+      expect(validator.validate(nodes)).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.UnknownTag,
+          message: "Unknown tag FORM in parent OBJE",
+        }),
+      ]);
+    });
+
+    // The two shapes share one type, so FILE cannot be required without the
+    // pointer form reporting it absent.
+    test("accepts the pointer form with no children", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE @M1@
+0 @M1@ OBJE
+1 FILE portrait.jpg
+2 FORM jpeg
+`);
+
+      expect(validator.validate(nodes)).toEqual([]);
+    });
+
+    test("still requires one shape or the other", async () => {
+      const { nodes, validator } = in551(`0 @I1@ INDI
+1 OBJE
+`);
+
+      expect(validator.validate(nodes)).toEqual([
+        expect.objectContaining({ code: GedcomErrorCode.MissingRef }),
+      ]);
+    });
   });
 
   test("does not validate inside an extension subtree", async () => {

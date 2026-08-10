@@ -2,10 +2,14 @@ import { GedcomError, GedcomErrorCode } from "../types/errors";
 import { ASTNode, ASTToken } from "../parser";
 import { buildAst } from "../parser/ast";
 import { ConfigurableLexer } from "../parser/lexer";
-import { GedcomValidator, schemeFor } from "../validator";
+import { GedcomValidator } from "../validator";
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
 import { getGedcomVersion } from "../validator/getGedcomVersion";
+import {
+  resolveGedcomVersion,
+  type VersionResolution,
+} from "../validator/versionRegistry";
 import {
   collectExtensions,
   emptyExtensions,
@@ -24,6 +28,8 @@ export class GedcomDocument {
   public xRefs = new Map<string, ASTToken[]>();
   private errors: GedcomError[] = [];
   private scheme: GedcomScheme | undefined;
+  private resolution: VersionResolution | undefined;
+  private requiresSchmaDeclaration = false;
   private extensions: ExtensionContext = emptyExtensions();
 
   private parseGedcom(input: string) {
@@ -62,17 +68,58 @@ export class GedcomDocument {
     this.pointers = pointers;
     this.xRefs = xrefs;
     this.errors.push(...this.validateLevels(nodes));
-    const version = getGedcomVersion(nodes);
-    this.scheme = schemeFor(nodes);
+
+    const resolution = resolveGedcomVersion(nodes);
+    this.resolution = resolution;
+
+    if (resolution.kind === "undetermined") {
+      // The schema is kept so completions can help write the header that will
+      // name the version; nothing is validated against it.
+      this.scheme = resolution.scheme;
+      this.requiresSchmaDeclaration = resolution.requiresSchmaDeclaration;
+      this.errors.push({
+        code: GedcomErrorCode.UndeterminedVersion,
+        message:
+          "No GEDCOM version in HEAD.GEDC.VERS, so the file cannot be checked against a specification",
+        range: resolution.range,
+        level: "error",
+      });
+      return this;
+    }
+
+    if (resolution.kind === "unsupported") {
+      this.errors.push({
+        code: GedcomErrorCode.UnsupportedVersion,
+        message: `GEDCOM ${resolution.version} is not supported, so the file cannot be checked against a specification`,
+        range: resolution.range,
+        level: "error",
+      });
+      return this;
+    }
+
+    if (resolution.kind === "substituted") {
+      this.errors.push({
+        code: GedcomErrorCode.SubstitutedVersion,
+        message: `GEDCOM ${resolution.version} is checked against the ${resolution.using} schema; the two differ, so some diagnostics may not apply and others may be missing`,
+        range: resolution.range,
+        level: "warning",
+      });
+    }
+
+    this.scheme = resolution.scheme;
+    this.requiresSchmaDeclaration = resolution.requiresSchmaDeclaration;
     const { context, errors } = collectExtensions(
       nodes,
-      !version?.startsWith("5"),
+      this.requiresSchmaDeclaration,
       this.scheme,
     );
     this.extensions = context;
     this.errors.push(...errors);
     const validator = new GedcomValidator(pointers, context);
-    this.errors.push(...validator.validate(this.nodes));
+    // Passed explicitly: validate() otherwise chooses a schema of its own.
+    this.errors.push(
+      ...validator.validate(this.nodes, GedcomType(""), this.scheme),
+    );
     return this;
   }
 
@@ -140,17 +187,20 @@ export class GedcomDocument {
     return getGedcomVersion(this.nodes);
   }
 
+  getVersionResolution(): VersionResolution | undefined {
+    return this.resolution;
+  }
+
   getCompletions(position: Position, lineText: string): GedcomCompletion[] {
     if (!this.scheme) {
       return [];
     }
-    const version = getGedcomVersion(this.nodes);
     return getGedcomCompletions({
       nodes: this.nodes,
       pointers: this.pointers,
       scheme: this.scheme,
       extensions: this.extensions,
-      isGedcom7: !version?.startsWith("5"),
+      isGedcom7: this.requiresSchmaDeclaration,
       position,
       lineText,
     });

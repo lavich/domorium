@@ -20,7 +20,11 @@ import {
   isModified,
 } from "@/editor/documentSession";
 import { downloadGedcom, readGedcomFile } from "@/editor/fileActions";
-import type { GedcomEditorHandle, WebDiagnostic } from "@/editor/types";
+import type {
+  GedcomEditorHandle,
+  WebDiagnostic,
+  WebEditorStatus,
+} from "@/editor/types";
 
 type PendingReplacement =
   { type: "file"; fileName: string; text: string } | { type: "demo" } | null;
@@ -46,6 +50,11 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<WebDiagnostic[]>([]);
+  const [status, setStatus] = useState<WebEditorStatus>({
+    line: 0,
+    character: 0,
+    resolution: undefined,
+  });
   const [pendingReplacement, setPendingReplacement] =
     useState<PendingReplacement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -143,9 +152,35 @@ function AppContent() {
     dispatch({ type: "downloaded" });
   };
 
+  // The File menu names these, so they have to work. Ctrl/Cmd-S also keeps the
+  // browser from offering to save the page, which is never what is wanted here.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!event.metaKey && !event.ctrlKey) {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      if (key !== "o" && key !== "s") {
+        return;
+      }
+      event.preventDefault();
+      if (key === "o") {
+        openFile();
+      } else {
+        download();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   return (
     <main className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
-      <SiteHeader />
+      <SiteHeader
+        onOpenFile={openFile}
+        onDownload={download}
+        onReset={() => requestReplacement({ type: "demo" })}
+      />
       <input
         ref={fileInputRef}
         className="sr-only"
@@ -154,8 +189,8 @@ function AppContent() {
         aria-label="Open GEDCOM file"
         onChange={handleFile}
       />
-      <div className="mx-auto flex min-h-0 w-full max-w-[110rem] flex-1 overflow-hidden p-4 lg:p-6">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+      <div className="flex min-h-0 w-full flex-1 overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {loadError ? (
             <Alert variant="destructive">
               <AlertTitle>Unable to open GEDCOM</AlertTitle>
@@ -172,13 +207,14 @@ function AppContent() {
               session={session}
               modified={modified}
               diagnostics={diagnostics}
+              status={status}
               theme={resolvedTheme}
               editorRef={editorRef}
               onChange={() => dispatch({ type: "edit" })}
               onDiagnosticsChange={setDiagnostics}
+              onStatusChange={setStatus}
               onOpenFile={openFile}
               onDownload={download}
-              onReset={() => requestReplacement({ type: "demo" })}
             />
           )}
         </div>

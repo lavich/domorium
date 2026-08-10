@@ -5,3 +5,4 @@ export type { GedcomCompletion } from "./completion/completion";
 export { GedcomErrorCode } from "./types/errors";
 export type { GedcomError } from "./types/errors";
 export type { Position, Range } from "./types/position";
+export type { VersionResolution } from "./validator/versionRegistry";
