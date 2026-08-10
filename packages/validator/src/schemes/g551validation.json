@@ -4541,6 +4541,16 @@
         "type": "https://gedcom.io/terms/v5.5.1/MEDI"
       }
     },
+    "https://gedcom.io/terms/v5.5.1/OBJE-XREF_OBJE": {
+      "FILE": {
+        "cardinality": "{0:M}",
+        "type": "https://gedcom.io/terms/v5.5.1/OBJE-NULL-FILE"
+      },
+      "TITL": {
+        "cardinality": "{0:1}",
+        "type": "https://gedcom.io/terms/v5.5.1/TITL-DESCRIPTIVE_TITLE"
+      }
+    },
     "https://gedcom.io/terms/v5.5.1/OCCU": {
       "ADDR": {
         "cardinality": "{0:1}",
