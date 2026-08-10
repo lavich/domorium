@@ -90,6 +90,7 @@ describe("document links", () => {
     ]);
   });
 
+  // Names #143: an untrimmed VERS token made a second space read as GEDCOM 7.
   it("classifies a 5.5.1 path whatever follows the VERS tag", () => {
     const service = new GedcomLanguageService(
       [
@@ -114,6 +115,7 @@ describe("document links", () => {
     ]);
   });
 
+  // Names #143: a version with no schema was given GEDCOM 7 path rules.
   it("offers nothing for a version it cannot judge", () => {
     const service = new GedcomLanguageService(
       [

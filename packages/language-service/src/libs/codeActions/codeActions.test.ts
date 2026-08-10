@@ -302,6 +302,8 @@ describe("code actions", () => {
     ).toBe(false);
   });
 
+  // Names #143: an unsupported version fell through to the GEDCOM 7 record
+  // set. Reached directly, since no unresolved reference is reported for one.
   it("creates no record for a version with no dialect", () => {
     const text = [
       "0 HEAD",
