@@ -90,6 +90,50 @@ describe("document links", () => {
     ]);
   });
 
+  // Names #143: this read the VERS token itself, and the delimiter after a tag
+  // belongs to the payload, so a second space made a 5.5.1 file look like 7.0
+  // and its absolute path stopped being a link.
+  it("classifies a 5.5.1 path whatever follows the VERS tag", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS  5.5.1",
+        "0 @O1@ OBJE",
+        "1 FILE C:\\Genealogy\\photo.jpg",
+      ].join("\n"),
+    );
+
+    expect(
+      service.getDocumentLinks().map(({ kind, targetText }) => ({
+        kind,
+        targetText,
+      })),
+    ).toEqual([
+      {
+        kind: "file-absolute",
+        targetText: "C:\\Genealogy\\photo.jpg",
+      },
+    ]);
+  });
+
+  // Names #143: a version with no schema was given GEDCOM 7 path rules.
+  it("offers nothing for a version it cannot judge", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 4.0",
+        "0 @I1@ INDI",
+        "1 WWW https://example.org/person/1",
+        "1 OBJE",
+        "2 FILE media/portrait.jpg",
+      ].join("\n"),
+    );
+
+    expect(service.getDocumentLinks()).toEqual([]);
+  });
+
   it("classifies URLs correctly in GEDCOM 5.5.1", () => {
     const service = new GedcomLanguageService(
       [

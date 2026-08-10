@@ -1,4 +1,4 @@
-import { GedcomDocument } from "@domorium/validator";
+import { GedcomDocument, type GedcomDialect } from "@domorium/validator";
 import type {
   CodeAction,
   Diagnostic,
@@ -15,7 +15,7 @@ interface CodeActionContext {
   index: ReferenceIndex;
   currentDiagnostics: Diagnostic[];
   version: DocumentVersion;
-  gedcomVersion: string | undefined;
+  dialect: GedcomDialect | undefined;
 }
 
 export function getCodeActions(
@@ -118,7 +118,7 @@ function unresolvedXrefActions(
   if (
     trailerLine >= 0 &&
     !context.index.get(xref)?.declarations.length &&
-    canCreateBareRecord(context.gedcomVersion, recordTag)
+    canCreateBareRecord(context.dialect, recordTag)
   ) {
     const newline = context.text.includes("\r\n") ? "\r\n" : "\n";
     actions.push({
@@ -144,13 +144,18 @@ function unresolvedXrefActions(
 }
 
 function canCreateBareRecord(
-  gedcomVersion: string | undefined,
+  dialect: GedcomDialect | undefined,
   recordTag: string,
 ): boolean {
-  const isGedcom551 = gedcomVersion?.startsWith("5") === true;
-  const allowed = isGedcom551
-    ? new Set(["FAM", "INDI", "SOUR", "SUBN"])
-    : new Set(["FAM", "INDI", "SOUR"]);
+  // Which records exist is what the specification says, so an unsupported
+  // version is offered none rather than another version's set.
+  if (dialect === undefined) {
+    return false;
+  }
+  const allowed =
+    dialect === "5.5.1"
+      ? new Set(["FAM", "INDI", "SOUR", "SUBN"])
+      : new Set(["FAM", "INDI", "SOUR"]);
   return allowed.has(recordTag);
 }
 

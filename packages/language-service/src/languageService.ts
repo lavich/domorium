@@ -150,7 +150,7 @@ export class GedcomLanguageService {
   }
 
   getDocumentLinks(): DocumentLink[] {
-    return documentLinks(this.document.getNodes());
+    return documentLinks(this.document.getNodes(), this.document.getDialect());
   }
 
   getCodeActions(
@@ -164,7 +164,7 @@ export class GedcomLanguageService {
         index: this.referenceIndex,
         currentDiagnostics: this.getDiagnostics(),
         version: this.version,
-        gedcomVersion: this.document.getVersion(),
+        dialect: this.document.getDialect(),
       },
       range,
       diagnostics,
