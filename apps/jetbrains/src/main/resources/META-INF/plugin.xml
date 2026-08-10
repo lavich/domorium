@@ -31,6 +31,16 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.5.0</h2>
+    <ul>
+      <li><b>A file whose version cannot be checked no longer looks clean.</b> <code>2 VERS 4.0</code>, a misspelled version and a file with no version line were all checked against GEDCOM 7 and reported nothing, because none of those rules applied to them. They now carry one error saying so, and the rest of the checking goes quiet rather than judging the file by the wrong specification. Levels, syntax, highlighting, folding and navigation still work</li>
+      <li><b><code>2 VERS 5.5</code>, <code>5.5.5</code> and <code>5.5EL</code> are checked against the 5.5.1 rules with a warning</b> that says the two differ, so some marks may not apply and others may be missing. Those files previously collected the 5.5.1 marks with no explanation of where they came from</li>
+      <li>Completions and file links go quiet for a version with no rules, and a 4.0 file is no longer offered GEDCOM 7 record creation</li>
+      <li><b>Anything written under a structure that cannot hold it is now marked.</b> A line beneath <code>1 TITL</code>, or beneath the trailer in a 5.5.1 file, was accepted without comment</li>
+      <li><code>2 VERS  5.5.1</code> written with two spaces was read as GEDCOM 7, so a 5.5.1 file was checked against the wrong rules and an absolute media path stopped being a clickable link. Both are fixed</li>
+      <li><code>1 OBJE</code> with <code>FILE</code> and <code>TITL</code> written beneath it, the inline form of a 5.5.1 media link, no longer reports <code>Unknown tag FILE</code></li>
+    </ul>
+
     <h2>1.4.0</h2>
     <ul>
       <li>Stopped marking an extension tag used as an enumeration value: <code>2 PEDI _ENUMVAL</code> and <code>2 ROLE _CHILD</code> were underlined, though the specification permits extending an enumeration this way. One never declared in <code>HEAD.SCHMA</code> is now a warning instead</li>
