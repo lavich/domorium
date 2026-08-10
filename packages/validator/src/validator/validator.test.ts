@@ -4,6 +4,7 @@ import { ConfigurableLexer } from "../parser/lexer";
 import { buildAst } from "../parser/ast";
 import { collectExtensions } from "./extensions";
 import { getGedcomVersion } from "./getGedcomVersion";
+import { GedcomErrorCode } from "../types/errors";
 
 const astBuilder = (text: string) => {
   const lexingResult = new ConfigurableLexer({ zeroBased: true }).tokenize(
@@ -87,6 +88,112 @@ describe("validator", () => {
     const validator = new GedcomValidator();
     const errs = validator.validate(nodes);
     expect(errs.length).toBe(0);
+  });
+
+  // Issue #116: a leaf structure accepted any child, silently, to any depth.
+  describe("a structure the schema gives no substructures", () => {
+    test("reports a child of it as an unknown tag", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL Open Archieven
+2 BOGUS whatever
+0 TRLR
+`);
+      const validator = new GedcomValidator();
+
+      const errs = validator.validate(nodes);
+
+      expect(errs).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.UnknownTag,
+          message: "Unknown tag BOGUS in parent TITL",
+        }),
+      ]);
+    });
+
+    // Reported once, at the outermost unknown tag; its subtree is left alone,
+    // as under any other parent. ADR-0008 gives the reason for extensions:
+    // there is no definition to check a subtree against.
+    test("reports the outermost child once and leaves its subtree alone", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL Open Archieven
+2 BOGUS whatever
+3 ALSO nested
+0 TRLR
+`);
+      const validator = new GedcomValidator();
+
+      const errs = validator.validate(nodes);
+
+      expect(errs.map((e) => e.message)).toEqual([
+        "Unknown tag BOGUS in parent TITL",
+      ]);
+    });
+
+    test("reports a child of TRLR in GEDCOM 5.5.1, which is such a structure", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SOUR Domorium
+1 SUBM @SUBM1@
+0 @SUBM1@ SUBM
+1 NAME Someone
+0 TRLR
+1 ANYTHING at all
+`);
+      const validator = new GedcomValidator();
+
+      const errs = validator.validate(nodes);
+
+      // Asserted by containment, not equality: HEAD.SUBM does not resolve in
+      // 5.5.1 even when the record is declared, so this document cannot be
+      // made otherwise clean. That is a separate defect from this one.
+      expect(errs).toContainEqual(
+        expect.objectContaining({
+          code: GedcomErrorCode.UnknownTag,
+          message: "Unknown tag ANYTHING in parent TRLR",
+        }),
+      );
+    });
+
+    test("still accepts the continuation lines its payload allows", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL A title long enough to wrap
+2 CONT onto a second line
+2 CONC and further still
+0 TRLR
+`);
+      const validator = new GedcomValidator();
+
+      const errs = validator.validate(nodes);
+
+      expect(errs).toEqual([]);
+    });
+
+    test("says nothing when it has no children", async () => {
+      const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL Open Archieven
+0 TRLR
+`);
+      const validator = new GedcomValidator();
+
+      const errs = validator.validate(nodes);
+
+      expect(errs).toEqual([]);
+    });
   });
 
   // Issue #90, from a user's real export: EVEN carries a Text payload, and
