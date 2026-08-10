@@ -89,6 +89,19 @@ may still have a level that cannot follow the line above it. Two distinct codes 
 "could not determine the version" from "version X is not supported": the causes differ, and
 so does what the reader should do about it.
 
+The two differ in one further respect. An **undetermined** document still gets a schema for
+**completions**, though not for validation, and it is the newest supported one. An empty
+buffer is the common case in an editor and has no version by definition, so a reader typing
+the first line of a new file must still be offered `HEAD`, and the version they are about to
+write is most likely the current one. An **unsupported** document is offered nothing: a 4.0
+file is not on its way to becoming supported, and completing GEDCOM 7 tags into it would be
+inventing a file the reader did not ask for.
+
+Which version counts as newest is read off the table's own order rather than named in code,
+so a future release is a row at the top and nothing else. Whether a version requires
+extension tags to be declared in `HEAD.SCHMA` is likewise a property of the table entry, not
+a comparison against the string `7.0`.
+
 Resolution happens once, in `GedcomDocument.createDocument`, where version, schema,
 extension context and validation already meet.
 
@@ -101,6 +114,11 @@ where they had silence, and 5.5 files gain a warning. Each host's changelog has 
 Completions go quiet for an unsupported version, because they read the schema too. That is
 consistent — offering GEDCOM 7 tags inside a 4.0 file was never right — but it is a loss of
 function for those files, not only a gain in honesty.
+
+An empty buffer now carries an error while it is being written, which is noise on the way to
+a valid file. It is accepted because the alternative is worse: a threshold below which the
+validator stays quiet would have to guess when a document is finished, and would then be
+silent about genuinely truncated files.
 
 Adding a version becomes a row and a schema file rather than an edit to a conditional, and
 the table is the single place where the question "what do we do with this version" is
