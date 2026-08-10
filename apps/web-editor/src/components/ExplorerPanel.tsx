@@ -19,11 +19,6 @@ export interface ExplorerPanelProps {
   onDownload(): void;
 }
 
-/**
- * One document, so the tree has one leaf. The shape is here because the editor
- * is meant to grow into a project; until it does, this shows what is actually
- * open rather than folders that do not exist.
- */
 export function ExplorerPanel({
   fileName,
   modified,

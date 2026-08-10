@@ -12,7 +12,6 @@ export interface WebDiagnostic {
   character: number;
 }
 
-/** What the status bar reports: where the caret is, and how the file is judged. */
 export interface WebEditorStatus {
   line: number;
   character: number;

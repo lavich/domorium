@@ -34,7 +34,6 @@ const themeItems: {
   { value: "system", label: "System", icon: SunMoonIcon },
 ];
 
-/** Shown in the File menu, so it must name the key the reader actually has. */
 const modifierKey =
   typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
     ? "\u2318"

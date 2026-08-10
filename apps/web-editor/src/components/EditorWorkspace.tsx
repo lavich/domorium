@@ -63,9 +63,7 @@ export function EditorWorkspace({
   );
 
   // h-full, not only flex-1: ResizablePanel is not a flex container, so a
-  // percentage height is what gives the editor below a definite one to scroll
-  // inside. Without it the editor grows to the document and the tab bar leaves
-  // the screen.
+  // percentage is what gives the editor a definite height to scroll inside.
   const pane = (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
       <EditorTabs fileName={session.fileName} modified={modified} />

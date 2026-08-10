@@ -89,9 +89,8 @@ export function createGedcomEditor(
   };
 
   /**
-   * The caret moves far more often than the document changes, so this is not
-   * behind the settle delay; the resolution it reports is the last one the
-   * validator produced rather than a fresh parse.
+   * Not behind the settle delay, because the caret moves far more often than
+   * the document does; the resolution it reports is the last one parsed.
    */
   let lastResolution: WebEditorStatus["resolution"];
   const reportStatus = (
