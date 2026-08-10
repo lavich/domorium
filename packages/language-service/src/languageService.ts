@@ -1,4 +1,4 @@
-import { GedcomDocument } from "@domorium/validator";
+import { GedcomDocument, type VersionResolution } from "@domorium/validator";
 
 import { getCompletionItems } from "./libs/completion/completion";
 import { getCodeActions } from "./libs/codeActions/codeActions";
@@ -69,6 +69,10 @@ export class GedcomLanguageService {
       ...error,
       severity: error.level,
     }));
+  }
+
+  getVersionResolution(): VersionResolution | undefined {
+    return this.document.getVersionResolution();
   }
 
   getCompletionItems(position: Position): CompletionItem[] {

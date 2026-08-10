@@ -15,6 +15,7 @@ const firstHandle: GedcomEditorHandle = {
   destroy: vi.fn(),
   focusDiagnostic: vi.fn(),
   setTheme: vi.fn(),
+  openSearch: vi.fn(),
 };
 
 const secondHandle: GedcomEditorHandle = {
@@ -22,6 +23,7 @@ const secondHandle: GedcomEditorHandle = {
   destroy: vi.fn(),
   focusDiagnostic: vi.fn(),
   setTheme: vi.fn(),
+  openSearch: vi.fn(),
 };
 
 beforeEach(() => {
@@ -41,6 +43,7 @@ it("creates one editor and destroys it on unmount", () => {
       theme="dark"
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
+      onStatusChange={vi.fn()}
     />,
   );
 
@@ -57,6 +60,7 @@ it("updates the theme without replacing the editor", () => {
       theme="light"
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
+      onStatusChange={vi.fn()}
     />,
   );
 
@@ -67,6 +71,7 @@ it("updates the theme without replacing the editor", () => {
       theme="dark"
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
+      onStatusChange={vi.fn()}
     />,
   );
 
@@ -82,6 +87,7 @@ it("replaces the editor when the document key changes", () => {
       theme="light"
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
+      onStatusChange={vi.fn()}
     />,
   );
 
@@ -92,6 +98,7 @@ it("replaces the editor when the document key changes", () => {
       theme="light"
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
+      onStatusChange={vi.fn()}
     />,
   );
 
