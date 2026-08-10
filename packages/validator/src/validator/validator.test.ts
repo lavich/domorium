@@ -136,7 +136,7 @@ describe("validator", () => {
     });
 
     test("reports a child of TRLR in GEDCOM 5.5.1, which is such a structure", async () => {
-      const { nodes } = astBuilder(`0 HEAD
+      const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
 2 VERS 5.5.1
 2 FORM LINEAGE-LINKED
@@ -148,19 +148,16 @@ describe("validator", () => {
 0 TRLR
 1 ANYTHING at all
 `);
-      const validator = new GedcomValidator();
+      const validator = new GedcomValidator(pointers);
 
       const errs = validator.validate(nodes);
 
-      // Asserted by containment, not equality: HEAD.SUBM does not resolve in
-      // 5.5.1 even when the record is declared, so this document cannot be
-      // made otherwise clean. That is a separate defect from this one.
-      expect(errs).toContainEqual(
+      expect(errs).toEqual([
         expect.objectContaining({
           code: GedcomErrorCode.UnknownTag,
           message: "Unknown tag ANYTHING in parent TRLR",
         }),
-      );
+      ]);
     });
 
     test("still accepts the continuation lines its payload allows", async () => {
