@@ -5,8 +5,11 @@ import g551validationJson from "../schemes/g551validation.json";
 import type { Range } from "../types/position";
 import { getGedcomVersion } from "./getGedcomVersion";
 
+export type GedcomDialect = "7.0" | "5.5.1";
+
 interface SchemaChoice {
   scheme: GedcomScheme;
+  dialect: GedcomDialect;
   /** GEDCOM 7 onwards requires every extension tag to be declared in SCHMA. */
   requiresSchmaDeclaration: boolean;
 }
@@ -16,7 +19,6 @@ export type VersionResolution =
   | ({
       kind: "substituted";
       version: string;
-      using: string;
       range: Range;
     } & SchemaChoice)
   | { kind: "unsupported"; version: string; range: Range }
@@ -24,7 +26,7 @@ export type VersionResolution =
 
 type Entry =
   | ({ kind: "supported"; version: string } & SchemaChoice)
-  | ({ kind: "substituted"; version: string; using: string } & SchemaChoice);
+  | ({ kind: "substituted"; version: string } & SchemaChoice);
 
 // Which dialect may borrow another's schema is decided by the direction of the
 // difference between them; ADR-0009 records the measurement per entry. 5.5.5 and
@@ -38,33 +40,35 @@ const TABLE: readonly Entry[] = [
   {
     kind: "supported",
     version: "7.0",
+    dialect: "7.0",
     scheme: g7validationJson,
     requiresSchmaDeclaration: true,
   },
   {
     kind: "supported",
     version: "5.5.1",
+    dialect: "5.5.1",
     scheme: g551validationJson,
     requiresSchmaDeclaration: false,
   },
   {
     kind: "substituted",
     version: "5.5.5",
-    using: "5.5.1",
+    dialect: "5.5.1",
     scheme: g551validationJson,
     requiresSchmaDeclaration: false,
   },
   {
     kind: "substituted",
     version: "5.5 EL",
-    using: "5.5.1",
+    dialect: "5.5.1",
     scheme: g551validationJson,
     requiresSchmaDeclaration: false,
   },
   {
     kind: "substituted",
     version: "5.5",
-    using: "5.5.1",
+    dialect: "5.5.1",
     scheme: g551validationJson,
     requiresSchmaDeclaration: false,
   },
@@ -91,10 +95,11 @@ export function resolveGedcomVersion(nodes: ASTNode[]): VersionResolution {
   if (!version) {
     // An empty buffer has no version and is the common case in an editor, so it
     // still gets a schema to complete the header against.
-    const { scheme, requiresSchmaDeclaration } = NEWEST_SUPPORTED;
+    const { scheme, dialect, requiresSchmaDeclaration } = NEWEST_SUPPORTED;
     return {
       kind: "undetermined",
       scheme,
+      dialect,
       requiresSchmaDeclaration,
       range,
     };

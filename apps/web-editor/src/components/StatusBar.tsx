@@ -58,7 +58,7 @@ function stateLabel(resolution: VersionResolution | undefined): string {
     case "supported":
       return "supported";
     case "substituted":
-      return `checked as ${resolution.using}`;
+      return `checked as ${resolution.dialect}`;
     case "unsupported":
       return "not supported";
     default:

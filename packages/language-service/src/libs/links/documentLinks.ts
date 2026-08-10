@@ -1,17 +1,22 @@
-import { TokenNames, type ASTNode } from "@domorium/validator";
+import {
+  TokenNames,
+  type ASTNode,
+  type GedcomDialect,
+} from "@domorium/validator";
 import type { DocumentLink } from "../../types";
 
 const ABSOLUTE_PATH = /^(?:\/|[A-Za-z]:[\\/]|\\\\)/u;
 const URI_SCHEME = /^[A-Za-z][A-Za-z0-9+.-]*:/u;
 
-export function documentLinks(nodes: ASTNode[]): DocumentLink[] {
+export function documentLinks(
+  nodes: ASTNode[],
+  dialect: GedcomDialect | undefined,
+): DocumentLink[] {
   const links: DocumentLink[] = [];
-  const version = nodes
-    .find((node) => node.tokens[TokenNames.TAG]?.value === "HEAD")
-    ?.children.find((node) => node.tokens[TokenNames.TAG]?.value === "GEDC")
-    ?.children.find((node) => node.tokens[TokenNames.TAG]?.value === "VERS")
-    ?.tokens[TokenNames.VALUE]?.value;
-  const isGedcom7 = !version?.startsWith("5");
+  if (dialect === undefined) {
+    return links;
+  }
+  const isGedcom7 = dialect === "7.0";
 
   const visit = (node: ASTNode): void => {
     const tag = node.tokens[TokenNames.TAG]?.value;
