@@ -5,7 +5,6 @@ import g551validationJson from "../schemes/g551validation.json";
 import type { Range } from "../types/position";
 import { getGedcomVersion } from "./getGedcomVersion";
 
-/** What the schema this version selects implies, beyond the schema itself. */
 interface SchemaChoice {
   scheme: GedcomScheme;
   /** GEDCOM 7 onwards requires every extension tag to be declared in SCHMA. */
@@ -27,12 +26,14 @@ type Entry =
   | ({ kind: "supported"; version: string } & SchemaChoice)
   | ({ kind: "substituted"; version: string; using: string } & SchemaChoice);
 
-// Whether one schema may stand in for another version depends on the direction
-// of the difference between them; ADR-0009 records the measurement per entry.
-// 5.5.5 and 5.5 EL are listed because they begin with 5.5 — leaving them out
-// would resolve them as 5.5 rather than leave them unsupported.
-// Written newest first: the first supported entry is what a document with no
-// version yet is offered completions from, so a new release goes at the top.
+// Which dialect may borrow another's schema is decided by the direction of the
+// difference between them; ADR-0009 records the measurement per entry. 5.5.5 and
+// 5.5 EL are listed because they begin with 5.5 — leaving them out would resolve
+// them as 5.5 rather than leave them unsupported.
+//
+// The order carries meaning of its own: newest first, because the first
+// supported entry is what a versionless document completes against. Matching
+// does not use it — see BY_LENGTH below.
 const TABLE: readonly Entry[] = [
   {
     kind: "supported",
@@ -69,9 +70,6 @@ const TABLE: readonly Entry[] = [
   },
 ];
 
-// Matching is longest-first, which is independent of the order above: reordering
-// the table changes which version a versionless document assumes, not what any
-// version resolves to.
 const BY_LENGTH = [...TABLE].sort(
   (a, b) => b.version.length - a.version.length,
 );
@@ -91,10 +89,8 @@ export function resolveGedcomVersion(nodes: ASTNode[]): VersionResolution {
 
   const version = getGedcomVersion(nodes);
   if (!version) {
-    // An empty or half-typed document has no version and is the common case in
-    // an editor, so it still gets a schema to complete against — the newest,
-    // since that is what a new file is most likely becoming. An unsupported
-    // version gets none: that file is not on its way to being supported.
+    // An empty buffer has no version and is the common case in an editor, so it
+    // still gets a schema to complete the header against.
     const { scheme, requiresSchmaDeclaration } = NEWEST_SUPPORTED;
     return {
       kind: "undetermined",
