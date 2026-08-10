@@ -280,4 +280,89 @@ describe("validator", () => {
     expect(errors[0].code).toBe("VAL008");
     expect(errors[0].level).toBe("warning");
   });
+
+  // ADR-0009: a file whose version names no schema we hold must not come back
+  // clean, and must not be judged by a schema it never asked for.
+  describe("version resolution", () => {
+    const in551 = (vers: string) => `0 HEAD
+1 SOUR TestApp
+1 GEDC
+2 VERS ${vers}
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Submitter
+0 TRLR
+`;
+
+    test("an unsupported version is reported and stops schema validation", () => {
+      const errors = new GedcomDocument()
+        .createDocument(
+          `0 HEAD\n1 GEDC\n2 VERS 4.0\n0 @I1@ INDI\n1 BOGUS x\n0 TRLR\n`,
+        )
+        .getErrors();
+
+      expect(errors).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.UnsupportedVersion,
+          level: "error",
+        }),
+      ]);
+    });
+
+    test("an undetermined version is reported under its own code", () => {
+      const errors = new GedcomDocument()
+        .createDocument(`0 HEAD\n1 GEDC\n0 @I1@ INDI\n0 TRLR\n`)
+        .getErrors();
+
+      expect(errors).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.UndeterminedVersion,
+          level: "error",
+        }),
+      ]);
+    });
+
+    test("a substituted version warns and still validates", () => {
+      const errors = new GedcomDocument()
+        .createDocument(in551("5.5"))
+        .getErrors();
+
+      expect(errors).toEqual([
+        expect.objectContaining({
+          code: GedcomErrorCode.SubstitutedVersion,
+          level: "warning",
+        }),
+      ]);
+    });
+
+    test("a supported version reports nothing of its own", () => {
+      expect(
+        new GedcomDocument().createDocument(in551("5.5.1")).getErrors(),
+      ).toEqual([]);
+    });
+
+    test("level diagnostics survive an unsupported version", () => {
+      const errors = new GedcomDocument()
+        .createDocument(
+          `0 HEAD\n1 GEDC\n2 VERS 4.0\n0 @I1@ INDI\n3 NAME X /Y/\n0 TRLR\n`,
+        )
+        .getErrors()
+        .map((error) => error.code);
+
+      expect(errors).toContain(GedcomErrorCode.InvalidLevel);
+      expect(errors).toContain(GedcomErrorCode.UnsupportedVersion);
+    });
+
+    test("the outcome is available without parsing the message", () => {
+      const document = new GedcomDocument().createDocument(in551("5.5"));
+
+      expect(document.getVersionResolution()).toMatchObject({
+        kind: "substituted",
+        version: "5.5",
+        using: "5.5.1",
+      });
+    });
+  });
 });

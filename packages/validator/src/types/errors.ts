@@ -25,6 +25,12 @@ export enum GedcomErrorCode {
   DuplicateDeclaration = "VAL009",
   /** An event with neither a payload nor substructures asserts nothing. */
   EmptyEvent = "VAL010",
+  /** The version is one no schema in this package describes. */
+  UnsupportedVersion = "VAL011",
+  /** No version could be read from HEAD.GEDC.VERS. */
+  UndeterminedVersion = "VAL012",
+  /** A version checked against a different version's schema. */
+  SubstitutedVersion = "VAL013",
   /** A pointer whose xref names no record of the required type. */
   UnresolvedXref = "unresolved-xref",
   /** A line whose level cannot follow the line above it. */

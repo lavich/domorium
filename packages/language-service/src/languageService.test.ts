@@ -20,11 +20,14 @@ describe("GedcomLanguageService", () => {
   it("updates and validates one document snapshot", () => {
     const service = new GedcomLanguageService("0 HEAD\n0 TRLR");
     expect(service.getDiagnostics()).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "VAL002" })]),
+      expect.arrayContaining([expect.objectContaining({ code: "VAL012" })]),
     );
 
     service.update("0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 TRLR");
 
+    expect(service.getDiagnostics()).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "VAL012" })]),
+    );
     expect(service.getDiagnostics()).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
