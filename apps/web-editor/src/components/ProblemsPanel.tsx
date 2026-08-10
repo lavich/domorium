@@ -10,7 +10,7 @@ export function ProblemsPanel({ diagnostics, onSelect }: ProblemsPanelProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex h-(--shell-tabs-height) shrink-0 items-center gap-2 border-b px-3">
-        <span className="text-[11px] font-bold tracking-[0.05em] text-muted-foreground uppercase">
+        <span className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
           Problems
         </span>
         <span className="rounded bg-muted px-1.5 font-mono text-[11px] text-muted-foreground">

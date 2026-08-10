@@ -1,5 +1,6 @@
 import {
   CheckIcon,
+  ChevronDownIcon,
   CodeIcon,
   DownloadIcon,
   ExternalLinkIcon,
@@ -33,6 +34,12 @@ const themeItems: {
   { value: "system", label: "System", icon: SunMoonIcon },
 ];
 
+/** Shown in the File menu, so it must name the key the reader actually has. */
+const modifierKey =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
+    ? "\u2318"
+    : "Ctrl+";
+
 const productLinks = [
   { label: "VS Code", href: LINKS.vscode },
   { label: "Obsidian", href: LINKS.obsidian },
@@ -40,16 +47,12 @@ const productLinks = [
 ] as const;
 
 export interface SiteHeaderProps {
-  fileName: string;
-  modified: boolean;
   onOpenFile(): void;
   onDownload(): void;
   onReset(): void;
 }
 
 export function SiteHeader({
-  fileName,
-  modified,
   onOpenFile,
   onDownload,
   onReset,
@@ -58,26 +61,33 @@ export function SiteHeader({
 
   return (
     <header className="grid shrink-0 items-center gap-2 border-b px-4 py-3 md:grid-cols-[1fr_auto_1fr] lg:px-6">
-      <a
-        href="/"
-        className="flex items-center gap-2 justify-self-start font-heading font-semibold"
-      >
-        <img src="/favicon.svg" alt="" className="size-7" />
-        <span>Domorium</span>
-      </a>
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center gap-1 justify-self-start">
+        <a
+          href="/"
+          className="flex items-center gap-2 font-heading font-semibold"
+        >
+          <img src="/favicon.svg" alt="" className="size-7" />
+          <span>Domorium</span>
+        </a>
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
             File
+            <ChevronDownIcon data-icon="inline-end" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={onOpenFile}>
               <UploadIcon />
               Open…
+              <span className="ml-auto font-mono text-xs text-muted-foreground">
+                {modifierKey}O
+              </span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onDownload}>
               <DownloadIcon />
               Download copy
+              <span className="ml-auto font-mono text-xs text-muted-foreground">
+                {modifierKey}S
+              </span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onReset}>
@@ -86,16 +96,10 @@ export function SiteHeader({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <h1 className="flex items-center gap-2 font-mono text-[13px] font-normal">
-          {fileName}
-          {modified ? (
-            <span
-              aria-label="Unsaved changes"
-              className="size-1.5 rounded-full bg-primary"
-            />
-          ) : null}
-        </h1>
       </div>
+      <h1 className="text-center font-heading text-sm font-semibold sm:text-base">
+        Open, validate and edit GEDCOM locally
+      </h1>
       <nav
         aria-label="Domorium products and project links"
         className="flex flex-wrap items-center justify-center gap-1 md:justify-self-end"

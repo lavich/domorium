@@ -97,8 +97,11 @@ describe("App", () => {
     ).toBe(LINKS.github);
     expect(screen.getByLabelText("GEDCOM editor")).not.toBeNull();
     expect(
-      screen.getByRole("heading", { name: /example\.ged/i }),
+      screen.getByRole("heading", {
+        name: /open, validate and edit GEDCOM locally/i,
+      }),
     ).not.toBeNull();
+    expect(screen.getByRole("tab", { name: /example\.ged/i })).not.toBeNull();
     expect(
       screen.queryByRole("complementary", { name: /GEDCOM problems/i }),
     ).toBeNull();
@@ -144,7 +147,7 @@ describe("App", () => {
     const input = screen.getByLabelText("Open GEDCOM file");
     await user.upload(input, new File(["0 HEAD\n0 TRLR"], "family.ged"));
     expect(
-      await screen.findByRole("heading", { name: /family\.ged/i }),
+      await screen.findByRole("tab", { name: /family\.ged/i }),
     ).not.toBeNull();
 
     await user.clear(screen.getByLabelText("GEDCOM editor"));
@@ -161,9 +164,7 @@ describe("App", () => {
       screen.getByRole("alertdialog", { name: /discard your changes/i }),
     ).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(
-      screen.getByRole("heading", { name: /family\.ged/i }),
-    ).not.toBeNull();
+    expect(screen.getByRole("tab", { name: /family\.ged/i })).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "File" }));
     await user.click(
@@ -171,9 +172,7 @@ describe("App", () => {
     );
     await user.click(screen.getByRole("button", { name: "Discard changes" }));
     await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: /example\.ged/i }),
-      ).not.toBeNull(),
+      expect(screen.getByRole("tab", { name: /example\.ged/i })).not.toBeNull(),
     );
   });
 });

@@ -29,6 +29,8 @@ export function EditorWorkspace({
   onChange,
   onDiagnosticsChange,
   onStatusChange,
+  onOpenFile,
+  onDownload,
 }: {
   session: DocumentSession;
   modified: boolean;
@@ -39,6 +41,8 @@ export function EditorWorkspace({
   onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
   onStatusChange(status: WebEditorStatus): void;
+  onOpenFile(): void;
+  onDownload(): void;
 }) {
   const wideEnoughForPanels = useMediaQuery("(min-width: 768px)");
   const [explorerOpen, setExplorerOpen] = useState(true);
@@ -81,7 +85,12 @@ export function EditorWorkspace({
           onOpenSearch={() => editorRef.current?.openSearch()}
         />
         {wideEnoughForPanels && explorerOpen ? (
-          <ExplorerPanel fileName={session.fileName} modified={modified} />
+          <ExplorerPanel
+            fileName={session.fileName}
+            modified={modified}
+            onOpenFile={onOpenFile}
+            onDownload={onDownload}
+          />
         ) : null}
         {wideEnoughForPanels && problemsOpen ? (
           <ResizablePanelGroup orientation="horizontal">

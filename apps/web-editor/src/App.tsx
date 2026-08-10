@@ -152,11 +152,31 @@ function AppContent() {
     dispatch({ type: "downloaded" });
   };
 
+  // The File menu names these, so they have to work. Ctrl/Cmd-S also keeps the
+  // browser from offering to save the page, which is never what is wanted here.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!event.metaKey && !event.ctrlKey) {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      if (key !== "o" && key !== "s") {
+        return;
+      }
+      event.preventDefault();
+      if (key === "o") {
+        openFile();
+      } else {
+        download();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   return (
     <main className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
       <SiteHeader
-        fileName={session.fileName}
-        modified={modified}
         onOpenFile={openFile}
         onDownload={download}
         onReset={() => requestReplacement({ type: "demo" })}
@@ -193,6 +213,8 @@ function AppContent() {
               onChange={() => dispatch({ type: "edit" })}
               onDiagnosticsChange={setDiagnostics}
               onStatusChange={setStatus}
+              onOpenFile={openFile}
+              onDownload={download}
             />
           )}
         </div>
