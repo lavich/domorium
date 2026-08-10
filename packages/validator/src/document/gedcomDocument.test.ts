@@ -361,7 +361,7 @@ describe("validator", () => {
       expect(document.getVersionResolution()).toMatchObject({
         kind: "substituted",
         version: "5.5",
-        using: "5.5.1",
+        dialect: "5.5.1",
       });
     });
   });

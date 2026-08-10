@@ -24,7 +24,7 @@ describe("resolveGedcomVersion", () => {
     (vers) => {
       expect(
         resolveGedcomVersion(astFor(`2 VERS ${vers}`).nodes),
-      ).toMatchObject({ kind: "substituted", version: vers, using: "5.5.1" });
+      ).toMatchObject({ kind: "substituted", version: vers, dialect: "5.5.1" });
     },
   );
 

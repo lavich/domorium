@@ -8,6 +8,7 @@ import { RuleNode } from "../validator/rule-node";
 import { getGedcomVersion } from "../validator/getGedcomVersion";
 import {
   resolveGedcomVersion,
+  type GedcomDialect,
   type VersionResolution,
 } from "../validator/versionRegistry";
 import {
@@ -100,7 +101,7 @@ export class GedcomDocument {
     if (resolution.kind === "substituted") {
       this.errors.push({
         code: GedcomErrorCode.SubstitutedVersion,
-        message: `GEDCOM ${resolution.version} is checked against the ${resolution.using} schema; the two differ, so some diagnostics may not apply and others may be missing`,
+        message: `GEDCOM ${resolution.version} is checked against the ${resolution.dialect} schema; the two differ, so some diagnostics may not apply and others may be missing`,
         range: resolution.range,
         level: "warning",
       });
@@ -189,6 +190,15 @@ export class GedcomDocument {
 
   getVersionResolution(): VersionResolution | undefined {
     return this.resolution;
+  }
+
+  // An unsupported version has no dialect, and a feature that reads one is
+  // saying what the specification requires. It may not answer for a file whose
+  // specification we do not have.
+  getDialect(): GedcomDialect | undefined {
+    return this.resolution && "dialect" in this.resolution
+      ? this.resolution.dialect
+      : undefined;
   }
 
   getCompletions(position: Position, lineText: string): GedcomCompletion[] {
