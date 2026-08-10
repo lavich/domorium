@@ -1,70 +1,40 @@
 # Agent instructions
 
-Domorium is a collection of GEDCOM editing tools — parser, validator, and
-language features for `.ged` files, adapted to VS Code, JetBrains IDEs, the browser, and Obsidian. npm workspace
-monorepo, TypeScript, with a Kotlin/Gradle plugin under `apps/jetbrains`.
-
-This file is the canonical instruction set for all coding assistants. Files such
-as `CLAUDE.md` are pointers to it and must not carry content of their own.
+GEDCOM tooling for `.ged` files — VS Code, JetBrains IDEs, Obsidian, the browser.
+TypeScript npm workspace, plus a Kotlin/Gradle plugin in `apps/jetbrains`. These
+are the canonical instructions for all coding assistants; `CLAUDE.md` and its kin
+are pointers carrying no content. Read this file in full.
 
 ## Layout
 
 ```text
-packages/validator          @domorium/validator        parser + schema validation   (npm)
-packages/language-service   @domorium/language-service editor-independent features (npm)
-packages/language-server    @domorium/language-server  LSP adapter                 (internal)
-packages/codemirror         @domorium/codemirror       CodeMirror 6 adapter        (npm)
-apps/vscode                 VS Code extension        → language-server
-apps/jetbrains              JetBrains plugin         → language-server (bundled stdio build)
-apps/web-editor             Vite app, GitHub Pages   → codemirror
+validator → language-service → language-server (LSP adapter, internal)
+                             → codemirror (CodeMirror 6)
+apps/vscode, apps/jetbrains → language-server;  apps/web-editor → codemirror
 ```
 
-Dependencies point one way: apps → adapter → language service → validator. Read
-[docs/architecture.md](docs/architecture.md) before changing anything that
-crosses a package boundary.
+Dependencies point one way; everything but `language-server` publishes as
+`@domorium/*`. Read [docs/architecture.md](docs/architecture.md) before crossing a
+package boundary, [docs/adr/](docs/adr/) for decisions already taken.
 
 ## Commands
 
-Run from the repository root.
+From the repository root: `npm install`, `npm run test:run`, `npm run build:libs`,
+`npm run dev -w apps/web-editor`.
 
-| Command                          | Purpose                                     |
-| -------------------------------- | ------------------------------------------- |
-| `npm install`                    | Install and build libraries (`postinstall`) |
-| `npm run check`                  | Full gate: TypeScript, docs, JetBrains      |
-| `npm run check:typescript`       | Lint, typecheck, tests                      |
-| `npm run check:docs`             | Documentation checks (see below)            |
-| `npm run check:conformance`      | Validator against the official GEDCOM files |
-| `npx prettier --write <files>`   | Fix formatting the checks complain about    |
-| `npm run test:run`               | Vitest, single run                          |
-| `npm run build:libs`             | Rebuild `language-server` and `codemirror`  |
-| `npm run dev -w apps/web-editor` | Web editor dev server                       |
-
-`npm run check` must pass before any commit is proposed, and it is enforced on
-pre-push by [lefthook.yml](lefthook.yml), which additionally runs Prettier and
-ESLint with `--fix` on staged files at pre-commit.
-
-Its `check:jetbrains` stage needs a JDK. Without one it is skipped — the pre-push
-hook detects this and says so — and CI runs it anyway. Say in the commit proposal
-that the stage did not run locally; skipped is not the same as passed.
-
-After changing a lower-layer package, rebuild it — consumers import from `dist`
-and will otherwise use stale output.
-
-`check:conformance` is deliberately outside `npm run check`: it fetches the
-official FamilySearch test files from gedcom.io, so it needs the network and
-`npm run check` must not. CI runs it as its own job. The files are never written
-to disk — they live in a repository that states no licence, so this one does not
-carry a copy. What is committed is
-[scripts/conformance-corpus.json](scripts/conformance-corpus.json): a SHA-256 per
-file and the diagnostics it is expected to produce, so an upstream edit fails
-loudly rather than passing unnoticed. After a change that fixes or adds a
-diagnostic, re-record with `npm run check:conformance -- --update` and read the
-diff — that diff is the evidence, and reviewing it is the point.
+- `npm run check` is the full gate and must pass before any commit is proposed;
+  [lefthook.yml](lefthook.yml) enforces it on pre-push and runs Prettier and ESLint
+  on staged files.
+- Its `check:jetbrains` stage needs a JDK and is skipped without one. Say so in the
+  commit proposal — skipped is not passed.
+- After changing a lower-layer package, rebuild it; consumers import from `dist`.
+- `npm run check:conformance` runs the validator against the official GEDCOM files.
+  It needs the network, so it sits outside `check` and is its own CI job. After
+  changing a diagnostic, re-record with `-- --update` and read the diff.
 
 ## Invariants
 
-Violating one of these means the change is at the wrong layer. Do not work around
-them; move the code instead.
+Violating one means the change is at the wrong layer. Move the code instead.
 
 - No package below the adapter layer imports an editor API or an LSP type.
 - `@domorium/language-service` declares its own protocol-shaped types in
@@ -72,132 +42,53 @@ them; move the code instead.
 - Genealogy logic lives in a shared package, never duplicated across apps.
 - `@codemirror/*` and `@lezer/*` stay peer dependencies, single-instanced.
 - Semantic edits preserve reciprocal GEDCOM pointers and revalidate the result.
-- Never hand-edit generated files: `packages/validator/src/schemes/g7validation.json`
-  (regenerate with `npm run generate -w packages/validator`) or any `dist` output.
-  `g551validation.json` is the exception — GEDCOM 5.5.1 has no machine-readable
-  spec, so that schema is maintained by hand.
+- Never hand-edit `dist` or `schemes/g7validation.json` (regenerate with
+  `npm run generate -w packages/validator`); `g551validation.json` is hand-maintained.
 
 ## Conventions
 
-- Prettier owns formatting and has no config file — do not hand-format, and do
-  not add one without a reason.
-- Tests are Vitest, colocated as `*.test.ts` next to the code under test. New
-  behavior in a package ships with tests in that package.
-- Commit messages follow Conventional Commits, with an optional scope:
-  `feat(jetbrains): …`, `fix(web-editor): …`, `docs: …`, `refactor: …`.
-- Work happens on branches and lands through pull requests. Do not commit or push
-  to `main` unless explicitly asked.
+- Prettier owns formatting and has no config file; do not hand-format.
+- Tests are Vitest, colocated as `*.test.ts`. New behavior ships with tests.
+- Commit messages follow Conventional Commits with an optional scope.
+- Work lands through pull requests. Do not commit or push to `main` unless asked.
 - Prefer focused commits at meaningful checkpoints over one large commit.
-- Never discard uncommitted work you did not write. Several worktrees may hold
-  work in progress; preserve local changes in all of them.
-- Match the surrounding code. This repository has consistent naming and
-  structure; a change that reads as foreign is a change to redo.
+- Never discard uncommitted work you did not write, in any worktree.
+- Match the surrounding code; a change that reads as foreign is one to redo.
 
 ### Comments
 
-A comment earns its place by saying something the code cannot. Before writing
-one, name which of the two it is:
-
-- **A rule from outside the code** — the GEDCOM spec, an LSP requirement, a
-  platform constraint. No amount of reading the code harder recovers it.
-- **A trap** — why the obvious simplification is wrong, so the next reader does
-  not helpfully undo it.
-
-If it is neither, it belongs somewhere else:
-
-- **What the code used to do, and why it changed** → the commit message. In the
-  source it describes an absence, and it rots the moment the next change lands.
-- **Measurements** — timings, memory, token counts → the changelog, or the issue
-  that motivated the work. A number in a comment is never re-measured; it is
-  wrong within a release and nobody notices.
-- **A restatement of the line below it, or of the name above it** → delete it. A
-  docblock that repeats the signature is worse than none: it is one more thing
-  that has to be kept true.
-
-Two questions catch nearly every comment that should not have been written:
-
-- **Would this sentence fit in the commit message?** Then put it there. Arguing
-  a change to a reviewer is what the commit and the pull request are for. A
-  comment that does it says the same thing twice, and the copy that stays in the
-  source is the one nobody updates when it stops being true.
-- **Is it in the past tense?** `used to`, `previously`, `was`, `before this`,
-  `now` — all tells that it is history. So is any number.
-
-Keep a comment as short as the rule it states. If the rule is one line, so is
-the comment. Two paragraphs on one decision means the second is justification,
-and justification goes in the commit.
-
-Tests are the exception. A comment naming the bug a test was written to catch is
-that test's reason to exist; without it the test reads as redundant and someone
-deletes it.
-
-Comment density is not a thing to match. Where the surrounding code
-over-explains, do not add to it.
+- A comment earns its place only as a rule from outside the code, or as a trap —
+  why the obvious simplification is wrong. Otherwise delete it.
+- History belongs in the commit message, measurements in the changelog or issue,
+  a restatement of the code nowhere. `used to`, `previously`, `was`, `now` and any
+  number are tells that it is one of those.
+- Keep it as short as the rule it states. In tests, name the bug it catches.
 
 ## Releases
 
-Every releasable unit has its own version, changelog, and tag family — see
-[docs/architecture.md](docs/architecture.md) for the table and
-[docs/adr/0003](docs/adr/0003-independent-package-publishing.md) for why.
-
-- **Never create or push a release tag without explicit approval, even when every
-  check passes.** Publishing is irreversible: npm versions are immutable, and a
-  marketplace release is visible the moment it lands. A mistake is corrected by
-  publishing a new version, never by replacing one.
-- A release is one deliberate act: version bump, changelog entry, then tag. The
-  workflow rejects a tag whose version does not match the package's
-  `package.json`.
-- Validate a package release with a real `npm pack` tarball installed into a clean
-  consumer — not `npm link`, not a source-directory dependency. The tarball is
-  what users actually get, and only it exercises the real exports, declarations,
-  and peer dependency boundaries.
+- **Never create or push a release tag without explicit approval**, however green
+  the checks are. Publishing is irreversible.
+- One deliberate act: version bump, changelog entry, then tag. The workflow rejects
+  a tag whose version does not match `package.json`.
+- Validate a release from a real `npm pack` tarball in a clean consumer, not `npm link`.
 
 ## Documentation
 
-Documentation lives in this repository and is updated in the same change as the
-code it describes. See [docs/adr/0002](docs/adr/0002-documentation-in-repository.md)
-for the reasoning.
+Updated in the same change as the code it describes.
 
-Obligations when making a change:
+- Public API changed → that package's `README.md` and its usage example. Nothing
+  checks examples mechanically; read it and confirm every name still exists.
+- Layers or dependency direction changed → [docs/architecture.md](docs/architecture.md).
+- A decision expensive to reverse → an ADR from [the template](docs/adr/template.md)
+  and its row in [the index](docs/adr/README.md). Records are immutable; supersede.
+- A version changed → its changelog by hand: `CHANGELOG.md`, or `<change-notes>` in
+  the JetBrains `plugin.xml`.
+- A [TODO.md](TODO.md) item completed → mark it there.
+  [docs/roadmap.md](docs/roadmap.md) holds directions, not commitments.
+- Plans, designs and notes are temporary and not committed; durable decisions become
+  ADRs. Assistant session memory is not project documentation.
 
-- Public API of a package changed → update that package's `README.md`, including its
-  usage example. Nothing checks examples mechanically, so read this one and confirm
-  every name still exists and the call is still how you would actually use the API.
-- Layer boundaries or dependency direction changed → update
-  [docs/architecture.md](docs/architecture.md).
-- A decision was made that would be expensive to reverse → add an ADR in
-  [docs/adr/](docs/adr/) using [the template](docs/adr/template.md), and add its row
-  to [the index](docs/adr/README.md). Existing records are immutable; supersede
-  rather than edit.
-- A release unit's version changed → add the matching changelog entry by hand.
-  `CHANGELOG.md` for the npm packages and the VS Code extension; the `<change-notes>`
-  block in `apps/jetbrains/.../plugin.xml` for the JetBrains plugin, which is where
-  its Marketplace listing reads them from. Changelogs are curated, not generated.
-- An item in [TODO.md](TODO.md) was completed → mark it there. Do not silently
-  promote items out of [docs/roadmap.md](docs/roadmap.md); that document holds
-  directions, not commitments.
-- Brainstorming notes, feature designs, and implementation plans are temporary
-  working material and are not committed. Preserve only what outlives the task:
-  durable decisions become ADRs, structural facts go into `docs/architecture.md`,
-  and user-visible changes go into a changelog.
-
-`npm run check:docs` enforces the mechanical half: Markdown is Prettier-formatted
-and passes markdownlint, every relative link and `#fragment` resolves, every package
-and app has a README, all five release units have a changelog entry for their current
-version, and the ADR index lists every record. It cannot judge whether the prose is
-still true, and it
-does not look inside code examples at all — that is what the obligations above are
-for, and [docs/prompts/docs-sync.md](docs/prompts/docs-sync.md) is the pass to run
-before opening a pull request.
-
-Assistant session memory is not project documentation. A durable decision that
-surfaced in conversation belongs in an ADR or it does not exist.
-
-## Where to look
-
-- [docs/architecture.md](docs/architecture.md) — layers, build order, release
-  topology, invariants in full
-- [docs/adr/](docs/adr/) — recorded decisions and rejected alternatives
-- [TODO.md](TODO.md) — near-term work
-- [docs/roadmap.md](docs/roadmap.md) — longer-range directions
-- Per-app READMEs — platform-specific build and debug instructions
+`npm run check:docs` covers the mechanical half — formatting, links, a README per
+package, a changelog entry per release unit, a complete ADR index — but cannot judge
+whether prose is true and never reads code examples.
+[docs/prompts/docs-sync.md](docs/prompts/docs-sync.md) is the pass before a PR.
