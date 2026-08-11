@@ -18,20 +18,26 @@ import {
   createStandaloneEditorExtensions,
   type DocumentLink,
   EditorLanguageService,
+  findRecordPreview,
   goToDefinition,
   goToNextReference,
+  hoveredPointerField,
   offsetToPosition,
   rangeToOffsets,
   renameReference,
+  setHoveredPointer,
   SETTLE_DELAY_MS,
 } from "@domorium/codemirror";
 
+import { recordPreviewTooltip, setRecordPreview } from "./recordPreviewTooltip";
 import type {
   GedcomEditorHandle,
   WebDiagnostic,
   WebEditorStatus,
   WebTheme,
 } from "./types";
+
+const PREVIEW_MAX_LINES = 24;
 
 export interface CreateGedcomEditorOptions {
   parent: HTMLElement;
@@ -135,6 +141,9 @@ export function createGedcomEditor(
           run: (view) => renameAtSelection(view, language),
         },
       ]),
+      hoveredPointerField,
+      recordPreviewTooltip(language),
+      recordPreviewGesture(language),
       search({ top: true }),
       highlightSelectionMatches(),
       keymap.of(searchKeymap),
@@ -185,6 +194,58 @@ export function createGedcomEditor(
       }
     },
   };
+}
+
+/**
+ * All but identical to the plugin's, which is the argument for moving the
+ * gesture down too rather than writing it a third time — see #171.
+ */
+function recordPreviewGesture(language: EditorLanguageService) {
+  let shown: number | null = null;
+  const clear = (view: EditorView): void => {
+    if (shown === null) {
+      return;
+    }
+    shown = null;
+    view.dispatch({
+      effects: [setHoveredPointer.of(null), setRecordPreview.of(null)],
+    });
+  };
+  return EditorView.domEventHandlers({
+    mousemove: (event, view) => {
+      if (!event.metaKey && !event.ctrlKey) {
+        clear(view);
+        return;
+      }
+      const offset = view.posAtCoords({ x: event.clientX, y: event.clientY });
+      const preview =
+        offset === null
+          ? null
+          : findRecordPreview(view.state, language, offset, PREVIEW_MAX_LINES);
+      if (!preview) {
+        clear(view);
+        return;
+      }
+      if (preview.pointer.from === shown) {
+        return;
+      }
+      shown = preview.pointer.from;
+      view.dispatch({
+        effects: [
+          setHoveredPointer.of(preview.pointer),
+          setRecordPreview.of(preview),
+        ],
+      });
+    },
+    mouseleave: (_event, view) => {
+      clear(view);
+    },
+    keyup: (event, view) => {
+      if (!event.metaKey && !event.ctrlKey) {
+        clear(view);
+      }
+    },
+  });
 }
 
 function editorTheme(theme: WebTheme) {

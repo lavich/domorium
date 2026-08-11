@@ -164,3 +164,24 @@ body {
   color: var(--muted-foreground);
   border-color: var(--border);
 }
+
+.gedcom-hovered-pointer {
+  text-decoration: underline;
+  text-decoration-color: var(--primary);
+  /* The tail of @ crosses the underline, and skipping ink drops it under both
+     delimiters of every pointer. */
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+}
+
+.gedcom-record-preview {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  max-height: 24rem;
+  overflow: auto;
+  white-space: pre;
+  font-family: Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
