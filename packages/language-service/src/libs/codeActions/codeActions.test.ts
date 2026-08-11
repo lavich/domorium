@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GedcomLanguageService } from "../../languageService";
+import { getCodeActions } from "./codeActions";
 
 const documentText = [
   "0 HEAD",
@@ -299,5 +300,42 @@ describe("code actions", () => {
           "title" in action && action.title.startsWith("Replace @I9@"),
       ),
     ).toBe(false);
+  });
+
+  // Names #143: an unsupported version fell through to the GEDCOM 7 record
+  // set. Reached directly, since no unresolved reference is reported for one.
+  it("creates no record for a version with no dialect", () => {
+    const text = [
+      "0 HEAD",
+      "1 GEDC",
+      "2 VERS 7.0",
+      "0 @I1@ INDI",
+      "0 @F1@ FAM",
+      "1 WIFE @I9@",
+      "0 TRLR",
+    ].join("\n");
+    const service = new GedcomLanguageService(text, 1);
+    const diagnostic = service
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+
+    const actions = getCodeActions(
+      {
+        text,
+        index: service.getReferenceIndex(),
+        currentDiagnostics: service.getDiagnostics(),
+        version: 1,
+        dialect: undefined,
+      },
+      diagnostic.range,
+      [diagnostic],
+      1,
+    );
+
+    expect(
+      Array.isArray(actions)
+        ? actions.map((action) => ("title" in action ? action.title : ""))
+        : actions,
+    ).toEqual(["Replace @I9@ with @I1@"]);
   });
 });

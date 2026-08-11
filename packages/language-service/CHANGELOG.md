@@ -2,6 +2,24 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## 1.2.0 - 2026-08-10
+
+- **File links follow the resolved version instead of a version test of their
+  own.** Two consequences. `2 VERS  5.5.1`, with a second space after the tag,
+  read as GEDCOM 7, so an absolute path — legal in 5.5.1 — stopped being a link;
+  it is one again. And a version no schema describes was given GEDCOM 7 path
+  rules, so a 4.0 file was told its version cannot be checked against any
+  specification and offered file links in the same breath; it now gets none,
+  `WWW` included, since that `WWW` means a web address is itself something only
+  a specification says.
+- The record-creation quick fix reads the same resolution. Nothing reaches it for
+  an unsupported version today, because no unresolved reference is reported for
+  one, but the fall-through was to the GEDCOM 7 record set.
+- New on `GedcomLanguageService`: `getVersionResolution()`, so a host can report
+  which version was detected and what was done about it. `VersionResolution` is
+  re-exported.
+- Requires `@domorium/validator` 1.5.0 or later.
+
 ## 1.1.0 - 2026-08-07
 
 - `Hover.contents.kind` is now `"plaintext"` where it was `"markdown"`. This
