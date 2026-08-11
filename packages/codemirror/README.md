@@ -4,8 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/lavich/domorium/blob/main/LICENSE)
 
 CodeMirror 6 integration for GEDCOM completion, diagnostics, hover, folding,
-semantic highlighting, document links, definitions, references, and rename.
-The language behavior comes from `@domorium/language-service`.
+semantic highlighting, document links, definitions, references, rename, and
+record preview. The language behavior comes from `@domorium/language-service`.
 
 Part of [Domorium](https://github.com/lavich/domorium) — GEDCOM editor tooling for
 the browser, Obsidian, VS Code, and JetBrains IDEs.
@@ -67,6 +67,11 @@ view = new EditorView({ state, parent: document.body });
 `createGedcomExtensions` contains GEDCOM-specific features and accepts host
 callbacks for workspace edits and document links. It does not install general
 editor keymaps, gutters, history, or layout behavior.
+
+Record preview is not installed as an extension: `findRecordPreview` and
+`getRecordPreviewRuns` are called by the host, which decides the gesture, the
+surface it is drawn on, and when it closes. Only `hoveredPointerField` goes
+among the extensions.
 
 `createStandaloneEditorExtensions` is an optional preset for a complete
 standalone editor. Embedded hosts such as IDEs and note-taking applications
