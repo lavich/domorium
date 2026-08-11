@@ -1,3 +1,4 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -48,7 +49,21 @@ spotless {
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
+            // No untilBuild: this plugin is an LSP client and touches almost no
+            // platform API, so nothing here dates. That is only defensible with
+            // the verification below, which checks the promise rather than
+            // assuming it.
             sinceBuild = "242"
+        }
+    }
+    pluginVerification {
+        ides {
+            recommended()
+            // Ultimate on the build the Marketplace verifier reported as
+            // missing LSP4IJ (#167). recommended() answers for Community only,
+            // and the point of this entry is to answer for the same product
+            // they ran.
+            create(IntelliJPlatformType.IntellijIdeaUltimate, "251.29188.72")
         }
     }
     publishing {
