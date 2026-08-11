@@ -17,6 +17,13 @@ describe("@domorium/codemirror public API", () => {
     expect("toOffsets" in packageApi).toBe(false);
   });
 
+  it("exposes record preview to hosts, so none of them rebuilds it", () => {
+    expect("findRecordPreview" in packageApi).toBe(true);
+    expect("getRecordPreviewRuns" in packageApi).toBe(true);
+    expect("hoveredPointerField" in packageApi).toBe(true);
+    expect("setHoveredPointer" in packageApi).toBe(true);
+  });
+
   it("exposes reference commands needed by editor hosts", () => {
     expect("canRenameReference" in packageApi).toBe(true);
     expect("renameReference" in packageApi).toBe(true);

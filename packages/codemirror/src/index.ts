@@ -10,11 +10,19 @@ export {
   type GedcomEditorSettings,
   type ReferenceHighlightSpec,
 } from "./extensions.js";
+export { hoveredPointerField, setHoveredPointer } from "./pointerDecoration.js";
 export {
   offsetToPosition,
   positionToOffset,
   rangeToOffsets,
 } from "./positions.js";
+export {
+  findRecordPreview,
+  getRecordPreviewRuns,
+  type OffsetSpan,
+  type PreviewRun,
+  type RecordPreview,
+} from "./recordPreview.js";
 export {
   applyWorkspaceEdit,
   EditorLanguageService,
