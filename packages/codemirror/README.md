@@ -75,34 +75,25 @@ need.
 
 ## Record preview
 
-A cross-reference tells the reader nothing on its own: `1 FAMS @F1@` is only
-meaningful once you know what `@F1@` is. `findRecordPreview` resolves the
-pointer at an offset and returns the span of the record it names, together with
-the span of the pointer itself; `getRecordPreviewRuns` splits that span into
-runs carrying the host's own highlight classes, so a preview looks like the
-editor it came from.
+`findRecordPreview` returns the span of the record a pointer names and the span
+of the pointer itself; `getRecordPreviewRuns` splits that span into runs
+carrying the host's own highlight classes.
 
 ```typescript
 import {
   findRecordPreview,
   getRecordPreviewRuns,
-  hoveredPointerField,
+  hoveredPointerField, // among the editor's extensions
   setHoveredPointer,
 } from "@domorium/codemirror";
 
-// hoveredPointerField goes among the editor's extensions.
-const offset = view.posAtCoords({ x: event.clientX, y: event.clientY });
-const preview =
-  offset === null ? null : findRecordPreview(view.state, language, offset, 24);
-
+const preview = findRecordPreview(view.state, language, offset, 24);
 if (preview) {
   view.dispatch({ effects: setHoveredPointer.of(preview.pointer) });
   for (const run of getRecordPreviewRuns(view.state, language, preview)) {
     const span = container.appendChild(document.createElement("span"));
     span.textContent = run.text;
-    if (run.className) {
-      span.className = run.className;
-    }
+    span.className = run.className ?? "";
   }
 }
 ```
@@ -110,13 +101,10 @@ if (preview) {
 The host owns what surrounds this: which gesture opens a preview, what it is
 drawn in, and when it closes. `setHoveredPointer.of(null)` clears the mark.
 
-The marked pointer carries the class `gedcom-hovered-pointer` and is unstyled
-until the host says what it looks like. Give it
-`text-decoration-skip-ink: none` if you underline it — the tail of `@` crosses
-the line, and the browser default drops the underline under both delimiters.
-
-`preview.truncated` reports that the record was longer than `maxLines` and the
-span stops short of its end.
+The marked pointer carries the class `gedcom-hovered-pointer` and, like the
+other classes here, is unstyled until the host says otherwise. If you underline
+it, set `text-decoration-skip-ink: none` — the tail of `@` crosses the line and
+the browser default drops the underline under both delimiters.
 
 The package does not depend on a browser worker, the Language Server Protocol,
 or any particular editor host. CodeMirror packages are peer dependencies so the
