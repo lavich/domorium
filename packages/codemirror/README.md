@@ -4,8 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/lavich/domorium/blob/main/LICENSE)
 
 CodeMirror 6 integration for GEDCOM completion, diagnostics, hover, folding,
-semantic highlighting, document links, definitions, references, and rename.
-The language behavior comes from `@domorium/language-service`.
+semantic highlighting, document links, definitions, references, rename, and
+record preview. The language behavior comes from `@domorium/language-service`.
 
 Part of [Domorium](https://github.com/lavich/domorium) — GEDCOM editor tooling for
 the browser, Obsidian, VS Code, and JetBrains IDEs.
@@ -68,43 +68,15 @@ view = new EditorView({ state, parent: document.body });
 callbacks for workspace edits and document links. It does not install general
 editor keymaps, gutters, history, or layout behavior.
 
+Record preview is not installed as an extension: `findRecordPreview` and
+`getRecordPreviewRuns` are called by the host, which decides the gesture, the
+surface it is drawn on, and when it closes. Only `hoveredPointerField` goes
+among the extensions.
+
 `createStandaloneEditorExtensions` is an optional preset for a complete
 standalone editor. Embedded hosts such as IDEs and note-taking applications
 usually provide their own editor shell and should use only the extensions they
 need.
-
-## Record preview
-
-`findRecordPreview` returns the span of the record a pointer names and the span
-of the pointer itself; `getRecordPreviewRuns` splits that span into runs
-carrying the host's own highlight classes.
-
-```typescript
-import {
-  findRecordPreview,
-  getRecordPreviewRuns,
-  hoveredPointerField, // among the editor's extensions
-  setHoveredPointer,
-} from "@domorium/codemirror";
-
-const preview = findRecordPreview(view.state, language, offset, 24);
-if (preview) {
-  view.dispatch({ effects: setHoveredPointer.of(preview.pointer) });
-  for (const run of getRecordPreviewRuns(view.state, language, preview)) {
-    const span = container.appendChild(document.createElement("span"));
-    span.textContent = run.text;
-    span.className = run.className ?? "";
-  }
-}
-```
-
-The host owns what surrounds this: which gesture opens a preview, what it is
-drawn in, and when it closes. `setHoveredPointer.of(null)` clears the mark.
-
-The marked pointer carries the class `gedcom-hovered-pointer` and, like the
-other classes here, is unstyled until the host says otherwise. If you underline
-it, set `text-decoration-skip-ink: none` — the tail of `@` crosses the line and
-the browser default drops the underline under both delimiters.
 
 The package does not depend on a browser worker, the Language Server Protocol,
 or any particular editor host. CodeMirror packages are peer dependencies so the
