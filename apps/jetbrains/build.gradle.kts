@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "domorium"
-version = "1.5.0"
+version = "1.5.1"
 
 repositories {
     mavenCentral()
@@ -49,6 +49,13 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "242"
+        }
+    }
+    pluginVerification {
+        ides {
+            // Naming a build newer than this answers with is silently ignored:
+            // no error, no download, no verification.
+            recommended()
         }
     }
     publishing {
