@@ -537,12 +537,19 @@ export function createGedcomExtensions(
   return extensions;
 }
 
-export function createStandaloneEditorExtensions(): Extension[] {
+export interface StandaloneEditorOptions {
+  /** Off leaves the lint gutter out, for a host that hides diagnostics. */
+  diagnostics?: boolean;
+}
+
+export function createStandaloneEditorExtensions(
+  options: StandaloneEditorOptions = {},
+): Extension[] {
   return [
     lineNumbers(),
     history(),
     foldGutter(),
-    lintGutter(),
+    ...((options.diagnostics ?? true) ? [lintGutter()] : []),
     indentUnit.of("  "),
     EditorView.lineWrapping,
     EditorView.contentAttributes.of({
@@ -566,9 +573,19 @@ const gedcomBaseTheme = EditorView.baseTheme({
   ".gedcom-reference-write": {
     backgroundColor: "color-mix(in srgb, currentColor 18%, transparent)",
     textDecoration: "underline",
+    textDecorationSkipInk: "none",
   },
   ".gedcom-indent-hint": {
     opacity: "0.55",
     pointerEvents: "none",
+  },
+  /**
+   * The tail of @ crosses an underline, and skipping ink drops it under both
+   * delimiters of every pointer — which is the whole of what is marked here.
+   */
+  ".gedcom-hovered-pointer": {
+    textDecoration: "underline",
+    textDecorationSkipInk: "none",
+    cursor: "pointer",
   },
 });

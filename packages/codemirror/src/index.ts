@@ -9,6 +9,7 @@ export {
   type GedcomEditorOptions,
   type GedcomEditorSettings,
   type ReferenceHighlightSpec,
+  type StandaloneEditorOptions,
 } from "./extensions.js";
 export { hoveredPointerField, setHoveredPointer } from "./pointerDecoration.js";
 export {
@@ -23,6 +24,10 @@ export {
   type PreviewRun,
   type RecordPreview,
 } from "./recordPreview.js";
+export {
+  recordPreviewHover,
+  type RecordPreviewHoverOptions,
+} from "./recordPreviewHover.js";
 export {
   applyWorkspaceEdit,
   EditorLanguageService,
