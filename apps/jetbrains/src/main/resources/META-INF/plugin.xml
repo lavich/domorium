@@ -31,6 +31,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.5.1</h2>
+    <ul>
+      <li>The same plugin as 1.5.0, which never became installable. Everything below is what this release brings</li>
+    </ul>
+
     <h2>1.5.0</h2>
     <ul>
       <li><b>A file whose version cannot be checked no longer looks clean.</b> <code>2 VERS 4.0</code>, a misspelled version and a file with no version line were all checked against GEDCOM 7 and reported nothing, because none of those rules applied to them. They now carry one error saying so, and the rest of the checking goes quiet rather than judging the file by the wrong specification. Levels, syntax, highlighting, folding and navigation still work</li>
