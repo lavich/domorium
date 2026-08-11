@@ -68,15 +68,17 @@ view = new EditorView({ state, parent: document.body });
 callbacks for workspace edits and document links. It does not install general
 editor keymaps, gutters, history, or layout behavior.
 
-Record preview is not installed as an extension: `findRecordPreview` and
-`getRecordPreviewRuns` are called by the host, which decides the gesture, the
-surface it is drawn on, and when it closes. Only `hoveredPointerField` goes
-among the extensions.
+`recordPreviewHover` installs the gesture that previews the record a
+cross-reference names, and marks the pointer under the reader's attention. The
+host supplies `show` and `hide`, because what a preview is drawn on — a
+tooltip, a popover — is the host's to decide; `getRecordPreviewRuns` turns the
+record into runs carrying the host's own highlight classes.
 
 `createStandaloneEditorExtensions` is an optional preset for a complete
-standalone editor. Embedded hosts such as IDEs and note-taking applications
-usually provide their own editor shell and should use only the extensions they
-need.
+standalone editor; its lint gutter follows the `diagnostics` option. Embedded
+hosts such as IDEs and note-taking applications usually provide their own editor
+shell and should use only the extensions they need, composing their own theme
+and highlight style on top of the preset rather than restating it.
 
 The package does not depend on a browser worker, the Language Server Protocol,
 or any particular editor host. CodeMirror packages are peer dependencies so the

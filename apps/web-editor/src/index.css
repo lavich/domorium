@@ -165,15 +165,6 @@ body {
   border-color: var(--border);
 }
 
-.gedcom-hovered-pointer {
-  text-decoration: underline;
-  text-decoration-color: var(--primary);
-  /* The tail of @ crosses the underline, and skipping ink drops it under both
-     delimiters of every pointer. */
-  text-decoration-skip-ink: none;
-  cursor: pointer;
-}
-
 .gedcom-record-preview {
   margin: 0;
   padding: 0.5rem 0.75rem;
