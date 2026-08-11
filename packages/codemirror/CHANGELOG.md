@@ -2,6 +2,25 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## 1.2.0 - 2026-08-11
+
+- **A cross-reference can be read without leaving the line it is on.** Hold the
+  modifier and point at `@F1@` and the record it names appears, painted with the
+  host's own highlight classes rather than as flat text — the preview looks like
+  the editor it came from, and costs a handful of runs rather than a second
+  editor. `recordPreviewHover` installs the gesture and marks the pointer;
+  `show` and `hide` stay with the host, because a tooltip and a popover are
+  different surfaces. `findRecordPreview` and `getRecordPreviewRuns` are there
+  for a host that wants the pieces instead.
+- `createStandaloneEditorExtensions` takes a `diagnostics` option. A host that
+  hides diagnostics had to restate the whole preset to drop one gutter from it,
+  and nothing detected the two lists drifting apart.
+- **The underline under a marked declaration no longer breaks under its
+  delimiters.** `gedcom-reference-write` underlines the whole of `@F1@`, and the
+  browser default drops a decoration wherever a glyph crosses it, which the tail
+  of `@` does — so the mark has been drawn with two gaps in it since it was
+  written.
+
 ## 1.1.0 - 2026-08-07
 
 - Cap the hover tooltip at `min(40rem, 90vw)` by `min(20rem, 60vh)` and let it
