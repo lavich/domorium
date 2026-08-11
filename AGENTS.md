@@ -50,6 +50,8 @@ Violating one means the change is at the wrong layer. Move the code instead.
 - Prettier owns formatting and has no config file; do not hand-format.
 - Tests are Vitest, colocated as `*.test.ts`. New behavior ships with tests.
 - Commit messages follow Conventional Commits with an optional scope.
+- Never sign a commit or a pull request for the tool that wrote it: no
+  `Co-Authored-By` trailer naming an assistant, no "generated with" line.
 - Work lands through pull requests. Do not commit or push to `main` unless asked.
 - Prefer focused commits at meaningful checkpoints over one large commit.
 - Never discard uncommitted work you did not write, in any worktree.
