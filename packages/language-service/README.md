@@ -26,3 +26,7 @@ const diagnostics = service.getDiagnostics();
 ```
 
 The service also provides completion, hover, definitions, folding ranges, document symbols, semantic tokens, and indentation hints.
+
+`getDocument()` returns the parsed `GedcomDocument` the answers above are derived
+from, for a question this package does not answer — its nodes, its errors, its
+version, its labels. Reading it costs nothing; the parse has already happened.

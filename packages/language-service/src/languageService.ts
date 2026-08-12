@@ -64,6 +64,16 @@ export class GedcomLanguageService {
     );
   }
 
+  /**
+   * The parse behind every answer here, for a question this package has not
+   * anticipated. Handing it out couples a caller to the validator's own type
+   * rather than to the protocol-shaped ones in types.ts — deliberately, on the
+   * precedent getReferenceIndex set: the alternative is a method per question.
+   */
+  getDocument(): GedcomDocument {
+    return this.document;
+  }
+
   getDiagnostics(): Diagnostic[] {
     return this.document.getErrors().map((error) => ({
       ...error,

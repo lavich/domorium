@@ -51,6 +51,7 @@ export {
 } from "./commands.js";
 export type {
   DocumentLink,
+  GedcomDocument,
   Range,
   WorkspaceEdit,
 } from "@domorium/language-service";
