@@ -69,10 +69,16 @@ describe("XREF navigation", () => {
     );
   });
 
-  it("treats token ranges as half-open", () => {
+  it("answers for a caret touching the end of a token, and not past it", () => {
     expect(
       service.getReferences(
         { line: 3, character: 11 },
+        { includeDeclaration: true },
+      ),
+    ).not.toEqual([]);
+    expect(
+      service.getReferences(
+        { line: 3, character: 12 },
         { includeDeclaration: true },
       ),
     ).toEqual([]);
