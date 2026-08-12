@@ -11,6 +11,11 @@ All notable changes to `@domorium/codemirror` are documented here.
   anywhere — a file rewritten underneath the view, a command running, a modifier
   released where the editor never saw it — and `hide` is called for it.
 - `hoveredPointer(state)` reads which pointer a preview is open on.
+- **A hover follows the glyph the pointer is over, not the boundary beside
+  it.** Pointing at the space after a tag showed that tag's tooltip, because
+  the left half of the space and the right half of the tag are one position.
+  A caret is a boundary and a pointer is over a character; only the host is
+  told which, so `pointerOnRange` is where that is decided.
 - Requires `@domorium/language-service` 1.3.0 or newer: `EditorLanguageService`
   passes parse options through to it, and an older one ignores them in silence.
 
