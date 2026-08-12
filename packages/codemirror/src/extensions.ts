@@ -49,6 +49,7 @@ import { tags, type Tag } from "@lezer/highlight";
 
 import {
   offsetToPosition,
+  pointerOnRange,
   positionToOffset,
   rangeToOffsets,
 } from "./positions.js";
@@ -208,11 +209,10 @@ function diagnosticSource(
 }
 
 function hoverSource(language: EditorLanguageService): Extension {
-  return hoverTooltip((view, offset) => {
-    const hover = language
-      .update(view.state.doc)
-      .getHover(offsetToPosition(view.state.doc, offset));
-    if (!hover) {
+  return hoverTooltip((view, offset, side) => {
+    const doc = view.state.doc;
+    const hover = language.update(doc).getHover(offsetToPosition(doc, offset));
+    if (!hover || !pointerOnRange(doc, offset, side, hover.range)) {
       return null;
     }
     return {

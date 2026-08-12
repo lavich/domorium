@@ -22,3 +22,14 @@ export function rangeToOffsets(
     to: positionToOffset(document, range.end),
   };
 }
+
+export function pointerOnRange(
+  document: Text,
+  offset: number,
+  side: -1 | 1,
+  range: Range,
+): boolean {
+  const character = side < 0 ? offset - 1 : offset;
+  const { from, to } = rangeToOffsets(document, range);
+  return character >= from && character < to;
+}
