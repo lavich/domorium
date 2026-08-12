@@ -17,6 +17,57 @@ const GEDCOM = `0 HEAD
 0 TRLR`;
 
 describe("GedcomLanguageService", () => {
+  describe("a caret touching the end of a pointer", () => {
+    // Line 4 is `1 FAMS @F1@`: the closing @ is character 10.
+    const POINTERS = [
+      "0 HEAD",
+      "1 GEDC",
+      "2 VERS 7.0",
+      "0 @I1@ INDI",
+      "1 FAMS @F1@",
+      "0 @F1@ FAM",
+      "0 TRLR",
+    ].join("\n");
+    const END = { line: 4, character: 11 };
+
+    it("goes to the definition", () => {
+      const service = new GedcomLanguageService(POINTERS);
+
+      expect(service.getDefinitionRanges(END)).toHaveLength(1);
+    });
+
+    it("finds the references", () => {
+      const service = new GedcomLanguageService(POINTERS);
+
+      expect(
+        service.getReferences(END, { includeDeclaration: true }),
+      ).toHaveLength(2);
+    });
+
+    it("offers to rename", () => {
+      const service = new GedcomLanguageService(POINTERS);
+
+      expect(service.prepareRename(END).ok).toBe(true);
+    });
+
+    it("answers hover at the end of a tag, which reads the same rule", () => {
+      const service = new GedcomLanguageService(POINTERS);
+
+      expect(service.getHover({ line: 4, character: 6 })).not.toBeNull();
+      expect(service.getHover({ line: 4, character: 7 })).toBeNull();
+    });
+
+    it("stops at the space after it, which is nobody's pointer", () => {
+      const service = new GedcomLanguageService(
+        POINTERS.replace("1 FAMS @F1@", "1 FAMS @F1@ "),
+      );
+
+      expect(
+        service.getDefinitionRanges({ line: 4, character: 12 }),
+      ).toHaveLength(0);
+    });
+  });
+
   it("hands out the document it parsed, so a host need not parse it again", () => {
     const service = new GedcomLanguageService(GEDCOM);
 
