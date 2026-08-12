@@ -27,6 +27,10 @@ const diagnostics = service.getDiagnostics();
 
 The service also provides completion, hover, definitions, folding ranges, document symbols, semantic tokens, and indentation hints.
 
+`getDocumentSymbols()` labels a record with what a reader would call it — the
+name of a person, the title of a source — where the format gives it one.
+`name` stays the tag, so a consumer rendering it is unaffected.
+
 `getDocument()` returns the parsed `GedcomDocument` the answers above are derived
 from, for a question this package does not answer — its nodes, its errors, its
 version, its labels. Reading it costs nothing; the parse has already happened.

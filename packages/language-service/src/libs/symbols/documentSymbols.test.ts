@@ -16,6 +16,7 @@ describe("documentSymbols", () => {
       {
         name: "INDI",
         detail: "@I1@",
+        label: "Homer /Simpson/",
         kind: DocumentSymbolKind.Object,
         range: {
           start: { line: 0, character: 0 },
