@@ -1,11 +1,21 @@
-import { StateEffect, StateField } from "@codemirror/state";
+import { StateEffect, StateField, type EditorState } from "@codemirror/state";
 import { Decoration, EditorView, type DecorationSet } from "@codemirror/view";
 
 import type { OffsetSpan } from "./recordPreview.js";
 
 export const setHoveredPointer = StateEffect.define<OffsetSpan | null>();
 
-const hoveredPointer = Decoration.mark({ class: "gedcom-hovered-pointer" });
+/** The pointer a preview is open on, for a host that needs to know. */
+export function hoveredPointer(state: EditorState): OffsetSpan | null {
+  let span: OffsetSpan | null = null;
+  state.field(hoveredPointerField).between(0, state.doc.length, (from, to) => {
+    span = { from, to };
+    return false;
+  });
+  return span;
+}
+
+const pointerMark = Decoration.mark({ class: "gedcom-hovered-pointer" });
 
 export const hoveredPointerField = StateField.define<DecorationSet>({
   create: () => Decoration.none,
@@ -15,7 +25,7 @@ export const hoveredPointerField = StateField.define<DecorationSet>({
         return effect.value === null
           ? Decoration.none
           : Decoration.set([
-              hoveredPointer.range(effect.value.from, effect.value.to),
+              pointerMark.range(effect.value.from, effect.value.to),
             ]);
       }
     }
