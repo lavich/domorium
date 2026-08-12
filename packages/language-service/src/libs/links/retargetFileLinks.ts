@@ -50,19 +50,27 @@ export function retargetFileLinks(
 ): WorkspaceEdit {
   // Literal: decoding it too would match a file named with a space against one
   // named with %20.
-  const from = normalize(options.from);
+  const from = normalize(options.from, options.dialect);
   const newText = encodeFileTarget(options.to, options.dialect);
   const edits = options.links
     .filter(
       (link) =>
         link.kind === "file-relative" &&
-        normalize(decodeFileTarget(link.targetText, options.dialect)) === from,
+        normalize(
+          decodeFileTarget(link.targetText, options.dialect),
+          options.dialect,
+        ) === from,
     )
     .map((link) => ({ range: link.range, newText }));
   return { version: options.version, edits };
 }
 
-/** `./a.jpg` and `a.jpg` name one file; no other path arithmetic belongs here. */
-function normalize(path: string): string {
-  return path.replace(/^\.\//u, "");
+/**
+ * `./a.jpg` and `a.jpg` name one file. A 5.5.1 payload is a string, so what
+ * wrote it chose the separator and `\` is one; a GEDCOM 7 payload is a URI
+ * reference, where `\` separates nothing and is a character in a name.
+ */
+function normalize(path: string, dialect: GedcomDialect | undefined): string {
+  const separators = dialect === "7.0" ? path : path.replaceAll("\\", "/");
+  return separators.replace(/^\.\//u, "");
 }

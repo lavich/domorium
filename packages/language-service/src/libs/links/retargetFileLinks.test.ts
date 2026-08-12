@@ -58,6 +58,44 @@ describe("reading and writing a file target", () => {
   });
 });
 
+describe("a 5.5.1 path, which is a string and not a URI reference", () => {
+  const version = 1;
+  const windows = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @O1@ OBJE
+1 FILE media\\my photo.jpg
+0 TRLR`;
+
+  it("finds a file a Windows program wrote with backslashes", () => {
+    const edit = retargetFileLinks({
+      links: linksOf(windows, "5.5.1"),
+      dialect: "5.5.1",
+      from: "media/my photo.jpg",
+      to: "media/renamed.jpg",
+      version,
+    });
+
+    expect(edit.edits).toHaveLength(1);
+    expect(edit.edits[0]?.newText).toBe("media/renamed.jpg");
+  });
+
+  it("keeps a backslash a character in GEDCOM 7, where it separates nothing", () => {
+    const edit = retargetFileLinks({
+      links: linksOf(
+        "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @O1@ OBJE\n1 FILE media/a%5Cb.jpg\n0 TRLR",
+        "7.0",
+      ),
+      dialect: "7.0",
+      from: "media/a/b.jpg",
+      to: "media/x.jpg",
+      version,
+    });
+
+    expect(edit.edits).toEqual([]);
+  });
+});
+
 describe("retargeting the files a document points at", () => {
   const version = 7;
 
