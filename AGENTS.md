@@ -65,6 +65,9 @@ Violating one means the change is at the wrong layer. Move the code instead.
   a restatement of the code nowhere. `used to`, `previously`, `was`, `now` and any
   number are tells that it is one of those.
 - Keep it as short as the rule it states. In tests, name the bug it catches.
+- Before writing one, find where the rule is already stated — a test name, a
+  type, the symbol itself. A comment repeating a guard is not a second guard,
+  and it goes stale while the guard does not.
 
 ## Releases
 
