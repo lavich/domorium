@@ -25,6 +25,23 @@ const document = new GedcomDocument().createDocument(gedcomString);
 const errors = document.getErrors();
 ```
 
+## Fragments
+
+A fenced block in a note, an example in documentation, a selection: text that is
+part of a document rather than one of its own.
+
+```typescript
+const block = new GedcomDocument().createDocument(text, {
+  fragment: true,
+  dialect: "7.0",
+});
+```
+
+What goes quiet is what the boundary caused — the header and trailer, a pointer
+leaving the text, an extension tag with no `HEAD.SCHMA` to declare it in.
+Everything else is still read. `dialect` is needed because a fragment carries no
+`HEAD.GEDC.VERS`.
+
 ## Diagnostics
 
 `getErrors()` returns `GedcomError[]`:

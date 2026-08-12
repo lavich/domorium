@@ -149,3 +149,21 @@ describe("toCodeMirrorChanges", () => {
     ).toBeNull();
   });
 });
+
+describe("text that is part of a document rather than one of its own", () => {
+  it("checks a fenced block against the dialect the host names", () => {
+    const fragment = new EditorLanguageService({
+      fragment: true,
+      dialect: "7.0",
+    });
+
+    const codes = fragment
+      .update("0 @I1@ INDI\n1 NAME Homer /Simpson/\n1 NOPE x")
+      .getDiagnostics()
+      .map((diagnostic) => diagnostic.code);
+
+    expect(codes).toContain("VAL001");
+    expect(codes).not.toContain("VAL002");
+    expect(codes).not.toContain("VAL012");
+  });
+});

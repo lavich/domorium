@@ -74,6 +74,9 @@ host supplies `show` and `hide`, because what a preview is drawn on — a
 tooltip, a popover — is the host's to decide; `getRecordPreviewRuns` turns the
 record into runs carrying the host's own highlight classes.
 
+`trigger` decides what opens one and defaults to the platform modifier;
+`clearRecordPreview(view)` closes one from anywhere, and `hide` is called for it.
+
 `createStandaloneEditorExtensions` is an optional preset for a complete
 standalone editor; its lint gutter follows the `diagnostics` option. Embedded
 hosts such as IDEs and note-taking applications usually provide their own editor

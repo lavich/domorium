@@ -109,6 +109,8 @@ export class GedcomValidator {
       ASTNode[]
     >(),
     private readonly extensions: ExtensionContext = emptyExtensions(),
+    /** A fragment is not a document, so nothing is required of its root. */
+    private readonly fragment = false,
   ) {}
 
   setScheme(nodes: ASTNode[]): GedcomScheme {
@@ -204,6 +206,9 @@ export class GedcomValidator {
     }
 
     for (const [tag, rule] of rules) {
+      if (this.fragment && parentType === GedcomType("")) {
+        break;
+      }
       if ((occurrences.get(tag) ?? 0) < rule.min) {
         errors.push({
           code: GedcomErrorCode.MissingTag,

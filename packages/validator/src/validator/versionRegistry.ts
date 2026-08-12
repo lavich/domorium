@@ -85,6 +85,19 @@ const ORIGIN: Range = {
   end: { line: 0, character: 0 },
 };
 
+/** The schema a caller names outright, for text that carries no header. */
+export function schemaForDialect(dialect: GedcomDialect): SchemaChoice {
+  const entry = TABLE.find(
+    (candidate) =>
+      candidate.kind === "supported" && candidate.dialect === dialect,
+  )!;
+  return {
+    scheme: entry.scheme,
+    dialect: entry.dialect,
+    requiresSchmaDeclaration: entry.requiresSchmaDeclaration,
+  };
+}
+
 export function resolveGedcomVersion(nodes: ASTNode[]): VersionResolution {
   const HEAD = nodes.find((node) => node.tokens.TAG?.value === "HEAD");
   const GEDC = HEAD?.children.find((node) => node.tokens.TAG?.value === "GEDC");

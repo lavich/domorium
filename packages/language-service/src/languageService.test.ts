@@ -17,6 +17,29 @@ const GEDCOM = `0 HEAD
 0 TRLR`;
 
 describe("GedcomLanguageService", () => {
+  it("hands out the document it parsed, so a host need not parse it again", () => {
+    const service = new GedcomLanguageService(GEDCOM);
+
+    const document = service.getDocument();
+
+    expect(document.getNodes().length).toBeGreaterThan(0);
+    expect(document.getVersionResolution()).toEqual(
+      service.getVersionResolution(),
+    );
+  });
+
+  it("hands out the current document, not the one it opened with", () => {
+    const service = new GedcomLanguageService(GEDCOM);
+    const before = service.getDocument();
+
+    service.update("0 HEAD\n1 GEDC\n2 VERS 7.0\n0 TRLR");
+
+    expect(service.getDocument()).not.toBe(before);
+    expect(service.getDocument().getNodes().length).toBeLessThan(
+      before.getNodes().length,
+    );
+  });
+
   it("updates and validates one document snapshot", () => {
     const service = new GedcomLanguageService("0 HEAD\n0 TRLR");
     expect(service.getDiagnostics()).toEqual(

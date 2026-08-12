@@ -22,6 +22,8 @@ describe("@domorium/codemirror public API", () => {
     expect("getRecordPreviewRuns" in packageApi).toBe(true);
     expect("hoveredPointerField" in packageApi).toBe(true);
     expect("setHoveredPointer" in packageApi).toBe(true);
+    expect("clearRecordPreview" in packageApi).toBe(true);
+    expect("hoveredPointer" in packageApi).toBe(true);
   });
 
   it("exposes reference commands needed by editor hosts", () => {

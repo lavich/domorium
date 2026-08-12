@@ -1,4 +1,8 @@
-import { GedcomDocument, type VersionResolution } from "@domorium/validator";
+import {
+  GedcomDocument,
+  type CreateDocumentOptions,
+  type VersionResolution,
+} from "@domorium/validator";
 
 import { getCompletionItems } from "./libs/completion/completion";
 import { getCodeActions } from "./libs/codeActions/codeActions";
@@ -6,6 +10,7 @@ import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
 import { documentLinks } from "./libs/links/documentLinks";
+import { retargetFileLinks } from "./libs/links/retargetFileLinks";
 import { ReferenceIndex } from "./libs/references/referenceIndex";
 import {
   getDocumentHighlights,
@@ -34,6 +39,7 @@ import type {
   PrepareRenameResult,
   Range,
   ReferenceOptions,
+  WorkspaceEdit,
   WorkspaceEditResult,
 } from "./types";
 
@@ -45,7 +51,12 @@ export class GedcomLanguageService {
   private foldingRanges: FoldingRange[] | undefined;
   private foldingByStartLine: Map<number, FoldingRange> | undefined;
 
-  constructor(text = "", version: DocumentVersion = 0) {
+  // options describe the text, not one parse of it, so they outlive an update.
+  constructor(
+    text = "",
+    version: DocumentVersion = 0,
+    private readonly options: CreateDocumentOptions = {},
+  ) {
     this.update(text, version);
   }
 
@@ -55,13 +66,17 @@ export class GedcomLanguageService {
     this.foldingRanges = undefined;
     this.foldingByStartLine = undefined;
     const document = new GedcomDocument();
-    document.createDocument(text);
+    document.createDocument(text, this.options);
     this.document = document;
     this.referenceIndex = new ReferenceIndex(
       document.getNodes(),
       (node) => document.getPointerTargetTag(node),
       (node) => document.isRecordDeclaration(node),
     );
+  }
+
+  getDocument(): GedcomDocument {
+    return this.document;
   }
 
   getDiagnostics(): Diagnostic[] {
@@ -151,6 +166,17 @@ export class GedcomLanguageService {
 
   getDocumentLinks(): DocumentLink[] {
     return documentLinks(this.document.getNodes(), this.document.getDialect());
+  }
+
+  /** from and to are plain paths, relative to the document. */
+  retargetFileLinks(from: string, to: string): WorkspaceEdit {
+    return retargetFileLinks({
+      links: this.getDocumentLinks(),
+      dialect: this.document.getDialect(),
+      from,
+      to,
+      version: this.version,
+    });
   }
 
   getCodeActions(

@@ -25,4 +25,6 @@ const service = new GedcomLanguageService(gedcomText);
 const diagnostics = service.getDiagnostics();
 ```
 
-The service also provides completion, hover, definitions, folding ranges, document symbols, semantic tokens, and indentation hints.
+The service also provides completion, hover, definitions, folding ranges,
+document symbols, semantic tokens, indentation hints, and the edits that retarget
+a file a document points at. `getDocument()` returns the parse behind all of it.

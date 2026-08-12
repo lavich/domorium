@@ -165,6 +165,8 @@ export enum DocumentSymbolKind {
 export interface DocumentSymbol {
   name: string;
   detail?: string;
+  /** What a reader calls this record. Absent where the format names none. */
+  label?: string;
   kind: DocumentSymbolKind;
   range: Range;
   selectionRange: Range;

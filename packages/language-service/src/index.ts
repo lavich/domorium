@@ -1,4 +1,14 @@
 export { GedcomLanguageService } from "./languageService";
+// Named so a caller of getDocument can type what it gets without reaching
+// past this package for the declaration.
+export type {
+  CreateDocumentOptions,
+  GedcomDocument,
+} from "@domorium/validator";
+export {
+  decodeFileTarget,
+  encodeFileTarget,
+} from "./libs/links/retargetFileLinks";
 export { ReferenceIndex } from "./libs/references/referenceIndex";
 export {
   legend as semanticTokenLegend,

@@ -11,7 +11,11 @@ export {
   type ReferenceHighlightSpec,
   type StandaloneEditorOptions,
 } from "./extensions.js";
-export { hoveredPointerField, setHoveredPointer } from "./pointerDecoration.js";
+export {
+  hoveredPointer,
+  hoveredPointerField,
+  setHoveredPointer,
+} from "./pointerDecoration.js";
 export {
   offsetToPosition,
   positionToOffset,
@@ -25,6 +29,7 @@ export {
   type RecordPreview,
 } from "./recordPreview.js";
 export {
+  clearRecordPreview,
   recordPreviewHover,
   type RecordPreviewHoverOptions,
 } from "./recordPreviewHover.js";
@@ -45,7 +50,9 @@ export {
   type GedcomCommandTarget,
 } from "./commands.js";
 export type {
+  CreateDocumentOptions,
   DocumentLink,
+  GedcomDocument,
   Range,
   WorkspaceEdit,
 } from "@domorium/language-service";
