@@ -1,4 +1,8 @@
-import { GedcomDocument, type VersionResolution } from "@domorium/validator";
+import {
+  GedcomDocument,
+  type CreateDocumentOptions,
+  type VersionResolution,
+} from "@domorium/validator";
 
 import { getCompletionItems } from "./libs/completion/completion";
 import { getCodeActions } from "./libs/codeActions/codeActions";
@@ -47,7 +51,15 @@ export class GedcomLanguageService {
   private foldingRanges: FoldingRange[] | undefined;
   private foldingByStartLine: Map<number, FoldingRange> | undefined;
 
-  constructor(text = "", version: DocumentVersion = 0) {
+  /**
+   * options describe the text rather than one parse of it — a fenced block is
+   * a fragment every time it is edited — so they are kept and reused.
+   */
+  constructor(
+    text = "",
+    version: DocumentVersion = 0,
+    private readonly options: CreateDocumentOptions = {},
+  ) {
     this.update(text, version);
   }
 
@@ -57,7 +69,7 @@ export class GedcomLanguageService {
     this.foldingRanges = undefined;
     this.foldingByStartLine = undefined;
     const document = new GedcomDocument();
-    document.createDocument(text);
+    document.createDocument(text, this.options);
     this.document = document;
     this.referenceIndex = new ReferenceIndex(
       document.getNodes(),

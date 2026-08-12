@@ -1,7 +1,10 @@
 export { GedcomLanguageService } from "./languageService";
 // Named so a caller of getDocument can type what it gets without reaching
 // past this package for the declaration.
-export type { GedcomDocument } from "@domorium/validator";
+export type {
+  CreateDocumentOptions,
+  GedcomDocument,
+} from "@domorium/validator";
 export {
   decodeFileTarget,
   encodeFileTarget,

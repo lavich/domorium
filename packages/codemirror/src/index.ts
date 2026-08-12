@@ -50,6 +50,7 @@ export {
   type GedcomCommandTarget,
 } from "./commands.js";
 export type {
+  CreateDocumentOptions,
   DocumentLink,
   GedcomDocument,
   Range,

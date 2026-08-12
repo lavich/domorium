@@ -1,6 +1,7 @@
 import type { Text } from "@codemirror/state";
 import {
   GedcomLanguageService,
+  type CreateDocumentOptions,
   type DocumentHighlight,
   type DocumentLink,
   type Position,
@@ -67,10 +68,14 @@ export function applyWorkspaceEdit(
 }
 
 export class EditorLanguageService {
-  readonly service = new GedcomLanguageService();
+  readonly service: GedcomLanguageService;
   private text = "";
   private doc: Text | undefined;
   private version = 0;
+
+  constructor(options?: CreateDocumentOptions) {
+    this.service = new GedcomLanguageService("", 0, options);
+  }
 
   /**
    * Prefer passing the editor's `state.doc`. Hover, completion, highlighting

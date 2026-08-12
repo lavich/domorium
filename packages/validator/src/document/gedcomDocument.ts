@@ -8,6 +8,7 @@ import { RuleNode } from "../validator/rule-node";
 import { getGedcomVersion } from "../validator/getGedcomVersion";
 import {
   resolveGedcomVersion,
+  schemaForDialect,
   type GedcomDialect,
   type VersionResolution,
 } from "../validator/versionRegistry";
@@ -22,6 +23,23 @@ import {
   type GedcomCompletion,
 } from "../completion/completion";
 import type { Position } from "../types/position";
+
+export interface CreateDocumentOptions {
+  /**
+   * Text that is part of a document rather than one of its own — a fenced
+   * block in a note, an example in documentation, a selection. What is missing
+   * because the text stops is not the author's mistake.
+   */
+  fragment?: boolean;
+  /** Which rules to read it by, since a fragment carries no header to say. */
+  dialect?: GedcomDialect;
+}
+
+/** Reported only because a fragment ends where it does. */
+const BOUNDED_BY_FRAGMENT = new Set<string>([
+  GedcomErrorCode.UnresolvedXref,
+  GedcomErrorCode.UndocumentedTag,
+]);
 
 export class GedcomDocument {
   private nodes: ASTNode[] = [];
@@ -63,7 +81,10 @@ export class GedcomDocument {
     return result;
   }
 
-  createDocument(text: string): GedcomDocument {
+  createDocument(
+    text: string,
+    options: CreateDocumentOptions = {},
+  ): GedcomDocument {
     const { nodes, pointers, xrefs } = this.parseGedcom(text);
     this.nodes = nodes;
     this.pointers = pointers;
@@ -72,6 +93,17 @@ export class GedcomDocument {
 
     const resolution = resolveGedcomVersion(nodes);
     this.resolution = resolution;
+
+    // A fragment has no header to carry a version, so the caller names one.
+    // Without it there is nothing to check against and saying so is the answer.
+    if (
+      options.fragment &&
+      options.dialect &&
+      resolution.kind === "undetermined"
+    ) {
+      this.applyScheme(nodes, schemaForDialect(options.dialect), options);
+      return this;
+    }
 
     if (resolution.kind === "undetermined") {
       // The schema is kept so completions can help write the header that will
@@ -107,8 +139,20 @@ export class GedcomDocument {
       });
     }
 
-    this.scheme = resolution.scheme;
-    this.requiresSchmaDeclaration = resolution.requiresSchmaDeclaration;
+    this.applyScheme(nodes, resolution, options);
+    return this;
+  }
+
+  private applyScheme(
+    nodes: ASTNode[],
+    choice: {
+      scheme: GedcomScheme;
+      requiresSchmaDeclaration: boolean;
+    },
+    options: CreateDocumentOptions,
+  ): void {
+    this.scheme = choice.scheme;
+    this.requiresSchmaDeclaration = choice.requiresSchmaDeclaration;
     const { context, errors } = collectExtensions(
       nodes,
       this.requiresSchmaDeclaration,
@@ -116,12 +160,20 @@ export class GedcomDocument {
     );
     this.extensions = context;
     this.errors.push(...errors);
-    const validator = new GedcomValidator(pointers, context);
+    const validator = new GedcomValidator(
+      this.pointers,
+      context,
+      options.fragment ?? false,
+    );
     // Passed explicitly: validate() otherwise chooses a schema of its own.
     this.errors.push(
       ...validator.validate(this.nodes, GedcomType(""), this.scheme),
     );
-    return this;
+    if (options.fragment) {
+      this.errors = this.errors.filter(
+        (error) => !BOUNDED_BY_FRAGMENT.has(error.code),
+      );
+    }
   }
 
   private validateLevels(nodes: ASTNode[], expectedLevel = 0): GedcomError[] {
