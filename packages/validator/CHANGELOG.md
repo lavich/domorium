@@ -2,6 +2,20 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## 1.6.0 - 2026-08-12
+
+- **A fragment can be checked without being told it is not a file.** Text that is
+  part of a document rather than one of its own — a block pasted into a note, an
+  example in documentation, a selection — was judged as a whole file, so the one
+  thing certainly not the author's mistake was the first thing reported, and
+  nothing after it was read at all. `createDocument(text, { fragment: true,
+dialect })` reads the lines and goes quiet only about what the boundary caused:
+  the missing header and trailer, a pointer leaving the text, an extension tag
+  with no `HEAD.SCHMA` to declare it in. An unknown tag, a payload of the wrong
+  type and a level that cannot follow the line above are still reported.
+- `dialect` is named by the caller because a fragment carries no
+  `HEAD.GEDC.VERS`; without one there are still no rules to read it by.
+
 ## 1.5.0 - 2026-08-10
 
 - **The GEDCOM version is resolved against a table by longest match, and a

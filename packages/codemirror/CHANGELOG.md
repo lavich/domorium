@@ -2,6 +2,18 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## 1.3.0 - 2026-08-12
+
+- **The host chooses what opens a record preview and when it closes.** `trigger`
+  answers whether an event asks for one and defaults to the platform modifier, so
+  a host whose users configure that gesture can honour their setting instead of
+  being overridden. `clearRecordPreview(view)` closes an open preview from
+  anywhere — a file rewritten underneath the view, a command running, a modifier
+  released where the editor never saw it — and `hide` is called for it.
+- `hoveredPointer(state)` reads which pointer a preview is open on.
+- Requires `@domorium/language-service` 1.3.0 or newer: `EditorLanguageService`
+  passes parse options through to it, and an older one ignores them in silence.
+
 ## 1.2.0 - 2026-08-11
 
 - **A cross-reference can be read without leaving the line it is on.** Hold the

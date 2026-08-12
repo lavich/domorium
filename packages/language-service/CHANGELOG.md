@@ -2,6 +2,28 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## 1.3.0 - 2026-08-12
+
+- **A caret touching the end of a token now resolves it.** Placed immediately
+  after the closing `@` of a pointer — where it lands after typing one, or after
+  `End` — go to definition, find references, rename, hover and completion all
+  declined in silence. A position names the boundary between two characters, and
+  both edges of a token are on it; GEDCOM puts a space between tokens, so no
+  boundary belongs to two.
+- **Document symbols carry a label**: the name of a person, the title of a
+  source, where the format gives a record one. `name` is still the tag. A host
+  building a list of records no longer has to read a `NAME` payload itself.
+- **`retargetFileLinks` answers with the edits that point a document at a file
+  that moved.** A GEDCOM 7 `FILE` payload is a URI reference and a 5.5.1 one is a
+  path, so the same rename is spelled differently in each; `decodeFileTarget` and
+  `encodeFileTarget` are that rule alone, for a host resolving a link rather than
+  rewriting one — reading a payload raw sent it looking for a file with a percent
+  sign in its name.
+- `getDocument()` returns the parsed document behind every answer, for a question
+  this package does not answer.
+- Requires `@domorium/validator` 1.6.0 or newer: a fragment is parsed with the
+  option that release adds, and an older one ignores it in silence.
+
 ## 1.2.0 - 2026-08-10
 
 - **File links follow the resolved version instead of a version test of their
