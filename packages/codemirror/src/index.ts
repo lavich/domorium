@@ -18,6 +18,7 @@ export {
 } from "./pointerDecoration.js";
 export {
   offsetToPosition,
+  pointerOnRange,
   positionToOffset,
   rangeToOffsets,
 } from "./positions.js";
