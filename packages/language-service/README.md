@@ -31,6 +31,12 @@ The service also provides completion, hover, definitions, folding ranges, docume
 name of a person, the title of a source — where the format gives it one.
 `name` stays the tag, so a consumer rendering it is unaffected.
 
+`retargetFileLinks(from, to)` answers with the edits that make a document
+point at a file that moved. A GEDCOM 7 `FILE` payload is a URI reference and
+a 5.5.1 one is a path, so the same rename is spelled differently in each;
+`decodeFileTarget` and `encodeFileTarget` are that rule on its own, for a
+host resolving a link rather than rewriting one.
+
 `getDocument()` returns the parsed `GedcomDocument` the answers above are derived
 from, for a question this package does not answer — its nodes, its errors, its
 version, its labels. Reading it costs nothing; the parse has already happened.

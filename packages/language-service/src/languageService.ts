@@ -6,6 +6,7 @@ import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
 import { documentLinks } from "./libs/links/documentLinks";
+import { retargetFileLinks } from "./libs/links/retargetFileLinks";
 import { ReferenceIndex } from "./libs/references/referenceIndex";
 import {
   getDocumentHighlights,
@@ -34,6 +35,7 @@ import type {
   PrepareRenameResult,
   Range,
   ReferenceOptions,
+  WorkspaceEdit,
   WorkspaceEditResult,
 } from "./types";
 
@@ -161,6 +163,21 @@ export class GedcomLanguageService {
 
   getDocumentLinks(): DocumentLink[] {
     return documentLinks(this.document.getNodes(), this.document.getDialect());
+  }
+
+  /**
+   * The edits that make a document point at a file where it moved. The caller
+   * supplies plain paths, relative to the document, and this answers in the
+   * dialect's own spelling — escaped in GEDCOM 7, literal in 5.5.1.
+   */
+  retargetFileLinks(from: string, to: string): WorkspaceEdit {
+    return retargetFileLinks({
+      links: this.getDocumentLinks(),
+      dialect: this.document.getDialect(),
+      from,
+      to,
+      version: this.version,
+    });
   }
 
   getCodeActions(
