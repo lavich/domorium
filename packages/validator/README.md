@@ -27,9 +27,8 @@ const errors = document.getErrors();
 
 ## Fragments
 
-Text that is part of a document rather than one of its own — a fenced block in a
-note, an example in documentation, a selection — is missing a header and a
-trailer by nature, and should not be told so.
+A fenced block in a note, an example in documentation, a selection: text that is
+part of a document rather than one of its own.
 
 ```typescript
 const block = new GedcomDocument().createDocument(text, {
@@ -38,12 +37,10 @@ const block = new GedcomDocument().createDocument(text, {
 });
 ```
 
-`dialect` is required in practice: a fragment carries no `HEAD.GEDC.VERS`, and
-without one there are no rules to read it by. What goes quiet is what the
-boundary caused — the header and trailer it cannot have, a pointer leaving the
-text, an extension tag with no `HEAD.SCHMA` to declare it in. Everything else
-still applies: an unknown tag, a payload of the wrong type, a level that cannot
-follow the line above.
+What goes quiet is what the boundary caused — the header and trailer, a pointer
+leaving the text, an extension tag with no `HEAD.SCHMA` to declare it in.
+Everything else is still read. `dialect` is needed because a fragment carries no
+`HEAD.GEDC.VERS`.
 
 ## Diagnostics
 

@@ -5,17 +5,15 @@ import type { DocumentLink, DocumentVersion, WorkspaceEdit } from "../../types";
 export interface RetargetFileLinksOptions {
   links: DocumentLink[];
   dialect: GedcomDialect | undefined;
-  /** The file being pointed at, as the caller writes a path, not as GEDCOM does. */
+  /** Plain paths, as a caller writes them rather than as GEDCOM spells them. */
   from: string;
-  /** Where it went, likewise. */
   to: string;
   version: DocumentVersion;
 }
 
 /**
- * A GEDCOM 7 local `FILE` payload is a URI reference, so what it contains is
- * escaped and a path is not. 5.5.1 says path, and escaping one there would
- * invent a file nobody has.
+ * A GEDCOM 7 local `FILE` payload is a URI reference and a 5.5.1 one is a path,
+ * so escaping applies to the first and would invent a filename in the second.
  */
 export function decodeFileTarget(
   target: string,
@@ -50,8 +48,8 @@ export function encodeFileTarget(
 export function retargetFileLinks(
   options: RetargetFileLinksOptions,
 ): WorkspaceEdit {
-  // from is taken literally. Decoding it too would make a file whose name
-  // contains %20 match a link to a file whose name contains a space.
+  // Literal: decoding it too would match a file named with a space against one
+  // named with %20.
   const from = normalize(options.from);
   const newText = encodeFileTarget(options.to, options.dialect);
   const edits = options.links
@@ -64,7 +62,7 @@ export function retargetFileLinks(
   return { version: options.version, edits };
 }
 
-/** `./a.jpg` and `a.jpg` name one file; nothing else here is path arithmetic. */
+/** `./a.jpg` and `a.jpg` name one file; no other path arithmetic belongs here. */
 function normalize(path: string): string {
   return path.replace(/^\.\//u, "");
 }

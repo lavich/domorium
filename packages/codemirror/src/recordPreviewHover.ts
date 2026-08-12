@@ -15,11 +15,7 @@ export interface RecordPreviewHoverOptions {
   language: EditorLanguageService;
   /** Lines of a record to reach for before reporting it cut short. */
   maxLines?: number;
-  /**
-   * Whether an event asks for a preview. Defaults to the platform modifier,
-   * which is a convention rather than a rule: a host whose users configure the
-   * gesture answers from that setting instead.
-   */
+  /** Whether an event asks for a preview. Defaults to the platform modifier. */
   trigger?: (event: MouseEvent) => boolean;
   /** Draw the preview. The event carries the element a popover can hang from. */
   show(preview: RecordPreview, view: EditorView, event: MouseEvent): void;
@@ -50,10 +46,6 @@ export function clearRecordPreview(view: EditorView): void {
   view.dispatch({ effects: setHoveredPointer.of(null) });
 }
 
-/**
- * The gesture, not the surface: which pointer answers, and when it is let go.
- * What opens a preview and what it is drawn on are the host's to decide.
- */
 export function recordPreviewHover(
   options: RecordPreviewHoverOptions,
 ): Extension {
@@ -82,8 +74,8 @@ export function recordPreviewHover(
   // that forgot it would dispatch into a state that cannot hold the mark.
   return [
     hoveredPointerField,
-    // hide answers the mark going away rather than the gesture letting go, so
-    // a host that clears the preview for its own reasons is told about it.
+    // hide answers the mark going away, not the gesture letting go, so a host
+    // that closes a preview itself is told about it.
     EditorView.updateListener.of((update) => {
       if (hoveredPointer(update.startState) && !hoveredPointer(update.state)) {
         options.hide(update.view);
@@ -112,8 +104,7 @@ export function recordPreviewHover(
       mouseleave: (_event, view) => {
         settle(view, null, null);
       },
-      // Only while the editor has focus. A host that wants more listens where
-      // it can and calls clearRecordPreview.
+      // Only while the editor has focus; elsewhere is the host's to watch.
       keyup: (event, view) => {
         if (!event.metaKey && !event.ctrlKey) {
           settle(view, null, null);

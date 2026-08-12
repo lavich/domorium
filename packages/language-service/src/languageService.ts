@@ -51,10 +51,7 @@ export class GedcomLanguageService {
   private foldingRanges: FoldingRange[] | undefined;
   private foldingByStartLine: Map<number, FoldingRange> | undefined;
 
-  /**
-   * options describe the text rather than one parse of it — a fenced block is
-   * a fragment every time it is edited — so they are kept and reused.
-   */
+  // options describe the text, not one parse of it, so they outlive an update.
   constructor(
     text = "",
     version: DocumentVersion = 0,
@@ -78,12 +75,6 @@ export class GedcomLanguageService {
     );
   }
 
-  /**
-   * The parse behind every answer here, for a question this package has not
-   * anticipated. Handing it out couples a caller to the validator's own type
-   * rather than to the protocol-shaped ones in types.ts — deliberately, on the
-   * precedent getReferenceIndex set: the alternative is a method per question.
-   */
   getDocument(): GedcomDocument {
     return this.document;
   }
@@ -177,11 +168,7 @@ export class GedcomLanguageService {
     return documentLinks(this.document.getNodes(), this.document.getDialect());
   }
 
-  /**
-   * The edits that make a document point at a file where it moved. The caller
-   * supplies plain paths, relative to the document, and this answers in the
-   * dialect's own spelling — escaped in GEDCOM 7, literal in 5.5.1.
-   */
+  /** from and to are plain paths, relative to the document. */
   retargetFileLinks(from: string, to: string): WorkspaceEdit {
     return retargetFileLinks({
       links: this.getDocumentLinks(),

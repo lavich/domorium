@@ -165,12 +165,7 @@ export enum DocumentSymbolKind {
 export interface DocumentSymbol {
   name: string;
   detail?: string;
-  /**
-   * What a reader would call this record — the name of a person, the title of
-   * a source. Absent where the format gives a record no name of its own, and
-   * absent on everything that is not a record. `name` stays the tag, because
-   * consumers render it.
-   */
+  /** What a reader calls this record. Absent where the format names none. */
   label?: string;
   kind: DocumentSymbolKind;
   range: Range;

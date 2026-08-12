@@ -25,13 +25,9 @@ import {
 import type { Position } from "../types/position";
 
 export interface CreateDocumentOptions {
-  /**
-   * Text that is part of a document rather than one of its own — a fenced
-   * block in a note, an example in documentation, a selection. What is missing
-   * because the text stops is not the author's mistake.
-   */
+  /** Text that is part of a document rather than one of its own. */
   fragment?: boolean;
-  /** Which rules to read it by, since a fragment carries no header to say. */
+  /** A fragment carries no header, so the rules are named rather than read. */
   dialect?: GedcomDialect;
 }
 
@@ -94,8 +90,6 @@ export class GedcomDocument {
     const resolution = resolveGedcomVersion(nodes);
     this.resolution = resolution;
 
-    // A fragment has no header to carry a version, so the caller names one.
-    // Without it there is nothing to check against and saying so is the answer.
     if (
       options.fragment &&
       options.dialect &&

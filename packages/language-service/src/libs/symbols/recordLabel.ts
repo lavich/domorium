@@ -1,10 +1,7 @@
 import type { ASTNode } from "@domorium/validator";
 
-/**
- * Where the format says a record carries a name of its own. A family has none:
- * it is known by its spouses, which are pointers to other records and so not a
- * question this function can answer.
- */
+// A family is missing because it is known by its spouses, and those are
+// pointers to other records.
 const LABEL_TAG: Record<string, string> = {
   INDI: "NAME",
   SUBM: "NAME",
@@ -13,11 +10,7 @@ const LABEL_TAG: Record<string, string> = {
   OBJE: "TITL",
 };
 
-/**
- * The payload as written. Reading a personal name — the slashes around a
- * surname, the order of its parts, the parts that are missing — is its own
- * subject, and guessing at it here would put a guess in every host at once.
- */
+/** The payload as written: reading a personal name is its own subject. */
 export function recordLabel(node: ASTNode): string | undefined {
   const tag = LABEL_TAG[node.tokens.TAG?.value ?? ""];
   if (!tag) {

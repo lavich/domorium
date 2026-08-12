@@ -5,7 +5,6 @@ import type { OffsetSpan } from "./recordPreview.js";
 
 export const setHoveredPointer = StateEffect.define<OffsetSpan | null>();
 
-/** The pointer a preview is open on, for a host that needs to know. */
 export function hoveredPointer(state: EditorState): OffsetSpan | null {
   let span: OffsetSpan | null = null;
   state.field(hoveredPointerField).between(0, state.doc.length, (from, to) => {

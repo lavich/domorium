@@ -25,18 +25,6 @@ const service = new GedcomLanguageService(gedcomText);
 const diagnostics = service.getDiagnostics();
 ```
 
-The service also provides completion, hover, definitions, folding ranges, document symbols, semantic tokens, and indentation hints.
-
-`getDocumentSymbols()` labels a record with what a reader would call it — the
-name of a person, the title of a source — where the format gives it one.
-`name` stays the tag, so a consumer rendering it is unaffected.
-
-`retargetFileLinks(from, to)` answers with the edits that make a document
-point at a file that moved. A GEDCOM 7 `FILE` payload is a URI reference and
-a 5.5.1 one is a path, so the same rename is spelled differently in each;
-`decodeFileTarget` and `encodeFileTarget` are that rule on its own, for a
-host resolving a link rather than rewriting one.
-
-`getDocument()` returns the parsed `GedcomDocument` the answers above are derived
-from, for a question this package does not answer — its nodes, its errors, its
-version, its labels. Reading it costs nothing; the parse has already happened.
+The service also provides completion, hover, definitions, folding ranges,
+document symbols, semantic tokens, indentation hints, and the edits that retarget
+a file a document points at. `getDocument()` returns the parse behind all of it.
