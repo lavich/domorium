@@ -19,7 +19,7 @@ export const isPositionInRange = (
   }
   if (
     position.line === range.end.line &&
-    position.character >= range.end.character
+    position.character > range.end.character
   ) {
     return false;
   }

@@ -120,7 +120,7 @@ describe("ReferenceIndex", () => {
 
   // A binary search replaces the linear scan in `at`, so it has to agree with
   // isPositionInRange on every edge: start inclusive, end exclusive.
-  it("resolves the cursor on the first and last character of an xref, but not one past it", () => {
+  it("resolves the cursor anywhere on an xref, both edges included", () => {
     // 0 @I1@ INDI  — the pointer occupies characters 2 through 5.
     const service = new GedcomLanguageService(
       ["0 @I1@ INDI", "0 @F1@ FAM", "1 HUSB @I1@"].join("\n"),
@@ -130,9 +130,10 @@ describe("ReferenceIndex", () => {
     expect(index.at({ line: 0, character: 1 })).toBeUndefined();
     expect(index.at({ line: 0, character: 2 })?.role).toBe("declaration");
     expect(index.at({ line: 0, character: 5 })?.role).toBe("declaration");
-    expect(index.at({ line: 0, character: 6 })).toBeUndefined();
+    expect(index.at({ line: 0, character: 6 })?.role).toBe("declaration");
+    expect(index.at({ line: 0, character: 7 })).toBeUndefined();
     expect(index.at({ line: 2, character: 7 })?.role).toBe("usage");
-    expect(index.at({ line: 2, character: 11 })).toBeUndefined();
+    expect(index.at({ line: 2, character: 11 })?.role).toBe("usage");
   });
 
   it("resolves the cursor in a document with CRLF line endings", () => {
