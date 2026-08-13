@@ -2,7 +2,7 @@
   "source": "https://gedcom.io/testfiles/gedcom70/",
   "known": [
     {
-      "note": "Twenty of the twenty-two files are diagnostic-free. Eight diagnostics remain and seven of them are correct."
+      "note": "Twenty of the twenty-three files are diagnostic-free. Nine diagnostics remain and eight of them are correct."
     },
     {
       "issue": 96,
@@ -11,8 +11,13 @@
     },
     {
       "correct": true,
-      "where": "extension-record.ged 10, 11, 15 and extensions.ged 61, 62, 77, 82",
+      "where": "extension-record.ged 10, 11, 15, extensions.ged 61, 62, 77, 82 and warnings70.ged 60",
       "what": "VAL008 is right here: those tags really are undocumented, and the specification recommends against that. Line 61 is an enumerated value rather than a tag, which the specification counts as an extension tag all the same. Not everything recorded below is a bug."
+    },
+    {
+      "issue": 192,
+      "where": "warnings70.ged, almost all of it",
+      "what": "The GEDCOM Steering Committee split its corpus so that maximal*.ged imports without warnings and this file collects what should warn: ADR1-3, HEAD.SOUR.DATA, six deprecated ordinance STAT values and EXID with no TYPE. We report one diagnostic in it, and that one is the undeclared extension tag rather than any deprecation. The single entry recorded above is what we do say, not what we should."
     }
   ],
   "files": {
@@ -79,7 +84,7 @@
       "expected": []
     },
     "maximal70.ged": {
-      "sha256": "398c32b357a5cb2b00e27015bd563dfd306dbbf2997a047cd714f7905b4b88eb",
+      "sha256": "c7af0efc36d2630be965d8c17ecbbcf6b64c6cde9bca3bebed661a06226d43e8",
       "expected": []
     },
     "minimal70.ged": {
@@ -109,6 +114,10 @@
     "voidptr.ged": {
       "sha256": "ca8f022dcb87d3ddec53b4fb8d6aa7603e5227a20178db6329e062aee9df39f8",
       "expected": []
+    },
+    "warnings70.ged": {
+      "sha256": "b8c3a088ee9cb6e4a83c76245019286ee41da1bf0533219c869cc080fc1e8c7a",
+      "expected": ["60 warning VAL008"]
     },
     "xref.ged": {
       "sha256": "c194630901c65e13724b47ecd0f11818ac6d4b089757c916506caa08ab8c0870",
