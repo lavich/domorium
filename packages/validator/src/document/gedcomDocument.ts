@@ -114,6 +114,19 @@ export class GedcomDocument {
       return this;
     }
 
+    if (resolution.kind === "paf") {
+      const named = resolution.system
+        ? ` (\`1 SYST ${resolution.system}\`)`
+        : "";
+      this.errors.push({
+        code: GedcomErrorCode.PersonalAncestralFile,
+        message: `The header names a system before GEDC${named}, so this is a Personal Ancestral File and is not checked against a GEDCOM specification`,
+        range: resolution.range,
+        level: "warning",
+      });
+      return this;
+    }
+
     if (resolution.kind === "unsupported") {
       this.errors.push({
         code: GedcomErrorCode.UnsupportedVersion,

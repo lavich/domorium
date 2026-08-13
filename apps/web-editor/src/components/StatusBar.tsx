@@ -50,6 +50,9 @@ function versionLabel(resolution: VersionResolution | undefined): string {
   if (!resolution || resolution.kind === "undetermined") {
     return "No version";
   }
+  if (resolution.kind === "paf") {
+    return "Personal Ancestral File";
+  }
   return `GEDCOM ${resolution.version}`;
 }
 
@@ -61,6 +64,8 @@ function stateLabel(resolution: VersionResolution | undefined): string {
       return `checked as ${resolution.dialect}`;
     case "unsupported":
       return "not supported";
+    case "paf":
+      return "not checked";
     default:
       return "not stated";
   }
