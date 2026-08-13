@@ -14,10 +14,7 @@ export default defineConfig({
     },
   },
   test: {
-    poolOptions: {
-      forks: { execArgv },
-      threads: { execArgv },
-    },
+    execArgv,
     exclude: [
       ...configDefaults.exclude,
       "**/.worktrees/**",
