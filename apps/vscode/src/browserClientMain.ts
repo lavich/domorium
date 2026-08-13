@@ -35,10 +35,12 @@ function createWorkerLanguageClient(
   );
   const worker = new Worker(serverMain.toString(true));
 
+  // 10 puts the worker where the node client has always taken its server
+  // options, so the browser client is now called the same way as that one.
   return new LanguageClient(
     "gedcomLanguageServer",
     "GEDCOM Language Server",
-    clientOptions,
     worker,
+    clientOptions,
   );
 }
