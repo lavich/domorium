@@ -193,15 +193,21 @@ export const createServer = (connection: Connection) => {
     const currentDiagnostics = service.getDiagnostics();
     const diagnostics = params.context.diagnostics.map((diagnostic) => {
       const code = String(diagnostic.code ?? "");
+      // LSP 3.18 lets a message be markup. Ours are plain text, and comparing
+      // one to the other found nothing, so no code action matched its report.
+      const message =
+        typeof diagnostic.message === "string"
+          ? diagnostic.message
+          : diagnostic.message.value;
       return (
         currentDiagnostics.find(
           (current) =>
             current.code === code &&
-            current.message === diagnostic.message &&
+            current.message === message &&
             JSON.stringify(current.range) === JSON.stringify(diagnostic.range),
         ) ?? {
           code,
-          message: diagnostic.message,
+          message,
           range: diagnostic.range,
           severity: "error" as const,
         }
