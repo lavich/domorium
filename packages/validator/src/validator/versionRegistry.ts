@@ -22,6 +22,8 @@ export type VersionResolution =
       range: Range;
     } & SchemaChoice)
   | { kind: "unsupported"; version: string; range: Range }
+  /** The payload of HEAD.SYST, which is the program that wrote the file. */
+  | { kind: "paf"; system: string; range: Range }
   | ({ kind: "undetermined"; range: Range } & SchemaChoice);
 
 type Entry =
@@ -98,11 +100,37 @@ export function schemaForDialect(dialect: GedcomDialect): SchemaChoice {
   };
 }
 
+/**
+ * Step 1 of FamilySearch's version-detection algorithm reads until whichever of
+ * `1 GEDC` and `1 SYST` comes first. `1 SYST` skips the version entirely and
+ * sends the file to the Personal Ancestral File specification, so it does not
+ * weigh against `2 VERS` — it replaces it.
+ */
+function readSystem(HEAD: ASTNode | undefined): ASTNode | undefined {
+  const at = (tag: string) =>
+    HEAD?.children.findIndex((node) => node.tokens.TAG?.value === tag) ?? -1;
+  const syst = at("SYST");
+  if (syst === -1) {
+    return undefined;
+  }
+  const gedc = at("GEDC");
+  return gedc === -1 || syst < gedc ? HEAD?.children[syst] : undefined;
+}
+
 export function resolveGedcomVersion(nodes: ASTNode[]): VersionResolution {
   const HEAD = nodes.find((node) => node.tokens.TAG?.value === "HEAD");
   const GEDC = HEAD?.children.find((node) => node.tokens.TAG?.value === "GEDC");
   const VERS = GEDC?.children.find((node) => node.tokens.TAG?.value === "VERS");
   const range = VERS?.tokens.VALUE?.range ?? HEAD?.range ?? ORIGIN;
+
+  const SYST = readSystem(HEAD);
+  if (SYST) {
+    return {
+      kind: "paf",
+      system: SYST.tokens.VALUE?.value?.trim() ?? "",
+      range: SYST.tokens.VALUE?.range ?? SYST.range,
+    };
+  }
 
   const version = getGedcomVersion(nodes);
   if (!version) {

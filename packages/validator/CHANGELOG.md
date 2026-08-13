@@ -2,6 +2,21 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **A header naming a system before `GEDC` is Personal Ancestral File, and is no
+  longer judged by a specification that does not apply to it.** FamilySearch's
+  version-detection algorithm reads until whichever of `1 GEDC` and `1 SYST`
+  comes first; `1 SYST` skips the version entirely and sends the file to the PAF
+  specification. We read the `VERS` line regardless, resolved 5.5.1 and reported
+  five diagnostics from a schema the algorithm says is not the file's.
+- `VAL015` says so and nothing else is reported, the way an unsupported version
+  already behaves. `getVersionResolution()` gains a `paf` kind carrying the
+  system the header named. Writing a PAF schema is not in scope; saying plainly
+  that this dialect is not judged here is.
+- A `1 SYST` **after** `1 GEDC` changes nothing, which is what the algorithm
+  says: whichever comes first decides.
+
 ## 1.7.0 - 2026-08-13
 
 - **A date payload offers completions, and they depend on where the cursor is.**
