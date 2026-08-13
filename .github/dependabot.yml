@@ -9,6 +9,12 @@ updates:
       time: "09:00"
       timezone: Asia/Nicosia
     open-pull-requests-limit: 10
+    ignore:
+      # Pinned to engines.vscode in apps/vscode/package.json, which is the
+      # oldest VS Code the extension claims to run on. Ahead of that floor,
+      # vsce refuses to package and the compiler stops enforcing it. The floor
+      # moves when an API we want needs it — see #56, #128 and #195.
+      - dependency-name: "@types/vscode"
 
   - package-ecosystem: gradle
     directory: /apps/jetbrains
