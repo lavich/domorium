@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 1.7.0 - 2026-08-13
 
 - **A date payload offers completions, and they depend on where the cursor is.**
   Typing one got no help at all, in a format where the help is most needed. The
