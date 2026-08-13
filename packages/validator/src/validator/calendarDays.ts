@@ -2,10 +2,9 @@
  * The part of a date the grammar cannot express: `31 FEB` is two well-formed
  * tokens naming a day February does not have.
  *
- * Only GREGORIAN and JULIAN are checked. They share the twelve month tags and
- * their lengths, and differ only in which years February gets a 29th; HEBREW
- * and FRENCH_R have months of their own and are left alone rather than judged
- * by somebody else's calendar.
+ * GREGORIAN and JULIAN share the twelve month tags and their lengths, and
+ * differ only in which years February gets a 29th, which is why one table
+ * serves both. HEBREW and FRENCH_R have months of their own.
  */
 
 const LENGTHS: Record<string, number> = {
@@ -25,8 +24,7 @@ const LENGTHS: Record<string, number> = {
 
 const CHECKED_CALENDARS = new Set(["GREGORIAN", "JULIAN"]);
 const INTEGER = /^\d+$/u;
-// 5.5.1 names a calendar with an escape rather than a bare word, and both
-// dialects reach this check.
+// Both dialects reach this check, and 5.5.1 writes a calendar as an escape.
 const CALENDAR_ESCAPE = /^@#D([A-Z][A-Z_ ]*)@$/u;
 const CALENDARS = new Set([
   ...CHECKED_CALENDARS,
@@ -74,10 +72,6 @@ export function daysInMonth(
   return isLeapYear(year, calendar) ? 29 : 28;
 }
 
-/**
- * A phrase is free text that may hold anything, including something shaped
- * like a date, so it is removed before the value is read as one.
- */
 function withoutPhrases(value: string): string {
   return value.replace(/\([^()]*\)/gu, " ");
 }
@@ -104,8 +98,7 @@ export function impossibleDays(value: string): ImpossibleDay[] {
       continue;
     }
 
-    // Astronomical year numbering before the common era is a question this
-    // check does not need to answer: February is given its longest length.
+    // Rather than answer what a leap year is before the common era.
     const epoch = tokens[at + 3];
     const year =
       INTEGER.test(tokens[at + 2] ?? "") && epoch !== "BCE" && epoch !== "B.C."

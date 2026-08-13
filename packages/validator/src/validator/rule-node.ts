@@ -79,18 +79,6 @@ function formatValueSet(values: string[] | null): string {
 
 // An absent payload is one problem whatever type was expected, so it keeps its
 // own code and every rule reports it alike.
-// Reported only for a value the grammar accepted: "31 FEB 1900" is a date, and
-// saying it is not one would confuse the person who typed it.
-function impossibleDayErrors(node: ASTNode, value: string): GedcomError[] {
-  return impossibleDays(value).map(({ day, month, length }) =>
-    valueError(
-      node,
-      `names ${day} ${month}, and ${month} has ${length} days`,
-      GedcomErrorCode.ImpossibleDay,
-    ),
-  );
-}
-
 function valueError(
   node: ASTNode,
   message: string,
@@ -102,6 +90,16 @@ function valueError(
     range: node.tokens.VALUE?.range || node.range,
     level: "error",
   };
+}
+
+function impossibleDayErrors(node: ASTNode, value: string): GedcomError[] {
+  return impossibleDays(value).map(({ day, month, length }) =>
+    valueError(
+      node,
+      `names ${day} ${month}, and ${month} has ${length} days`,
+      GedcomErrorCode.ImpossibleDay,
+    ),
+  );
 }
 
 // Hour may be 1 or 2 digits (both "8:38" and "08:38" are valid) per both
