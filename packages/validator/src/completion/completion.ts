@@ -6,6 +6,7 @@ import {
   type GedcomScheme,
 } from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
+import { dateSlot, type DateGrammar } from "./dateSlot";
 import type { ExtensionContext } from "../validator/extensions";
 
 export interface GedcomCompletion {
@@ -139,10 +140,42 @@ function completeTags(
   return [...standardTags, ...extensionTags];
 }
 
+const DATE_GRAMMARS: Record<string, DateGrammar> = {
+  "date-v7": "value",
+  date: "value",
+  "date-period-v7": "period",
+  "date-period": "period",
+  "date-exact-v7": "exact",
+  "date-exact": "exact",
+};
+
+/**
+ * An extension calendar declared in HEAD.SCHMA is not offered: a declaration
+ * says a tag has a URI, not that the tag names a calendar, so offering every
+ * declared tag here would be noise where the point is a short, right list.
+ */
+function completeDate(
+  context: CompletionContext,
+  grammar: DateGrammar,
+  typed: string,
+): GedcomCompletion[] {
+  const slot = dateSlot(typed, grammar);
+  const calendar = (name: string | null) =>
+    name === null ? undefined : context.scheme.calendar[GedcomTag(name)];
+
+  return [
+    ...(slot.calendars ? Object.keys(context.scheme.calendar) : []),
+    ...Object.keys(calendar(slot.months)?.months ?? {}),
+    ...(calendar(slot.epochs)?.epochs ?? []),
+    ...slot.keywords,
+  ].map((label) => ({ label, kind: "enum" }) as const);
+}
+
 function completeValues(
   context: CompletionContext,
   level: number,
   tag: string,
+  typed: string,
 ): GedcomCompletion[] {
   const parent = resolveParent(context, level);
   if (!parent) {
@@ -157,6 +190,11 @@ function completeValues(
 
   const ruleNode = new RuleNode(context.scheme, context.pointers);
   const fieldType = ruleNode.getFieldType(childType);
+  const grammar =
+    fieldType.type === null ? undefined : DATE_GRAMMARS[fieldType.type];
+  if (grammar) {
+    return completeDate(context, grammar, typed);
+  }
   if (fieldType.type === "select" || fieldType.type === "multiselect") {
     return [...new Set(ruleNode.getAvailableValues(childType) ?? [])]
       .filter(Boolean)
@@ -184,7 +222,12 @@ export function getGedcomCompletions(
   }
   const valueMatch = VALUE_PREFIX.exec(prefix);
   if (valueMatch) {
-    return completeValues(context, Number(valueMatch[1]), valueMatch[2]);
+    return completeValues(
+      context,
+      Number(valueMatch[1]),
+      valueMatch[2],
+      valueMatch[3],
+    );
   }
   return [];
 }
