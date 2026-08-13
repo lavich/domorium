@@ -30,7 +30,7 @@ dependencies {
     }
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:6.1.3")
 }
 
