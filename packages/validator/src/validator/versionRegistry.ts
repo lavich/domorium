@@ -101,10 +101,8 @@ export function schemaForDialect(dialect: GedcomDialect): SchemaChoice {
 }
 
 /**
- * Step 1 of FamilySearch's version-detection algorithm reads until whichever of
- * `1 GEDC` and `1 SYST` comes first. `1 SYST` skips the version entirely and
- * sends the file to the Personal Ancestral File specification, so it does not
- * weigh against `2 VERS` — it replaces it.
+ * Step 1 of FamilySearch's version-detection algorithm: `1 SYST` does not weigh
+ * against `2 VERS`, it replaces it, and the version is never read.
  */
 function readSystem(HEAD: ASTNode | undefined): ASTNode | undefined {
   const at = (tag: string) =>
