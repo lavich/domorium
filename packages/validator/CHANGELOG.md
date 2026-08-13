@@ -4,6 +4,19 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A date payload offers completions, and they depend on where the cursor is.**
+  Typing one got no help at all, in a format where the help is most needed. The
+  start of a value offers the calendars, the modifiers and the months; after a
+  number, the months it could still take and the epoch it could already be;
+  after `BET`'s first date, `AND`; after `FROM`'s, `TO`. An exact date is offered
+  months alone, since its grammar admits no calendar and no epoch.
+- **The months offered are the ones the calendar in force actually has.**
+  a cursor after `HEBREW 1` offers `TSH` through `ELL`, one after `FRENCH_R`
+  offers `VEND` through `COMP`, and the twelve a user knows by heart are not among them. This is the
+  case the feature is for.
+- GEDCOM 7 only. 5.5.1 keeps its months in a regular expression and its
+  `calendar` section is empty, so there is nothing there to offer from.
+
 - **A date naming a day the calendar does not have is reported.** `31 FEB 1900`,
   `31 APR 1880`, `0 JAN` and `99 JAN` were all accepted: the grammar gives a day
   as one or two digits, and nothing looked at the month it belongs to. Each now

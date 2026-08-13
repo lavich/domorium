@@ -239,3 +239,54 @@ describe("GedcomDocument.getCompletions", () => {
     expect(doc.getCompletions({ line: 7, character: 2 }, "2 ")).toEqual([]);
   });
 });
+
+describe("completion inside a DATE payload", () => {
+  const offers = (line: string, body: string) => {
+    const text = `0 HEAD\n1 GEDC\n2 VERS 7.0\n${body}${line}\n0 TRLR\n`;
+    const at = text.slice(0, text.indexOf(line)).split("\n").length - 1;
+    return document(text)
+      .getCompletions({ line: at, character: line.length }, line)
+      .map((item) => item.label);
+  };
+  const inBirth = (line: string) => offers(line, "0 @I1@ INDI\n1 BIRT\n");
+
+  it("offers the calendars, the modifiers and the months at the start", () => {
+    const labels = inBirth("2 DATE ");
+
+    expect(labels).toContain("GREGORIAN");
+    expect(labels).toContain("HEBREW");
+    expect(labels).toContain("BET");
+    expect(labels).toContain("JAN");
+  });
+
+  it("offers the months of the calendar in force, not the ones we know", () => {
+    const labels = inBirth("2 DATE HEBREW 1 ");
+
+    expect(labels).toContain("TSH");
+    expect(labels).toContain("ELL");
+    expect(labels).not.toContain("JAN");
+  });
+
+  it("offers the French Republican months after that calendar", () => {
+    expect(inBirth("2 DATE FRENCH_R ")).toContain("VEND");
+  });
+
+  it("asks for the word that finishes a range or a period", () => {
+    expect(inBirth("2 DATE BET 1900 ")).toContain("AND");
+    expect(inBirth("2 DATE FROM 1900 ")).toContain("TO");
+  });
+
+  it("offers the epoch a calendar has, and none where it has none", () => {
+    expect(inBirth("2 DATE 1 JAN 2000 ")).toEqual(["BCE"]);
+    expect(inBirth("2 DATE HEBREW 1 TSH 5760 ")).toEqual([]);
+  });
+
+  it("offers nothing between a month and the year it needs", () => {
+    expect(inBirth("2 DATE 1 JAN ")).toEqual([]);
+  });
+
+  it("offers an exact date its months, and no calendar to put them in", () => {
+    expect(offers("1 DATE 1 ", "")).toContain("APR");
+    expect(offers("1 DATE ", "")).toEqual([]);
+  });
+});
