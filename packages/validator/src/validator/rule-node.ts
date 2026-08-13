@@ -9,6 +9,7 @@ import {
   resolveTag,
   undocumentedTag,
 } from "./extensions";
+import { impossibleDays } from "./calendarDays";
 import {
   isValidDateExact,
   isValidDatePeriod,
@@ -78,6 +79,18 @@ function formatValueSet(values: string[] | null): string {
 
 // An absent payload is one problem whatever type was expected, so it keeps its
 // own code and every rule reports it alike.
+// Reported only for a value the grammar accepted: "31 FEB 1900" is a date, and
+// saying it is not one would confuse the person who typed it.
+function impossibleDayErrors(node: ASTNode, value: string): GedcomError[] {
+  return impossibleDays(value).map(({ day, month, length }) =>
+    valueError(
+      node,
+      `names ${day} ${month}, and ${month} has ${length} days`,
+      GedcomErrorCode.ImpossibleDay,
+    ),
+  );
+}
+
 function valueError(
   node: ASTNode,
   message: string,
@@ -567,6 +580,8 @@ export class RuleNode {
               `should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`,
             ),
           );
+        } else {
+          errors.push(...impossibleDayErrors(node, value));
         }
         break;
       case "date":
@@ -577,6 +592,8 @@ export class RuleNode {
               `should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
             ),
           );
+        } else {
+          errors.push(...impossibleDayErrors(node, value));
         }
         break;
       case "date-period-v7":
@@ -592,6 +609,8 @@ export class RuleNode {
               `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
             ),
           );
+        } else {
+          errors.push(...impossibleDayErrors(node, value));
         }
         break;
       }
@@ -608,6 +627,8 @@ export class RuleNode {
               `should be an exact date in day month year order (e.g. "1 APR 1911")`,
             ),
           );
+        } else {
+          errors.push(...impossibleDayErrors(node, value));
         }
         break;
       }

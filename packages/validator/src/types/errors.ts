@@ -31,6 +31,8 @@ export enum GedcomErrorCode {
   UndeterminedVersion = "VAL012",
   /** A version checked against a different version's schema. */
   SubstitutedVersion = "VAL013",
+  /** A date naming a day its calendar does not have, such as 31 FEB. */
+  ImpossibleDay = "VAL014",
   /** A pointer whose xref names no record of the required type. */
   UnresolvedXref = "unresolved-xref",
   /** A line whose level cannot follow the line above it. */
