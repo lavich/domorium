@@ -2,6 +2,25 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **A date naming a day the calendar does not have is reported.** `31 FEB 1900`,
+  `31 APR 1880`, `0 JAN` and `99 JAN` were all accepted: the grammar gives a day
+  as one or two digits, and nothing looked at the month it belongs to. Each now
+  carries `VAL014` saying which day was named and how many the month has. So does
+  `29 FEB 1900` — a year divisible by 100 and not by 400 has no 29th — while
+  `29 FEB 2000` and `29 FEB 2024` stay quiet.
+- The check is separate from the grammar and reported with a code of its own,
+  because `31 FEB 1900` _is_ a date: telling its author it is not one would say
+  the wrong thing about a value they can see is a date.
+- **A Julian date is judged by the Julian rule**, which keeps every fourth year
+  leap with no exception for centuries, so `JULIAN 29 FEB 1700` is accepted where
+  the same day in the Gregorian calendar is not. `HEBREW` and `FRENCH_R` have
+  months of their own and are not judged by anyone else's calendar. Both dialects
+  are covered, including 5.5.1's `@#DJULIAN@` escape.
+- A phrase is removed before a value is read as a date, so
+  `INT 1900 (born 31 FEB by the old reckoning)` reports nothing.
+
 ## 1.6.0 - 2026-08-12
 
 - **A fragment can be checked without being told it is not a file.** Text that is
