@@ -38,7 +38,7 @@ function createWorkerLanguageClient(
   return new LanguageClient(
     "gedcomLanguageServer",
     "GEDCOM Language Server",
-    clientOptions,
     worker,
+    clientOptions,
   );
 }
