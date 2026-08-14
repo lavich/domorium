@@ -1,7 +1,5 @@
 // @vitest-environment jsdom
-import { highlightingFor } from "@codemirror/language";
 import { EditorView } from "@codemirror/view";
-import { tags } from "@lezer/highlight";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createGedcomEditor } from "./createGedcomEditor";
@@ -80,18 +78,34 @@ describe("createGedcomEditor", () => {
     sliceDoc.mockRestore();
   });
 
-  // A pointer is a `variableName`, and the light default styles that tag only
-  // where one is declared, so a reference to a record arrived in the colour of
-  // ordinary text while the dark theme coloured it.
-  it("colours a reference to a record in either theme", () => {
-    const parent = editor({});
-    const view = EditorView.findFromDOM(parent)!;
+  // Neither general-purpose theme has a rule for both identifiers, and each was
+  // missing the other one: the light left a reference the colour of ordinary
+  // text, the dark a declaration.
+  it.each(["light", "dark"] as const)(
+    "tells a declared pointer, a reference and ordinary text apart in the %s theme",
+    (theme) => {
+      const parent = editor({ theme });
+      const view = EditorView.findFromDOM(parent)!;
+      const pointers = [
+        ...parent.querySelectorAll("span.gedcom-token-variable"),
+      ];
+      const declared = "gedcom-token-declaration";
+      const colourOf = (node: Element | null) =>
+        node === null ? null : getComputedStyle(node).color;
 
-    expect(highlightingFor(view.state, [tags.variableName])).not.toBeNull();
+      const text = colourOf(view.contentDOM);
+      const declaration = colourOf(
+        pointers.find((span) => span.classList.contains(declared)) ?? null,
+      );
+      const reference = colourOf(
+        pointers.find((span) => !span.classList.contains(declared)) ?? null,
+      );
 
-    handle!.setTheme("dark");
-    expect(highlightingFor(view.state, [tags.variableName])).not.toBeNull();
-  });
+      expect(declaration).not.toBeNull();
+      expect(reference).not.toBeNull();
+      expect(new Set([text, declaration, reference]).size).toBe(3);
+    },
+  );
 
   // Download reads the text when it needs it, which is the reason the app can
   // stop being handed a copy on every keystroke.

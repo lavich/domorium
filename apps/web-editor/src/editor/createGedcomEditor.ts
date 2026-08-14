@@ -10,7 +10,7 @@ import {
   HighlightStyle,
   syntaxHighlighting,
 } from "@codemirror/language";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { color as oneDarkColor, oneDark } from "@codemirror/theme-one-dark";
 import { tags } from "@lezer/highlight";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
@@ -199,22 +199,40 @@ export function createGedcomEditor(
 }
 
 /*
- * An identifier is a `variableName`, which the light default styles only where
- * one is being declared or is local — so a reference to a record arrived in the
- * colour of ordinary text. `oneDark` needs none of this: it colours `name`, from
- * which `variableName` descends. The value is the one that style already gives a
- * local, which keeps the two identifiers in one family.
+ * A pointer is a `variableName` and a declared one is that tag under
+ * `definition`, and neither general-purpose theme has a rule for the pair: the
+ * light one states a definition and a local but not the plain tag, and the dark
+ * one colours `name`, which `variableName` descends from, but paints a
+ * definition of it in the ivory it writes ordinary text in. So one left a
+ * reference uncoloured and the other a declaration.
+ *
+ * Both identifiers are stated here rather than one gap patched in each, because
+ * a rule that only fills a gap depends on which of the theme's own rules it
+ * meets. The values are the ones the theme in question already uses: a local
+ * and a definition in the light, and a name and a name defined as a function in
+ * the dark.
  */
 const lightIdentifiers = HighlightStyle.define([
   { tag: tags.variableName, color: "#30a" },
+  { tag: tags.definition(tags.variableName), color: "#00f" },
 ]);
 
+const darkIdentifiers = HighlightStyle.define([
+  { tag: tags.variableName, color: oneDarkColor.coral },
+  { tag: tags.definition(tags.variableName), color: oneDarkColor.malibu },
+]);
+
+/*
+ * Ours first: the view mounts `styleModule` as the facet's values reversed, so
+ * where two highlighters name the same token the earlier extension is the one
+ * whose colour survives.
+ */
 function editorTheme(theme: WebTheme) {
   return theme === "dark"
-    ? oneDark
+    ? [syntaxHighlighting(darkIdentifiers), oneDark]
     : [
-        syntaxHighlighting(defaultHighlightStyle),
         syntaxHighlighting(lightIdentifiers),
+        syntaxHighlighting(defaultHighlightStyle),
       ];
 }
 
