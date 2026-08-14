@@ -473,7 +473,7 @@ function buildReferenceDecorations(
   return Decoration.set(
     referenceHighlightSpecs(view.state, service).map((highlight) =>
       Decoration.mark({
-        class: `gedcom-reference-${highlight.kind}`,
+        class: "gedcom-reference",
       }).range(highlight.from, highlight.to),
     ),
   );
@@ -516,7 +516,7 @@ function semanticDecorations(
     for (const token of service.getSemanticTokens({ from, to })) {
       // Offsets, not a line and character: CodeMirror addresses everything by
       // offset, and so does the syntax tree the tokens come from.
-      const tag = semanticTokenTag(token.tokenType);
+      const tag = semanticTokenTag(token.tokenType, token.tokenModifiers);
       const classes = [
         tokenClass(token.tokenType),
         tag ? highlightingFor(state, [tag]) : null,
@@ -558,7 +558,20 @@ export function tokenClass(tokenType: number): string | null {
   return name === undefined ? null : `gedcom-token-${name}`;
 }
 
-export function semanticTokenTag(tokenType: number): Tag | null {
+export function semanticTokenTag(
+  tokenType: number,
+  tokenModifiers = 0,
+): Tag | null {
+  const tag = tagOfTokenType(tokenType);
+  if (tag === null) {
+    return null;
+  }
+  // `declaration` is the only modifier the legend carries, and `definition` is
+  // what a highlight style already knows that to mean.
+  return tokenModifiers === 0 ? tag : tags.definition(tag);
+}
+
+function tagOfTokenType(tokenType: number): Tag | null {
   switch (semanticTokenLegend.tokenTypes[tokenType]) {
     case "comment":
       return tags.comment;
@@ -636,13 +649,8 @@ const gedcomBaseTheme = EditorView.baseTheme({
     overflow: "auto",
     overflowWrap: "anywhere",
   },
-  ".gedcom-reference-read": {
+  ".gedcom-reference": {
     backgroundColor: "color-mix(in srgb, currentColor 12%, transparent)",
-  },
-  ".gedcom-reference-write": {
-    backgroundColor: "color-mix(in srgb, currentColor 18%, transparent)",
-    textDecoration: "underline",
-    textDecorationSkipInk: "none",
   },
   ".gedcom-indent-hint": {
     opacity: "0.55",

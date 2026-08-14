@@ -8,6 +8,16 @@ All notable changes to `@domorium/codemirror` are documented here.
   `link`**, so its colour is stated where every other colour is, rather than in
   a rule of its own: a web address is `tags.url`, a file is `tags.link`, and
   `documentLinkTag(kind)` is that mapping, exported beside `semanticTokenTag`.
+- **A declaring token carries a modified tag**, `tags.definition` over the tag its
+  type maps to, so what a declaration looks like is stated in the host's highlight
+  style beside every other colour. `semanticTokenTag(type, modifiers)` is that
+  mapping; the stable `gedcom-token-declaration` class is still applied, as the
+  name the legend gives rather than as a look.
+- **`gedcom-reference-write` is gone.** Every occurrence the selection highlights
+  now carries one class, `gedcom-reference`: which of them is the declaration is
+  what the token above already says, and saying it twice made a host state the
+  same thing in two places. `getDocumentHighlights` keeps its `kind` — an LSP host
+  renders read and write itself.
 - **The hover tooltip's own `gedcom-hover` class is gone.** CodeMirror already
   marks a hover tooltip `cm-tooltip-hover`, which is what the base theme sizes
   and what a host should dress; a second name for the same box said nothing.

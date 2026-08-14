@@ -66,6 +66,16 @@ describe("GEDCOM editor extensions", () => {
     expect(semanticTokenTag(2)).toBe(tags.string);
   });
 
+  // A declaration is a modified tag rather than a class of its own, so a host
+  // says what one looks like in the highlight style it already writes.
+  it("modifies the tag of a declaring token", () => {
+    const semanticTokenTag = Reflect.get(extensionsModule, "semanticTokenTag");
+
+    expect(semanticTokenTag(1, 0)).toBe(tags.keyword);
+    expect(semanticTokenTag(1, 1)).toBe(tags.definition(tags.keyword));
+    expect(semanticTokenTag(3, 1)).toBe(null);
+  });
+
   it("maps declaration and use highlights at the selection", () => {
     const language = new EditorLanguageService();
     const declaration = text.indexOf("@I1@");
