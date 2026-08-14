@@ -8,8 +8,10 @@ All notable changes to `@domorium/codemirror` are documented here.
   with Ctrl/Cmd-click since they were added, and neither looked like anything: a
   reader had no way to tell there was something to click. They now carry
   `gedcom-link` and `gedcom-link-<kind>` — `http`, `file-relative`,
-  `file-absolute` — underlined by the base theme, and coloured by the host,
-  which knows what a link looks like everywhere else it shows one.
+  `file-absolute` — underlined by the base theme, which is the one cue the
+  syntax highlighting does not already use. A host that colours them should do
+  it under the pointer rather than always: level, pointer and tag hold every
+  colour a reader has learnt to read, and a fourth competes with them.
 - `getDocumentLinkSpecs(state, language)` answers with the same offsets, for a
   host that wants them.
 
