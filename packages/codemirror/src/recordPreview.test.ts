@@ -1,6 +1,7 @@
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { tags } from "@lezer/highlight";
+import { semanticTokenLegend } from "@domorium/language-service";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -12,8 +13,9 @@ import { EditorLanguageService } from "./service.js";
 
 const highlightStyle = HighlightStyle.define([
   { tag: tags.comment, class: "tok-level" },
-  { tag: tags.keyword, class: "tok-pointer" },
-  { tag: tags.string, class: "tok-tag" },
+  { tag: tags.keyword, class: "tok-tag" },
+  { tag: tags.variableName, class: "tok-pointer" },
+  { tag: tags.string, class: "tok-value" },
 ]);
 
 function load(lines: string[]) {
@@ -123,9 +125,21 @@ describe("splitting a record into runs", () => {
     expect(runs.map((run) => run.text).join("")).toBe(
       state.doc.sliceString(from, to),
     );
+    // Named rather than numbered: the index is the legend's order, and that
+    // order changed once a tag became a keyword and an identifier a variable.
+    const named = (index: number | null) =>
+      index === null ? "-" : semanticTokenLegend.tokenTypes[index];
+
     expect(
-      runs.slice(0, 6).map((run) => `${run.tokenType ?? "-"}:${run.text}`),
-    ).toEqual(["0:0", "-: ", "1:@F1@", "-: ", "2:FAM", "-:\n"]);
+      runs.slice(0, 6).map((run) => `${named(run.tokenType)}:${run.text}`),
+    ).toEqual([
+      "comment:0",
+      "-: ",
+      "variable:@F1@",
+      "-: ",
+      "keyword:FAM",
+      "-:\n",
+    ]);
   });
 
   it("clips a token that runs past the end of a record cut short", () => {

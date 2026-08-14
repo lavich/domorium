@@ -63,7 +63,8 @@ describe("GEDCOM editor extensions", () => {
     const semanticTokenTag = Reflect.get(extensionsModule, "semanticTokenTag");
     expect(semanticTokenTag(0)).toBe(tags.comment);
     expect(semanticTokenTag(1)).toBe(tags.keyword);
-    expect(semanticTokenTag(2)).toBe(tags.string);
+    expect(semanticTokenTag(2)).toBe(tags.variableName);
+    expect(semanticTokenTag(3)).toBe(tags.string);
   });
 
   // A declaration is a modified tag rather than a class of its own, so a host
@@ -71,9 +72,9 @@ describe("GEDCOM editor extensions", () => {
   it("modifies the tag of a declaring token", () => {
     const semanticTokenTag = Reflect.get(extensionsModule, "semanticTokenTag");
 
-    expect(semanticTokenTag(1, 0)).toBe(tags.keyword);
-    expect(semanticTokenTag(1, 1)).toBe(tags.definition(tags.keyword));
-    expect(semanticTokenTag(3, 1)).toBe(null);
+    expect(semanticTokenTag(2, 0)).toBe(tags.variableName);
+    expect(semanticTokenTag(2, 1)).toBe(tags.definition(tags.variableName));
+    expect(semanticTokenTag(9, 1)).toBe(null);
   });
 
   it("maps declaration and use highlights at the selection", () => {

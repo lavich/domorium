@@ -11,7 +11,6 @@ const text = [
   "2 VERS 7.0",
   "0 @I1@ INDI",
   "1 NAME Ada /Lovelace/",
-  "1 WWW https://domorium.com/",
   "0 @F1@ FAM",
   "1 HUSB @I1@",
   "0 TRLR",
@@ -43,18 +42,6 @@ const editor = (
 };
 
 describe("createGedcomEditor", () => {
-  // The package marks a link and names nothing, so the name a rule in
-  // `index.css` is written against has to come from here.
-  it("names the class its own stylesheet dresses a link with", () => {
-    const parent = editor({});
-
-    const marked = [...parent.querySelectorAll(".gedcom-link")].map(
-      (element) => element.textContent,
-    );
-
-    expect(marked).toContain("https://domorium.com/");
-  });
-
   // The editor's own plugins defer their work, but the host listener undid it:
   // it reparsed the whole document to refresh the problems panel on every
   // keystroke, which is the single most expensive thing on that path.

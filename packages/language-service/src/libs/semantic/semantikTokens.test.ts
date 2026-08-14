@@ -46,6 +46,26 @@ describe("semanticTokens", () => {
 
   // A length taken from offsets must not count the carriage return, and the
   // line numbers must survive it.
+  // The words a host's theme already holds: a tag is the keyword of a line, an
+  // identifier is a variable, and a payload is the value.
+  it("types a tag, an identifier and a payload by what they are", () => {
+    const source = "0 @I1@ INDI\n1 NAME Ada /Lovelace/\n0 TRLR\n";
+    const gedcom = new GedcomDocument();
+    gedcom.createDocument(source);
+    const tokens = semanticTokens(gedcom.getNodes());
+    const typeOf = (text: string) =>
+      tokens.find(
+        (token) => source.slice(token.startOffset, token.endOffset) === text,
+      )?.tokenType;
+
+    expect(typeOf("INDI")).toBe(tokenTypeIndex(TokenNames.TAG));
+    expect(typeOf("@I1@")).toBe(tokenTypeIndex(TokenNames.POINTER));
+    expect(typeOf("Ada /Lovelace/")).toBe(tokenTypeIndex(TokenNames.VALUE));
+    expect(tokenTypeIndex(TokenNames.TAG)).not.toBe(
+      tokenTypeIndex(TokenNames.POINTER),
+    );
+  });
+
   it("reports positions and lengths on a document with CRLF line endings", () => {
     const document = new GedcomDocument();
     document.createDocument(["0 @I1@ INDI", "1 SEX M", "0 TRLR"].join("\r\n"));

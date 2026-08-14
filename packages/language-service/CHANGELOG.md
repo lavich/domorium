@@ -2,6 +2,20 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## Unreleased
+
+- **A token is typed by what it is.** A tag is `keyword`, an identifier is
+  `variable`, and a payload is `string` — where a tag used to be `string`, an
+  identifier `keyword`, and a payload nothing at all, so the text after a tag
+  carried no token and no host could colour it. The level stays `comment` for want
+  of a truer name: it is the line's structure rather than its content.
+  `POINTER` keeps the `declaration` modifier, which is what tells a record's own
+  identifier from a reference to it.
+- The legend is what an editor's theme is written against, so this changes what a
+  file looks like in every host: a tag takes the colour a theme holds for a
+  keyword, an identifier the one it holds for a variable, and a payload the one
+  for a string.
+
 ## 1.4.0 - 2026-08-14
 
 - **A shared note is a record with an identifier, and `detail` now says so.** The

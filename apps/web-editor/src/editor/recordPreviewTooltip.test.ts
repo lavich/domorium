@@ -17,7 +17,7 @@ import {
 } from "./recordPreviewTooltip";
 
 const highlightStyle = HighlightStyle.define([
-  { tag: tags.keyword, class: "tok-pointer" },
+  { tag: tags.variableName, class: "tok-pointer" },
 ]);
 
 const text = [

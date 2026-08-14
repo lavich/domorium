@@ -568,6 +568,8 @@ function tagOfTokenType(tokenType: number): Tag | null {
       return tags.comment;
     case "keyword":
       return tags.keyword;
+    case "variable":
+      return tags.variableName;
     case "string":
       return tags.string;
     default:

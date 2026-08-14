@@ -11,6 +11,10 @@ All notable changes to `@domorium/codemirror` are documented here.
   gets no decoration rather than a `gedcom-link` of ours, and a host that wants a
   name of its own writes `{ tag, class }` — which is also the only way to reach a
   state a highlight style cannot state, `:hover` among them.
+- **`variable` maps to `tags.variableName`**, the type the legend now gives an
+  identifier. A tag arrives as `tags.keyword` and a payload as `tags.string`,
+  which is the same mapping as before by name and a different one by meaning —
+  see `@domorium/language-service`.
 - **A declaring token carries a modified tag**, `tags.definition` over the tag its
   type maps to, so what a declaration looks like is stated in the host's highlight
   style beside every other colour. `semanticTokenTag(type, modifiers)` is that

@@ -62,8 +62,8 @@ describe("highlighting schedule", () => {
   // colour the host stated for a pointer.
   it("keeps the tag's own class beside the one its modifier earns", () => {
     const style = HighlightStyle.define([
-      { tag: tags.keyword, color: "rgb(1, 2, 3)" },
-      { tag: tags.definition(tags.keyword), fontWeight: "600" },
+      { tag: tags.variableName, color: "rgb(1, 2, 3)" },
+      { tag: tags.definition(tags.variableName), fontWeight: "600" },
     ]);
     const language = new EditorLanguageService();
     const view = new EditorView({
