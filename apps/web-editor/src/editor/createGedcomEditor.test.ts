@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
+import { highlightingFor } from "@codemirror/language";
 import { EditorView } from "@codemirror/view";
+import { tags } from "@lezer/highlight";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createGedcomEditor } from "./createGedcomEditor";
@@ -76,6 +78,19 @@ describe("createGedcomEditor", () => {
     expect(onChange).toHaveBeenCalledOnce();
     expect(sliceDoc).not.toHaveBeenCalled();
     sliceDoc.mockRestore();
+  });
+
+  // A pointer is a `variableName`, and the light default styles that tag only
+  // where one is declared, so a reference to a record arrived in the colour of
+  // ordinary text while the dark theme coloured it.
+  it("colours a reference to a record in either theme", () => {
+    const parent = editor({});
+    const view = EditorView.findFromDOM(parent)!;
+
+    expect(highlightingFor(view.state, [tags.variableName])).not.toBeNull();
+
+    handle!.setTheme("dark");
+    expect(highlightingFor(view.state, [tags.variableName])).not.toBeNull();
   });
 
   // Download reads the text when it needs it, which is the reason the app can

@@ -7,9 +7,11 @@ import {
 } from "@codemirror/search";
 import {
   defaultHighlightStyle,
+  HighlightStyle,
   syntaxHighlighting,
 } from "@codemirror/language";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { tags } from "@lezer/highlight";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import {
@@ -196,8 +198,24 @@ export function createGedcomEditor(
   };
 }
 
+/*
+ * An identifier is a `variableName`, which the light default styles only where
+ * one is being declared or is local — so a reference to a record arrived in the
+ * colour of ordinary text. `oneDark` needs none of this: it colours `name`, from
+ * which `variableName` descends. The value is the one that style already gives a
+ * local, which keeps the two identifiers in one family.
+ */
+const lightIdentifiers = HighlightStyle.define([
+  { tag: tags.variableName, color: "#30a" },
+]);
+
 function editorTheme(theme: WebTheme) {
-  return theme === "dark" ? oneDark : syntaxHighlighting(defaultHighlightStyle);
+  return theme === "dark"
+    ? oneDark
+    : [
+        syntaxHighlighting(defaultHighlightStyle),
+        syntaxHighlighting(lightIdentifiers),
+      ];
 }
 
 function renameAtSelection(
