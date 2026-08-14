@@ -7,9 +7,11 @@ import {
 } from "@codemirror/search";
 import {
   defaultHighlightStyle,
+  HighlightStyle,
   syntaxHighlighting,
 } from "@codemirror/language";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { tags } from "@lezer/highlight";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import {
@@ -196,8 +198,21 @@ export function createGedcomEditor(
   };
 }
 
+/*
+ * The package marks a link and leaves the name to whoever styles it, so the
+ * name is stated here beside the rule that uses it in `index.css`. A class-only
+ * rule adds nothing else, which leaves the colour to the theme below.
+ */
+const linkClasses = HighlightStyle.define([
+  { tag: tags.link, class: "gedcom-link" },
+  { tag: tags.url, class: "gedcom-link" },
+]);
+
 function editorTheme(theme: WebTheme) {
-  return theme === "dark" ? oneDark : syntaxHighlighting(defaultHighlightStyle);
+  return [
+    syntaxHighlighting(linkClasses),
+    theme === "dark" ? oneDark : syntaxHighlighting(defaultHighlightStyle),
+  ];
 }
 
 function renameAtSelection(

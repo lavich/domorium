@@ -4,10 +4,13 @@ All notable changes to `@domorium/codemirror` are documented here.
 
 ## Unreleased
 
-- **A link also carries the class its host's highlight style mints for `url` or
-  `link`**, so its colour is stated where every other colour is, rather than in
-  a rule of its own: a web address is `tags.url`, a file is `tags.link`, and
-  `documentLinkTag(kind)` is that mapping, exported beside `semanticTokenTag`.
+- **A link carries only the class its host's highlight style mints** for `url` or
+  `link`, so both its name and its look are the host's: a web address is
+  `tags.url`, a file is `tags.link`, and `documentLinkTag(kind)` is that mapping,
+  exported beside `semanticTokenTag`. A style that names no class for those tags
+  gets no decoration rather than a `gedcom-link` of ours, and a host that wants a
+  name of its own writes `{ tag, class }` — which is also the only way to reach a
+  state a highlight style cannot state, `:hover` among them.
 - **A declaring token carries a modified tag**, `tags.definition` over the tag its
   type maps to, so what a declaration looks like is stated in the host's highlight
   style beside every other colour. `semanticTokenTag(type, modifiers)` is that

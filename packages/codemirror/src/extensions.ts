@@ -447,12 +447,13 @@ function buildLinkDecorations(
 ): DecorationSet {
   const { state } = view;
   return Decoration.set(
-    documentLinkSpecs(state, service).map((link) => {
+    documentLinkSpecs(state, service).flatMap((link) => {
+      // The host's highlight style names the class and says what it looks like;
+      // with nothing to mark the text with, there is no decoration to add.
       const themeClass = highlightingFor(state, [documentLinkTag(link.kind)]);
-      const classes = [`gedcom-link gedcom-link-${link.kind}`, themeClass]
-        .filter((value): value is string => value !== null)
-        .join(" ");
-      return Decoration.mark({ class: classes }).range(link.from, link.to);
+      return themeClass === null
+        ? []
+        : [Decoration.mark({ class: themeClass }).range(link.from, link.to)];
     }),
     true,
   );
