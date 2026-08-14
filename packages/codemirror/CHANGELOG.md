@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
-## Unreleased
+## 1.4.0 - 2026-08-14
 
 - **A web address and a file path are marked as links.** Both had been openable
   with Ctrl/Cmd-click since they were added, and neither looked like anything: a

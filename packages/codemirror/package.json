@@ -1,6 +1,6 @@
 {
   "name": "@domorium/codemirror",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "CodeMirror 6 integration for GEDCOM language features",
   "keywords": [
     "gedcom",
