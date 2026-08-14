@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 1.8.0 - 2026-08-14
 
 - **A header naming a system before `GEDC` is Personal Ancestral File, and is no
   longer judged by a specification that does not apply to it.** FamilySearch's
