@@ -55,6 +55,22 @@ describe("highlighting schedule", () => {
     view.destroy();
   });
 
+  // The occurrences of the identifier under the caret are answered by
+  // `getReferenceHighlightSpecs` and painted by nobody: a host that wants them
+  // marked says so itself.
+  it("paints nothing for the identifier under the caret", () => {
+    const language = new EditorLanguageService();
+    const view = editorWith(language, document.body);
+    const declaration = text.indexOf("@I1@");
+
+    view.dispatch({ selection: { anchor: declaration + 1 } });
+
+    expect(
+      view.dom.querySelectorAll("[class*='gedcom-reference']"),
+    ).toHaveLength(0);
+    view.destroy();
+  });
+
   // Deferring the rebuild must not mean dropping what is already painted, or
   // the file would flash grey on every keystroke. The decorations are mapped
   // through the change instead, which is what keeps them on their text.
@@ -98,7 +114,9 @@ describe("highlighting schedule", () => {
       }),
     });
 
-    const decorated = [...view.dom.querySelectorAll(".gedcom-token-declaration")];
+    const decorated = [
+      ...view.dom.querySelectorAll(".gedcom-token-declaration"),
+    ];
 
     expect(decorated.map((node) => node.textContent)).toEqual(["@I1@"]);
     view.destroy();

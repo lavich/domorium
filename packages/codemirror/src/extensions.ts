@@ -458,27 +458,6 @@ function buildLinkDecorations(
   );
 }
 
-function referenceHighlights(language: EditorLanguageService): Extension {
-  return deferredDecorations(
-    language,
-    (view, service) => buildReferenceDecorations(view, service),
-    { onSelectionChange: true },
-  );
-}
-
-function buildReferenceDecorations(
-  view: EditorView,
-  service: GedcomLanguageService,
-): DecorationSet {
-  return Decoration.set(
-    referenceHighlightSpecs(view.state, service).map((highlight) =>
-      Decoration.mark({
-        class: "gedcom-reference",
-      }).range(highlight.from, highlight.to),
-    ),
-  );
-}
-
 class IndentHintWidget extends WidgetType {
   constructor(private readonly label: string) {
     super();
@@ -609,7 +588,6 @@ export function createGedcomExtensions(
     foldingSource(language),
     navigation(language, options.actions),
     documentLinks(language),
-    referenceHighlights(language),
     semanticFeatures(language, indentationHints),
     gedcomBaseTheme,
   ];
@@ -648,9 +626,6 @@ const gedcomBaseTheme = EditorView.baseTheme({
     maxHeight: "min(20rem, 60vh)",
     overflow: "auto",
     overflowWrap: "anywhere",
-  },
-  ".gedcom-reference": {
-    backgroundColor: "color-mix(in srgb, currentColor 12%, transparent)",
   },
   ".gedcom-indent-hint": {
     opacity: "0.55",
