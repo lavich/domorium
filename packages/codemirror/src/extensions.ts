@@ -507,9 +507,9 @@ function semanticDecorations(
       // Offsets, not a line and character: CodeMirror addresses everything by
       // offset, and so does the syntax tree the tokens come from.
       const tag = semanticTokenTag(token.tokenType);
-      const themeClass = tag ? highlightingFor(state, [tag]) : null;
       const classes = [
-        themeClass,
+        tokenClass(token.tokenType),
+        tag ? highlightingFor(state, [tag]) : null,
         token.tokenModifiers === 0 ? null : "gedcom-token-declaration",
       ].filter((value): value is string => value !== null);
       const end = Math.min(token.startOffset + token.length, state.doc.length);
@@ -536,6 +536,16 @@ function semanticDecorations(
   }
 
   return Decoration.set(decorations, true);
+}
+
+/**
+ * A name a stylesheet can reach, beside the class a `HighlightStyle` mints.
+ * A host that states its colours in CSS needs one that does not change
+ * between builds, and it is the name the legend gives.
+ */
+export function tokenClass(tokenType: number): string | null {
+  const name = semanticTokenLegend.tokenTypes[tokenType];
+  return name === undefined ? null : `gedcom-token-${name}`;
 }
 
 export function semanticTokenTag(tokenType: number): Tag | null {

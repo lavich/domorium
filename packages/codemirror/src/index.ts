@@ -5,6 +5,7 @@ export {
   getDocumentLinkSpecs,
   getReferenceHighlightSpecs,
   semanticTokenTag,
+  tokenClass,
   SETTLE_DELAY_MS,
   type GedcomEditorActions,
   type GedcomEditorOptions,
