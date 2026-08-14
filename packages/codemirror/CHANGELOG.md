@@ -2,6 +2,17 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## Unreleased
+
+- **A web address and a file path are marked as links.** Both had been openable
+  with Ctrl/Cmd-click since they were added, and neither looked like anything: a
+  reader had no way to tell there was something to click. They now carry
+  `gedcom-link` and `gedcom-link-<kind>` — `http`, `file-relative`,
+  `file-absolute` — underlined by the base theme, and coloured by the host,
+  which knows what a link looks like everywhere else it shows one.
+- `getDocumentLinkSpecs(state, language)` answers with the same offsets, for a
+  host that wants them.
+
 ## 1.3.0 - 2026-08-12
 
 - **The host chooses what opens a record preview and when it closes.** `trigger`
