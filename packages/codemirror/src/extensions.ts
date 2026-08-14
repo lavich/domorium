@@ -496,10 +496,21 @@ function semanticDecorations(
     for (const token of service.getSemanticTokens({ from, to })) {
       // Offsets, not a line and character: CodeMirror addresses everything by
       // offset, and so does the syntax tree the tokens come from.
-      const tag = semanticTokenTag(token.tokenType, token.tokenModifiers);
+      // A modifier adds to what the type says rather than replacing it: a
+      // highlight style answers with one class per tag, the most specific rule
+      // it has, so asking only for `definition` would drop the colour a host
+      // stated for the tag underneath.
+      const base = semanticTokenTag(token.tokenType);
+      const modified = semanticTokenTag(token.tokenType, token.tokenModifiers);
+      const styled = [
+        base === null ? null : highlightingFor(state, [base]),
+        modified === null || modified === base
+          ? null
+          : highlightingFor(state, [modified]),
+      ];
       const classes = [
         tokenClass(token.tokenType),
-        tag ? highlightingFor(state, [tag]) : null,
+        ...new Set(styled.filter((value): value is string => value !== null)),
         token.tokenModifiers === 0 ? null : "gedcom-token-declaration",
       ].filter((value): value is string => value !== null);
       const end = Math.min(token.startOffset + token.length, state.doc.length);

@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import { tags } from "@lezer/highlight";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -52,6 +54,52 @@ describe("highlighting schedule", () => {
     view.dispatch({ changes: { from: 0, insert: "0 NOTE typed\n" } });
 
     expect(language.getVersion()).toBe(parsed);
+    view.destroy();
+  });
+
+  // A highlight style answers with the most specific rule it has and no other,
+  // so a declaration asked for by its modifier alone would arrive without the
+  // colour the host stated for a pointer.
+  it("keeps the tag's own class beside the one its modifier earns", () => {
+    const style = HighlightStyle.define([
+      { tag: tags.keyword, color: "rgb(1, 2, 3)" },
+      { tag: tags.definition(tags.keyword), fontWeight: "600" },
+    ]);
+    const language = new EditorLanguageService();
+    const view = new EditorView({
+      parent: document.body,
+      state: EditorState.create({
+        doc: text,
+        extensions: [
+          ...createGedcomExtensions({
+            actions: { applyWorkspaceEdit: () => true },
+            language,
+            settings: { diagnostics: false },
+          }),
+          ...createStandaloneEditorExtensions(),
+          syntaxHighlighting(style),
+        ],
+      }),
+    });
+
+    const spanOn = (prefix: string) => {
+      const line = [...view.dom.querySelectorAll(".cm-line")].find((element) =>
+        // The indentation hint is a widget, and its text comes first.
+        (element.textContent ?? "").trim().startsWith(prefix),
+      );
+      return [...(line?.querySelectorAll("span") ?? [])].find(
+        (element) => element.textContent === "@I1@",
+      );
+    };
+
+    const declaration = spanOn("0 @I1@");
+    const reference = spanOn("1 HUSB");
+
+    expect(getComputedStyle(declaration!).fontWeight).toBe("600");
+    expect(getComputedStyle(declaration!).color, "and its colour").toBe(
+      "rgb(1, 2, 3)",
+    );
+    expect(getComputedStyle(reference!).fontWeight).not.toBe("600");
     view.destroy();
   });
 

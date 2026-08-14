@@ -15,7 +15,10 @@ All notable changes to `@domorium/codemirror` are documented here.
   type maps to, so what a declaration looks like is stated in the host's highlight
   style beside every other colour. `semanticTokenTag(type, modifiers)` is that
   mapping; the stable `gedcom-token-declaration` class is still applied, as the
-  name the legend gives rather than as a look.
+  name the legend gives rather than as a look. The modifier **adds** to the tag
+  rather than replacing it: a highlight style answers with one class per tag — the
+  most specific rule it holds — so a host stating only a weight for
+  `definition(keyword)` keeps the colour it stated for `keyword` underneath.
 - **The occurrences of the identifier under the caret are no longer painted.**
   `gedcom-reference-read` and `gedcom-reference-write` are gone, and so is the
   decoration behind them: in a file where a record and the pointers to it sit
