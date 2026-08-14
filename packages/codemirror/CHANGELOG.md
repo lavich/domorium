@@ -14,6 +14,12 @@ All notable changes to `@domorium/codemirror` are documented here.
   colour a reader has learnt to read, and a fourth competes with them.
 - `getDocumentLinkSpecs(state, language)` answers with the same offsets, for a
   host that wants them.
+- **A token in the editor now carries `gedcom-token-<type>` as well as the class
+  its `HighlightStyle` mints.** The minted one is generated per build and cannot
+  be named in a stylesheet, so a host that keeps its colours in CSS had to state
+  them a second time as a `HighlightStyle` — and a host rendering GEDCOM outside
+  the editor, where there is no editor state to mint from, spelt the same names
+  by hand. `tokenClass(tokenType)` is that spelling, exported.
 
 ## 1.3.0 - 2026-08-12
 

@@ -1,3 +1,4 @@
+import { semanticTokenLegend } from "@domorium/language-service";
 import { EditorState } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
@@ -8,6 +9,7 @@ import {
   getDiagnosticActions,
   getDocumentLinkSpecs,
   getReferenceHighlightSpecs,
+  tokenClass,
 } from "./extensions";
 import { EditorLanguageService } from "./service";
 
@@ -140,5 +142,18 @@ describe("the links a document holds", () => {
     expect(
       links("0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @O1@ OBJE\n1 FILE\n0 TRLR"),
     ).toEqual([]);
+  });
+});
+
+describe("the class a stylesheet reaches a token by", () => {
+  const legend = semanticTokenLegend.tokenTypes;
+
+  it("is the name the legend gives", () => {
+    expect(tokenClass(legend.indexOf("keyword"))).toBe("gedcom-token-keyword");
+    expect(tokenClass(legend.indexOf("comment"))).toBe("gedcom-token-comment");
+  });
+
+  it("is nothing for a type outside the legend", () => {
+    expect(tokenClass(legend.length)).toBeNull();
   });
 });
