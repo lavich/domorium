@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
-## Unreleased
+## 1.4.0 - 2026-08-14
 
 - **A shared note is a record with an identifier, and `detail` now says so.** The
   one declaration that carries a payload on its own line — `0 @N1@ SNOTE text`,
