@@ -41,6 +41,7 @@ import {
   type CompletionItem,
   type Diagnostic,
   type DocumentLink,
+  type DocumentLinkKind,
   type GedcomLanguageService,
   semanticTokenLegend,
   type WorkspaceEdit,
@@ -400,6 +401,53 @@ function deferredDecorations(
   );
 }
 
+function documentLinks(language: EditorLanguageService): Extension {
+  return deferredDecorations(
+    language,
+    (view, service) => buildLinkDecorations(view, service),
+    { onViewportChange: true },
+  );
+}
+
+export interface DocumentLinkSpec {
+  from: number;
+  to: number;
+  kind: DocumentLinkKind;
+}
+
+export function getDocumentLinkSpecs(
+  state: EditorState,
+  language: EditorLanguageService,
+): DocumentLinkSpec[] {
+  return documentLinkSpecs(state, language.update(state.doc));
+}
+
+function documentLinkSpecs(
+  state: EditorState,
+  service: GedcomLanguageService,
+): DocumentLinkSpec[] {
+  return service.getDocumentLinks().flatMap((link) => {
+    const { from, to } = rangeToOffsets(state.doc, link.range);
+    // A decoration spanning nothing is an error rather than a no-op.
+    return to > from ? [{ from, to, kind: link.kind }] : [];
+  });
+}
+
+function buildLinkDecorations(
+  view: EditorView,
+  service: GedcomLanguageService,
+): DecorationSet {
+  return Decoration.set(
+    documentLinkSpecs(view.state, service).map((link) =>
+      Decoration.mark({ class: `gedcom-link gedcom-link-${link.kind}` }).range(
+        link.from,
+        link.to,
+      ),
+    ),
+    true,
+  );
+}
+
 function referenceHighlights(language: EditorLanguageService): Extension {
   return deferredDecorations(
     language,
@@ -527,6 +575,7 @@ export function createGedcomExtensions(
     hoverSource(language),
     foldingSource(language),
     navigation(language, options.actions),
+    documentLinks(language),
     referenceHighlights(language),
     semanticFeatures(language, indentationHints),
     gedcomBaseTheme,
@@ -578,6 +627,13 @@ const gedcomBaseTheme = EditorView.baseTheme({
   ".gedcom-indent-hint": {
     opacity: "0.55",
     pointerEvents: "none",
+  },
+  // Colour is the host's: it knows what a link looks like everywhere else it
+  // shows one.
+  ".gedcom-link": {
+    textDecoration: "underline",
+    textDecorationSkipInk: "none",
+    cursor: "pointer",
   },
   /**
    * The tail of @ crosses an underline, and skipping ink drops it under both

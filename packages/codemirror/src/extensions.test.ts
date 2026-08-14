@@ -4,7 +4,11 @@ import { tags } from "@lezer/highlight";
 import { describe, expect, it, vi } from "vitest";
 
 import * as extensionsModule from "./extensions";
-import { getDiagnosticActions, getReferenceHighlightSpecs } from "./extensions";
+import {
+  getDiagnosticActions,
+  getDocumentLinkSpecs,
+  getReferenceHighlightSpecs,
+} from "./extensions";
 import { EditorLanguageService } from "./service";
 
 const text = [
@@ -104,5 +108,37 @@ describe("GEDCOM editor extensions", () => {
     });
 
     expect(() => actions[0].apply()).not.toThrow();
+  });
+});
+
+describe("the links a document holds", () => {
+  const links = (source: string) =>
+    getDocumentLinkSpecs(
+      EditorState.create({ doc: source }),
+      new EditorLanguageService(),
+    );
+
+  it("marks a web address, so a reader can see there is one", () => {
+    const source =
+      "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @R1@ REPO\n1 WWW https://example.org/\n0 TRLR";
+    const [link] = links(source);
+
+    expect(link?.kind).toBe("http");
+    expect(source.slice(link?.from, link?.to)).toBe("https://example.org/");
+  });
+
+  it("marks a file beside the document, which is not the same kind of link", () => {
+    const source =
+      "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @O1@ OBJE\n1 FILE media/portrait.png\n2 FORM image/png\n0 TRLR";
+    const [link] = links(source);
+
+    expect(link?.kind).toBe("file-relative");
+    expect(source.slice(link?.from, link?.to)).toBe("media/portrait.png");
+  });
+
+  it("marks nothing where a payload is empty", () => {
+    expect(
+      links("0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @O1@ OBJE\n1 FILE\n0 TRLR"),
+    ).toEqual([]);
   });
 });
