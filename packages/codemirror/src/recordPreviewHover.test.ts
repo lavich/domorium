@@ -3,7 +3,7 @@ import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { hoveredPointer, setHoveredPointer } from "./pointerDecoration.js";
+import { hoveredPointer, setHoveredPointer } from "./hoveredPointer.js";
 import {
   clearRecordPreview,
   previewTransition,

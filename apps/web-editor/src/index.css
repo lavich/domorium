@@ -179,6 +179,12 @@ body {
 
 /* Colour is the syntax highlighting's, and all of it is spoken for; the
    underline says a link is there, and the pointer under it says which one. */
+.gedcom-link {
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+}
+
 .gedcom-link:hover {
   color: var(--primary);
 }

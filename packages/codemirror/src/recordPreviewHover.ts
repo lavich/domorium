@@ -5,7 +5,7 @@ import {
   hoveredPointer,
   hoveredPointerField,
   setHoveredPointer,
-} from "./pointerDecoration.js";
+} from "./hoveredPointer.js";
 import { findRecordPreview, type RecordPreview } from "./recordPreview.js";
 import type { EditorLanguageService } from "./service.js";
 

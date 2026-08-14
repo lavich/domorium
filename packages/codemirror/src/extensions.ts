@@ -220,7 +220,6 @@ function hoverSource(language: EditorLanguageService): Extension {
       pos: offset,
       create() {
         const dom = document.createElement("div");
-        dom.className = "gedcom-hover";
         dom.textContent = hover.contents.value;
         return { dom };
       },
@@ -433,17 +432,28 @@ function documentLinkSpecs(
   });
 }
 
+/**
+ * A web address is `url` and a file is `link`, which is what a host already
+ * says about the two in its highlight style: colour belongs there, beside
+ * every other colour it states, rather than in a rule of its own.
+ */
+export function documentLinkTag(kind: DocumentLinkKind): Tag {
+  return kind === "http" ? tags.url : tags.link;
+}
+
 function buildLinkDecorations(
   view: EditorView,
   service: GedcomLanguageService,
 ): DecorationSet {
+  const { state } = view;
   return Decoration.set(
-    documentLinkSpecs(view.state, service).map((link) =>
-      Decoration.mark({ class: `gedcom-link gedcom-link-${link.kind}` }).range(
-        link.from,
-        link.to,
-      ),
-    ),
+    documentLinkSpecs(state, service).map((link) => {
+      const themeClass = highlightingFor(state, [documentLinkTag(link.kind)]);
+      const classes = [`gedcom-link gedcom-link-${link.kind}`, themeClass]
+        .filter((value): value is string => value !== null)
+        .join(" ");
+      return Decoration.mark({ class: classes }).range(link.from, link.to);
+    }),
     true,
   );
 }
@@ -637,21 +647,5 @@ const gedcomBaseTheme = EditorView.baseTheme({
   ".gedcom-indent-hint": {
     opacity: "0.55",
     pointerEvents: "none",
-  },
-  // Colour is the host's: it knows what a link looks like everywhere else it
-  // shows one.
-  ".gedcom-link": {
-    textDecoration: "underline",
-    textDecorationSkipInk: "none",
-    cursor: "pointer",
-  },
-  /**
-   * The tail of @ crosses an underline, and skipping ink drops it under both
-   * delimiters of every pointer — which is the whole of what is marked here.
-   */
-  ".gedcom-hovered-pointer": {
-    textDecoration: "underline",
-    textDecorationSkipInk: "none",
-    cursor: "pointer",
   },
 });

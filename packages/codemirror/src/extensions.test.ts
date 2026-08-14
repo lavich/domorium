@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import * as extensionsModule from "./extensions";
 import {
+  documentLinkTag,
   getDiagnosticActions,
   getDocumentLinkSpecs,
   getReferenceHighlightSpecs,
@@ -155,5 +156,13 @@ describe("the class a stylesheet reaches a token by", () => {
 
   it("is nothing for a type outside the legend", () => {
     expect(tokenClass(legend.length)).toBeNull();
+  });
+});
+
+describe("the tag a link is coloured by", () => {
+  it("is a url for a web address and a link for a file", () => {
+    expect(documentLinkTag("http")).toBe(tags.url);
+    expect(documentLinkTag("file-relative")).toBe(tags.link);
+    expect(documentLinkTag("file-absolute")).toBe(tags.link);
   });
 });

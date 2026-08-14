@@ -2,6 +2,20 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## Unreleased
+
+- **A link also carries the class its host's highlight style mints for `url` or
+  `link`**, so its colour is stated where every other colour is, rather than in
+  a rule of its own: a web address is `tags.url`, a file is `tags.link`, and
+  `documentLinkTag(kind)` is that mapping, exported beside `semanticTokenTag`.
+- **The hover tooltip's own `gedcom-hover` class is gone.** CodeMirror already
+  marks a hover tooltip `cm-tooltip-hover`, which is what the base theme sizes
+  and what a host should dress; a second name for the same box said nothing.
+- **The base theme no longer says what a link looks like.** Its two classes
+  outweighed the one a highlight style mints, so a host stating a decoration or
+  a cursor of its own was overridden by the default underneath. The mark is
+  still applied; the whole appearance is the host's.
+
 ## 1.4.0 - 2026-08-14
 
 - **A web address and a file path are marked as links.** Both had been openable
@@ -9,9 +23,7 @@ All notable changes to `@domorium/codemirror` are documented here.
   reader had no way to tell there was something to click. They now carry
   `gedcom-link` and `gedcom-link-<kind>` — `http`, `file-relative`,
   `file-absolute` — underlined by the base theme, which is the one cue the
-  syntax highlighting does not already use. A host that colours them should do
-  it under the pointer rather than always: level, pointer and tag hold every
-  colour a reader has learnt to read, and a fourth competes with them.
+  syntax highlighting does not already use.
 - `getDocumentLinkSpecs(state, language)` answers with the same offsets, for a
   host that wants them.
 - **A token in the editor now carries `gedcom-token-<type>` as well as the class
