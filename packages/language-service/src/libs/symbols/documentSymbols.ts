@@ -2,9 +2,8 @@ import type { ASTNode } from "@domorium/validator";
 import { DocumentSymbolKind, type DocumentSymbol } from "../../types";
 import { recordLabel } from "./recordLabel";
 
-// A record is named by the identifier other records point at. A shared note is
-// the one declaration that also carries a payload, and that payload is its
-// text, which nothing can point at.
+// A record is named by the identifier other records point at, and a shared
+// note declares one and carries a payload besides.
 function symbolDetail(node: ASTNode): string | undefined {
   const { VALUE, XREF, POINTER } = node.tokens;
   return node.level === 0

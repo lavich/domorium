@@ -13,7 +13,7 @@ const LABEL_TAG: Record<string, string> = {
 /** The payload as written: reading a personal name is its own subject. */
 export function recordLabel(node: ASTNode): string | undefined {
   const recordTag = node.tokens.TAG?.value ?? "";
-  // A shared note is its own text: SNOTE in GEDCOM 7, NOTE in 5.5.1.
+  // A shared note carries its text on its own line rather than in a child.
   if (recordTag === "SNOTE" || recordTag === "NOTE") {
     return node.tokens.VALUE?.value || undefined;
   }
