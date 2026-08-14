@@ -2,6 +2,15 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## Unreleased
+
+- **A shared note is a record with an identifier, and `detail` now says so.** The
+  one declaration that carries a payload on its own line — `0 @N1@ SNOTE text`,
+  and `NOTE` in 5.5.1 — read that text as the symbol's `detail`, where every
+  other record reads its `@N1@`. Anything looking a record up by what `detail`
+  says never found a shared note. The text moves to `label`, beside the name of a
+  person and the title of a source.
+
 ## 1.3.0 - 2026-08-12
 
 - **A caret touching the end of a token now resolves it.** Placed immediately
