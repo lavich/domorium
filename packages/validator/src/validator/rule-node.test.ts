@@ -1117,6 +1117,30 @@ describe("payload for VERS 5.5.1", () => {
       ).toEqual([]);
     });
 
+    test("should pass SOUR carrying the description itself", async () => {
+      expect(
+        noteIn(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 SOUR Parish register, Warsaw, vol 3 p 41
+0 TRLR
+`),
+      ).toEqual([]);
+    });
+
+    test("should report SOUR pointing at a record that does not exist", async () => {
+      expect(
+        noteIn(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 SOUR @S9@
+0 TRLR
+`),
+      ).toMatchObject([{ code: "unresolved-xref" }]);
+    });
+
     test("should report NOTE pointing at a record that does not exist", async () => {
       expect(
         noteIn(`0 HEAD

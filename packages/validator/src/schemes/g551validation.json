@@ -5065,6 +5065,10 @@
       "QUAY": {
         "cardinality": "{0:1}",
         "type": "https://gedcom.io/terms/v5.5.1/QUAY"
+      },
+      "TEXT": {
+        "cardinality": "{0:M}",
+        "type": "https://gedcom.io/terms/v5.5.1/TEXT"
       }
     },
     "https://gedcom.io/terms/v5.5.1/SOUR-XREF_SOUR-DATA": {

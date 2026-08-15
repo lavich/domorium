@@ -11,6 +11,10 @@ text` was told to be a pointer to a `NOTE` record, though `NOTE_STRUCTURE` has
   so the report landed only on one-line notes — which every export from
   MyHeritage, Ancestry and Gramps is full of. The schema still names the pointer
   form, which is the one with a target to resolve and to complete.
+- **A source citation carrying its description is no longer reported either.**
+  `1 SOUR Parish register, Warsaw, vol 3 p 41` is the branch 5.5.1 provides for
+  systems that keep no source records, and `TEXT` written beneath it is no longer
+  an unknown tag. See [ADR 0010](../../docs/adr/0010-two-form-structures-in-5-5-1.md).
 
 ## 1.8.0 - 2026-08-14
 
