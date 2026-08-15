@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
-## Unreleased
+## 1.5.0 - 2026-08-15
 
 - **A link carries only the class its host's highlight style mints** for `url` or
   `link`, so both its name and its look are the host's: a web address is
