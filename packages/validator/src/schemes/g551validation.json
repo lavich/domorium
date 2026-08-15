@@ -940,7 +940,8 @@
     },
     "https://gedcom.io/terms/v5.5.1/NOTE-XREF_NOTE": {
       "to": "https://gedcom.io/terms/v5.5.1/record-NOTE",
-      "type": "pointer"
+      "type": "pointer",
+      "orText": true
     },
     "https://gedcom.io/terms/v5.5.1/NPFX": {
       "type": "https://gedcom.io/terms/v5.5.1/type-NAME_PIECE_PREFIX"

@@ -269,10 +269,17 @@ export class RuleNode {
   getFieldType(tagType: GedcomType): {
     type: FieldType;
     to: GedcomType | undefined;
+    orText?: boolean;
   } {
     const payload = this.scheme.payload[tagType];
     let type: FieldType;
     let to: GedcomType | undefined = undefined;
+    // A 5.5.1 structure whose payload is written either way: `NOTE` carries a
+    // pointer to a NOTE record or the text of the note itself.
+    const orText =
+      typeof payload === "object" && payload !== null && "orText" in payload
+        ? payload.orText === true
+        : false;
     switch (payload?.type) {
       case "Y|<NULL>":
         type = "boolean";
@@ -343,7 +350,7 @@ export class RuleNode {
       default:
         type = "string";
     }
-    return { type, to };
+    return { type, to, orText };
   }
 
   private mayOmitPayload(tagType: GedcomType): boolean {
@@ -658,7 +665,13 @@ export class RuleNode {
           (XREF.value === VOID_POINTER ||
             this.isPointerTarget(tagType, XREF.value));
         const hasChildren = node.children.length !== 0;
-        if ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren)) {
+        // Where the payload may be the text instead, anything not written as a
+        // pointer is that alternative rather than a malformed pointer.
+        const isText = fieldType.orText === true && !isXrefExist;
+        if (
+          !isText &&
+          ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren))
+        ) {
           const targetTag = fieldType.to
             ? this.scheme.tag[fieldType.to]
             : undefined;

@@ -2,6 +2,15 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **A note written as text in a 5.5.1 file is no longer reported.** `1 NOTE plain
+text` was told to be a pointer to a `NOTE` record, though `NOTE_STRUCTURE` has
+  two forms and the text itself is the second. A note that ran to a `CONT` line
+  escaped, because the pointer rule stays silent for a structure with children,
+  so the report landed only on one-line notes — which every export from
+  MyHeritage, Ancestry and Gramps is full of.
+
 ## 1.8.0 - 2026-08-14
 
 - **A header naming a system before `GEDC` is Personal Ancestral File, and is no
