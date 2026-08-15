@@ -64,6 +64,19 @@ const OMITTABLE_PAYLOADS = new Set([
   "https://gedcom.io/terms/v7/type-Age",
 ]);
 
+// 5.5.1 writes some structures two ways. `NOTE_STRUCTURE` carries either a
+// pointer to a NOTE record or the text of the note itself:
+//
+//   n NOTE @<XREF:NOTE>@
+//   n NOTE [SUBMITTER_TEXT | NULL]
+//
+// The schema names the pointer form, which is the one with a target to resolve
+// and to offer as a completion; a payload not written as a pointer is the other
+// form, and nothing is wrong with it.
+const TEXT_OR_POINTER = new Set([
+  "https://gedcom.io/terms/v5.5.1/NOTE-XREF_NOTE",
+]);
+
 const GEDCOM_7_TYPE_PREFIX = "https://gedcom.io/terms/v7/";
 
 const MAX_LISTED_VALUES = 10;
@@ -269,17 +282,10 @@ export class RuleNode {
   getFieldType(tagType: GedcomType): {
     type: FieldType;
     to: GedcomType | undefined;
-    orText?: boolean;
   } {
     const payload = this.scheme.payload[tagType];
     let type: FieldType;
     let to: GedcomType | undefined = undefined;
-    // A 5.5.1 structure whose payload is written either way: `NOTE` carries a
-    // pointer to a NOTE record or the text of the note itself.
-    const orText =
-      typeof payload === "object" && payload !== null && "orText" in payload
-        ? payload.orText === true
-        : false;
     switch (payload?.type) {
       case "Y|<NULL>":
         type = "boolean";
@@ -350,7 +356,7 @@ export class RuleNode {
       default:
         type = "string";
     }
-    return { type, to, orText };
+    return { type, to };
   }
 
   private mayOmitPayload(tagType: GedcomType): boolean {
@@ -665,9 +671,7 @@ export class RuleNode {
           (XREF.value === VOID_POINTER ||
             this.isPointerTarget(tagType, XREF.value));
         const hasChildren = node.children.length !== 0;
-        // Where the payload may be the text instead, anything not written as a
-        // pointer is that alternative rather than a malformed pointer.
-        const isText = fieldType.orText === true && !isXrefExist;
+        const isText = TEXT_OR_POINTER.has(tagType) && !isXrefExist;
         if (
           !isText &&
           ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren))

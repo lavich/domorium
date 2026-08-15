@@ -9,7 +9,8 @@ text` was told to be a pointer to a `NOTE` record, though `NOTE_STRUCTURE` has
   two forms and the text itself is the second. A note that ran to a `CONT` line
   escaped, because the pointer rule stays silent for a structure with children,
   so the report landed only on one-line notes — which every export from
-  MyHeritage, Ancestry and Gramps is full of.
+  MyHeritage, Ancestry and Gramps is full of. The schema still names the pointer
+  form, which is the one with a target to resolve and to complete.
 
 ## 1.8.0 - 2026-08-14
 
