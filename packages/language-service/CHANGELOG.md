@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
-## Unreleased
+## 1.5.0 - 2026-08-15
 
 - **A token is typed by what it is.** A tag is `keyword`, an identifier is
   `variable`, and a payload is `string` — where a tag used to be `string`, an
