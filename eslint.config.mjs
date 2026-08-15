@@ -17,6 +17,7 @@ export default tseslint.config(
       "**/build/**",
       "**/.intellijPlatform/**",
       "**/.worktrees/**",
+      "tmp/**",
       "**/coverage/**",
       "**/.vscode-test-web/**",
     ],

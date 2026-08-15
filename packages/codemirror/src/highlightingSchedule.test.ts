@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import { tags } from "@lezer/highlight";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -55,6 +57,65 @@ describe("highlighting schedule", () => {
     view.destroy();
   });
 
+  // A highlight style answers with the most specific rule and no other, so a
+  // declaration asked for by its modifier alone would arrive uncoloured.
+  it("keeps the tag's own class beside the one its modifier earns", () => {
+    const style = HighlightStyle.define([
+      { tag: tags.variableName, color: "rgb(1, 2, 3)" },
+      { tag: tags.definition(tags.variableName), fontWeight: "600" },
+    ]);
+    const language = new EditorLanguageService();
+    const view = new EditorView({
+      parent: document.body,
+      state: EditorState.create({
+        doc: text,
+        extensions: [
+          ...createGedcomExtensions({
+            actions: { applyWorkspaceEdit: () => true },
+            language,
+            settings: { diagnostics: false },
+          }),
+          ...createStandaloneEditorExtensions(),
+          syntaxHighlighting(style),
+        ],
+      }),
+    });
+
+    const spanOn = (prefix: string) => {
+      const line = [...view.dom.querySelectorAll(".cm-line")].find((element) =>
+        // The indentation hint is a widget, and its text comes first.
+        (element.textContent ?? "").trim().startsWith(prefix),
+      );
+      return [...(line?.querySelectorAll("span") ?? [])].find(
+        (element) => element.textContent === "@I1@",
+      );
+    };
+
+    const declaration = spanOn("0 @I1@");
+    const reference = spanOn("1 HUSB");
+
+    expect(getComputedStyle(declaration!).fontWeight).toBe("600");
+    expect(getComputedStyle(declaration!).color, "and its colour").toBe(
+      "rgb(1, 2, 3)",
+    );
+    expect(getComputedStyle(reference!).fontWeight).not.toBe("600");
+    view.destroy();
+  });
+
+  // `getReferenceHighlightSpecs` still answers; painting them is the host's.
+  it("paints nothing for the identifier under the caret", () => {
+    const language = new EditorLanguageService();
+    const view = editorWith(language, document.body);
+    const declaration = text.indexOf("@I1@");
+
+    view.dispatch({ selection: { anchor: declaration + 1 } });
+
+    expect(
+      view.dom.querySelectorAll("[class*='gedcom-reference']"),
+    ).toHaveLength(0);
+    view.destroy();
+  });
+
   // Deferring the rebuild must not mean dropping what is already painted, or
   // the file would flash grey on every keystroke. The decorations are mapped
   // through the change instead, which is what keeps them on their text.
@@ -98,7 +159,9 @@ describe("highlighting schedule", () => {
       }),
     });
 
-    const decorated = [...view.dom.querySelectorAll(".gedcom-token-declaration")];
+    const decorated = [
+      ...view.dom.querySelectorAll(".gedcom-token-declaration"),
+    ];
 
     expect(decorated.map((node) => node.textContent)).toEqual(["@I1@"]);
     view.destroy();

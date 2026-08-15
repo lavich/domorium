@@ -78,6 +78,71 @@ describe("createGedcomEditor", () => {
     sliceDoc.mockRestore();
   });
 
+  // Each theme was missing the identifier the other one had: the light left a
+  // reference the colour of ordinary text, the dark a declaration.
+  it.each(["light", "dark"] as const)(
+    "tells a declared pointer, a reference and ordinary text apart in the %s theme",
+    (theme) => {
+      const parent = editor({ theme });
+      const view = EditorView.findFromDOM(parent)!;
+      const pointers = [
+        ...parent.querySelectorAll("span.gedcom-token-variable"),
+      ];
+      const declared = "gedcom-token-declaration";
+      const colourOf = (node: Element | null) =>
+        node === null ? null : getComputedStyle(node).color;
+
+      const text = colourOf(view.contentDOM);
+      const declaration = colourOf(
+        pointers.find((span) => span.classList.contains(declared)) ?? null,
+      );
+      const reference = colourOf(
+        pointers.find((span) => !span.classList.contains(declared)) ?? null,
+      );
+
+      expect(declaration).not.toBeNull();
+      expect(reference).not.toBeNull();
+      expect(new Set([text, declaration, reference]).size).toBe(3);
+    },
+  );
+
+  // Both themes think an underline says enough about a `link`, which left a
+  // path the colour of the payload it sits in, or of a comment in the dark.
+  it.each(["light", "dark"] as const)(
+    "colours the path of a file apart from a payload and a web address in the %s theme",
+    (theme) => {
+      const parent = editor({
+        theme,
+        initialText: [
+          "0 HEAD",
+          "1 GEDC",
+          "2 VERS 7.0",
+          "0 @O1@ OBJE",
+          "1 FILE media/portrait.png",
+          "0 @R1@ REPO",
+          "1 WWW https://example.org/",
+          "0 TRLR",
+        ].join("\n"),
+      });
+      // A link decorates the payload it names, so the coloured span is the
+      // inner one — the one with nothing inside it.
+      const painted = (content: string) =>
+        [...parent.querySelectorAll("span")]
+          .filter(
+            (span) => span.textContent === content && !span.firstElementChild,
+          )
+          .map((span) => getComputedStyle(span).color);
+
+      const [path] = painted("media/portrait.png");
+      const [address] = painted("https://example.org/");
+      const [payload] = painted("7.0");
+      const [level] = painted("0");
+
+      expect([path, address, payload, level].filter(Boolean)).toHaveLength(4);
+      expect(new Set([path, address, payload, level]).size).toBe(4);
+    },
+  );
+
   // Download reads the text when it needs it, which is the reason the app can
   // stop being handed a copy on every keystroke.
   it("hands out the current text on request", () => {

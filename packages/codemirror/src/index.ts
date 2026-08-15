@@ -1,6 +1,7 @@
 export {
   createGedcomExtensions,
   createStandaloneEditorExtensions,
+  documentLinkTag,
   getDiagnosticActions,
   getDocumentLinkSpecs,
   getReferenceHighlightSpecs,
@@ -18,7 +19,7 @@ export {
   hoveredPointer,
   hoveredPointerField,
   setHoveredPointer,
-} from "./pointerDecoration.js";
+} from "./hoveredPointer.js";
 export {
   offsetToPosition,
   pointerOnRange,

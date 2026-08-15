@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import * as extensionsModule from "./extensions";
 import {
+  documentLinkTag,
   getDiagnosticActions,
   getDocumentLinkSpecs,
   getReferenceHighlightSpecs,
@@ -62,7 +63,18 @@ describe("GEDCOM editor extensions", () => {
     const semanticTokenTag = Reflect.get(extensionsModule, "semanticTokenTag");
     expect(semanticTokenTag(0)).toBe(tags.comment);
     expect(semanticTokenTag(1)).toBe(tags.keyword);
-    expect(semanticTokenTag(2)).toBe(tags.string);
+    expect(semanticTokenTag(2)).toBe(tags.variableName);
+    expect(semanticTokenTag(3)).toBe(tags.string);
+  });
+
+  // A declaration is a modified tag rather than a class of its own, so a host
+  // says what one looks like in the highlight style it already writes.
+  it("modifies the tag of a declaring token", () => {
+    const semanticTokenTag = Reflect.get(extensionsModule, "semanticTokenTag");
+
+    expect(semanticTokenTag(2, 0)).toBe(tags.variableName);
+    expect(semanticTokenTag(2, 1)).toBe(tags.definition(tags.variableName));
+    expect(semanticTokenTag(9, 1)).toBe(null);
   });
 
   it("maps declaration and use highlights at the selection", () => {
@@ -155,5 +167,13 @@ describe("the class a stylesheet reaches a token by", () => {
 
   it("is nothing for a type outside the legend", () => {
     expect(tokenClass(legend.length)).toBeNull();
+  });
+});
+
+describe("the tag a link is coloured by", () => {
+  it("is a url for a web address and a link for a file", () => {
+    expect(documentLinkTag("http")).toBe(tags.url);
+    expect(documentLinkTag("file-relative")).toBe(tags.link);
+    expect(documentLinkTag("file-absolute")).toBe(tags.link);
   });
 });

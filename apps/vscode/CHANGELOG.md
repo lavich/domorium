@@ -2,6 +2,19 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## Unreleased
+
+- **A file is coloured by what each part of a line is.** A tag is a keyword
+  rather than a string, an XREF is an identifier rather than a keyword, and the
+  value of a line — which carried no colour at all — is a string. Every theme
+  colours these four on its own, so a `.ged` file will look different after the
+  update.
+- **An XREF is coloured where it used to be plain.** A theme with no rule of its
+  own for an identifier falls back to a TextMate scope, and the one VS Code
+  reaches for by default is the colour of ordinary text. The extension now names
+  the scopes to fall back to instead, and the record an XREF declares is set
+  apart from a reference to it.
+
 ## 1.5.0
 
 - **A file whose version cannot be checked no longer looks clean.** `2 VERS 4.0`,

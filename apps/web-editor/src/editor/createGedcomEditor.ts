@@ -7,9 +7,11 @@ import {
 } from "@codemirror/search";
 import {
   defaultHighlightStyle,
+  HighlightStyle,
   syntaxHighlighting,
 } from "@codemirror/language";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { color as oneDarkColor, oneDark } from "@codemirror/theme-one-dark";
+import { tags } from "@lezer/highlight";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import {
@@ -196,8 +198,35 @@ export function createGedcomEditor(
   };
 }
 
+/*
+ * What the general-purpose themes leave a GEDCOM document without, in colours
+ * each of them already uses elsewhere: the light has no rule for a plain
+ * `variableName`, the dark paints a definition of one in the ivory it writes
+ * ordinary text in, and both think an underline says enough about a `link`.
+ * Every rule is stated in both, because one that only fills a gap depends on
+ * which of the theme's own rules it meets.
+ */
+const lightTokens = HighlightStyle.define([
+  { tag: tags.variableName, color: "#30a" },
+  { tag: tags.definition(tags.variableName), color: "#00f" },
+  { tag: tags.link, color: "#164", textDecoration: "underline" },
+]);
+
+const darkTokens = HighlightStyle.define([
+  { tag: tags.variableName, color: oneDarkColor.coral },
+  { tag: tags.definition(tags.variableName), color: oneDarkColor.malibu },
+  { tag: tags.link, color: oneDarkColor.whiskey, textDecoration: "underline" },
+]);
+
+// Ours first: the view mounts `styleModule` reversed, so where two highlighters
+// name one token the earlier extension is the one whose colour survives.
 function editorTheme(theme: WebTheme) {
-  return theme === "dark" ? oneDark : syntaxHighlighting(defaultHighlightStyle);
+  return theme === "dark"
+    ? [syntaxHighlighting(darkTokens), oneDark]
+    : [
+        syntaxHighlighting(lightTokens),
+        syntaxHighlighting(defaultHighlightStyle),
+      ];
 }
 
 function renameAtSelection(

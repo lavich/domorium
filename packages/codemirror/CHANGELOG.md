@@ -2,6 +2,43 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## Unreleased
+
+- **A link carries only the class its host's highlight style mints** for `url` or
+  `link`, so both its name and its look are the host's: a web address is
+  `tags.url`, a file is `tags.link`, and `documentLinkTag(kind)` is that mapping,
+  exported beside `semanticTokenTag`. A style that names no class for those tags
+  gets no decoration rather than a `gedcom-link` of ours, and a host that wants a
+  name of its own writes `{ tag, class }` — which is also the only way to reach a
+  state a highlight style cannot state, `:hover` among them.
+- **`variable` maps to `tags.variableName`**, the type the legend now gives an
+  identifier. A tag arrives as `tags.keyword` and a payload as `tags.string`,
+  which is the same mapping as before by name and a different one by meaning —
+  see `@domorium/language-service`.
+- **A declaring token carries a modified tag**, `tags.definition` over the tag its
+  type maps to, so what a declaration looks like is stated in the host's highlight
+  style beside every other colour. `semanticTokenTag(type, modifiers)` is that
+  mapping; the stable `gedcom-token-declaration` class is still applied, as the
+  name the legend gives rather than as a look. The modifier **adds** to the tag
+  rather than replacing it: a highlight style answers with one class per tag — the
+  most specific rule it holds — so a host stating only a weight for
+  `definition(keyword)` keeps the colour it stated for `keyword` underneath.
+- **The occurrences of the identifier under the caret are no longer painted.**
+  `gedcom-reference-read` and `gedcom-reference-write` are gone, and so is the
+  decoration behind them: in a file where a record and the pointers to it sit
+  hundreds of lines apart, the marks were rarely both on screen, and the question
+  they answered is answered better by go to definition and find references.
+  `getReferenceHighlightSpecs` still says where the occurrences are, for a host
+  that wants to mark them, and `getDocumentHighlights` keeps its `kind` — an LSP
+  host renders read and write itself.
+- **The hover tooltip's own `gedcom-hover` class is gone.** CodeMirror already
+  marks a hover tooltip `cm-tooltip-hover`, which is what the base theme sizes
+  and what a host should dress; a second name for the same box said nothing.
+- **The base theme no longer says what a link looks like.** Its two classes
+  outweighed the one a highlight style mints, so a host stating a decoration or
+  a cursor of its own was overridden by the default underneath. The mark is
+  still applied; the whole appearance is the host's.
+
 ## 1.4.0 - 2026-08-14
 
 - **A web address and a file path are marked as links.** Both had been openable
@@ -9,9 +46,7 @@ All notable changes to `@domorium/codemirror` are documented here.
   reader had no way to tell there was something to click. They now carry
   `gedcom-link` and `gedcom-link-<kind>` — `http`, `file-relative`,
   `file-absolute` — underlined by the base theme, which is the one cue the
-  syntax highlighting does not already use. A host that colours them should do
-  it under the pointer rather than always: level, pointer and tag hold every
-  colour a reader has learnt to read, and a fourth competes with them.
+  syntax highlighting does not already use.
 - `getDocumentLinkSpecs(state, language)` answers with the same offsets, for a
   host that wants them.
 - **A token in the editor now carries `gedcom-token-<type>` as well as the class

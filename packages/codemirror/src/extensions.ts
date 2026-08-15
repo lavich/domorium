@@ -220,7 +220,6 @@ function hoverSource(language: EditorLanguageService): Extension {
       pos: offset,
       create() {
         const dom = document.createElement("div");
-        dom.className = "gedcom-hover";
         dom.textContent = hover.contents.value;
         return { dom };
       },
@@ -433,39 +432,25 @@ function documentLinkSpecs(
   });
 }
 
+/** A web address is `url` and a file is `link`; the colour is the host's. */
+export function documentLinkTag(kind: DocumentLinkKind): Tag {
+  return kind === "http" ? tags.url : tags.link;
+}
+
 function buildLinkDecorations(
   view: EditorView,
   service: GedcomLanguageService,
 ): DecorationSet {
+  const { state } = view;
   return Decoration.set(
-    documentLinkSpecs(view.state, service).map((link) =>
-      Decoration.mark({ class: `gedcom-link gedcom-link-${link.kind}` }).range(
-        link.from,
-        link.to,
-      ),
-    ),
+    documentLinkSpecs(state, service).flatMap((link) => {
+      // Nothing to mark the text with means no decoration to add.
+      const themeClass = highlightingFor(state, [documentLinkTag(link.kind)]);
+      return themeClass === null
+        ? []
+        : [Decoration.mark({ class: themeClass }).range(link.from, link.to)];
+    }),
     true,
-  );
-}
-
-function referenceHighlights(language: EditorLanguageService): Extension {
-  return deferredDecorations(
-    language,
-    (view, service) => buildReferenceDecorations(view, service),
-    { onSelectionChange: true },
-  );
-}
-
-function buildReferenceDecorations(
-  view: EditorView,
-  service: GedcomLanguageService,
-): DecorationSet {
-  return Decoration.set(
-    referenceHighlightSpecs(view.state, service).map((highlight) =>
-      Decoration.mark({
-        class: `gedcom-reference-${highlight.kind}`,
-      }).range(highlight.from, highlight.to),
-    ),
   );
 }
 
@@ -506,10 +491,20 @@ function semanticDecorations(
     for (const token of service.getSemanticTokens({ from, to })) {
       // Offsets, not a line and character: CodeMirror addresses everything by
       // offset, and so does the syntax tree the tokens come from.
-      const tag = semanticTokenTag(token.tokenType);
+      // A highlight style answers with one class per tag, so a modifier has to
+      // add to the type rather than replace it — asking only for `definition`
+      // would drop the colour a host stated for the tag underneath.
+      const base = semanticTokenTag(token.tokenType);
+      const modified = semanticTokenTag(token.tokenType, token.tokenModifiers);
+      const styled = [
+        base === null ? null : highlightingFor(state, [base]),
+        modified === null || modified === base
+          ? null
+          : highlightingFor(state, [modified]),
+      ];
       const classes = [
         tokenClass(token.tokenType),
-        tag ? highlightingFor(state, [tag]) : null,
+        ...new Set(styled.filter((value): value is string => value !== null)),
         token.tokenModifiers === 0 ? null : "gedcom-token-declaration",
       ].filter((value): value is string => value !== null);
       const end = Math.min(token.startOffset + token.length, state.doc.length);
@@ -548,12 +543,27 @@ export function tokenClass(tokenType: number): string | null {
   return name === undefined ? null : `gedcom-token-${name}`;
 }
 
-export function semanticTokenTag(tokenType: number): Tag | null {
+export function semanticTokenTag(
+  tokenType: number,
+  tokenModifiers = 0,
+): Tag | null {
+  const tag = tagOfTokenType(tokenType);
+  if (tag === null) {
+    return null;
+  }
+  // `declaration` is the legend's only modifier, and `definition` is what a
+  // highlight style knows it as.
+  return tokenModifiers === 0 ? tag : tags.definition(tag);
+}
+
+function tagOfTokenType(tokenType: number): Tag | null {
   switch (semanticTokenLegend.tokenTypes[tokenType]) {
     case "comment":
       return tags.comment;
     case "keyword":
       return tags.keyword;
+    case "variable":
+      return tags.variableName;
     case "string":
       return tags.string;
     default:
@@ -586,7 +596,6 @@ export function createGedcomExtensions(
     foldingSource(language),
     navigation(language, options.actions),
     documentLinks(language),
-    referenceHighlights(language),
     semanticFeatures(language, indentationHints),
     gedcomBaseTheme,
   ];
@@ -626,32 +635,8 @@ const gedcomBaseTheme = EditorView.baseTheme({
     overflow: "auto",
     overflowWrap: "anywhere",
   },
-  ".gedcom-reference-read": {
-    backgroundColor: "color-mix(in srgb, currentColor 12%, transparent)",
-  },
-  ".gedcom-reference-write": {
-    backgroundColor: "color-mix(in srgb, currentColor 18%, transparent)",
-    textDecoration: "underline",
-    textDecorationSkipInk: "none",
-  },
   ".gedcom-indent-hint": {
     opacity: "0.55",
     pointerEvents: "none",
-  },
-  // Colour is the host's: it knows what a link looks like everywhere else it
-  // shows one.
-  ".gedcom-link": {
-    textDecoration: "underline",
-    textDecorationSkipInk: "none",
-    cursor: "pointer",
-  },
-  /**
-   * The tail of @ crosses an underline, and skipping ink drops it under both
-   * delimiters of every pointer — which is the whole of what is marked here.
-   */
-  ".gedcom-hovered-pointer": {
-    textDecoration: "underline",
-    textDecorationSkipInk: "none",
-    cursor: "pointer",
   },
 });

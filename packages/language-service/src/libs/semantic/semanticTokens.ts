@@ -5,6 +5,7 @@ import { rootsInRange } from "../range/rootsInRange";
 const SemanticTokenTypes = {
   comment: "comment",
   keyword: "keyword",
+  variable: "variable",
   string: "string",
 } as const;
 
@@ -29,6 +30,7 @@ export interface SemanticToken {
 export const tokenTypes = [
   SemanticTokenTypes.comment,
   SemanticTokenTypes.keyword,
+  SemanticTokenTypes.variable,
   SemanticTokenTypes.string,
 ] as const;
 
@@ -42,11 +44,15 @@ export const legend = {
 const tokenTypeMap = new Map(tokenTypes.map((t, i) => [t, i]));
 const tokenModifierMap = new Map(tokenModifiers.map((m, i) => [m, i]));
 
+// A tag is the keyword of its line, an identifier a variable and a payload the
+// value, which is what a host's theme already holds a colour for. The level is a
+// comment for want of a truer name: it is structure, not content.
 const tokenMap: Partial<Record<TokenNames, (typeof tokenTypes)[number]>> = {
   LEVEL: SemanticTokenTypes.comment,
-  POINTER: SemanticTokenTypes.keyword,
-  XREF: SemanticTokenTypes.keyword,
-  TAG: SemanticTokenTypes.string,
+  POINTER: SemanticTokenTypes.variable,
+  XREF: SemanticTokenTypes.variable,
+  TAG: SemanticTokenTypes.keyword,
+  VALUE: SemanticTokenTypes.string,
 };
 
 const tokenModifiersMap: Record<TokenNames, (typeof tokenModifiers)[number][]> =
