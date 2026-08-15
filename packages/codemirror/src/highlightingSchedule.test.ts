@@ -57,9 +57,8 @@ describe("highlighting schedule", () => {
     view.destroy();
   });
 
-  // A highlight style answers with the most specific rule it has and no other,
-  // so a declaration asked for by its modifier alone would arrive without the
-  // colour the host stated for a pointer.
+  // A highlight style answers with the most specific rule and no other, so a
+  // declaration asked for by its modifier alone would arrive uncoloured.
   it("keeps the tag's own class beside the one its modifier earns", () => {
     const style = HighlightStyle.define([
       { tag: tags.variableName, color: "rgb(1, 2, 3)" },
@@ -103,9 +102,7 @@ describe("highlighting schedule", () => {
     view.destroy();
   });
 
-  // The occurrences of the identifier under the caret are answered by
-  // `getReferenceHighlightSpecs` and painted by nobody: a host that wants them
-  // marked says so itself.
+  // `getReferenceHighlightSpecs` still answers; painting them is the host's.
   it("paints nothing for the identifier under the caret", () => {
     const language = new EditorLanguageService();
     const view = editorWith(language, document.body);

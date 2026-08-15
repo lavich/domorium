@@ -44,6 +44,21 @@
           "dark": "images/fileIcon.svg"
         }
       }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "gedcom",
+        "scopes": {
+          "variable": [
+            "entity.name.type",
+            "variable.other.constant"
+          ],
+          "variable.declaration": [
+            "entity.name.function",
+            "entity.name.type"
+          ]
+        }
+      }
     ]
   },
   "vsce": {

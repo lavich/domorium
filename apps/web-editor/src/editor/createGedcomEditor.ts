@@ -199,22 +199,12 @@ export function createGedcomEditor(
 }
 
 /*
- * What the general-purpose themes leave a GEDCOM document without, said in the
- * colours each of them already uses elsewhere.
- *
- * A pointer is a `variableName` and a declared one is that tag under
- * `definition`, and neither theme has a rule for the pair: the light states a
- * definition and a local but not the plain tag, and the dark colours `name`,
- * which `variableName` descends from, but paints a definition of it in the ivory
- * it writes ordinary text in. So one left a reference uncoloured and the other a
- * declaration. Both are stated here rather than one gap patched in each, because
- * a rule that only fills a gap depends on which of the theme's own rules it
- * meets.
- *
- * A `link` is the path of a file beside the document. To either theme that tag
- * means a link inside prose, which they think an underline says enough about:
- * the light gives it no colour at all and the dark the grey it writes comments
- * in, and a path came out looking like the payload it is or like a comment.
+ * What the general-purpose themes leave a GEDCOM document without, in colours
+ * each of them already uses elsewhere: the light has no rule for a plain
+ * `variableName`, the dark paints a definition of one in the ivory it writes
+ * ordinary text in, and both think an underline says enough about a `link`.
+ * Every rule is stated in both, because one that only fills a gap depends on
+ * which of the theme's own rules it meets.
  */
 const lightTokens = HighlightStyle.define([
   { tag: tags.variableName, color: "#30a" },
@@ -228,11 +218,8 @@ const darkTokens = HighlightStyle.define([
   { tag: tags.link, color: oneDarkColor.whiskey, textDecoration: "underline" },
 ]);
 
-/*
- * Ours first: the view mounts `styleModule` as the facet's values reversed, so
- * where two highlighters name the same token the earlier extension is the one
- * whose colour survives.
- */
+// Ours first: the view mounts `styleModule` reversed, so where two highlighters
+// name one token the earlier extension is the one whose colour survives.
 function editorTheme(theme: WebTheme) {
   return theme === "dark"
     ? [syntaxHighlighting(darkTokens), oneDark]

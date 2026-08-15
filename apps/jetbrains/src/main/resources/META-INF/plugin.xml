@@ -166,5 +166,11 @@
         <fileNamePatternMapping patterns="*.ged;*.gedcom"
                                 serverId="gedcomServer"
                                 languageId="gedcom"/>
+
+        <!-- LSP4IJ paints a `variable` with the key of a local variable, which
+             no bundled scheme colours, so every pointer arrived the colour of
+             ordinary text. See GedcomSemanticTokensColorsProvider. -->
+        <semanticTokensColorsProvider serverId="gedcomServer"
+                                      class="domorium.jetbrains.GedcomSemanticTokensColorsProvider"/>
     </extensions>
 </idea-plugin>

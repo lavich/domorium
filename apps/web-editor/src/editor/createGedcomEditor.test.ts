@@ -78,9 +78,8 @@ describe("createGedcomEditor", () => {
     sliceDoc.mockRestore();
   });
 
-  // Neither general-purpose theme has a rule for both identifiers, and each was
-  // missing the other one: the light left a reference the colour of ordinary
-  // text, the dark a declaration.
+  // Each theme was missing the identifier the other one had: the light left a
+  // reference the colour of ordinary text, the dark a declaration.
   it.each(["light", "dark"] as const)(
     "tells a declared pointer, a reference and ordinary text apart in the %s theme",
     (theme) => {
@@ -107,9 +106,8 @@ describe("createGedcomEditor", () => {
     },
   );
 
-  // Both themes read `link` as a link inside prose and think an underline says
-  // enough about one, which left the path of a file the colour of the payload
-  // it sits in — or, in the dark, the colour of a comment.
+  // Both themes think an underline says enough about a `link`, which left a
+  // path the colour of the payload it sits in, or of a comment in the dark.
   it.each(["light", "dark"] as const)(
     "colours the path of a file apart from a payload and a web address in the %s theme",
     (theme) => {
@@ -126,8 +124,8 @@ describe("createGedcomEditor", () => {
           "0 TRLR",
         ].join("\n"),
       });
-      // A link decorates the payload it names, so the coloured one is the span
-      // inside the token, which is the one with nothing inside it.
+      // A link decorates the payload it names, so the coloured span is the
+      // inner one — the one with nothing inside it.
       const painted = (content: string) =>
         [...parent.querySelectorAll("span")]
           .filter(

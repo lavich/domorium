@@ -432,11 +432,7 @@ function documentLinkSpecs(
   });
 }
 
-/**
- * A web address is `url` and a file is `link`, which is what a host already
- * says about the two in its highlight style: colour belongs there, beside
- * every other colour it states, rather than in a rule of its own.
- */
+/** A web address is `url` and a file is `link`; the colour is the host's. */
 export function documentLinkTag(kind: DocumentLinkKind): Tag {
   return kind === "http" ? tags.url : tags.link;
 }
@@ -448,8 +444,7 @@ function buildLinkDecorations(
   const { state } = view;
   return Decoration.set(
     documentLinkSpecs(state, service).flatMap((link) => {
-      // The host's highlight style names the class and says what it looks like;
-      // with nothing to mark the text with, there is no decoration to add.
+      // Nothing to mark the text with means no decoration to add.
       const themeClass = highlightingFor(state, [documentLinkTag(link.kind)]);
       return themeClass === null
         ? []
@@ -496,10 +491,9 @@ function semanticDecorations(
     for (const token of service.getSemanticTokens({ from, to })) {
       // Offsets, not a line and character: CodeMirror addresses everything by
       // offset, and so does the syntax tree the tokens come from.
-      // A modifier adds to what the type says rather than replacing it: a
-      // highlight style answers with one class per tag, the most specific rule
-      // it has, so asking only for `definition` would drop the colour a host
-      // stated for the tag underneath.
+      // A highlight style answers with one class per tag, so a modifier has to
+      // add to the type rather than replace it — asking only for `definition`
+      // would drop the colour a host stated for the tag underneath.
       const base = semanticTokenTag(token.tokenType);
       const modified = semanticTokenTag(token.tokenType, token.tokenModifiers);
       const styled = [
@@ -557,8 +551,8 @@ export function semanticTokenTag(
   if (tag === null) {
     return null;
   }
-  // `declaration` is the only modifier the legend carries, and `definition` is
-  // what a highlight style already knows that to mean.
+  // `declaration` is the legend's only modifier, and `definition` is what a
+  // highlight style knows it as.
   return tokenModifiers === 0 ? tag : tags.definition(tag);
 }
 
