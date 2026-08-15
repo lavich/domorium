@@ -1069,10 +1069,8 @@ describe("payload for VERS 7", () => {
 });
 
 describe("payload for VERS 5.5.1", () => {
-  // NOTE_STRUCTURE has two forms in 5.5.1: a pointer to a NOTE record, or the
-  // text itself. Only the first was modelled, so a one-line note was reported
-  // as needing a pointer — while one carrying a CONT escaped, because the
-  // pointer rule stays silent for a structure that has children.
+  // A one-line note and a citation carrying its description were each reported
+  // as a malformed pointer.
   describe("rule pointer or text", () => {
     const noteIn = (document: string) => {
       const { nodes, pointers } = astBuilder(document);

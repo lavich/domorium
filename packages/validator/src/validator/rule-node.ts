@@ -64,16 +64,12 @@ const OMITTABLE_PAYLOADS = new Set([
   "https://gedcom.io/terms/v7/type-Age",
 ]);
 
-// 5.5.1 writes some structures two ways. A note carries either a pointer to a
-// NOTE record or the text itself, and a citation either a pointer to a SOUR
-// record or the description, for "systems not using source records":
+// 5.5.1 writes these two ways, and the schema names only the pointer form:
 //
 //   n NOTE @<XREF:NOTE>@   |  n NOTE [SUBMITTER_TEXT | NULL]
 //   n SOUR @<XREF:SOUR>@   |  n SOUR <SOURCE_DESCRIPTION>
 //
-// The schema names the pointer form, which is the one with a target to resolve
-// and to offer as a completion; a payload not written as a pointer is the other
-// form, and nothing is wrong with it. See docs/adr/0016.
+// See docs/adr/0010-two-form-structures-in-5-5-1.md.
 const TEXT_OR_POINTER = new Set([
   "https://gedcom.io/terms/v5.5.1/NOTE-XREF_NOTE",
   "https://gedcom.io/terms/v5.5.1/SOUR-XREF_SOUR",
