@@ -2,6 +2,14 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## 1.5.1 - 2026-08-15
+
+- **The editor installs again beside a host that carries its own CodeMirror.**
+  The peer range for `@codemirror/view` had been narrowed to `^6.43.8` by a
+  dependency bump, and nothing in the package needs a version that new. A host
+  pinned to what it ships — an Obsidian plugin is pinned to 6.38.6 — could not
+  resolve 1.4.0 or 1.5.0 at all.
+
 ## 1.5.0 - 2026-08-15
 
 - **A link carries only the class its host's highlight style mints** for `url` or
