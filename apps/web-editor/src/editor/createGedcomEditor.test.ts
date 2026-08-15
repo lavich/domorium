@@ -107,6 +107,44 @@ describe("createGedcomEditor", () => {
     },
   );
 
+  // Both themes read `link` as a link inside prose and think an underline says
+  // enough about one, which left the path of a file the colour of the payload
+  // it sits in — or, in the dark, the colour of a comment.
+  it.each(["light", "dark"] as const)(
+    "colours the path of a file apart from a payload and a web address in the %s theme",
+    (theme) => {
+      const parent = editor({
+        theme,
+        initialText: [
+          "0 HEAD",
+          "1 GEDC",
+          "2 VERS 7.0",
+          "0 @O1@ OBJE",
+          "1 FILE media/portrait.png",
+          "0 @R1@ REPO",
+          "1 WWW https://example.org/",
+          "0 TRLR",
+        ].join("\n"),
+      });
+      // A link decorates the payload it names, so the coloured one is the span
+      // inside the token, which is the one with nothing inside it.
+      const painted = (content: string) =>
+        [...parent.querySelectorAll("span")]
+          .filter(
+            (span) => span.textContent === content && !span.firstElementChild,
+          )
+          .map((span) => getComputedStyle(span).color);
+
+      const [path] = painted("media/portrait.png");
+      const [address] = painted("https://example.org/");
+      const [payload] = painted("7.0");
+      const [level] = painted("0");
+
+      expect([path, address, payload, level].filter(Boolean)).toHaveLength(4);
+      expect(new Set([path, address, payload, level]).size).toBe(4);
+    },
+  );
+
   // Download reads the text when it needs it, which is the reason the app can
   // stop being handed a copy on every keystroke.
   it("hands out the current text on request", () => {

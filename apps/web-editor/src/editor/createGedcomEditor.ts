@@ -199,27 +199,33 @@ export function createGedcomEditor(
 }
 
 /*
- * A pointer is a `variableName` and a declared one is that tag under
- * `definition`, and neither general-purpose theme has a rule for the pair: the
- * light one states a definition and a local but not the plain tag, and the dark
- * one colours `name`, which `variableName` descends from, but paints a
- * definition of it in the ivory it writes ordinary text in. So one left a
- * reference uncoloured and the other a declaration.
+ * What the general-purpose themes leave a GEDCOM document without, said in the
+ * colours each of them already uses elsewhere.
  *
- * Both identifiers are stated here rather than one gap patched in each, because
+ * A pointer is a `variableName` and a declared one is that tag under
+ * `definition`, and neither theme has a rule for the pair: the light states a
+ * definition and a local but not the plain tag, and the dark colours `name`,
+ * which `variableName` descends from, but paints a definition of it in the ivory
+ * it writes ordinary text in. So one left a reference uncoloured and the other a
+ * declaration. Both are stated here rather than one gap patched in each, because
  * a rule that only fills a gap depends on which of the theme's own rules it
- * meets. The values are the ones the theme in question already uses: a local
- * and a definition in the light, and a name and a name defined as a function in
- * the dark.
+ * meets.
+ *
+ * A `link` is the path of a file beside the document. To either theme that tag
+ * means a link inside prose, which they think an underline says enough about:
+ * the light gives it no colour at all and the dark the grey it writes comments
+ * in, and a path came out looking like the payload it is or like a comment.
  */
-const lightIdentifiers = HighlightStyle.define([
+const lightTokens = HighlightStyle.define([
   { tag: tags.variableName, color: "#30a" },
   { tag: tags.definition(tags.variableName), color: "#00f" },
+  { tag: tags.link, color: "#164", textDecoration: "underline" },
 ]);
 
-const darkIdentifiers = HighlightStyle.define([
+const darkTokens = HighlightStyle.define([
   { tag: tags.variableName, color: oneDarkColor.coral },
   { tag: tags.definition(tags.variableName), color: oneDarkColor.malibu },
+  { tag: tags.link, color: oneDarkColor.whiskey, textDecoration: "underline" },
 ]);
 
 /*
@@ -229,9 +235,9 @@ const darkIdentifiers = HighlightStyle.define([
  */
 function editorTheme(theme: WebTheme) {
   return theme === "dark"
-    ? [syntaxHighlighting(darkIdentifiers), oneDark]
+    ? [syntaxHighlighting(darkTokens), oneDark]
     : [
-        syntaxHighlighting(lightIdentifiers),
+        syntaxHighlighting(lightTokens),
         syntaxHighlighting(defaultHighlightStyle),
       ];
 }
