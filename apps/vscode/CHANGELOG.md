@@ -2,7 +2,7 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
-## Unreleased
+## 1.6.0
 
 - **A file is coloured by what each part of a line is.** A tag is a keyword
   rather than a string, an XREF is an identifier rather than a keyword, and the

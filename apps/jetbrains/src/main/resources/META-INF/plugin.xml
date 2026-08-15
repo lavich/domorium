@@ -31,6 +31,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.6.0</h2>
+    <ul>
+      <li><b>A file is coloured by what each part of a line is.</b> A tag reads as a keyword rather than a string, an XREF as an identifier rather than a keyword, and the value of a line &mdash; which carried no colour at all &mdash; as a string. A <code>.ged</code> file will look different after the update</li>
+      <li><b>An XREF is coloured, and the record it declares is set apart from a reference to it.</b> Both arrived in the colour of ordinary text: the colour scheme has no rule for the key an identifier fell back to, and there is no key at all for a declared one. The plugin now names two keys of the scheme, so the colours are still the ones you chose</li>
+    </ul>
+
     <h2>1.5.1</h2>
     <ul>
       <li>The same plugin as 1.5.0, which never became installable. Everything below is what this release brings</li>
