@@ -1069,6 +1069,89 @@ describe("payload for VERS 7", () => {
 });
 
 describe("payload for VERS 5.5.1", () => {
+  // A one-line note and a citation carrying its description were each reported
+  // as a malformed pointer.
+  describe("rule pointer or text", () => {
+    const noteIn = (document: string) => {
+      const { nodes, pointers } = astBuilder(document);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      return ruleEngine.validate(nodes[1].children[0]);
+    };
+
+    test("should pass NOTE carrying the text itself", async () => {
+      expect(
+        noteIn(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NOTE plain text here
+0 TRLR
+`),
+      ).toEqual([]);
+    });
+
+    test("should pass NOTE with no payload at all", async () => {
+      expect(
+        noteIn(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NOTE
+0 TRLR
+`),
+      ).toEqual([]);
+    });
+
+    test("should pass NOTE pointing at a record that exists", async () => {
+      expect(
+        noteIn(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NOTE @N1@
+0 @N1@ NOTE text
+0 TRLR
+`),
+      ).toEqual([]);
+    });
+
+    test("should pass SOUR carrying the description itself", async () => {
+      expect(
+        noteIn(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 SOUR Parish register, Warsaw, vol 3 p 41
+0 TRLR
+`),
+      ).toEqual([]);
+    });
+
+    test("should report SOUR pointing at a record that does not exist", async () => {
+      expect(
+        noteIn(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 SOUR @S9@
+0 TRLR
+`),
+      ).toMatchObject([{ code: "unresolved-xref" }]);
+    });
+
+    test("should report NOTE pointing at a record that does not exist", async () => {
+      expect(
+        noteIn(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NOTE @N9@
+0 TRLR
+`),
+      ).toMatchObject([{ code: "unresolved-xref" }]);
+    });
+  });
+
   describe("rule Y|NULL", () => {
     test("should pass MARR with Y", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD

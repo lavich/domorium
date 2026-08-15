@@ -21,6 +21,7 @@ number.
 | [0007](0007-present-editor-products-as-gedcom.md)   | Present editor products as GEDCOM                          | Accepted |
 | [0008](0008-extension-tag-validation.md)            | Accept extension tags and leave their subtrees unvalidated | Accepted |
 | [0009](0009-gedcom-version-resolution.md)           | Resolve the GEDCOM version by longest match                | Accepted |
+| [0010](0010-two-form-structures-in-5-5-1.md)        | Model a 5.5.1 structure written two ways as one structure  | Accepted |
 
 ## What belongs in an ADR
 

@@ -64,6 +64,17 @@ const OMITTABLE_PAYLOADS = new Set([
   "https://gedcom.io/terms/v7/type-Age",
 ]);
 
+// 5.5.1 writes these two ways, and the schema names only the pointer form:
+//
+//   n NOTE @<XREF:NOTE>@   |  n NOTE [SUBMITTER_TEXT | NULL]
+//   n SOUR @<XREF:SOUR>@   |  n SOUR <SOURCE_DESCRIPTION>
+//
+// See docs/adr/0010-two-form-structures-in-5-5-1.md.
+const TEXT_OR_POINTER = new Set([
+  "https://gedcom.io/terms/v5.5.1/NOTE-XREF_NOTE",
+  "https://gedcom.io/terms/v5.5.1/SOUR-XREF_SOUR",
+]);
+
 const GEDCOM_7_TYPE_PREFIX = "https://gedcom.io/terms/v7/";
 
 const MAX_LISTED_VALUES = 10;
@@ -658,7 +669,11 @@ export class RuleNode {
           (XREF.value === VOID_POINTER ||
             this.isPointerTarget(tagType, XREF.value));
         const hasChildren = node.children.length !== 0;
-        if ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren)) {
+        const isText = TEXT_OR_POINTER.has(tagType) && !isXrefExist;
+        if (
+          !isText &&
+          ((isXrefExist && !isXrefValid) || (!isXrefExist && !hasChildren))
+        ) {
           const targetTag = fieldType.to
             ? this.scheme.tag[fieldType.to]
             : undefined;
