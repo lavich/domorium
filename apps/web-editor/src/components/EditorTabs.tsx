@@ -51,9 +51,10 @@ export function EditorTabs({
                 // The line variant marks the tab in front five pixels below the
                 // tab, which is outside this row: the mark belongs inside it,
                 // where the strip cannot clip it away.
-                // The variant paints every tab transparent from the list above, so
-                // the raised look of the tab in front has to say it means it.
-                "after:hidden data-active:border-b-primary data-active:bg-background!",
+                // The variant paints the tab in front transparent from the list
+                // above — and in the dark theme its borders too — so both the mark
+                // and the raised look have to say they mean it.
+                "after:hidden data-active:border-b-primary! data-active:bg-background!",
               )}
             >
               <KindIcon kind={file.kind} />
