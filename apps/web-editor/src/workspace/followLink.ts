@@ -12,9 +12,8 @@ export type FollowedLink =
   | { kind: "refused"; message: string };
 
 /**
- * What following a link in a document should do. The kind comes from the
- * language service, which decided what the payload is; the app adds the one
- * thing only it knows — the folder the path has to stay inside.
+ * What following a link should do. The language service decided what the payload
+ * is; the app adds the one thing only it knows — the folder to stay inside.
  */
 export function followLink(
   link: { kind: DocumentLinkKind; targetText: string },

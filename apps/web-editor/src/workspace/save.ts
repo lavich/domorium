@@ -23,10 +23,6 @@ export function decodedFaithfully(text: string): boolean {
   return declared === null || declared === "UTF-8" || declared === "UTF8";
 }
 
-/**
- * Saving, as a decision made away from the components: which of the four things
- * happens, and what the reader is told when none of them writes.
- */
 export async function save(
   file: OpenFile,
   text: string,
@@ -52,8 +48,7 @@ export async function save(
   }
   try {
     await gateway.writeText(file.path, text);
-    // A workspace that cannot be written gives the reader a copy instead, and
-    // saying "written" of a download would be a lie about where the file is.
+    // Saying "written" of a download would be a lie about where the file is.
     return gateway.writable
       ? { kind: "written", path: file.path }
       : { kind: "downloaded", name: file.name };
@@ -72,9 +67,8 @@ export async function save(
 }
 
 /**
- * Whether the reader should be offered a save at all, and of which sort. Saving
- * needs somewhere the document came from; saving as needs only the browser's save
- * dialog, which asks for the folder itself.
+ * Saving needs somewhere the document came from; saving as needs only the dialog,
+ * which asks for the folder itself.
  */
 export function saveAvailability(
   file: OpenFile | null,

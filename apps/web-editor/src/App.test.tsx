@@ -215,10 +215,7 @@ describe("App", () => {
   });
 });
 
-/**
- * A stand-in for a granted directory, so the folder path can be walked in a test
- * at all: jsdom implements no picker and no file handles.
- */
+/** A stand-in for a granted directory: jsdom has no picker and no file handles. */
 function grantFolder(
   tree: Record<string, string>,
   permission: "granted" | "denied" = "granted",
@@ -277,8 +274,7 @@ function grantFolder(
 
   /**
    * A file the reader picks in the save dialog. `inside` is what the platform
-   * answers when asked whether that file sits under the granted folder — a handle
-   * carries no path, so only the platform can say.
+   * answers when asked whether it sits under the granted folder.
    */
   const chooseInSaveDialog = (name: string, inside: string[] | null) => {
     const handle = {
@@ -316,10 +312,9 @@ function typeIntoEditor(extra: string) {
 }
 
 describe("a granted folder", () => {
-  // The explorer and the problems panel are shown on a wide window only, and the
-  // suite above deliberately runs narrow. Answering `true` to every query is not
-  // the same thing: a component asking `(pointer: coarse)` would then believe it
-  // is on a touch screen and stop opening its menu on a click.
+  // The panels are shown on a wide window only. Answering `true` to every query
+  // instead would tell a component asking `(pointer: coarse)` that this is a touch
+  // screen, and it would stop opening its menu on a click.
   beforeEach(() =>
     vi.stubGlobal(
       "matchMedia",
@@ -395,8 +390,7 @@ describe("a granted folder", () => {
     await userEvent.click(screen.getByLabelText("Open a folder"));
     await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
     await userEvent.click(screen.getByText("tree.ged"));
-    // The editor is remounted for the file just opened, so typing before that
-    // lands goes into an editor about to be replaced.
+    // Typing before the remount lands goes into an editor about to be replaced.
     await screen.findByRole("tab", { name: /tree\.ged/ });
     await waitFor(() =>
       expect(
@@ -404,9 +398,8 @@ describe("a granted folder", () => {
       ).toContain("0 TRLR"),
     );
 
-    // `userEvent.type` has to click first, and its pointer checks find nothing
-    // clickable in this layout under jsdom. The subject here is saving, so the
-    // edit arrives as the change event the editor would have raised.
+    // `userEvent.type` clicks first, and its pointer checks find nothing clickable
+    // in this layout under jsdom.
     typeIntoEditor("0 NOTE typed");
     await waitFor(() =>
       expect(screen.getByLabelText("Unsaved changes")).toBeTruthy(),
@@ -494,10 +487,7 @@ describe("a granted folder", () => {
     expect(screen.getByLabelText("Unsaved changes")).toBeTruthy();
   });
 
-  /**
-   * Opening the folder and the document in it, with the wait the remount needs:
-   * every question about unsaved work starts from an edited document in a folder.
-   */
+  /** Every question about unsaved work starts from an edited document in a folder. */
   async function editTreeInFolder(user: ReturnType<typeof userEvent.setup>) {
     render(<App />);
     await screen.findByLabelText("GEDCOM editor");
@@ -516,8 +506,8 @@ describe("a granted folder", () => {
     );
   }
 
-  // The editor is one document at a time: without keeping the text of the tab
-  // being left, coming back to it would show the file on disk instead.
+  // The editor is one document at a time, so the tab left behind loses its text
+  // unless something keeps it.
   it("keeps what was typed when the reader reads another file and comes back", async () => {
     const user = userEvent.setup();
     folder();

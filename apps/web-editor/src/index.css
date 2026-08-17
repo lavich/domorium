@@ -103,12 +103,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  /*
-   * The same hue as the light theme's #4648d4, lifted for a near-black ground:
-   * 7.8:1 against the background it marks on, and 7:1 against the dark text a
-   * button lays over it. The brand blue itself reaches only 2.6:1 here, which is
-   * why the tab in front and the unsaved dot were left neutral grey before.
-   */
+  /* The primary hue, lifted until it carries on a near-black ground. */
   --primary: oklch(0.72 0.15 271.6);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
@@ -136,7 +131,6 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* A strip that scrolls sideways and wants no scrollbar drawn over its one row. */
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {

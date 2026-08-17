@@ -31,9 +31,8 @@ export function EditorTabs({
       className="h-(--shell-tabs-height) shrink-0 gap-0 border-b bg-muted/30"
     >
       {/*
-       * More tabs than room scroll sideways, and nothing scrolls up: the strip is
-       * one row as tall as the band, so a scrollbar drawn inside it would sit over
-       * the line marking the tab in front and shorten the row that carries it.
+       * A scrollbar drawn inside one row this short would sit over the mark on the
+       * tab in front and shorten the row that carries it.
        */}
       <div className="scrollbar-none h-full w-full overflow-x-auto overflow-y-hidden">
         <TabsList
@@ -48,12 +47,10 @@ export function EditorTabs({
               title={file.path}
               className={cn(
                 "h-full gap-2 rounded-none border-r border-b-2 border-b-transparent px-3",
-                // The line variant marks the tab in front five pixels below the
-                // tab, which is outside this row: the mark belongs inside it,
-                // where the strip cannot clip it away.
-                // The variant paints the tab in front transparent from the list
-                // above — and in the dark theme its borders too — so both the mark
-                // and the raised look have to say they mean it.
+                // The line variant marks the tab in front below the tab itself,
+                // which this row clips away, and paints the tab transparent from
+                // the list above — its borders too in the dark theme — so the mark
+                // is drawn here instead and has to say it means it.
                 "after:hidden data-active:border-b-primary! data-active:bg-background!",
               )}
             >
@@ -65,11 +62,7 @@ export function EditorTabs({
                   className="size-1.5 rounded-full bg-primary"
                 />
               ) : null}
-              {/*
-               * A button inside a tab trigger, which a click must not turn into
-               * a tab change: closing the tab beside the one in front should
-               * leave the reader where they were.
-               */}
+              {/* Closing a tab must not also select it. */}
               <span
                 role="button"
                 tabIndex={-1}

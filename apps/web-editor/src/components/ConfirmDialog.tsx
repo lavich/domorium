@@ -13,20 +13,15 @@ import {
 export interface Confirmation {
   title: string;
   description: string;
-  /** What the button that goes ahead says, in the words of what it does. */
   action: string;
   confirm(): void;
-  /**
-   * A second way out, where the reader has more than one — closing an edited tab
-   * can be answered by saving, by discarding, or by not closing it at all.
-   */
+  /** A second way out, where the reader has more than one. */
   alternative?: { action: string; choose(): void };
 }
 
 /**
- * One dialog for every question the editor has to ask before it loses or replaces
- * something. The question is data, so the answer arrives where it was asked from
- * rather than through a flag per case.
+ * One dialog for every question asked before something is lost or replaced. The
+ * question is data, so the answer arrives where it was asked from.
  */
 export function ConfirmDialog({
   confirmation,

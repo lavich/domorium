@@ -143,8 +143,8 @@ describe("what counts as unsaved", () => {
     expect(state.files.every((file) => !file.modified)).toBe(true);
   });
 
-  // What the reader typed lives in the editor, and the editor is one document at a
-  // time: the tab being left has to carry its text, or it comes back off the disk.
+  // The editor is one document at a time, so the tab being left has to carry its
+  // text or it comes back off the disk.
   it("keeps the text of a tab without unmarking it or remounting it", () => {
     const state = after(
       [

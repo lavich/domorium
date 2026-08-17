@@ -1,11 +1,7 @@
 /**
  * The mark the project already uses for a GEDCOM file — a pedigree of one box
- * over three — drawn here rather than loaded from `favicon.svg` so it takes the
- * colour around it. The file keeps its own blue, which is right for a browser tab
- * and wrong beside text.
- *
- * Same geometry as `apps/vscode/images/fileIcon.svg`, which is what the
- * extension shows in its own explorer.
+ * over three — drawn rather than loaded from `favicon.svg` so it takes the colour
+ * around it. Same geometry as `apps/vscode/images/fileIcon.svg`.
  */
 export function GedcomFileIcon({ className }: { className?: string }) {
   return (

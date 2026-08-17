@@ -1,20 +1,15 @@
 /**
- * Everything the editor needs from a file system, and nothing about which one.
- *
- * A granted folder and a single chosen file are two implementations of this,
- * which is what keeps the unsupported-browser path a case rather than a branch
- * through the components — and what lets the tests run against a tree in memory,
- * since jsdom implements no part of the File System Access API.
+ * Everything the editor needs from a file system, and nothing about which one: a
+ * browser without the File System Access API is another implementation rather
+ * than a branch through the components, and jsdom, which has none of it, can be
+ * given a tree in memory.
  */
 export interface FileGateway {
-  /** What the workspace is called, for the explorer's header. */
   readonly name: string;
-  /** Whether this gateway can write at all; a single chosen file cannot. */
   readonly writable: boolean;
   /**
-   * Whether the workspace holds more than the file that was opened. A single
-   * chosen file and the demo do not, so a path beside the document reaches
-   * nothing there however well it resolves.
+   * Whether the workspace holds more than the file that was opened: where it does
+   * not, a path beside the document reaches nothing however well it resolves.
    */
   readonly folder: boolean;
   list(path: string): Promise<DirectoryEntry[]>;
@@ -31,7 +26,6 @@ export interface DirectoryEntry {
   kind: "file" | "directory";
 }
 
-/** A path that leaves the workspace, or names it absolutely, reaches nothing. */
 export class OutsideWorkspaceError extends Error {
   constructor(readonly path: string) {
     super(`${path} lies outside the folder you granted`);
@@ -54,10 +48,9 @@ export class NotWritableError extends Error {
 }
 
 /**
- * Resolves a path against a directory inside the workspace, refusing anything
- * that climbs out of it or names the file system's own root. Every gateway
- * resolves through this: the root is the only thing an app knows and a package
- * cannot.
+ * Resolves a path against a directory inside the workspace, refusing anything that
+ * climbs out of it or names the file system's own root. Every gateway resolves
+ * through this.
  */
 export function resolveInWorkspace(
   baseDirectory: string,

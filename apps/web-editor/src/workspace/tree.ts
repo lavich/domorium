@@ -9,10 +9,9 @@ export interface TreeNode extends DirectoryEntry {
 }
 
 /**
- * The explorer's rows: a flat list, because that is what a list renders, with
- * the depth carried on each row. A directory is read when it is expanded and
- * never before — a folder of thousands of files should cost what the reader
- * opens, not what it holds.
+ * The explorer's rows, flat, with the depth on each. A directory is read when it
+ * is expanded and never before: a folder should cost what the reader opens, not
+ * what it holds.
  */
 export async function treeRows(
   gateway: FileGateway,
@@ -39,7 +38,6 @@ export async function treeRows(
   return rows;
 }
 
-/** Adds or removes a directory from the set of open ones, leaving the rest. */
 export function toggled(
   expanded: ReadonlySet<string>,
   path: string,

@@ -7,9 +7,8 @@ import {
 } from "./fileGateway";
 
 /**
- * The File System Access API, and nothing else. Every call the editor makes into
- * the browser is here, so the surface a test cannot reach stays this small: five
- * methods, no decisions.
+ * The File System Access API, and nothing else: every call the editor makes into
+ * the browser is here, so the surface no test can reach stays this small.
  */
 export function createFolderGateway(
   root: FileSystemDirectoryHandle,
@@ -121,10 +120,7 @@ export function pickFolder(): Promise<FileSystemDirectoryHandle> {
   return browser.showDirectoryPicker({ mode: "readwrite" });
 }
 
-/**
- * The browser's save dialog: the reader picks the folder and the name, and the
- * warning about replacing something is the browser's to give.
- */
+/** The browser's save dialog, which also owns the warning about replacing a file. */
 export function pickSaveFile(
   suggestedName: string,
 ): Promise<FileSystemFileHandle> {
@@ -146,9 +142,8 @@ export function pickSaveFile(
 }
 
 /**
- * Where a chosen file sits inside the granted folder, if it does at all. The
- * platform answers this — a handle carries no path — and the answer decides
- * whether the session can continue against it or the copy simply went elsewhere.
+ * Where a chosen file sits inside the granted folder, if it does at all. Only the
+ * platform can answer: a handle carries no path.
  */
 export async function pathWithin(
   root: FileSystemDirectoryHandle,
@@ -182,7 +177,6 @@ export function savePickerAvailable(
   return typeof browser.showSaveFilePicker === "function";
 }
 
-/** Whether folders can be granted at all, asked once and not of a component. */
 export function folderAccessAvailable(
   browser: Pick<Window, never> & { showDirectoryPicker?: unknown } = window,
 ): boolean {

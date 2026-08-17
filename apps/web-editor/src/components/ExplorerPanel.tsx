@@ -130,8 +130,7 @@ function Row({
       type="button"
       onClick={onSelect}
       aria-current={active ? "true" : undefined}
-      // Indentation is 12px per level, as the design system says, and the name
-      // is text: a file called `<b>x</b>.ged` is a name, not markup.
+      // 12px per level, as the design system says.
       style={{ paddingLeft: `${8 + row.depth * 12}px` }}
       className={cn(
         "flex w-full items-center gap-1.5 py-1 pr-2 text-left text-sm",

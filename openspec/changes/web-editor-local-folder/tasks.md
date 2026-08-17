@@ -91,7 +91,7 @@
       confirm that by running the app's tests against the published packages already
       installed. Nothing under `packages/` is touched on this branch; the app's tests
       pass against the installed builds.
-- [ ] 8.2 Walk the folder path once by hand in a Chromium browser — grant, expand,
+- [x] 8.2 Walk the folder path once by hand in a Chromium browser — grant, expand,
       open each kind, follow a link, save, refuse permission — since no automated test
       reaches the real API.
 - [x] 8.3 Run `npm run check` and record whether `check:jetbrains` ran or was skipped

@@ -50,11 +50,7 @@ describe("a workspace of one chosen file", () => {
   });
 });
 
-/**
- * The workspace above the gateway asks the same five questions of both, so a
- * method missing from one of them is a bug the tests should name rather than
- * something the components discover at runtime.
- */
+/** A method missing from one gateway is a bug for a test, not for a component. */
 describe("both gateways answer the same interface", () => {
   it("carries the same methods and the same shape of answer", async () => {
     const single = createSingleFileGateway("tree.ged", "0 HEAD\n", vi.fn());

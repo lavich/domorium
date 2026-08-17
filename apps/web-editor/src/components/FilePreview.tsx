@@ -5,9 +5,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
 /**
- * A note is shown as the text it is. Rendering it would mean deciding what to do
- * with the HTML and the scripts a note carries — material that came out of
- * someone else's export — so the preview shows the source and executes nothing.
+ * A note is shown as the text it is: rendering it would mean running the HTML and
+ * the scripts that came out of someone else's export.
  */
 export function MarkdownPreview({
   name,
@@ -29,9 +28,8 @@ export function MarkdownPreview({
 }
 
 /**
- * The image is shown through an object URL taken from the file itself, and the
- * URL is released when the preview is replaced or closed: a folder of
- * photographs would otherwise be held in memory for the rest of the session.
+ * The object URL is released when the preview is replaced or closed: a folder of
+ * photographs would otherwise be held for the rest of the session.
  */
 export function ImagePreview({
   name,

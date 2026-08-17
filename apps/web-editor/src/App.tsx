@@ -84,10 +84,7 @@ function AppContent() {
   const file = activeFile(workspace);
   const modified = unsavedFiles(workspace).length > 0;
 
-  /**
-   * Opening a workspace is opening a gateway: the demo, a single chosen file and
-   * a granted folder differ in which one they are and in nothing else.
-   */
+  /** The demo, a single chosen file and a granted folder differ in the gateway only. */
   const openWorkspace = useCallback(async (next: FileGateway, path: string) => {
     gateway.current = next;
     dispatch({
@@ -249,10 +246,9 @@ function AppContent() {
   };
 
   /**
-   * The browser asks where and under what name, and warns about replacing
-   * something itself. Where the file the reader chooses is inside the folder they
-   * granted, the session goes on against it; where it is not, the copy simply
-   * went elsewhere and the document in front is still the one it was.
+   * Where the file the reader chooses lies inside the granted folder the session
+   * goes on against it; where it does not, the copy went elsewhere and the
+   * document in front is still the one it was.
    */
   const saveDocumentAs = async () => {
     const current = gateway.current;
@@ -309,7 +305,6 @@ function AppContent() {
 
   const openFile = () => fileInputRef.current?.click();
 
-  /** Saves the tab that is about to close, and keeps it open where the save is refused. */
   const saveAndClose = async (open: OpenFile, text: string) => {
     const outcome = await save(open, text, gateway.current);
     if (outcome.kind === "refused") {
@@ -352,7 +347,6 @@ function AppContent() {
     });
   };
 
-  /** A granted folder replaces the workspace, so everything unsaved in it goes. */
   const requestFolder = () => {
     const unsaved = unsavedFiles(workspace);
     if (unsaved.length === 0) {
@@ -399,10 +393,7 @@ function AppContent() {
     }
   };
 
-  /**
-   * The editor is one document at a time, so what the reader typed into the tab
-   * being left is kept on the file before another takes its place.
-   */
+  /** The editor is one document at a time: the tab being left has to leave its text. */
   const keepEditorText = () => {
     if (file?.kind === "gedcom" && editorRef.current) {
       dispatch({

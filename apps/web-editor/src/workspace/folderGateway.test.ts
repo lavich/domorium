@@ -4,10 +4,9 @@ import { NoSuchFileError, NotWritableError } from "./fileGateway";
 import { createFolderGateway, folderAccessAvailable } from "./folderGateway";
 
 /**
- * A stand-in for a granted directory: jsdom implements no part of the File
- * System Access API, so this is the only way to drive the adapter at all. It
- * carries the two behaviours the adapter depends on — a `NotFoundError` for a
- * name that is not there, and a permission that can be refused.
+ * A stand-in for a granted directory, jsdom having none of the File System Access
+ * API. It carries the two behaviours the adapter depends on: a `NotFoundError` for
+ * a name that is not there, and a permission that can be refused.
  */
 function grantedFolder(
   tree: Record<string, string>,

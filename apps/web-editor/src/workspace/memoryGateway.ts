@@ -8,10 +8,8 @@ import {
 } from "./fileGateway";
 
 /**
- * A workspace held in a map, for tests and for the demo. It is the only
- * implementation the test suite can drive: jsdom has no File System Access API,
- * so a test against the real one would be a test against a stub of our own
- * making either way — better an honest tree than a pretend handle.
+ * A workspace held in a map, for tests and for the demo: jsdom has no File System
+ * Access API, so this is the only implementation a test can drive.
  */
 export function createMemoryGateway(
   files: Record<string, string | Blob>,
@@ -33,9 +31,8 @@ export function createMemoryGateway(
     writable,
     folder: options.folder ?? true,
 
-    // Every method is async so a refusal arrives as a rejection: these throw
-    // for a path outside the workspace, and a caller holding a promise should
-    // not have to catch an exception as well.
+    // Async throughout so a refusal arrives as a rejection: a caller holding a
+    // promise should not have to catch an exception as well.
     async list(path) {
       return entriesUnder(tree, resolveInWorkspace("", path));
     },

@@ -76,8 +76,7 @@ describe("saving a document", () => {
     });
   });
 
-  // Where no folder was granted the editor gives the file back instead, which is
-  // what it did before a folder could be granted at all.
+  // Where no folder was granted the editor gives the file back instead.
   it("downloads a copy where the workspace cannot be written", async () => {
     const download = vi.fn();
     const gateway = createSingleFileGateway("tree.ged", "0 HEAD\n", download);
