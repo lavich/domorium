@@ -91,7 +91,10 @@ Updated in the same change as the code it describes.
 - A [TODO.md](TODO.md) item completed → mark it there.
   [docs/roadmap.md](docs/roadmap.md) holds directions, not commitments.
 - Plans, designs and notes are temporary and not committed; durable decisions become
-  ADRs. Assistant session memory is not project documentation.
+  ADRs. Assistant session memory is not project documentation. `openspec/changes/` is
+  the exception: a change's proposal, design and tasks are committed with the work it
+  describes and moved under `openspec/changes/archive/` by `openspec archive` once it
+  lands. A decision expensive to reverse still becomes an ADR.
 
 `npm run check:docs` covers the mechanical half — formatting, links, a README per
 package, a changelog entry per release unit, a complete ADR index — but cannot judge
