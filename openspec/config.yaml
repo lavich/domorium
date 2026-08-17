@@ -1,0 +1,46 @@
+schema: spec-driven
+
+context: |
+  GEDCOM tooling for .ged files — VS Code, JetBrains IDEs, Obsidian, the browser.
+  A TypeScript npm workspace monorepo; apps/jetbrains is Kotlin/Gradle.
+
+  Read before proposing anything: AGENTS.md (the canonical instructions for coding
+  assistants), docs/architecture.md (layers and release topology), docs/adr/
+  (decisions already taken). Those files are the source of truth; this block is a
+  summary of them and loses to them on any conflict.
+
+  Dependencies point one way and nothing points back up:
+  validator → language-service → language-server (LSP adapter, internal)
+                               → codemirror (CodeMirror 6)
+  apps/vscode, apps/jetbrains → language-server; apps/web-editor → codemirror
+
+  Invariants — violating one means the change is at the wrong layer, so move the
+  code rather than the boundary:
+  - No package below the adapter layer imports an editor API or an LSP type.
+  - language-service declares its own protocol-shaped types in src/types.ts and
+    never depends on vscode-languageserver-protocol.
+  - Genealogy logic lives in a shared package, never duplicated across apps.
+  - @codemirror/* and @lezer/* stay peer dependencies, single-instanced.
+  - Semantic edits preserve reciprocal GEDCOM pointers and revalidate the result.
+  - Generated files are never hand-edited: dist, .agents/, and
+    packages/validator/src/schemes/g7validation.json. g551validation.json is the
+    exception — GEDCOM 5.5.1 has no generator and that schema is maintained by hand.
+
+  Every releasable unit is versioned and tagged independently, and publishing is
+  irreversible. Never propose creating or pushing a release tag.
+
+  Tests are Vitest, colocated as *.test.ts. Prettier owns formatting and has no
+  config file. Work lands through pull requests, never straight to main.
+
+rules:
+  proposal:
+    - Name the layers the change touches and confirm the dependency direction still points down.
+    - Say which editor hosts are affected, or state explicitly that none are.
+  design:
+    - A decision expensive to reverse needs an ADR from docs/adr/template.md and a row in the index, not just a design note.
+    - Prefer moving behavior down into a shared package over adding it to an app.
+  tasks:
+    - New behavior ships with tests in the same task, not a task of its own at the end.
+    - Documentation lands in the same change as the code: the package README and its usage example, docs/architecture.md when layers move, the changelog when a version changes.
+    - After changing a lower-layer package, rebuild it — consumers import from dist.
+    - The last task is `npm run check`; record whether check:jetbrains ran or was skipped for lack of a JDK.
