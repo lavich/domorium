@@ -3,12 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { NotWritableError } from "./fileGateway";
 import { createMemoryGateway } from "./memoryGateway";
 import { createSingleFileGateway } from "./singleFileGateway";
-import {
-  declaredCharacterSet,
-  save,
-  saveAsName,
-  saveAvailability,
-} from "./save";
+import { declaredCharacterSet, save, saveAvailability } from "./save";
 import type { OpenFile } from "./workspace";
 
 const document = (over: Partial<OpenFile> = {}): OpenFile => ({
@@ -126,8 +121,8 @@ describe("a document the editor did not decode faithfully", () => {
 });
 
 describe("whether saving is offered at all", () => {
-  it("is offered for a GEDCOM document in a workspace and for nothing else", () => {
-    expect(saveAvailability(document(), folder())).toEqual({
+  it("is offered for a GEDCOM document and for nothing else", () => {
+    expect(saveAvailability(document(), folder(), true)).toEqual({
       save: true,
       saveAs: true,
     });
@@ -135,26 +130,27 @@ describe("whether saving is offered at all", () => {
       saveAvailability(
         document({ kind: "image", name: "portrait.jpg" }),
         folder(),
+        true,
       ),
     ).toEqual({ save: false, saveAs: false });
-    expect(saveAvailability(null, folder())).toEqual({
+    expect(saveAvailability(null, folder(), true)).toEqual({
       save: false,
       saveAs: false,
     });
   });
 
-  // Without a folder there is nowhere to put a second file.
-  it("offers no save as where the workspace cannot be written", () => {
+  // The dialog asks for the folder itself, so a workspace of one file can still
+  // be saved as a copy — where the browser has the dialog at all.
+  it("offers saving as wherever the dialog exists, and never without it", () => {
     const single = createSingleFileGateway("tree.ged", "0 HEAD\n", vi.fn());
 
-    expect(saveAvailability(document(), single)).toEqual({
+    expect(saveAvailability(document(), single, true)).toEqual({
+      save: true,
+      saveAs: true,
+    });
+    expect(saveAvailability(document(), single, false)).toEqual({
       save: true,
       saveAs: false,
     });
-  });
-
-  it("names a copy without overwriting what is there", () => {
-    expect(saveAsName("tree.ged")).toBe("tree-copy.ged");
-    expect(saveAsName("media/family.GEDCOM")).toBe("media/family-copy.GEDCOM");
   });
 });

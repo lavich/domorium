@@ -105,7 +105,10 @@ export function SiteHeader({
               disabled={!saveAvailability.saveAs}
             >
               <FilePlusIcon />
-              Save as a copy…
+              Save as…
+              <span className="ml-auto font-mono text-xs text-muted-foreground">
+                {modifierKey}⇧S
+              </span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onDownload}>
               <DownloadIcon />

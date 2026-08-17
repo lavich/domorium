@@ -57,21 +57,37 @@ and marked modified, and the editor SHALL say what happened.
 - **THEN** the file on disk is either its previous content or the new content, never
   a truncated mixture, and the editor reports the failure
 
-### Requirement: A document can be saved under a new name
+### Requirement: A document can be saved under a name the reader chooses
 
-The editor SHALL let the reader save the open document as a new file in the
-granted folder, and SHALL continue the session against that new file.
+The editor SHALL let the reader save the open document as a new file, asking the
+browser for the folder and the name rather than choosing either itself. Where the
+file they choose lies inside the granted folder, the session SHALL continue
+against it.
 
-#### Scenario: Saving as a new name
+#### Scenario: Saving into the granted folder
 
-- **WHEN** the reader saves `tree.ged` as `tree-cleaned.ged`
+- **WHEN** the reader saves `tree.ged` and chooses `tree-cleaned.ged` in the
+  folder they granted
 - **THEN** the new file appears in the explorer, the tab now names it, and the
   original file is left as it was
 
+#### Scenario: Saving somewhere else
+
+- **WHEN** the reader chooses a folder other than the one they granted
+- **THEN** the file is written there, the editor says where it went, and the
+  document in front stays the one it was — still unsaved, because its own file
+  was not written
+
 #### Scenario: The name is already taken
 
-- **WHEN** the chosen name already exists in the folder
-- **THEN** the reader is asked to confirm replacing it before anything is written
+- **WHEN** the name the reader chooses already exists
+- **THEN** the browser's own replace warning stands in the way, and nothing is
+  written unless they accept it
+
+#### Scenario: The reader closes the dialog
+
+- **WHEN** the reader dismisses the browser's save dialog
+- **THEN** nothing is written and nothing is said
 
 ### Requirement: Without a folder, saving still gives the file back
 

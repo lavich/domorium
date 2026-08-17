@@ -71,22 +71,19 @@ export async function save(
   }
 }
 
-/** Whether the reader should be offered a save at all, and of which sort. */
+/**
+ * Whether the reader should be offered a save at all, and of which sort. Saving
+ * needs somewhere the document came from; saving as needs only the browser's save
+ * dialog, which asks for the folder itself.
+ */
 export function saveAvailability(
   file: OpenFile | null,
   gateway: FileGateway | null,
+  saveDialogAvailable = false,
 ): { save: boolean; saveAs: boolean } {
   const gedcom = file?.kind === "gedcom";
   return {
     save: gedcom && gateway !== null,
-    saveAs: gedcom && gateway?.writable === true,
+    saveAs: gedcom && saveDialogAvailable,
   };
-}
-
-/**
- * A name for a copy that does not overwrite what is already there, which is what
- * "save as" needs before it asks the reader to confirm anything.
- */
-export function saveAsName(path: string): string {
-  return path.replace(/(\.(?:ged|gedcom))$/i, "-copy$1");
 }

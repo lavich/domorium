@@ -17,10 +17,17 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { ThemeProvider, useTheme } from "@/components/ThemeProvider";
 import { downloadGedcom, readGedcomFile } from "@/editor/fileActions";
 import type { FileGateway } from "@/workspace/fileGateway";
-import { createFolderGateway, pickFolder } from "@/workspace/folderGateway";
+import {
+  createFolderGateway,
+  pathWithin,
+  pickFolder,
+  pickSaveFile,
+  savePickerAvailable,
+  writeThroughHandle,
+} from "@/workspace/folderGateway";
 import { createMemoryGateway } from "@/workspace/memoryGateway";
 import { followLink } from "@/workspace/followLink";
-import { save, saveAsName, saveAvailability } from "@/workspace/save";
+import { save, saveAvailability } from "@/workspace/save";
 import { detectWorkspaceSupport } from "@/workspace/support";
 import { toggled, treeRows, type TreeNode } from "@/workspace/tree";
 import { createSingleFileGateway } from "@/workspace/singleFileGateway";
@@ -55,6 +62,7 @@ function AppContent() {
   const { resolvedTheme } = useTheme();
   const [workspace, dispatch] = useReducer(workspaceReducer, emptyWorkspace);
   const gateway = useRef<FileGateway | null>(null);
+  const root = useRef<FileSystemDirectoryHandle | null>(null);
   const support = useRef(detectWorkspaceSupport()).current;
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [rows, setRows] = useState<TreeNode[]>([]);
@@ -239,55 +247,63 @@ function AppContent() {
     report(await save(file, textOf(file), gateway.current));
   };
 
-  /** Into the granted folder, under a name that does not already hold something. */
+  /**
+   * The browser asks where and under what name, and warns about replacing
+   * something itself. Where the file the reader chooses is inside the folder they
+   * granted, the session goes on against it; where it is not, the copy simply
+   * went elsewhere and the document in front is still the one it was.
+   */
   const saveDocumentAs = async () => {
     const current = gateway.current;
-    if (!file || !current?.writable) {
+    if (!file) {
       return;
     }
-    const path = saveAsName(file.path);
     const text = textOf(file);
-    const write = async () => {
-      try {
-        await current.create(path, text);
-        setExpanded((open) => new Set(open));
-        dispatch({ type: "saved", path: file.path });
-        dispatch({
-          type: "file-opened",
-          path,
-          kind: fileKindOf(path),
-          text,
-        });
-        setRows(await treeRows(current, expanded));
-      } catch (cause) {
-        dispatch({
-          type: "notice",
-          message:
-            cause instanceof Error
-              ? cause.message
-              : `${path} could not be written`,
-        });
+    let chosen: FileSystemFileHandle;
+    try {
+      chosen = await pickSaveFile(file.name);
+    } catch (cause) {
+      // Dismissing the dialog is not an error: nothing written, nothing said.
+      if (cause instanceof DOMException && cause.name === "AbortError") {
+        return;
       }
-    };
-
-    // Reading it is how one asks whether it is there: the gateway answers with
-    // an error naming the path, and nothing else distinguishes absent from
-    // unreadable.
-    const exists = await current
-      .readText(path)
-      .then(() => true)
-      .catch(() => false);
-
-    if (exists) {
-      setConfirmation({
-        title: `Replace ${path}?`,
-        description: `${path} is already in this folder. Saving will write over it.`,
-        action: "Replace",
-        confirm: () => void write(),
+      dispatch({
+        type: "notice",
+        message: cause instanceof Error ? cause.message : "Nothing was written",
       });
       return;
     }
-    await write();
+
+    try {
+      await writeThroughHandle(chosen, text);
+    } catch (cause) {
+      dispatch({
+        type: "notice",
+        message:
+          cause instanceof Error
+            ? cause.message
+            : `${chosen.name} could not be written`,
+      });
+      return;
+    }
+
+    // Only a granted folder can hold the file the session goes on against.
+    const inside = root.current ? await pathWithin(root.current, chosen) : null;
+    if (inside && current) {
+      dispatch({ type: "saved", path: file.path });
+      dispatch({
+        type: "file-opened",
+        path: inside,
+        kind: fileKindOf(inside),
+        text,
+      });
+      setRows(await treeRows(current, expanded));
+      return;
+    }
+    dispatch({
+      type: "notice",
+      message: `${chosen.name} was written outside this folder, so ${file.name} is still unsaved`,
+    });
   };
 
   const openFile = () => fileInputRef.current?.click();
@@ -300,6 +316,7 @@ function AppContent() {
     try {
       const handle = await pickFolder();
       setExpanded(new Set());
+      root.current = handle;
       gateway.current = createFolderGateway(handle);
       dispatch({
         type: "workspace-opened",
@@ -368,6 +385,8 @@ function AppContent() {
       event.preventDefault();
       if (key === "o") {
         openFile();
+      } else if (event.shiftKey) {
+        void saveDocumentAs();
       } else {
         void saveDocument();
       }
@@ -384,7 +403,11 @@ function AppContent() {
         onReset={() => requestReplacement({ type: "demo" })}
         onSave={() => void saveDocument()}
         onSaveAs={() => void saveDocumentAs()}
-        saveAvailability={saveAvailability(file, gateway.current)}
+        saveAvailability={saveAvailability(
+          file,
+          gateway.current,
+          savePickerAvailable(),
+        )}
       />
       <input
         ref={fileInputRef}

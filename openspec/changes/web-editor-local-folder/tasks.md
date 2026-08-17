@@ -55,9 +55,10 @@
       document, an unchanged one, and that time passing writes nothing.
 - [x] 5.2 Ask for write permission before the first write and carry a refusal or a
       failure back to the reader with the tab still modified, with tests for both.
-- [x] 5.3 Add "save as" into the granted folder, continuing the session against the
-      new file and confirming before replacing an existing name, with tests for
-      both paths.
+- [x] 5.3 Add "save as" through the browser's save dialog, so the reader chooses
+      the folder and the name: continue against the new file where it lies inside
+      the granted folder, and say where it went where it does not. Tests cover
+      both, and a dismissed dialog.
 - [x] 5.4 Refuse to write a document whose declared character set was not the one it
       was decoded with, with tests for a declared `ANSEL` and for `UTF-8`.
 - [x] 5.5 Fall back to downloading a copy where no folder is granted, with a test

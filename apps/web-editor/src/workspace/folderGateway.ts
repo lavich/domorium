@@ -121,6 +121,67 @@ export function pickFolder(): Promise<FileSystemDirectoryHandle> {
   return browser.showDirectoryPicker({ mode: "readwrite" });
 }
 
+/**
+ * The browser's save dialog: the reader picks the folder and the name, and the
+ * warning about replacing something is the browser's to give.
+ */
+export function pickSaveFile(
+  suggestedName: string,
+): Promise<FileSystemFileHandle> {
+  const browser = window as unknown as {
+    showSaveFilePicker(options?: {
+      suggestedName?: string;
+      types?: { description: string; accept: Record<string, string[]> }[];
+    }): Promise<FileSystemFileHandle>;
+  };
+  return browser.showSaveFilePicker({
+    suggestedName,
+    types: [
+      {
+        description: "GEDCOM file",
+        accept: { "text/plain": [".ged", ".gedcom"] },
+      },
+    ],
+  });
+}
+
+/**
+ * Where a chosen file sits inside the granted folder, if it does at all. The
+ * platform answers this — a handle carries no path — and the answer decides
+ * whether the session can continue against it or the copy simply went elsewhere.
+ */
+export async function pathWithin(
+  root: FileSystemDirectoryHandle,
+  file: FileSystemFileHandle,
+): Promise<string | null> {
+  const resolve = (
+    root as FileSystemDirectoryHandle & {
+      resolve?(descendant: FileSystemHandle): Promise<string[] | null>;
+    }
+  ).resolve;
+  const segments = await resolve?.call(root, file);
+  return segments ? segments.join("/") : null;
+}
+
+/** Writes through a handle the reader chose, which no path of ours addresses. */
+export async function writeThroughHandle(
+  file: FileSystemFileHandle,
+  text: string,
+): Promise<void> {
+  const stream = await file.createWritable();
+  try {
+    await stream.write(text);
+  } finally {
+    await stream.close();
+  }
+}
+
+export function savePickerAvailable(
+  browser: { showSaveFilePicker?: unknown } = window as never,
+): boolean {
+  return typeof browser.showSaveFilePicker === "function";
+}
+
 /** Whether folders can be granted at all, asked once and not of a component. */
 export function folderAccessAvailable(
   browser: Pick<Window, never> & { showDirectoryPicker?: unknown } = window,
