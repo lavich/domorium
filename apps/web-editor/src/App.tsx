@@ -16,12 +16,16 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { ThemeProvider, useTheme } from "@/components/ThemeProvider";
 import { downloadGedcom, readGedcomFile } from "@/editor/fileActions";
 import type { FileGateway } from "@/workspace/fileGateway";
+import { createFolderGateway, pickFolder } from "@/workspace/folderGateway";
 import { createMemoryGateway } from "@/workspace/memoryGateway";
+import { detectWorkspaceSupport } from "@/workspace/support";
+import { toggled, treeRows, type TreeNode } from "@/workspace/tree";
 import { createSingleFileGateway } from "@/workspace/singleFileGateway";
 import {
   activeFile,
   emptyWorkspace,
   fileKindOf,
+  isOpen,
   unsavedFiles,
   workspaceReducer,
 } from "@/workspace/workspace";
@@ -48,6 +52,9 @@ function AppContent() {
   const { resolvedTheme } = useTheme();
   const [workspace, dispatch] = useReducer(workspaceReducer, emptyWorkspace);
   const gateway = useRef<FileGateway | null>(null);
+  const support = useRef(detectWorkspaceSupport()).current;
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  const [rows, setRows] = useState<TreeNode[]>([]);
   const [demoText, setDemoText] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -120,6 +127,31 @@ function AppContent() {
   }, [openWorkspace]);
 
   useEffect(() => {
+    const current = gateway.current;
+    if (!current) {
+      setRows([]);
+      return;
+    }
+    let active = true;
+    treeRows(current, expanded)
+      .then((next) => active && setRows(next))
+      .catch((cause: unknown) =>
+        active
+          ? dispatch({
+              type: "notice",
+              message:
+                cause instanceof Error
+                  ? cause.message
+                  : "The folder could not be read",
+            })
+          : undefined,
+      );
+    return () => {
+      active = false;
+    };
+  }, [expanded, workspace.name]);
+
+  useEffect(() => {
     if (!modified) {
       return;
     }
@@ -176,6 +208,61 @@ function AppContent() {
   };
 
   const openFile = () => fileInputRef.current?.click();
+
+  /**
+   * Only ever from something the reader did: the browser refuses a picker it was
+   * not asked for, and a page that asks on load is one nobody trusts.
+   */
+  const openFolder = async () => {
+    try {
+      const handle = await pickFolder();
+      setExpanded(new Set());
+      gateway.current = createFolderGateway(handle);
+      dispatch({
+        type: "workspace-opened",
+        name: handle.name,
+        writable: true,
+      });
+      setRows(await treeRows(gateway.current, new Set()));
+    } catch (cause) {
+      // Closing the picker is not an error: nothing should change and nothing
+      // should be said.
+      if (cause instanceof DOMException && cause.name === "AbortError") {
+        return;
+      }
+      dispatch({
+        type: "notice",
+        message:
+          cause instanceof Error ? cause.message : "The folder was not granted",
+      });
+    }
+  };
+
+  const chooseFile = async (path: string) => {
+    const current = gateway.current;
+    if (!current) {
+      return;
+    }
+    const kind = fileKindOf(path);
+    if (isOpen(workspace, path) || kind === "unsupported") {
+      dispatch({ type: "file-opened", path, kind, text: null });
+      return;
+    }
+    try {
+      dispatch({
+        type: "file-opened",
+        path,
+        kind,
+        text: kind === "image" ? null : await current.readText(path),
+      });
+    } catch (cause) {
+      dispatch({
+        type: "notice",
+        message:
+          cause instanceof Error ? cause.message : "The file could not be read",
+      });
+    }
+  };
   const download = () => {
     if (!file) {
       return;
@@ -251,7 +338,13 @@ function AppContent() {
               onDiagnosticsChange={setDiagnostics}
               onStatusChange={setStatus}
               onOpenFile={openFile}
-              onDownload={download}
+              onOpenFolder={() => void openFolder()}
+              explorerRows={rows}
+              unavailableReason={support.reason}
+              onToggleDirectory={(path) =>
+                setExpanded((open) => toggled(open, path))
+              }
+              onChooseFile={(path) => void chooseFile(path)}
               onActivate={(path) => dispatch({ type: "file-activated", path })}
               onClose={(path) => dispatch({ type: "file-closed", path })}
               readBytes={(path) =>

@@ -14,6 +14,7 @@ import { ImagePreview, MarkdownPreview } from "./FilePreview";
 import { GedcomEditor } from "@/editor/GedcomEditor";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { activeFile, type Workspace } from "@/workspace/workspace";
+import type { TreeNode } from "@/workspace/tree";
 import type {
   GedcomEditorHandle,
   WebDiagnostic,
@@ -31,10 +32,14 @@ export function EditorWorkspace({
   onDiagnosticsChange,
   onStatusChange,
   onOpenFile,
-  onDownload,
+  onOpenFolder,
   onActivate,
   onClose,
   readBytes,
+  explorerRows,
+  unavailableReason,
+  onToggleDirectory,
+  onChooseFile,
 }: {
   workspace: Workspace;
   diagnostics: WebDiagnostic[];
@@ -45,10 +50,14 @@ export function EditorWorkspace({
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
   onStatusChange(status: WebEditorStatus): void;
   onOpenFile(): void;
-  onDownload(): void;
+  onOpenFolder(): void;
   onActivate(path: string): void;
   onClose(path: string): void;
   readBytes(path: string): Promise<Blob>;
+  explorerRows: TreeNode[];
+  unavailableReason: string | null;
+  onToggleDirectory(path: string): void;
+  onChooseFile(path: string): void;
 }) {
   const file = activeFile(workspace);
   const wideEnoughForPanels = useMediaQuery("(min-width: 768px)");
@@ -119,10 +128,15 @@ export function EditorWorkspace({
         />
         {wideEnoughForPanels && explorerOpen ? (
           <ExplorerPanel
-            fileName={file?.name ?? workspace.name ?? "No file"}
-            modified={file?.modified ?? false}
+            workspaceName={workspace.name}
+            rows={explorerRows}
+            activePath={workspace.activePath}
+            unavailableReason={unavailableReason}
+            notice={workspace.notice}
+            onOpenFolder={onOpenFolder}
             onOpenFile={onOpenFile}
-            onDownload={onDownload}
+            onToggleDirectory={onToggleDirectory}
+            onChooseFile={onChooseFile}
           />
         ) : null}
         {wideEnoughForPanels && problemsOpen ? (

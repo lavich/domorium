@@ -28,14 +28,14 @@
 
 ## 3. The explorer
 
-- [ ] 3.1 Replace the explorer's single-name placeholder with a tree over the
+- [x] 3.1 Replace the explorer's single-name placeholder with a tree over the
       gateway: every entry regardless of extension, directories expanded on demand,
       names beginning with a dot omitted. Tests use the in-memory gateway.
-- [ ] 3.2 Show for each entry whether the editor can open it, and give the folder
+- [x] 3.2 Show for each entry whether the editor can open it, and give the folder
       grant, its refusal and the unsupported-browser line their places in the panel,
       with tests for each state. A name is shown as text: a test covers an entry
       named with markup.
-- [ ] 3.3 Ask for a folder only from a reader's action, with a test that loading the
+- [x] 3.3 Ask for a folder only from a reader's action, with a test that loading the
       page requests nothing.
 
 ## 4. Following a link out of a document

@@ -1,5 +1,6 @@
-import { FileCodeIcon, FileTextIcon, ImageIcon, XIcon } from "lucide-react";
+import { FileTextIcon, ImageIcon, XIcon } from "lucide-react";
 
+import { GedcomFileIcon } from "./GedcomFileIcon";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -82,11 +83,9 @@ export function EditorTabs({
 }
 
 function KindIcon({ kind }: { kind: FileKind }) {
-  const Icon =
-    kind === "gedcom"
-      ? FileCodeIcon
-      : kind === "image"
-        ? ImageIcon
-        : FileTextIcon;
+  if (kind === "gedcom") {
+    return <GedcomFileIcon className="size-3.5 text-primary" />;
+  }
+  const Icon = kind === "image" ? ImageIcon : FileTextIcon;
   return <Icon className="size-3.5 text-muted-foreground" />;
 }

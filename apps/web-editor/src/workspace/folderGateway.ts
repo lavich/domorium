@@ -107,6 +107,19 @@ export function createFolderGateway(
   };
 }
 
+/**
+ * The picker is part of the API and not of the DOM types this project compiles
+ * against, so its shape is stated once, here, beside the rest of the adapter.
+ */
+export function pickFolder(): Promise<FileSystemDirectoryHandle> {
+  const browser = window as unknown as {
+    showDirectoryPicker(options?: {
+      mode?: "read" | "readwrite";
+    }): Promise<FileSystemDirectoryHandle>;
+  };
+  return browser.showDirectoryPicker({ mode: "readwrite" });
+}
+
 /** Whether folders can be granted at all, asked once and not of a component. */
 export function folderAccessAvailable(
   browser: Pick<Window, never> & { showDirectoryPicker?: unknown } = window,
