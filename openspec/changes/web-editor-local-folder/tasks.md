@@ -20,9 +20,9 @@
 - [x] 2.2 Route a chosen file to its kind — GEDCOM to the editor, markdown and image
       to a preview, anything else refused with a message — with tests per kind
       including the refusal.
-- [ ] 2.3 Wire the tab bar and status bar to the workspace, with tests that a
+- [x] 2.3 Wire the tab bar and status bar to the workspace, with tests that a
       preview tab is never marked modified.
-- [ ] 2.4 Render markdown without executing a script or raw HTML it carries, and
+- [x] 2.4 Render markdown without executing a script or raw HTML it carries, and
       release an image's URL when its preview is replaced or closed, with tests for
       an embedded script and for a sequence of images.
 

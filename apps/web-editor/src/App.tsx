@@ -14,12 +14,17 @@ import { EditorWorkspace } from "@/components/EditorWorkspace";
 import { ReplaceDocumentDialog } from "@/components/ReplaceDocumentDialog";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ThemeProvider, useTheme } from "@/components/ThemeProvider";
-import {
-  createDemoSession,
-  documentSessionReducer,
-  isModified,
-} from "@/editor/documentSession";
 import { downloadGedcom, readGedcomFile } from "@/editor/fileActions";
+import type { FileGateway } from "@/workspace/fileGateway";
+import { createMemoryGateway } from "@/workspace/memoryGateway";
+import { createSingleFileGateway } from "@/workspace/singleFileGateway";
+import {
+  activeFile,
+  emptyWorkspace,
+  fileKindOf,
+  unsavedFiles,
+  workspaceReducer,
+} from "@/workspace/workspace";
 import type {
   GedcomEditorHandle,
   WebDiagnostic,
@@ -41,11 +46,8 @@ export function App() {
 
 function AppContent() {
   const { resolvedTheme } = useTheme();
-  const [session, dispatch] = useReducer(
-    documentSessionReducer,
-    "",
-    createDemoSession,
-  );
+  const [workspace, dispatch] = useReducer(workspaceReducer, emptyWorkspace);
+  const gateway = useRef<FileGateway | null>(null);
   const [demoText, setDemoText] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -59,7 +61,28 @@ function AppContent() {
     useState<PendingReplacement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<GedcomEditorHandle>(null);
-  const modified = isModified(session);
+  const file = activeFile(workspace);
+  const modified = unsavedFiles(workspace).length > 0;
+
+  /**
+   * Opening a workspace is opening a gateway: the demo, a single chosen file and
+   * a granted folder differ in which one they are and in nothing else.
+   */
+  const openWorkspace = useCallback(async (next: FileGateway, path: string) => {
+    gateway.current = next;
+    dispatch({
+      type: "workspace-opened",
+      name: next.name,
+      writable: next.writable,
+    });
+    dispatch({
+      type: "file-opened",
+      path,
+      kind: fileKindOf(path),
+      text: fileKindOf(path) === "image" ? null : await next.readText(path),
+    });
+    setDiagnostics([]);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -70,12 +93,18 @@ function AppContent() {
         }
         return response.text();
       })
-      .then((text) => {
+      .then(async (text) => {
         if (!active) {
           return;
         }
         setDemoText(text);
-        dispatch({ type: "reset-demo", text });
+        await openWorkspace(
+          createMemoryGateway(
+            { "example.ged": text },
+            { name: "Example", writable: false },
+          ),
+          "example.ged",
+        );
       })
       .catch(() => {
         if (active) {
@@ -88,7 +117,7 @@ function AppContent() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [openWorkspace]);
 
   useEffect(() => {
     if (!modified) {
@@ -102,17 +131,21 @@ function AppContent() {
   const applyReplacement = useCallback(
     (replacement: Exclude<PendingReplacement, null>) => {
       if (replacement.type === "file") {
-        dispatch({
-          type: "file-loaded",
-          fileName: replacement.fileName,
-          text: replacement.text,
-        });
+        void openWorkspace(
+          createSingleFileGateway(replacement.fileName, replacement.text),
+          replacement.fileName,
+        );
       } else {
-        dispatch({ type: "reset-demo", text: demoText });
+        void openWorkspace(
+          createMemoryGateway(
+            { "example.ged": demoText },
+            { name: "Example", writable: false },
+          ),
+          "example.ged",
+        );
       }
-      setDiagnostics([]);
     },
-    [demoText],
+    [demoText, openWorkspace],
   );
 
   const requestReplacement = useCallback(
@@ -144,12 +177,15 @@ function AppContent() {
 
   const openFile = () => fileInputRef.current?.click();
   const download = () => {
+    if (!file) {
+      return;
+    }
     // Read now rather than track: the editor owns the document.
     downloadGedcom(
-      editorRef.current?.getText() ?? session.initialText,
-      session.fileName,
+      editorRef.current?.getText() ?? file.initialText ?? "",
+      file.name,
     );
-    dispatch({ type: "downloaded" });
+    dispatch({ type: "saved", path: file.path });
   };
 
   // The File menu names these, so they have to work. Ctrl/Cmd-S also keeps the
@@ -204,17 +240,25 @@ function AppContent() {
             />
           ) : (
             <EditorWorkspace
-              session={session}
-              modified={modified}
+              workspace={workspace}
               diagnostics={diagnostics}
               status={status}
               theme={resolvedTheme}
               editorRef={editorRef}
-              onChange={() => dispatch({ type: "edit" })}
+              onChange={() =>
+                file ? dispatch({ type: "edited", path: file.path }) : undefined
+              }
               onDiagnosticsChange={setDiagnostics}
               onStatusChange={setStatus}
               onOpenFile={openFile}
               onDownload={download}
+              onActivate={(path) => dispatch({ type: "file-activated", path })}
+              onClose={(path) => dispatch({ type: "file-closed", path })}
+              readBytes={(path) =>
+                gateway.current
+                  ? gateway.current.readBytes(path)
+                  : Promise.reject(new Error("No workspace is open"))
+              }
             />
           )}
         </div>

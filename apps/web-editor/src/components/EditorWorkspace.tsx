@@ -10,8 +10,10 @@ import { EditorTabs } from "./EditorTabs";
 import { ExplorerPanel } from "./ExplorerPanel";
 import { ProblemsPanel } from "./ProblemsPanel";
 import { StatusBar } from "./StatusBar";
+import { ImagePreview, MarkdownPreview } from "./FilePreview";
 import { GedcomEditor } from "@/editor/GedcomEditor";
-import type { DocumentSession } from "@/editor/documentSession";
+import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
+import { activeFile, type Workspace } from "@/workspace/workspace";
 import type {
   GedcomEditorHandle,
   WebDiagnostic,
@@ -20,8 +22,7 @@ import type {
 } from "@/editor/types";
 
 export function EditorWorkspace({
-  session,
-  modified,
+  workspace,
   diagnostics,
   status,
   theme,
@@ -31,9 +32,11 @@ export function EditorWorkspace({
   onStatusChange,
   onOpenFile,
   onDownload,
+  onActivate,
+  onClose,
+  readBytes,
 }: {
-  session: DocumentSession;
-  modified: boolean;
+  workspace: Workspace;
   diagnostics: WebDiagnostic[];
   status: WebEditorStatus;
   theme: WebTheme;
@@ -43,31 +46,63 @@ export function EditorWorkspace({
   onStatusChange(status: WebEditorStatus): void;
   onOpenFile(): void;
   onDownload(): void;
+  onActivate(path: string): void;
+  onClose(path: string): void;
+  readBytes(path: string): Promise<Blob>;
 }) {
+  const file = activeFile(workspace);
   const wideEnoughForPanels = useMediaQuery("(min-width: 768px)");
   const [explorerOpen, setExplorerOpen] = useState(true);
   const [problemsOpen, setProblemsOpen] = useState(true);
   const selectDiagnostic = (diagnostic: WebDiagnostic) =>
     editorRef.current?.focusDiagnostic(diagnostic);
 
-  const editor = (
-    <GedcomEditor
-      ref={editorRef}
-      editorKey={session.editorKey}
-      initialText={session.initialText}
-      theme={theme}
-      onChange={onChange}
-      onDiagnosticsChange={onDiagnosticsChange}
-      onStatusChange={onStatusChange}
-    />
-  );
+  // One surface per kind of file, chosen by the tab in front. A preview is not
+  // the editor with editing turned off: it holds no document and no dirty flag,
+  // which is what keeps "unsaved" a question only a GEDCOM tab can answer.
+  const surface = () => {
+    if (!file) {
+      return (
+        <Empty className="h-full">
+          <EmptyTitle>Nothing open</EmptyTitle>
+          <EmptyDescription>
+            Open a GEDCOM file to read and edit it.
+          </EmptyDescription>
+        </Empty>
+      );
+    }
+    if (file.kind === "markdown") {
+      return <MarkdownPreview name={file.name} text={file.initialText ?? ""} />;
+    }
+    if (file.kind === "image") {
+      return (
+        <ImagePreview name={file.name} path={file.path} load={readBytes} />
+      );
+    }
+    return (
+      <GedcomEditor
+        ref={editorRef}
+        editorKey={file.editorKey}
+        initialText={file.initialText ?? ""}
+        theme={theme}
+        onChange={onChange}
+        onDiagnosticsChange={onDiagnosticsChange}
+        onStatusChange={onStatusChange}
+      />
+    );
+  };
 
   // h-full, not only flex-1: ResizablePanel is not a flex container, so a
   // percentage is what gives the editor a definite height to scroll inside.
   const pane = (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
-      <EditorTabs fileName={session.fileName} modified={modified} />
-      <div className="min-h-0 flex-1">{editor}</div>
+      <EditorTabs
+        files={workspace.files}
+        activePath={workspace.activePath}
+        onActivate={onActivate}
+        onClose={onClose}
+      />
+      <div className="min-h-0 flex-1">{surface()}</div>
     </div>
   );
 
@@ -84,8 +119,8 @@ export function EditorWorkspace({
         />
         {wideEnoughForPanels && explorerOpen ? (
           <ExplorerPanel
-            fileName={session.fileName}
-            modified={modified}
+            fileName={file?.name ?? workspace.name ?? "No file"}
+            modified={file?.modified ?? false}
             onOpenFile={onOpenFile}
             onDownload={onDownload}
           />
