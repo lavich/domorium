@@ -14,10 +14,10 @@
 
 ## 2. A workspace of open files
 
-- [ ] 2.1 Grow `documentSession` into a workspace: a list of open files, each with a
+- [x] 2.1 Grow `documentSession` into a workspace: a list of open files, each with a
       path, a kind, and text and a modified flag for GEDCOM only. Tests cover
       opening, bringing an already-open file forward, and closing.
-- [ ] 2.2 Route a chosen file to its kind — GEDCOM to the editor, markdown and image
+- [x] 2.2 Route a chosen file to its kind — GEDCOM to the editor, markdown and image
       to a preview, anything else refused with a message — with tests per kind
       including the refusal.
 - [ ] 2.3 Wire the tab bar and status bar to the workspace, with tests that a
