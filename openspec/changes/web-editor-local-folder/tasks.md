@@ -68,10 +68,13 @@
 
 ## 6. Not losing unsaved work
 
-- [ ] 6.1 Ask before closing a tab with unsaved edits and before opening another
+- [x] 6.1 Ask before closing a tab with unsaved edits and before opening another
       folder, with tests for both.
-- [ ] 6.2 Raise the browser's own warning when the page is left with unsaved edits,
+- [x] 6.2 Raise the browser's own warning when the page is left with unsaved edits,
       with a test over the handler rather than the browser.
+- [x] 6.3 Keep the text of the tab being left on the file itself: the editor holds
+      one document, so moving between tabs discarded the edits of the one behind
+      without a word. Tested through the reducer and through the app.
 
 ## 7. Documentation
 

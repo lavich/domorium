@@ -35,6 +35,7 @@ export type WorkspaceAction =
   | { type: "file-activated"; path: string }
   | { type: "file-closed"; path: string }
   | { type: "edited"; path: string }
+  | { type: "text-kept"; path: string; text: string }
   | { type: "saved"; path: string }
   | { type: "notice"; message: string | null };
 
@@ -117,6 +118,16 @@ export function workspaceReducer(
         file.kind !== "gedcom" || file.modified
           ? file
           : { ...file, modified: true },
+      );
+
+    // The editor holds one document at a time, so the text of a tab being left has
+    // to be kept on the file itself — otherwise it comes back as the file on disk
+    // and the edits are gone without a word.
+    case "text-kept":
+      return mapFile(state, action.path, (file) =>
+        file.kind === "gedcom" && file.initialText !== action.text
+          ? { ...file, initialText: action.text }
+          : file,
       );
 
     case "saved":

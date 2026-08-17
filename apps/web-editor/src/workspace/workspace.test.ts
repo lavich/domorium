@@ -143,6 +143,36 @@ describe("what counts as unsaved", () => {
     expect(state.files.every((file) => !file.modified)).toBe(true);
   });
 
+  // What the reader typed lives in the editor, and the editor is one document at a
+  // time: the tab being left has to carry its text, or it comes back off the disk.
+  it("keeps the text of a tab without unmarking it or remounting it", () => {
+    const state = after(
+      [
+        opened("tree.ged", "0 HEAD\n"),
+        { type: "edited", path: "tree.ged" },
+        { type: "text-kept", path: "tree.ged", text: "0 HEAD\n0 NOTE typed\n" },
+      ],
+      granted(),
+    );
+    const tree = state.files[0];
+
+    expect(tree.initialText).toBe("0 HEAD\n0 NOTE typed\n");
+    expect(tree.modified).toBe(true);
+    expect(tree.editorKey).toBe(0);
+  });
+
+  it("keeps no text on a preview, which the editor never held", () => {
+    const state = after([opened("notes.md", "# Anna\n")], granted());
+
+    expect(
+      workspaceReducer(state, {
+        type: "text-kept",
+        path: "notes.md",
+        text: "# Someone else",
+      }),
+    ).toBe(state);
+  });
+
   it("leaves the state alone when nothing changes", () => {
     const state = after([opened("tree.ged")], granted());
 
@@ -154,6 +184,13 @@ describe("what counts as unsaved", () => {
     ).toBe(state);
     expect(
       workspaceReducer(state, { type: "file-closed", path: "absent.ged" }),
+    ).toBe(state);
+    expect(
+      workspaceReducer(state, {
+        type: "text-kept",
+        path: "tree.ged",
+        text: "0 HEAD\n",
+      }),
     ).toBe(state);
   });
 });

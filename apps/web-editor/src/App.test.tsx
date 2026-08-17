@@ -494,6 +494,142 @@ describe("a granted folder", () => {
     expect(screen.getByLabelText("Unsaved changes")).toBeTruthy();
   });
 
+  /**
+   * Opening the folder and the document in it, with the wait the remount needs:
+   * every question about unsaved work starts from an edited document in a folder.
+   */
+  async function editTreeInFolder(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await user.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await user.click(screen.getByText("tree.ged"));
+    await screen.findByRole("tab", { name: /tree\.ged/ });
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement).value,
+      ).toContain("0 TRLR"),
+    );
+    typeIntoEditor("0 NOTE typed");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Unsaved changes")).toBeTruthy(),
+    );
+  }
+
+  // The editor is one document at a time: without keeping the text of the tab
+  // being left, coming back to it would show the file on disk instead.
+  it("keeps what was typed when the reader reads another file and comes back", async () => {
+    const user = userEvent.setup();
+    folder();
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByText("notes.md"));
+    await screen.findByLabelText("Preview of notes.md");
+    await user.click(screen.getByRole("tab", { name: /tree\.ged/ }));
+
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement).value,
+      ).toContain("0 NOTE typed"),
+    );
+    expect(screen.getByLabelText("Unsaved changes")).toBeTruthy();
+  });
+
+  it("keeps the tab open when the reader answers the question with nothing", async () => {
+    const user = userEvent.setup();
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree);
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByLabelText("Close tree.ged"));
+    expect(
+      await screen.findByText(/tree\.ged has unsaved changes/),
+    ).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.getByRole("tab", { name: /tree\.ged/ })).toBeTruthy();
+    expect(screen.getByLabelText("Unsaved changes")).toBeTruthy();
+    expect(tree["tree.ged"]).toBe("0 HEAD\n0 TRLR\n");
+  });
+
+  it("closes the tab and writes nothing where the reader discards the edits", async () => {
+    const user = userEvent.setup();
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree);
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByLabelText("Close tree.ged"));
+    await user.click(screen.getByRole("button", { name: "Discard" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("tab", { name: /tree\.ged/ })).toBeNull(),
+    );
+    expect(tree["tree.ged"]).toBe("0 HEAD\n0 TRLR\n");
+  });
+
+  it("writes the document before closing the tab where the reader asks it to", async () => {
+    const user = userEvent.setup();
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree);
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByLabelText("Close tree.ged"));
+    await user.click(screen.getByRole("button", { name: "Save and close" }));
+
+    await waitFor(() => expect(tree["tree.ged"]).toContain("0 NOTE typed"));
+    await waitFor(() =>
+      expect(screen.queryByRole("tab", { name: /tree\.ged/ })).toBeNull(),
+    );
+  });
+
+  // Another folder replaces the workspace, so it takes everything unsaved with it.
+  it("names what is unsaved before another folder replaces it", async () => {
+    const user = userEvent.setup();
+    folder();
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByLabelText("Open a folder"));
+
+    expect(
+      await screen.findByText(/tree\.ged/, { selector: "p" }),
+    ).toBeTruthy();
+    await user.click(
+      screen.getByRole("button", { name: "Open another folder" }),
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Unsaved changes")).toBeNull(),
+    );
+  });
+
+  // The browser owns the wording and the buttons; all a page can do is ask for it.
+  it("asks the browser to warn before the page is left with unsaved edits", async () => {
+    const user = userEvent.setup();
+    folder();
+    await editTreeInFolder(user);
+
+    const leaving = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(leaving);
+
+    expect(leaving.defaultPrevented).toBe(true);
+  });
+
+  it("lets the page go once everything is written", async () => {
+    const user = userEvent.setup();
+    grantFolder({ "tree.ged": "0 HEAD\n0 TRLR\n" });
+    await editTreeInFolder(user);
+
+    await user.keyboard("{Meta>}s{/Meta}");
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Unsaved changes")).toBeNull(),
+    );
+
+    const leaving = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(leaving);
+
+    expect(leaving.defaultPrevented).toBe(false);
+  });
+
   it("writes nothing when the reader closes the save dialog", async () => {
     const user = userEvent.setup();
     const tree: Record<string, string> = { "tree.ged": "0 HEAD\n0 TRLR\n" };

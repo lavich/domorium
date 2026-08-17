@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +16,11 @@ export interface Confirmation {
   /** What the button that goes ahead says, in the words of what it does. */
   action: string;
   confirm(): void;
+  /**
+   * A second way out, where the reader has more than one — closing an edited tab
+   * can be answered by saving, by discarding, or by not closing it at all.
+   */
+  alternative?: { action: string; choose(): void };
 }
 
 /**
@@ -43,6 +49,17 @@ export function ConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
+          {confirmation?.alternative ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                confirmation.alternative?.choose();
+                onCancel();
+              }}
+            >
+              {confirmation.alternative.action}
+            </Button>
+          ) : null}
           <AlertDialogAction
             onClick={() => {
               confirmation?.confirm();

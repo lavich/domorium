@@ -38,6 +38,7 @@ import {
   isOpen,
   unsavedFiles,
   workspaceReducer,
+  type OpenFile,
 } from "@/workspace/workspace";
 import type {
   GedcomEditorHandle,
@@ -308,6 +309,66 @@ function AppContent() {
 
   const openFile = () => fileInputRef.current?.click();
 
+  /** Saves the tab that is about to close, and keeps it open where the save is refused. */
+  const saveAndClose = async (open: OpenFile, text: string) => {
+    const outcome = await save(open, text, gateway.current);
+    if (outcome.kind === "refused") {
+      dispatch({ type: "notice", message: outcome.message });
+      return;
+    }
+    dispatch({ type: "saved", path: open.path });
+    dispatch({ type: "file-closed", path: open.path });
+    dispatch({
+      type: "notice",
+      message:
+        outcome.kind === "downloaded"
+          ? `A copy of ${outcome.name} was downloaded; the original was not touched`
+          : null,
+    });
+  };
+
+  const closeTab = (path: string) => {
+    const open = workspace.files.find((tab) => tab.path === path);
+    if (!open) {
+      return;
+    }
+    if (!open.modified) {
+      keepEditorText();
+      dispatch({ type: "file-closed", path });
+      return;
+    }
+    // Read the text now: after the dialog the editor may hold another document.
+    const text = path === file?.path ? textOf(open) : (open.initialText ?? "");
+    setConfirmation({
+      title: `${open.name} has unsaved changes`,
+      description:
+        "Save it before closing, discard what you typed, or keep the tab open.",
+      action: "Save and close",
+      confirm: () => void saveAndClose(open, text),
+      alternative: {
+        action: "Discard",
+        choose: () => dispatch({ type: "file-closed", path }),
+      },
+    });
+  };
+
+  /** A granted folder replaces the workspace, so everything unsaved in it goes. */
+  const requestFolder = () => {
+    const unsaved = unsavedFiles(workspace);
+    if (unsaved.length === 0) {
+      void openFolder();
+      return;
+    }
+    setConfirmation({
+      title: "Unsaved changes",
+      description: `${unsaved.map((open) => open.name).join(", ")} ${
+        unsaved.length === 1 ? "has" : "have"
+      } changes that were never written, and opening another folder discards them.`,
+      action: "Open another folder",
+      confirm: () => void openFolder(),
+    });
+  };
+
   /**
    * Only ever from something the reader did: the browser refuses a picker it was
    * not asked for, and a page that asks on load is one nobody trusts.
@@ -338,11 +399,26 @@ function AppContent() {
     }
   };
 
+  /**
+   * The editor is one document at a time, so what the reader typed into the tab
+   * being left is kept on the file before another takes its place.
+   */
+  const keepEditorText = () => {
+    if (file?.kind === "gedcom" && editorRef.current) {
+      dispatch({
+        type: "text-kept",
+        path: file.path,
+        text: editorRef.current.getText(),
+      });
+    }
+  };
+
   const chooseFile = async (path: string) => {
     const current = gateway.current;
     if (!current) {
       return;
     }
+    keepEditorText();
     const kind = fileKindOf(path);
     if (isOpen(workspace, path) || kind === "unsupported") {
       dispatch({ type: "file-opened", path, kind, text: null });
@@ -456,15 +532,18 @@ function AppContent() {
                 }
               }}
               onOpenFile={openFile}
-              onOpenFolder={() => void openFolder()}
+              onOpenFolder={requestFolder}
               explorerRows={rows}
               unavailableReason={support.reason}
               onToggleDirectory={(path) =>
                 setExpanded((open) => toggled(open, path))
               }
               onChooseFile={(path) => void chooseFile(path)}
-              onActivate={(path) => dispatch({ type: "file-activated", path })}
-              onClose={(path) => dispatch({ type: "file-closed", path })}
+              onActivate={(path) => {
+                keepEditorText();
+                dispatch({ type: "file-activated", path });
+              }}
+              onClose={closeTab}
               readBytes={(path) =>
                 gateway.current
                   ? gateway.current.readBytes(path)
