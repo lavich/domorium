@@ -1,15 +1,15 @@
 ## 1. The seam for reaching files
 
-- [ ] 1.1 Define the file gateway interface in `apps/web-editor/src/workspace/` —
+- [x] 1.1 Define the file gateway interface in `apps/web-editor/src/workspace/` —
       list a directory, read text, read bytes, write text, create a file — with an
       in-memory implementation for tests and its own tests over that fake.
-- [ ] 1.2 Implement the folder-backed gateway over `FileSystemDirectoryHandle`,
+- [x] 1.2 Implement the folder-backed gateway over `FileSystemDirectoryHandle`,
       keeping it to those calls and no logic, with tests driving it through a stub
       handle.
-- [ ] 1.3 Implement the single-file gateway — the file input for reading, the
+- [x] 1.3 Implement the single-file gateway — the file input for reading, the
       download for writing — reusing what `fileActions.ts` already does, with tests
       showing both gateways satisfy the same interface.
-- [ ] 1.4 Detect folder support once at startup and expose it as state, with a test
+- [x] 1.4 Detect folder support once at startup and expose it as state, with a test
       for each answer.
 
 ## 2. A workspace of open files
