@@ -78,20 +78,22 @@
 
 ## 7. Documentation
 
-- [ ] 7.1 Update `apps/web-editor/README.md`: what the editor does with a folder,
+- [x] 7.1 Update `apps/web-editor/README.md`: what the editor does with a folder,
       which browsers can grant one, that saving is explicit, and that the folder is
       not remembered between visits.
-- [ ] 7.2 Add the app's file access to `docs/architecture.md` where it describes
+- [x] 7.2 Add the app's file access to `docs/architecture.md` where it describes
       `apps/web-editor` — one line, since no layer moves and no package below the app
       changes.
 
 ## 8. Checks
 
-- [ ] 8.1 No lower-layer package changed in this work, so nothing needs rebuilding;
+- [x] 8.1 No lower-layer package changed in this work, so nothing needs rebuilding;
       confirm that by running the app's tests against the published packages already
-      installed.
+      installed. Nothing under `packages/` is touched on this branch; the app's tests
+      pass against the installed builds.
 - [ ] 8.2 Walk the folder path once by hand in a Chromium browser — grant, expand,
       open each kind, follow a link, save, refuse permission — since no automated test
       reaches the real API.
-- [ ] 8.3 Run `npm run check` and record whether `check:jetbrains` ran or was skipped
-      for lack of a JDK.
+- [x] 8.3 Run `npm run check` and record whether `check:jetbrains` ran or was skipped
+      for lack of a JDK. It ran: Gradle `check` was BUILD SUCCESSFUL. The two lint
+      warnings are the long-standing ones in the validator scripts, not from this work.

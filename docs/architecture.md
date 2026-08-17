@@ -103,11 +103,11 @@ this package would break any host that already has its own copy.
 
 ## Editor hosts
 
-| App               | Consumes                    | Notes                                                                                                     |
-| ----------------- | --------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `apps/vscode`     | `@domorium/language-server` | Web extension: `browser` entry only, with a client and an in-worker server bundle                         |
-| `apps/jetbrains`  | `@domorium/language-server` | Gradle build runs `build:stdio` and bundles the result onto the plugin classpath as `server/stdio.cjs.js` |
-| `apps/web-editor` | `@domorium/codemirror`      | Vite app deployed to `domorium.com` through GitHub Pages from `main` when web-related paths change        |
+| App               | Consumes                    | Notes                                                                                                                                                                                                                                                                                   |
+| ----------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/vscode`     | `@domorium/language-server` | Web extension: `browser` entry only, with a client and an in-worker server bundle                                                                                                                                                                                                       |
+| `apps/jetbrains`  | `@domorium/language-server` | Gradle build runs `build:stdio` and bundles the result onto the plugin classpath as `server/stdio.cjs.js`                                                                                                                                                                               |
+| `apps/web-editor` | `@domorium/codemirror`      | Vite app deployed to `domorium.com` through GitHub Pages from `main` when web-related paths change; reads and writes a folder the reader grants through the browser's File System Access API, behind one gateway interface so the single-file and demo workspaces answer the same calls |
 
 The Obsidian plugin lives in a separate repository,
 [lavich/domorium-obsidian](https://github.com/lavich/domorium-obsidian), and will
