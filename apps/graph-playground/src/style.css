@@ -30,6 +30,20 @@ h1 {
   color: light-dark(#78716c, #a8a29e);
 }
 
+.open {
+  display: inline-block;
+  margin: 8px 0;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  cursor: pointer;
+}
+
+.open input {
+  display: none;
+}
+
 #graph {
   position: relative;
 }

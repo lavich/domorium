@@ -1,37 +1,55 @@
 import "./style.css";
-import { familyGraph } from "./fixture";
-import { rootsOf, subgraph, type PersonId } from "./graph";
+import { readGedcom } from "./gedcom";
+import { rootsOf, subgraph, type Graph, type PersonId } from "./graph";
 import { computeLayout, generations } from "./layout";
 import { relatives } from "./projection";
-import { renderGraph } from "./render";
+import { renderGraph, type GraphView } from "./render";
 
-const root = document.querySelector<HTMLElement>("#graph");
-const caption = document.querySelector<HTMLElement>("#caption");
-if (!root || !caption) {
-  throw new Error("the page is missing #graph or #caption");
-}
+const need = <T extends Element>(selector: string): T => {
+  const found = document.querySelector<T>(selector);
+  if (!found) {
+    throw new Error(`the page is missing ${selector}`);
+  }
+  return found;
+};
+
+const root = need<HTMLElement>("#graph");
+const caption = need<HTMLElement>("#caption");
+const file = need<HTMLInputElement>("#file");
 
 const PARAM = "person";
-const generation = generations(familyGraph);
+const SAMPLE = "/simpsons70.ged";
+
+interface Document {
+  readonly graph: Graph;
+  readonly generation: ReadonlyMap<PersonId, number>;
+  readonly view: GraphView;
+}
+
+let open: Document | null = null;
 
 // The whole of the state worth keeping is who the frame is built around, so the
 // address bar can hold all of it. Which also buys back and forward for free, and they
-// are the way out of a branch that has narrowed too far.
-const addressed = (): PersonId | null => {
+// are the way out of a branch that has narrowed too far. Ids come from the file, so a
+// link only means anything alongside the file it was taken from.
+const addressed = (graph: Graph): PersonId | null => {
   const id = new URLSearchParams(location.search).get(PARAM);
-  return id !== null && familyGraph.people.has(id) ? id : null;
+  return id !== null && graph.people.has(id) ? id : null;
 };
 
 // Drawing is the expensive half: the layout runs over the branch alone, so the people
 // left out do not reserve the space they would have taken up, and everyone still on
 // screen is dealt a fresh column.
 const draw = (id: PersonId): void => {
-  const branch = subgraph(familyGraph, relatives(familyGraph, id));
-  view.update(computeLayout(branch, generation, id), id);
-  caption.textContent = `${familyGraph.people.get(id)?.name} — ${branch.people.size} relatives of ${familyGraph.people.size}, click or arrow-key around, Enter re-centres`;
+  if (!open) {
+    return;
+  }
+  const branch = subgraph(open.graph, relatives(open.graph, id));
+  open.view.update(computeLayout(branch, open.generation, id), id);
+  caption.textContent = `${open.graph.people.get(id)?.name} — ${branch.people.size} relatives of ${open.graph.people.size}, click or arrow-key around, Enter re-centres`;
 };
 
-let current = addressed() ?? rootsOf(familyGraph)[0];
+let current: PersonId | null = null;
 
 const choose = (id: PersonId): void => {
   // Re-choosing whoever the frame is already built around would draw the same picture
@@ -48,18 +66,44 @@ const choose = (id: PersonId): void => {
 // lights up is the answer to "what survives if I click here": the relatives measured
 // against the whole graph, of which the reader sees the part already on screen.
 const point = (id: PersonId | null): void => {
-  view.highlight(id === null ? null : relatives(familyGraph, id));
+  if (open) {
+    open.view.highlight(id === null ? null : relatives(open.graph, id));
+  }
 };
 
-const view = renderGraph(root, familyGraph, computeLayout(familyGraph), {
-  point,
-  choose,
+function show(graph: Graph, from: PersonId | null): void {
+  const start = from ?? rootsOf(graph)[0];
+  if (start === undefined) {
+    root.replaceChildren();
+    caption.textContent = "That file has no INDI records to draw.";
+    open = null;
+    return;
+  }
+  open = {
+    graph,
+    generation: generations(graph),
+    view: renderGraph(root, graph, computeLayout(graph), { point, choose }),
+  };
+  current = start;
+  history.replaceState(null, "", `?${PARAM}=${start}`);
+  draw(start);
+}
+
+file.addEventListener("change", async () => {
+  const chosen = file.files?.[0];
+  if (chosen) {
+    // A different file means different ids, so whoever the address bar names belongs
+    // to the file that has just been closed.
+    show(readGedcom(await chosen.text()), null);
+  }
 });
 
 addEventListener("popstate", () => {
-  current = addressed() ?? rootsOf(familyGraph)[0];
-  draw(current);
+  if (open) {
+    current = addressed(open.graph) ?? rootsOf(open.graph)[0];
+    draw(current);
+  }
 });
 
-history.replaceState(null, "", `?${PARAM}=${current}`);
-draw(current);
+const sample = readGedcom(await (await fetch(SAMPLE)).text());
+show(sample, addressed(sample));

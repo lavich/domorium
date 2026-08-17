@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { buildGraph, type Person } from "./graph";
 import { computeLayout, COLUMN } from "./layout";
-import { familyGraph } from "./fixture";
+import { familyGedcom } from "./fixture";
+import { readGedcom } from "./gedcom";
 
 const person = (id: string, parents: string[] = []): Person => ({
   id,
@@ -62,9 +63,10 @@ describe("computeLayout", () => {
   });
 
   it("never places two people on the same spot", () => {
+    const scale = readGedcom(familyGedcom);
     const seen = new Set(
-      [...computeLayout(familyGraph).values()].map(({ x, y }) => `${x}:${y}`),
+      [...computeLayout(scale).values()].map(({ x, y }) => `${x}:${y}`),
     );
-    expect(seen.size).toBe(familyGraph.people.size);
+    expect(seen.size).toBe(scale.people.size);
   });
 });

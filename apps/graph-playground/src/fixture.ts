@@ -1,4 +1,8 @@
-import { buildGraph, type Graph, type Person, type PersonId } from "./graph";
+// A generated family, for the tests only. A real file small enough to keep in a test
+// is too small to catch a layout that falls apart at scale — the one bundled with the
+// app holds eleven people, and the collisions this has caught needed seventy — and one
+// big enough to catch it is too big to read. It is emitted as GEDCOM rather than built
+// as a graph so the tests come in through `readGedcom`, the only door the app has.
 
 const GIVEN_NAMES = [
   "Ada",
@@ -41,33 +45,46 @@ const SURNAMES = [
 // look shows the same tree. Uneven on purpose, so sibling groups differ in size.
 const CHILD_COUNTS = [3, 2, 4, 2, 3];
 
-interface Draft {
-  readonly id: PersonId;
+interface Individual {
+  readonly id: string;
   readonly name: string;
-  readonly parents: PersonId[];
-  readonly partners: PersonId[];
-  readonly lineage: string;
 }
 
-export function generateFamily(size: number): Person[] {
-  const drafts: Draft[] = [];
-  let nextName = 0;
+interface Family {
+  readonly id: string;
+  readonly spouses: readonly [string, string];
+  readonly children: string[];
+}
 
-  const add = (parents: PersonId[], lineage: string): Draft => {
-    const draft = {
-      id: `P${drafts.length + 1}`,
-      name: `${GIVEN_NAMES[drafts.length % GIVEN_NAMES.length]} ${lineage}`,
-      parents,
-      partners: [],
-      lineage,
+interface Spouse {
+  readonly person: Individual;
+  readonly surname: string;
+}
+
+export function generateGedcom(size: number): string {
+  const individuals: Individual[] = [];
+  const families: Family[] = [];
+  let nextSurname = 0;
+
+  const surname = (): string => SURNAMES[nextSurname++ % SURNAMES.length];
+
+  const born = (family: string): Spouse => {
+    const person = {
+      id: `@I${individuals.length + 1}@`,
+      name: `${GIVEN_NAMES[individuals.length % GIVEN_NAMES.length]} /${family}/`,
     };
-    drafts.push(draft);
-    return draft;
+    individuals.push(person);
+    return { person, surname: family };
   };
 
-  const marry = (one: Draft, other: Draft): void => {
-    one.partners.push(other.id);
-    other.partners.push(one.id);
+  const wed = (one: Spouse, other: Spouse): Family => {
+    const family = {
+      id: `@F${families.length + 1}@`,
+      spouses: [one.person.id, other.person.id] as [string, string],
+      children: [],
+    };
+    families.push(family);
+    return family;
   };
 
   // Every spouse comes from a family this one has never met, bringing the parents they
@@ -76,48 +93,57 @@ export function generateFamily(size: number): Person[] {
   // shared ancestor is no longer a tree: its lines cannot be drawn without crossing.
   // The surnames run out and start again, so two families can share a name without
   // sharing any blood, exactly as they do outside.
-  const marriesIn = (): Draft => {
-    const father = add([], SURNAMES[nextName++ % SURNAMES.length]);
-    const mother = add([], SURNAMES[nextName++ % SURNAMES.length]);
-    marry(father, mother);
-    return add([father.id, mother.id], father.lineage);
+  const marriesIn = (): Spouse => {
+    const father = born(surname());
+    const mother = born(surname());
+    const child = born(father.surname);
+    wed(father, mother).children.push(child.person.id);
+    return child;
   };
 
-  const founder = add([], SURNAMES[nextName++ % SURNAMES.length]);
+  const founder = born(surname());
   const consort = marriesIn();
-  marry(founder, consort);
-  let generation: [Draft, Draft][] = [[founder, consort]];
+  let generation = [
+    { one: founder, other: consort, home: wed(founder, consort) },
+  ];
 
-  while (generation.length > 0 && drafts.length < size) {
-    const next: [Draft, Draft][] = [];
-    for (const [one, other] of generation) {
-      const count = CHILD_COUNTS[drafts.length % CHILD_COUNTS.length];
-      for (let n = 0; n < count && drafts.length < size; n += 1) {
+  while (generation.length > 0 && individuals.length < size) {
+    const next: typeof generation = [];
+    for (const { one, other, home } of generation) {
+      const count = CHILD_COUNTS[individuals.length % CHILD_COUNTS.length];
+      for (let n = 0; n < count && individuals.length < size; n += 1) {
         // Alternate which side the children take their name from, so the families
         // that marry in are not painted over by the one they married into.
-        const child = add(
-          [one.id, other.id],
-          n % 2 === 0 ? one.lineage : other.lineage,
-        );
+        const child = born(n % 2 === 0 ? one.surname : other.surname);
+        home.children.push(child.person.id);
         // A marriage costs three more people. Out of room, the child stays single
         // and the line ends there, which is how a real file peters out too.
-        if (drafts.length + 3 <= size) {
+        if (individuals.length + 3 <= size) {
           const spouse = marriesIn();
-          marry(child, spouse);
-          next.push([child, spouse]);
+          next.push({ one: child, other: spouse, home: wed(child, spouse) });
         }
       }
     }
     generation = next;
   }
 
-  return drafts.map(({ id, name, lineage, parents, partners }) => ({
-    id,
-    name,
-    lineage,
-    parents,
-    partners,
-  }));
+  return [
+    "0 HEAD",
+    "1 GEDC",
+    "2 VERS 7.0",
+    ...individuals.flatMap(({ id, name }) => [
+      `0 ${id} INDI`,
+      `1 NAME ${name}`,
+    ]),
+    ...families.flatMap(({ id, spouses, children }) => [
+      `0 ${id} FAM`,
+      `1 HUSB ${spouses[0]}`,
+      `1 WIFE ${spouses[1]}`,
+      ...children.map((child) => `1 CHIL ${child}`),
+    ]),
+    "0 TRLR",
+    "",
+  ].join("\n");
 }
 
-export const familyGraph: Graph = buildGraph(generateFamily(72));
+export const familyGedcom = generateGedcom(72);
