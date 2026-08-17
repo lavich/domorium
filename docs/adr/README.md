@@ -32,6 +32,8 @@ reconstruct from commit history.
 
 Routine implementation choices do not belong here. Roadmap items live in
 [TODO.md](../../TODO.md), and longer-range directions in
-[roadmap.md](../roadmap.md). Brainstorming notes and implementation plans remain
-temporary; any decision from them that outlives the task is recorded here before
-the change is merged.
+[roadmap.md](../roadmap.md). A change's plan — why it is worth doing, how it is
+built, and what it takes — lives in `openspec/changes/`; a decision there stops
+mattering once the change lands, while a record here binds what is written after
+it. Any decision from a plan that outlives its task is recorded here before the
+change is merged.

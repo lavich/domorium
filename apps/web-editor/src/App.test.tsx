@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,9 +22,14 @@ vi.mock("./editor/GedcomEditor", () => ({
       initialText: string;
       onChange(): void;
       onDiagnosticsChange(diagnostics: []): void;
+      onFollowLink(link: {
+        kind: string;
+        targetText: string;
+        range: unknown;
+      }): void;
     }
   >(function MockGedcomEditor(
-    { initialText, onChange, onDiagnosticsChange },
+    { initialText, onChange, onDiagnosticsChange, onFollowLink },
     ref,
   ) {
     // The real editor owns the document and hands it over on request, so the
@@ -32,15 +43,42 @@ vi.mock("./editor/GedcomEditor", () => ({
       openSearch: vi.fn(),
     }));
     return (
-      <textarea
-        ref={area}
-        aria-label="GEDCOM editor"
-        defaultValue={initialText}
-        onChange={() => {
-          onChange();
-          onDiagnosticsChange([]);
-        }}
-      />
+      <>
+        <textarea
+          ref={area}
+          aria-label="GEDCOM editor"
+          defaultValue={initialText}
+          onChange={() => {
+            onChange();
+            onDiagnosticsChange([]);
+          }}
+        />
+        {/* The real editor calls this when a reader follows a link. */}
+        <button
+          type="button"
+          onClick={() =>
+            onFollowLink({
+              kind: "file-relative",
+              targetText: "media/portrait.jpg",
+              range: null,
+            })
+          }
+        >
+          follow the media link
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            onFollowLink({
+              kind: "http",
+              targetText: "https://example.org/",
+              range: null,
+            })
+          }
+        >
+          follow the web link
+        </button>
+      </>
     );
   }),
 }));
@@ -174,5 +212,446 @@ describe("App", () => {
     await waitFor(() =>
       expect(screen.getByRole("tab", { name: /example\.ged/i })).not.toBeNull(),
     );
+  });
+});
+
+/** A stand-in for a granted directory: jsdom has no picker and no file handles. */
+function grantFolder(
+  tree: Record<string, string>,
+  permission: "granted" | "denied" = "granted",
+) {
+  const directory = (prefix: string): unknown => ({
+    kind: "directory",
+    name: prefix.split("/").filter(Boolean).at(-1) ?? "Webb Family",
+    async *entries() {
+      const seen = new Set<string>();
+      for (const path of Object.keys(tree)) {
+        if (!path.startsWith(prefix)) {
+          continue;
+        }
+        const rest = path.slice(prefix.length);
+        const cut = rest.indexOf("/");
+        const name = cut < 0 ? rest : rest.slice(0, cut);
+        if (!name || seen.has(name)) {
+          continue;
+        }
+        seen.add(name);
+        yield [name, { kind: cut < 0 ? "file" : "directory" }];
+      }
+    },
+    getDirectoryHandle: (name: string) => {
+      const nested = `${prefix}${name}/`;
+      return Object.keys(tree).some((path) => path.startsWith(nested))
+        ? Promise.resolve(directory(nested))
+        : Promise.reject(new DOMException("no", "NotFoundError"));
+    },
+    getFileHandle: (name: string, init?: { create?: boolean }) => {
+      const path = `${prefix}${name}`;
+      if (!(path in tree) && !init?.create) {
+        return Promise.reject(new DOMException("no", "NotFoundError"));
+      }
+      return Promise.resolve({
+        getFile: () =>
+          Promise.resolve(
+            new File([tree[path] ?? ""], name, { type: "text/plain" }),
+          ),
+        createWritable: () =>
+          Promise.resolve({
+            write: (text: string) => {
+              tree[path] = text;
+              return Promise.resolve();
+            },
+            close: () => Promise.resolve(),
+          }),
+      });
+    },
+    queryPermission: () => Promise.resolve(permission),
+    requestPermission: () => Promise.resolve(permission),
+  });
+
+  const root = directory("") as Record<string, unknown>;
+  vi.stubGlobal("showDirectoryPicker", vi.fn().mockResolvedValue(root));
+
+  /**
+   * A file the reader picks in the save dialog. `inside` is what the platform
+   * answers when asked whether it sits under the granted folder.
+   */
+  const chooseInSaveDialog = (name: string, inside: string[] | null) => {
+    const handle = {
+      kind: "file",
+      name,
+      createWritable: () =>
+        Promise.resolve({
+          write: (text: string) => {
+            tree[inside ? inside.join("/") : `elsewhere/${name}`] = text;
+            return Promise.resolve();
+          },
+          close: () => Promise.resolve(),
+        }),
+    };
+    root.resolve = (asked: unknown) =>
+      Promise.resolve(asked === handle ? inside : null);
+    vi.stubGlobal("showSaveFilePicker", vi.fn().mockResolvedValue(handle));
+  };
+
+  const dismissSaveDialog = () => {
+    root.resolve = () => Promise.resolve(null);
+    vi.stubGlobal(
+      "showSaveFilePicker",
+      vi.fn().mockRejectedValue(new DOMException("no", "AbortError")),
+    );
+  };
+
+  return { chooseInSaveDialog, dismissSaveDialog };
+}
+
+/** The edit as the editor would report it: a change event carrying the new text. */
+function typeIntoEditor(extra: string) {
+  const area = screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement;
+  fireEvent.change(area, { target: { value: `${area.value}${extra}` } });
+}
+
+describe("a granted folder", () => {
+  // The panels are shown on a wide window only. Answering `true` to every query
+  // instead would tell a component asking `(pointer: coarse)` that this is a touch
+  // screen, and it would stop opening its menu on a click.
+  beforeEach(() =>
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query.includes("min-width"),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    ),
+  );
+
+  const folder = () =>
+    grantFolder({
+      "tree.ged": "0 HEAD\n0 TRLR\n",
+      "notes.md": "# Anna\n",
+      "media/portrait.jpg": "bytes",
+    });
+
+  it("lists what the folder holds and opens a note beside the document", async () => {
+    folder();
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+
+    await userEvent.click(screen.getByLabelText("Open a folder"));
+
+    await waitFor(() => expect(screen.getByText("notes.md")).toBeTruthy());
+    expect(screen.getByText("tree.ged")).toBeTruthy();
+    expect(screen.getByText("media")).toBeTruthy();
+
+    await userEvent.click(screen.getByText("notes.md"));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("Preview of notes.md")).toBeTruthy(),
+    );
+    expect(screen.getByRole("tab", { name: /notes\.md/ })).toBeTruthy();
+  });
+
+  it("opens the file a link in the document names", async () => {
+    folder();
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await userEvent.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await userEvent.click(screen.getByText("tree.ged"));
+
+    await userEvent.click(screen.getByText("follow the media link"));
+
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: /portrait\.jpg/ })).toBeTruthy(),
+    );
+  });
+
+  // Without a folder there is nothing to resolve a path against.
+  it("says a folder is needed to reach a file the document names", async () => {
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+
+    await userEvent.click(screen.getByText("follow the media link"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Open a folder to reach media/portrait.jpg"),
+      ).toBeTruthy(),
+    );
+  });
+
+  it("saves the edited document into the folder and clears the mark", async () => {
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree);
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await userEvent.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await userEvent.click(screen.getByText("tree.ged"));
+    // Typing before the remount lands goes into an editor about to be replaced.
+    await screen.findByRole("tab", { name: /tree\.ged/ });
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement).value,
+      ).toContain("0 TRLR"),
+    );
+
+    // `userEvent.type` clicks first, and its pointer checks find nothing clickable
+    // in this layout under jsdom.
+    typeIntoEditor("0 NOTE typed");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Unsaved changes")).toBeTruthy(),
+    );
+
+    await userEvent.keyboard("{Meta>}s{/Meta}");
+
+    await waitFor(() => expect(tree["tree.ged"]).toContain("0 NOTE typed"));
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Unsaved changes")).toBeNull(),
+    );
+  });
+
+  // The reader can be handed a folder to read and refuse to let it be written.
+  it("says nothing was written where permission is refused, and keeps the mark", async () => {
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree, "denied");
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await userEvent.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await userEvent.click(screen.getByText("tree.ged"));
+    await screen.findByRole("tab", { name: /tree\.ged/ });
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement).value,
+      ).toContain("0 TRLR"),
+    );
+    typeIntoEditor("0 NOTE typed");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Unsaved changes")).toBeTruthy(),
+    );
+
+    await userEvent.keyboard("{Meta>}s{/Meta}");
+
+    await waitFor(() =>
+      expect(screen.getByText(/open for reading only/)).toBeTruthy(),
+    );
+    expect(tree["tree.ged"]).toBe("0 HEAD\n0 TRLR\n");
+    expect(screen.getByLabelText("Unsaved changes")).toBeTruthy();
+  });
+
+  it("saves as a name the reader chooses in the folder, and goes on against it", async () => {
+    const user = userEvent.setup();
+    const tree: Record<string, string> = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    const { chooseInSaveDialog } = grantFolder(tree);
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await user.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await user.click(screen.getByText("tree.ged"));
+    await screen.findByRole("tab", { name: /tree\.ged/ });
+    typeIntoEditor("0 NOTE typed");
+
+    chooseInSaveDialog("tree-cleaned.ged", ["tree-cleaned.ged"]);
+    await user.keyboard("{Meta>}{Shift>}s{/Shift}{/Meta}");
+
+    await waitFor(() =>
+      expect(tree["tree-cleaned.ged"]).toContain("0 NOTE typed"),
+    );
+    expect(
+      await screen.findByRole("tab", { name: /tree-cleaned\.ged/ }),
+    ).toBeTruthy();
+    // The file it was opened from is left as it was.
+    expect(tree["tree.ged"]).toBe("0 HEAD\n0 TRLR\n");
+  });
+
+  it("says where a copy went when the reader chooses another folder", async () => {
+    const user = userEvent.setup();
+    const tree: Record<string, string> = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    const { chooseInSaveDialog } = grantFolder(tree);
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await user.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await user.click(screen.getByText("tree.ged"));
+    await screen.findByRole("tab", { name: /tree\.ged/ });
+    typeIntoEditor("0 NOTE typed");
+
+    chooseInSaveDialog("backup.ged", null);
+    await user.keyboard("{Meta>}{Shift>}s{/Shift}{/Meta}");
+
+    await waitFor(() => expect(screen.getByText(/still unsaved/)).toBeTruthy());
+    expect(tree["elsewhere/backup.ged"]).toContain("0 NOTE typed");
+    expect(screen.getByLabelText("Unsaved changes")).toBeTruthy();
+  });
+
+  /** Every question about unsaved work starts from an edited document in a folder. */
+  async function editTreeInFolder(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await user.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await user.click(screen.getByText("tree.ged"));
+    await screen.findByRole("tab", { name: /tree\.ged/ });
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement).value,
+      ).toContain("0 TRLR"),
+    );
+    typeIntoEditor("0 NOTE typed");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Unsaved changes")).toBeTruthy(),
+    );
+  }
+
+  // The editor is one document at a time, so the tab left behind loses its text
+  // unless something keeps it.
+  it("keeps what was typed when the reader reads another file and comes back", async () => {
+    const user = userEvent.setup();
+    folder();
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByText("notes.md"));
+    await screen.findByLabelText("Preview of notes.md");
+    await user.click(screen.getByRole("tab", { name: /tree\.ged/ }));
+
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement).value,
+      ).toContain("0 NOTE typed"),
+    );
+    expect(screen.getByLabelText("Unsaved changes")).toBeTruthy();
+  });
+
+  it("keeps the tab open when the reader answers the question with nothing", async () => {
+    const user = userEvent.setup();
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree);
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByLabelText("Close tree.ged"));
+    expect(
+      await screen.findByText(/tree\.ged has unsaved changes/),
+    ).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.getByRole("tab", { name: /tree\.ged/ })).toBeTruthy();
+    expect(screen.getByLabelText("Unsaved changes")).toBeTruthy();
+    expect(tree["tree.ged"]).toBe("0 HEAD\n0 TRLR\n");
+  });
+
+  it("closes the tab and writes nothing where the reader discards the edits", async () => {
+    const user = userEvent.setup();
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree);
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByLabelText("Close tree.ged"));
+    await user.click(screen.getByRole("button", { name: "Discard" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("tab", { name: /tree\.ged/ })).toBeNull(),
+    );
+    expect(tree["tree.ged"]).toBe("0 HEAD\n0 TRLR\n");
+  });
+
+  it("writes the document before closing the tab where the reader asks it to", async () => {
+    const user = userEvent.setup();
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree);
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByLabelText("Close tree.ged"));
+    await user.click(screen.getByRole("button", { name: "Save and close" }));
+
+    await waitFor(() => expect(tree["tree.ged"]).toContain("0 NOTE typed"));
+    await waitFor(() =>
+      expect(screen.queryByRole("tab", { name: /tree\.ged/ })).toBeNull(),
+    );
+  });
+
+  // Another folder replaces the workspace, so it takes everything unsaved with it.
+  it("names what is unsaved before another folder replaces it", async () => {
+    const user = userEvent.setup();
+    folder();
+    await editTreeInFolder(user);
+
+    await user.click(screen.getByLabelText("Open a folder"));
+
+    expect(
+      await screen.findByText(/tree\.ged/, { selector: "p" }),
+    ).toBeTruthy();
+    await user.click(
+      screen.getByRole("button", { name: "Open another folder" }),
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Unsaved changes")).toBeNull(),
+    );
+  });
+
+  // The browser owns the wording and the buttons; all a page can do is ask for it.
+  it("asks the browser to warn before the page is left with unsaved edits", async () => {
+    const user = userEvent.setup();
+    folder();
+    await editTreeInFolder(user);
+
+    const leaving = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(leaving);
+
+    expect(leaving.defaultPrevented).toBe(true);
+  });
+
+  it("lets the page go once everything is written", async () => {
+    const user = userEvent.setup();
+    grantFolder({ "tree.ged": "0 HEAD\n0 TRLR\n" });
+    await editTreeInFolder(user);
+
+    await user.keyboard("{Meta>}s{/Meta}");
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Unsaved changes")).toBeNull(),
+    );
+
+    const leaving = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(leaving);
+
+    expect(leaving.defaultPrevented).toBe(false);
+  });
+
+  it("writes nothing when the reader closes the save dialog", async () => {
+    const user = userEvent.setup();
+    const tree: Record<string, string> = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    const { dismissSaveDialog } = grantFolder(tree);
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await user.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await user.click(screen.getByText("tree.ged"));
+    await screen.findByRole("tab", { name: /tree\.ged/ });
+    typeIntoEditor("0 NOTE typed");
+
+    dismissSaveDialog();
+    await user.keyboard("{Meta>}{Shift>}s{/Shift}{/Meta}");
+
+    expect(Object.keys(tree)).toEqual(["tree.ged"]);
+    expect(tree["tree.ged"]).toBe("0 HEAD\n0 TRLR\n");
+  });
+
+  it("sends a web address to the browser and opens no tab for it", async () => {
+    const open = vi.fn();
+    vi.stubGlobal("open", open);
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+
+    await userEvent.click(screen.getByText("follow the web link"));
+
+    expect(open).toHaveBeenCalledWith(
+      "https://example.org/",
+      "_blank",
+      "noopener,noreferrer",
+    );
+    expect(screen.queryAllByRole("tab")).toHaveLength(1);
   });
 });

@@ -15,6 +15,7 @@ export default defineConfig({
   },
   test: {
     execArgv,
+    setupFiles: ["./vitest.setup.ts"],
     exclude: [
       ...configDefaults.exclude,
       "**/.worktrees/**",

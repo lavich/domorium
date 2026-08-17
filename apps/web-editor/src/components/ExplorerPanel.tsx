@@ -1,29 +1,53 @@
 import {
   ChevronDownIcon,
-  DownloadIcon,
-  FileCodeIcon,
+  ChevronRightIcon,
+  FileIcon,
+  FileTextIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  FolderPlusIcon,
+  ImageIcon,
   UploadIcon,
 } from "lucide-react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { GedcomFileIcon } from "./GedcomFileIcon";
+import type { TreeNode } from "@/workspace/tree";
+import type { FileKind } from "@/workspace/workspace";
 
 export interface ExplorerPanelProps {
-  fileName: string;
-  modified: boolean;
+  /** The workspace's name, or null before one is opened. */
+  workspaceName: string | null;
+  rows: TreeNode[];
+  activePath: string | null;
+  /** Null where the browser can grant a folder; the reason where it cannot. */
+  unavailableReason: string | null;
+  notice: string | null;
+  onOpenFolder(): void;
   onOpenFile(): void;
-  onDownload(): void;
+  onToggleDirectory(path: string): void;
+  onChooseFile(path: string): void;
 }
 
 export function ExplorerPanel({
-  fileName,
-  modified,
+  workspaceName,
+  rows,
+  activePath,
+  unavailableReason,
+  notice,
+  onOpenFolder,
   onOpenFile,
-  onDownload,
+  onToggleDirectory,
+  onChooseFile,
 }: ExplorerPanelProps) {
   return (
     <div className="flex w-(--explorer-width) shrink-0 flex-col border-r">
@@ -32,35 +56,130 @@ export function ExplorerPanel({
           Explorer
         </span>
         <div className="ml-auto flex items-center">
-          <HeaderAction label="Open a GEDCOM file" onClick={onOpenFile}>
+          {unavailableReason ? null : (
+            <HeaderAction label="Open a folder" onClick={onOpenFolder}>
+              <FolderPlusIcon />
+            </HeaderAction>
+          )}
+          <HeaderAction label="Open a single GEDCOM file" onClick={onOpenFile}>
             <UploadIcon />
           </HeaderAction>
-          <HeaderAction label="Download a copy" onClick={onDownload}>
-            <DownloadIcon />
-          </HeaderAction>
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto py-1">
-        <div className="flex items-center gap-1 px-2 py-1 text-sm">
-          <ChevronDownIcon className="size-3.5 text-muted-foreground" />
-          <span className="truncate font-medium">Open file</span>
+
+      {workspaceName ? (
+        <div className="flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-sm">
+          <FolderOpenIcon className="size-3.5 text-muted-foreground" />
+          <span className="truncate font-medium" title={workspaceName}>
+            {workspaceName}
+          </span>
         </div>
-        <div
-          aria-current="true"
-          className="mx-1 flex items-center gap-2 rounded bg-accent px-2 py-1 pl-6 text-sm"
-        >
-          <FileCodeIcon className="size-3.5 shrink-0 text-primary" />
-          <span className="truncate font-mono text-[13px]">{fileName}</span>
-          {modified ? (
-            <span
-              aria-label="Unsaved changes"
-              className="ml-auto size-1.5 shrink-0 rounded-full bg-primary"
-            />
-          ) : null}
-        </div>
-      </div>
+      ) : null}
+
+      {notice ? (
+        <Alert variant="destructive" className="mx-2 mb-1 w-auto py-2">
+          <AlertDescription className="text-[12px]">{notice}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <ScrollArea className="min-h-0 flex-1">
+        {rows.length === 0 ? (
+          <Empty className="p-4">
+            <EmptyTitle className="text-sm">
+              {unavailableReason ? "One file at a time" : "No folder open"}
+            </EmptyTitle>
+            <EmptyDescription className="text-[12px]">
+              {unavailableReason ??
+                "Open a folder to read the GEDCOM file with the media and notes beside it. The folder is not remembered between visits."}
+            </EmptyDescription>
+          </Empty>
+        ) : (
+          <ul className="py-1">
+            {rows.map((row) => (
+              <li key={row.path}>
+                <Row
+                  row={row}
+                  active={row.path === activePath}
+                  onSelect={() =>
+                    row.kind === "directory"
+                      ? onToggleDirectory(row.path)
+                      : onChooseFile(row.path)
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </ScrollArea>
     </div>
   );
+}
+
+function Row({
+  row,
+  active,
+  onSelect,
+}: {
+  row: TreeNode;
+  active: boolean;
+  onSelect(): void;
+}) {
+  const openable = row.kind === "directory" || row.kindIfFile !== "unsupported";
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-current={active ? "true" : undefined}
+      // 12px per level, as the design system says.
+      style={{ paddingLeft: `${8 + row.depth * 12}px` }}
+      className={cn(
+        "flex w-full items-center gap-1.5 py-1 pr-2 text-left text-sm",
+        active ? "bg-accent" : "hover:bg-accent/60",
+        openable ? "" : "text-muted-foreground",
+      )}
+    >
+      {row.kind === "directory" ? (
+        row.expanded ? (
+          <ChevronDownIcon className="size-3.5 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRightIcon className="size-3.5 shrink-0 text-muted-foreground" />
+        )
+      ) : (
+        <span className="size-3.5 shrink-0" />
+      )}
+      <RowIcon row={row} />
+      <span className="truncate font-mono text-[13px]" title={row.path}>
+        {row.name}
+      </span>
+      {openable ? null : (
+        <span className="ml-auto text-[10px] tracking-wide uppercase">
+          not shown
+        </span>
+      )}
+    </button>
+  );
+}
+
+function RowIcon({ row }: { row: TreeNode }) {
+  if (row.kind === "directory") {
+    return <FolderIcon className="size-3.5 shrink-0 text-muted-foreground" />;
+  }
+  if (row.kindIfFile === "gedcom") {
+    return <GedcomFileIcon className="size-3.5 shrink-0 text-primary" />;
+  }
+  const Icon = iconFor(row.kindIfFile);
+  return <Icon className="size-3.5 shrink-0 text-muted-foreground" />;
+}
+
+function iconFor(kind: FileKind | null) {
+  switch (kind) {
+    case "markdown":
+      return FileTextIcon;
+    case "image":
+      return ImageIcon;
+    default:
+      return FileIcon;
+  }
 }
 
 function HeaderAction({
@@ -81,7 +200,6 @@ function HeaderAction({
             size="icon"
             aria-label={label}
             onClick={onClick}
-            className="size-7 rounded text-muted-foreground"
           />
         }
       >
