@@ -3,9 +3,11 @@ import {
   ChevronDownIcon,
   CodeIcon,
   DownloadIcon,
+  FilePlusIcon,
   ExternalLinkIcon,
   MoonIcon,
   RotateCcwIcon,
+  SaveIcon,
   SunIcon,
   SunMoonIcon,
   UploadIcon,
@@ -49,12 +51,19 @@ export interface SiteHeaderProps {
   onOpenFile(): void;
   onDownload(): void;
   onReset(): void;
+  onSave(): void;
+  onSaveAs(): void;
+  /** Which of the two the document in front can have done to it. */
+  saveAvailability: { save: boolean; saveAs: boolean };
 }
 
 export function SiteHeader({
   onOpenFile,
   onDownload,
   onReset,
+  onSave,
+  onSaveAs,
+  saveAvailability,
 }: SiteHeaderProps) {
   const { theme, setTheme } = useTheme();
 
@@ -81,12 +90,26 @@ export function SiteHeader({
                 {modifierKey}O
               </span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDownload}>
-              <DownloadIcon />
-              Download copy
+            <DropdownMenuItem
+              onClick={onSave}
+              disabled={!saveAvailability.save}
+            >
+              <SaveIcon />
+              Save
               <span className="ml-auto font-mono text-xs text-muted-foreground">
                 {modifierKey}S
               </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={onSaveAs}
+              disabled={!saveAvailability.saveAs}
+            >
+              <FilePlusIcon />
+              Save as a copy…
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onDownload}>
+              <DownloadIcon />
+              Download copy
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onReset}>

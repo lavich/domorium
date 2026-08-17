@@ -11,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { EditorWorkspace } from "@/components/EditorWorkspace";
+import { ConfirmDialog, type Confirmation } from "@/components/ConfirmDialog";
 import { ReplaceDocumentDialog } from "@/components/ReplaceDocumentDialog";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ThemeProvider, useTheme } from "@/components/ThemeProvider";
@@ -19,6 +20,7 @@ import type { FileGateway } from "@/workspace/fileGateway";
 import { createFolderGateway, pickFolder } from "@/workspace/folderGateway";
 import { createMemoryGateway } from "@/workspace/memoryGateway";
 import { followLink } from "@/workspace/followLink";
+import { save, saveAsName, saveAvailability } from "@/workspace/save";
 import { detectWorkspaceSupport } from "@/workspace/support";
 import { toggled, treeRows, type TreeNode } from "@/workspace/tree";
 import { createSingleFileGateway } from "@/workspace/singleFileGateway";
@@ -67,6 +69,7 @@ function AppContent() {
   });
   const [pendingReplacement, setPendingReplacement] =
     useState<PendingReplacement>(null);
+  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<GedcomEditorHandle>(null);
   const file = activeFile(workspace);
@@ -208,6 +211,85 @@ function AppContent() {
     }
   };
 
+  /** Reads the document from the editor now: it owns it, and a copy per keystroke costs. */
+  const textOf = (open: typeof file) =>
+    editorRef.current?.getText() ?? open?.initialText ?? "";
+
+  const report = (outcome: Awaited<ReturnType<typeof save>>) => {
+    if (outcome.kind === "refused") {
+      dispatch({ type: "notice", message: outcome.message });
+      return;
+    }
+    if (outcome.kind !== "unchanged" && file) {
+      dispatch({ type: "saved", path: file.path });
+    }
+    dispatch({
+      type: "notice",
+      message:
+        outcome.kind === "downloaded"
+          ? `A copy of ${outcome.name} was downloaded; the original was not touched`
+          : null,
+    });
+  };
+
+  const saveDocument = async () => {
+    if (!file) {
+      return;
+    }
+    report(await save(file, textOf(file), gateway.current));
+  };
+
+  /** Into the granted folder, under a name that does not already hold something. */
+  const saveDocumentAs = async () => {
+    const current = gateway.current;
+    if (!file || !current?.writable) {
+      return;
+    }
+    const path = saveAsName(file.path);
+    const text = textOf(file);
+    const write = async () => {
+      try {
+        await current.create(path, text);
+        setExpanded((open) => new Set(open));
+        dispatch({ type: "saved", path: file.path });
+        dispatch({
+          type: "file-opened",
+          path,
+          kind: fileKindOf(path),
+          text,
+        });
+        setRows(await treeRows(current, expanded));
+      } catch (cause) {
+        dispatch({
+          type: "notice",
+          message:
+            cause instanceof Error
+              ? cause.message
+              : `${path} could not be written`,
+        });
+      }
+    };
+
+    // Reading it is how one asks whether it is there: the gateway answers with
+    // an error naming the path, and nothing else distinguishes absent from
+    // unreadable.
+    const exists = await current
+      .readText(path)
+      .then(() => true)
+      .catch(() => false);
+
+    if (exists) {
+      setConfirmation({
+        title: `Replace ${path}?`,
+        description: `${path} is already in this folder. Saving will write over it.`,
+        action: "Replace",
+        confirm: () => void write(),
+      });
+      return;
+    }
+    await write();
+  };
+
   const openFile = () => fileInputRef.current?.click();
 
   /**
@@ -268,11 +350,7 @@ function AppContent() {
     if (!file) {
       return;
     }
-    // Read now rather than track: the editor owns the document.
-    downloadGedcom(
-      editorRef.current?.getText() ?? file.initialText ?? "",
-      file.name,
-    );
+    downloadGedcom(textOf(file), file.name);
     dispatch({ type: "saved", path: file.path });
   };
 
@@ -291,7 +369,7 @@ function AppContent() {
       if (key === "o") {
         openFile();
       } else {
-        download();
+        void saveDocument();
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -304,6 +382,9 @@ function AppContent() {
         onOpenFile={openFile}
         onDownload={download}
         onReset={() => requestReplacement({ type: "demo" })}
+        onSave={() => void saveDocument()}
+        onSaveAs={() => void saveDocumentAs()}
+        saveAvailability={saveAvailability(file, gateway.current)}
       />
       <input
         ref={fileInputRef}
@@ -370,6 +451,10 @@ function AppContent() {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        confirmation={confirmation}
+        onCancel={() => setConfirmation(null)}
+      />
       <ReplaceDocumentDialog
         open={pendingReplacement !== null}
         onCancel={() => setPendingReplacement(null)}

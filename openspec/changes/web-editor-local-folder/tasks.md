@@ -50,19 +50,19 @@
 
 ## 5. Saving
 
-- [ ] 5.1 Save the open GEDCOM document through the gateway on an explicit command
+- [x] 5.1 Save the open GEDCOM document through the gateway on an explicit command
       and the platform shortcut, clearing the modified flag; tests cover an edited
       document, an unchanged one, and that time passing writes nothing.
-- [ ] 5.2 Ask for write permission before the first write and carry a refusal or a
+- [x] 5.2 Ask for write permission before the first write and carry a refusal or a
       failure back to the reader with the tab still modified, with tests for both.
-- [ ] 5.3 Add "save as" into the granted folder, continuing the session against the
+- [x] 5.3 Add "save as" into the granted folder, continuing the session against the
       new file and confirming before replacing an existing name, with tests for
       both paths.
-- [ ] 5.4 Refuse to write a document whose declared character set was not the one it
+- [x] 5.4 Refuse to write a document whose declared character set was not the one it
       was decoded with, with tests for a declared `ANSEL` and for `UTF-8`.
-- [ ] 5.5 Fall back to downloading a copy where no folder is granted, with a test
+- [x] 5.5 Fall back to downloading a copy where no folder is granted, with a test
       that says the original was not touched.
-- [ ] 5.6 Offer saving only for a GEDCOM document, and writing to a file only where
+- [x] 5.6 Offer saving only for a GEDCOM document, and writing to a file only where
       it came from a granted folder, with a test that a preview tab offers neither.
 
 ## 6. Not losing unsaved work

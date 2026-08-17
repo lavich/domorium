@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -213,7 +219,10 @@ describe("App", () => {
  * A stand-in for a granted directory, so the folder path can be walked in a test
  * at all: jsdom implements no picker and no file handles.
  */
-function grantFolder(tree: Record<string, string>) {
+function grantFolder(
+  tree: Record<string, string>,
+  permission: "granted" | "denied" = "granted",
+) {
   const directory = (prefix: string): unknown => ({
     kind: "directory",
     name: prefix.split("/").filter(Boolean).at(-1) ?? "Webb Family",
@@ -239,25 +248,40 @@ function grantFolder(tree: Record<string, string>) {
         ? Promise.resolve(directory(nested))
         : Promise.reject(new DOMException("no", "NotFoundError"));
     },
-    getFileHandle: (name: string) => {
+    getFileHandle: (name: string, init?: { create?: boolean }) => {
       const path = `${prefix}${name}`;
-      return path in tree
-        ? Promise.resolve({
-            getFile: () =>
-              Promise.resolve(
-                new File([tree[path]], name, { type: "text/plain" }),
-              ),
-          })
-        : Promise.reject(new DOMException("no", "NotFoundError"));
+      if (!(path in tree) && !init?.create) {
+        return Promise.reject(new DOMException("no", "NotFoundError"));
+      }
+      return Promise.resolve({
+        getFile: () =>
+          Promise.resolve(
+            new File([tree[path] ?? ""], name, { type: "text/plain" }),
+          ),
+        createWritable: () =>
+          Promise.resolve({
+            write: (text: string) => {
+              tree[path] = text;
+              return Promise.resolve();
+            },
+            close: () => Promise.resolve(),
+          }),
+      });
     },
-    queryPermission: () => Promise.resolve("granted"),
-    requestPermission: () => Promise.resolve("granted"),
+    queryPermission: () => Promise.resolve(permission),
+    requestPermission: () => Promise.resolve(permission),
   });
 
   vi.stubGlobal(
     "showDirectoryPicker",
     vi.fn().mockResolvedValue(directory("")),
   );
+}
+
+/** The edit as the editor would report it: a change event carrying the new text. */
+function typeIntoEditor(extra: string) {
+  const area = screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement;
+  fireEvent.change(area, { target: { value: `${area.value}${extra}` } });
 }
 
 describe("a granted folder", () => {
@@ -327,6 +351,68 @@ describe("a granted folder", () => {
         screen.getByText("Open a folder to reach media/portrait.jpg"),
       ).toBeTruthy(),
     );
+  });
+
+  it("saves the edited document into the folder and clears the mark", async () => {
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree);
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await userEvent.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await userEvent.click(screen.getByText("tree.ged"));
+    // The editor is remounted for the file just opened, so typing before that
+    // lands goes into an editor about to be replaced.
+    await screen.findByRole("tab", { name: /tree\.ged/ });
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement).value,
+      ).toContain("0 TRLR"),
+    );
+
+    // `userEvent.type` has to click first, and its pointer checks find nothing
+    // clickable in this layout under jsdom. The subject here is saving, so the
+    // edit arrives as the change event the editor would have raised.
+    typeIntoEditor("0 NOTE typed");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Unsaved changes")).toBeTruthy(),
+    );
+
+    await userEvent.keyboard("{Meta>}s{/Meta}");
+
+    await waitFor(() => expect(tree["tree.ged"]).toContain("0 NOTE typed"));
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Unsaved changes")).toBeNull(),
+    );
+  });
+
+  // The reader can be handed a folder to read and refuse to let it be written.
+  it("says nothing was written where permission is refused, and keeps the mark", async () => {
+    const tree = { "tree.ged": "0 HEAD\n0 TRLR\n" };
+    grantFolder(tree, "denied");
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await userEvent.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await userEvent.click(screen.getByText("tree.ged"));
+    await screen.findByRole("tab", { name: /tree\.ged/ });
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("GEDCOM editor") as HTMLTextAreaElement).value,
+      ).toContain("0 TRLR"),
+    );
+    typeIntoEditor("0 NOTE typed");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Unsaved changes")).toBeTruthy(),
+    );
+
+    await userEvent.keyboard("{Meta>}s{/Meta}");
+
+    await waitFor(() =>
+      expect(screen.getByText(/open for reading only/)).toBeTruthy(),
+    );
+    expect(tree["tree.ged"]).toBe("0 HEAD\n0 TRLR\n");
+    expect(screen.getByLabelText("Unsaved changes")).toBeTruthy();
   });
 
   it("sends a web address to the browser and opens no tab for it", async () => {
