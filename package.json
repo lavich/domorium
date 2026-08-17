@@ -35,7 +35,7 @@
     "markdownlint-rule-relative-links": "^5.1.2",
     "prettier": "^3.9.6",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.66.0",
+    "typescript-eslint": "^8.67.0",
     "vite": "^8.2.1",
     "vitest": "^4.1.10"
   },
