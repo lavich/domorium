@@ -18,6 +18,7 @@ import { downloadGedcom, readGedcomFile } from "@/editor/fileActions";
 import type { FileGateway } from "@/workspace/fileGateway";
 import { createFolderGateway, pickFolder } from "@/workspace/folderGateway";
 import { createMemoryGateway } from "@/workspace/memoryGateway";
+import { followLink } from "@/workspace/followLink";
 import { detectWorkspaceSupport } from "@/workspace/support";
 import { toggled, treeRows, type TreeNode } from "@/workspace/tree";
 import { createSingleFileGateway } from "@/workspace/singleFileGateway";
@@ -108,7 +109,7 @@ function AppContent() {
         await openWorkspace(
           createMemoryGateway(
             { "example.ged": text },
-            { name: "Example", writable: false },
+            { name: "Example", writable: false, folder: false },
           ),
           "example.ged",
         );
@@ -171,7 +172,7 @@ function AppContent() {
         void openWorkspace(
           createMemoryGateway(
             { "example.ged": demoText },
-            { name: "Example", writable: false },
+            { name: "Example", writable: false, folder: false },
           ),
           "example.ged",
         );
@@ -337,6 +338,19 @@ function AppContent() {
               }
               onDiagnosticsChange={setDiagnostics}
               onStatusChange={setStatus}
+              onFollowLink={(link) => {
+                const followed = followLink(link, {
+                  path: file?.path ?? "",
+                  hasWorkspace: gateway.current?.folder === true,
+                });
+                if (followed.kind === "web") {
+                  window.open(followed.url, "_blank", "noopener,noreferrer");
+                } else if (followed.kind === "file") {
+                  void chooseFile(followed.path);
+                } else {
+                  dispatch({ type: "notice", message: followed.message });
+                }
+              }}
               onOpenFile={openFile}
               onOpenFolder={() => void openFolder()}
               explorerRows={rows}

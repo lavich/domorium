@@ -33,6 +33,14 @@ describe("a workspace of one chosen file", () => {
     expect(gateway.writable).toBe(false);
   });
 
+  // Following a link out of a document needs to know this: a path beside the
+  // document reaches nothing where the workspace is one file.
+  it("says it holds no folder", () => {
+    expect(
+      createSingleFileGateway("tree.ged", "0 HEAD\n", vi.fn()).folder,
+    ).toBe(false);
+  });
+
   it("cannot create a second file", async () => {
     const gateway = createSingleFileGateway("tree.ged", "0 HEAD\n", vi.fn());
 
@@ -55,6 +63,7 @@ describe("both gateways answer the same interface", () => {
     for (const key of [
       "name",
       "writable",
+      "folder",
       "list",
       "readText",
       "readBytes",

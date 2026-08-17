@@ -107,6 +107,10 @@ describe("a workspace backed by a granted folder", () => {
     ]);
   });
 
+  it("says it holds a folder, which a link resolves against", () => {
+    expect(createFolderGateway(folder().root).folder).toBe(true);
+  });
+
   it("reads a nested file as text and as bytes", async () => {
     const gateway = createFolderGateway(folder().root);
 

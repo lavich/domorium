@@ -40,12 +40,12 @@
 
 ## 4. Following a link out of a document
 
-- [ ] 4.1 Resolve a `file-relative` link against the directory of the document that
+- [x] 4.1 Resolve a `file-relative` link against the directory of the document that
       names it and open the file it names, taking the kind from the language
       service rather than re-reading the payload. Tests cover a hit and a miss.
-- [ ] 4.2 Refuse a path that leaves the granted folder and an absolute path, with
+- [x] 4.2 Refuse a path that leaves the granted folder and an absolute path, with
       tests naming `../../keys/id_rsa` and `/etc/passwd`.
-- [ ] 4.3 Keep a web address opening in a browser tab, with a test that no editor tab
+- [x] 4.3 Keep a web address opening in a browser tab, with a test that no editor tab
       is added.
 
 ## 5. Saving

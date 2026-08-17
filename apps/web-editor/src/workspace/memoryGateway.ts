@@ -15,7 +15,7 @@ import {
  */
 export function createMemoryGateway(
   files: Record<string, string | Blob>,
-  options: { name?: string; writable?: boolean } = {},
+  options: { name?: string; writable?: boolean; folder?: boolean } = {},
 ): FileGateway {
   const tree = new Map<string, string | Blob>(Object.entries(files));
   const writable = options.writable ?? true;
@@ -31,6 +31,7 @@ export function createMemoryGateway(
   return {
     name: options.name ?? "memory",
     writable,
+    folder: options.folder ?? true,
 
     // Every method is async so a refusal arrives as a rejection: these throw
     // for a path outside the workspace, and a caller holding a promise should

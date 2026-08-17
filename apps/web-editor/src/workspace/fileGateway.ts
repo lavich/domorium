@@ -11,6 +11,12 @@ export interface FileGateway {
   readonly name: string;
   /** Whether this gateway can write at all; a single chosen file cannot. */
   readonly writable: boolean;
+  /**
+   * Whether the workspace holds more than the file that was opened. A single
+   * chosen file and the demo do not, so a path beside the document reaches
+   * nothing there however well it resolves.
+   */
+  readonly folder: boolean;
   list(path: string): Promise<DirectoryEntry[]>;
   readText(path: string): Promise<string>;
   readBytes(path: string): Promise<Blob>;

@@ -44,6 +44,7 @@ it("creates one editor and destroys it on unmount", () => {
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
       onStatusChange={vi.fn()}
+      onFollowLink={vi.fn()}
     />,
   );
 
@@ -61,6 +62,7 @@ it("updates the theme without replacing the editor", () => {
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
       onStatusChange={vi.fn()}
+      onFollowLink={vi.fn()}
     />,
   );
 
@@ -72,6 +74,7 @@ it("updates the theme without replacing the editor", () => {
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
       onStatusChange={vi.fn()}
+      onFollowLink={vi.fn()}
     />,
   );
 
@@ -88,6 +91,7 @@ it("replaces the editor when the document key changes", () => {
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
       onStatusChange={vi.fn()}
+      onFollowLink={vi.fn()}
     />,
   );
 
@@ -99,6 +103,7 @@ it("replaces the editor when the document key changes", () => {
       onChange={vi.fn()}
       onDiagnosticsChange={vi.fn()}
       onStatusChange={vi.fn()}
+      onFollowLink={vi.fn()}
     />,
   );
 

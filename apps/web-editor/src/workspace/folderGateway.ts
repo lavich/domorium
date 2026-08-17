@@ -63,6 +63,7 @@ export function createFolderGateway(
   return {
     name: root.name,
     writable: true,
+    folder: true,
 
     async list(path) {
       const resolved = resolveInWorkspace("", path);

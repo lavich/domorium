@@ -31,6 +31,7 @@ export function createSingleFileGateway(
     // snapshot, not a handle. Saving is a download, which the workspace has to
     // know about, because "saved" means something different for it.
     writable: false,
+    folder: false,
 
     async list(path) {
       return path === ""

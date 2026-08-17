@@ -16,9 +16,14 @@ vi.mock("./editor/GedcomEditor", () => ({
       initialText: string;
       onChange(): void;
       onDiagnosticsChange(diagnostics: []): void;
+      onFollowLink(link: {
+        kind: string;
+        targetText: string;
+        range: unknown;
+      }): void;
     }
   >(function MockGedcomEditor(
-    { initialText, onChange, onDiagnosticsChange },
+    { initialText, onChange, onDiagnosticsChange, onFollowLink },
     ref,
   ) {
     // The real editor owns the document and hands it over on request, so the
@@ -32,15 +37,42 @@ vi.mock("./editor/GedcomEditor", () => ({
       openSearch: vi.fn(),
     }));
     return (
-      <textarea
-        ref={area}
-        aria-label="GEDCOM editor"
-        defaultValue={initialText}
-        onChange={() => {
-          onChange();
-          onDiagnosticsChange([]);
-        }}
-      />
+      <>
+        <textarea
+          ref={area}
+          aria-label="GEDCOM editor"
+          defaultValue={initialText}
+          onChange={() => {
+            onChange();
+            onDiagnosticsChange([]);
+          }}
+        />
+        {/* The real editor calls this when a reader follows a link. */}
+        <button
+          type="button"
+          onClick={() =>
+            onFollowLink({
+              kind: "file-relative",
+              targetText: "media/portrait.jpg",
+              range: null,
+            })
+          }
+        >
+          follow the media link
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            onFollowLink({
+              kind: "http",
+              targetText: "https://example.org/",
+              range: null,
+            })
+          }
+        >
+          follow the web link
+        </button>
+      </>
     );
   }),
 }));
@@ -174,5 +206,142 @@ describe("App", () => {
     await waitFor(() =>
       expect(screen.getByRole("tab", { name: /example\.ged/i })).not.toBeNull(),
     );
+  });
+});
+
+/**
+ * A stand-in for a granted directory, so the folder path can be walked in a test
+ * at all: jsdom implements no picker and no file handles.
+ */
+function grantFolder(tree: Record<string, string>) {
+  const directory = (prefix: string): unknown => ({
+    kind: "directory",
+    name: prefix.split("/").filter(Boolean).at(-1) ?? "Webb Family",
+    async *entries() {
+      const seen = new Set<string>();
+      for (const path of Object.keys(tree)) {
+        if (!path.startsWith(prefix)) {
+          continue;
+        }
+        const rest = path.slice(prefix.length);
+        const cut = rest.indexOf("/");
+        const name = cut < 0 ? rest : rest.slice(0, cut);
+        if (!name || seen.has(name)) {
+          continue;
+        }
+        seen.add(name);
+        yield [name, { kind: cut < 0 ? "file" : "directory" }];
+      }
+    },
+    getDirectoryHandle: (name: string) => {
+      const nested = `${prefix}${name}/`;
+      return Object.keys(tree).some((path) => path.startsWith(nested))
+        ? Promise.resolve(directory(nested))
+        : Promise.reject(new DOMException("no", "NotFoundError"));
+    },
+    getFileHandle: (name: string) => {
+      const path = `${prefix}${name}`;
+      return path in tree
+        ? Promise.resolve({
+            getFile: () =>
+              Promise.resolve(
+                new File([tree[path]], name, { type: "text/plain" }),
+              ),
+          })
+        : Promise.reject(new DOMException("no", "NotFoundError"));
+    },
+    queryPermission: () => Promise.resolve("granted"),
+    requestPermission: () => Promise.resolve("granted"),
+  });
+
+  vi.stubGlobal(
+    "showDirectoryPicker",
+    vi.fn().mockResolvedValue(directory("")),
+  );
+}
+
+describe("a granted folder", () => {
+  // The explorer and the problems panel are shown on a wide window only, and the
+  // suite above deliberately runs narrow.
+  beforeEach(() =>
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockReturnValue({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+    ),
+  );
+
+  const folder = () =>
+    grantFolder({
+      "tree.ged": "0 HEAD\n0 TRLR\n",
+      "notes.md": "# Anna\n",
+      "media/portrait.jpg": "bytes",
+    });
+
+  it("lists what the folder holds and opens a note beside the document", async () => {
+    folder();
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+
+    await userEvent.click(screen.getByLabelText("Open a folder"));
+
+    await waitFor(() => expect(screen.getByText("notes.md")).toBeTruthy());
+    expect(screen.getByText("tree.ged")).toBeTruthy();
+    expect(screen.getByText("media")).toBeTruthy();
+
+    await userEvent.click(screen.getByText("notes.md"));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("Preview of notes.md")).toBeTruthy(),
+    );
+    expect(screen.getByRole("tab", { name: /notes\.md/ })).toBeTruthy();
+  });
+
+  it("opens the file a link in the document names", async () => {
+    folder();
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+    await userEvent.click(screen.getByLabelText("Open a folder"));
+    await waitFor(() => expect(screen.getByText("tree.ged")).toBeTruthy());
+    await userEvent.click(screen.getByText("tree.ged"));
+
+    await userEvent.click(screen.getByText("follow the media link"));
+
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: /portrait\.jpg/ })).toBeTruthy(),
+    );
+  });
+
+  // Without a folder there is nothing to resolve a path against.
+  it("says a folder is needed to reach a file the document names", async () => {
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+
+    await userEvent.click(screen.getByText("follow the media link"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Open a folder to reach media/portrait.jpg"),
+      ).toBeTruthy(),
+    );
+  });
+
+  it("sends a web address to the browser and opens no tab for it", async () => {
+    const open = vi.fn();
+    vi.stubGlobal("open", open);
+    render(<App />);
+    await screen.findByLabelText("GEDCOM editor");
+
+    await userEvent.click(screen.getByText("follow the web link"));
+
+    expect(open).toHaveBeenCalledWith(
+      "https://example.org/",
+      "_blank",
+      "noopener,noreferrer",
+    );
+    expect(screen.queryAllByRole("tab")).toHaveLength(1);
   });
 });

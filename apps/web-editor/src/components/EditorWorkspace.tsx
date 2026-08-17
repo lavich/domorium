@@ -11,6 +11,8 @@ import { ExplorerPanel } from "./ExplorerPanel";
 import { ProblemsPanel } from "./ProblemsPanel";
 import { StatusBar } from "./StatusBar";
 import { ImagePreview, MarkdownPreview } from "./FilePreview";
+import type { DocumentLink } from "@domorium/codemirror";
+
 import { GedcomEditor } from "@/editor/GedcomEditor";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { activeFile, type Workspace } from "@/workspace/workspace";
@@ -31,6 +33,7 @@ export function EditorWorkspace({
   onChange,
   onDiagnosticsChange,
   onStatusChange,
+  onFollowLink,
   onOpenFile,
   onOpenFolder,
   onActivate,
@@ -49,6 +52,7 @@ export function EditorWorkspace({
   onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
   onStatusChange(status: WebEditorStatus): void;
+  onFollowLink(link: DocumentLink): void;
   onOpenFile(): void;
   onOpenFolder(): void;
   onActivate(path: string): void;
@@ -97,6 +101,7 @@ export function EditorWorkspace({
         onChange={onChange}
         onDiagnosticsChange={onDiagnosticsChange}
         onStatusChange={onStatusChange}
+        onFollowLink={onFollowLink}
       />
     );
   };

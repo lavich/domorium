@@ -41,6 +41,12 @@ export interface CreateGedcomEditorOptions {
   parent: HTMLElement;
   initialText: string;
   theme: WebTheme;
+  /**
+   * What to do with a link the reader follows. A web address is the browser's;
+   * anything else belongs to whoever knows which folder is open, which is not
+   * the editor.
+   */
+  onFollowLink?(link: DocumentLink): void;
   /** An edit happened. Deliberately carries no text — see GedcomEditorHandle.getText. */
   onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
@@ -121,7 +127,10 @@ export function createGedcomEditor(
             editor
               ? applyWorkspaceEdit(editor, edit, language.getVersion())
               : false,
-          openDocumentLink,
+          openDocumentLink: (link) =>
+            options.onFollowLink
+              ? options.onFollowLink(link)
+              : openWebAddress(link),
         },
       }),
       ...createStandaloneEditorExtensions(),
@@ -245,7 +254,7 @@ function renameAtSelection(
   return nextName === null ? true : renameReference(view, language, nextName);
 }
 
-function openDocumentLink(link: DocumentLink): void {
+function openWebAddress(link: DocumentLink): void {
   if (link.kind === "http") {
     window.open(link.targetText, "_blank", "noopener,noreferrer");
   }
