@@ -130,6 +130,14 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* A strip that scrolls sideways and wants no scrollbar drawn over its one row. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

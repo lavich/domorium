@@ -2,7 +2,6 @@ import { FileTextIcon, ImageIcon, XIcon } from "lucide-react";
 
 import { GedcomFileIcon } from "./GedcomFileIcon";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { FileKind, OpenFile } from "@/workspace/workspace";
 
@@ -31,11 +30,16 @@ export function EditorTabs({
       onValueChange={(value) => onActivate(String(value))}
       className="h-(--shell-tabs-height) shrink-0 gap-0 border-b bg-muted/30"
     >
-      <ScrollArea className="w-full">
+      {/*
+       * More tabs than room scroll sideways, and nothing scrolls up: the strip is
+       * one row as tall as the band, so a scrollbar drawn inside it would sit over
+       * the line marking the tab in front and shorten the row that carries it.
+       */}
+      <div className="scrollbar-none h-full w-full overflow-x-auto overflow-y-hidden">
         <TabsList
           variant="line"
           aria-label="Open files"
-          className="h-(--shell-tabs-height) w-max rounded-none p-0"
+          className="h-full! w-max rounded-none p-0"
         >
           {files.map((file) => (
             <TabsTrigger
@@ -43,8 +47,13 @@ export function EditorTabs({
               value={file.path}
               title={file.path}
               className={cn(
-                "h-full gap-2 rounded-none border-r border-t-2 border-t-transparent px-3",
-                "data-selected:border-t-primary data-selected:bg-background",
+                "h-full gap-2 rounded-none border-r border-b-2 border-b-transparent px-3",
+                // The line variant marks the tab in front five pixels below the
+                // tab, which is outside this row: the mark belongs inside it,
+                // where the strip cannot clip it away.
+                // The variant paints every tab transparent from the list above, so
+                // the raised look of the tab in front has to say it means it.
+                "after:hidden data-active:border-b-primary data-active:bg-background!",
               )}
             >
               <KindIcon kind={file.kind} />
@@ -76,8 +85,7 @@ export function EditorTabs({
             </TabsTrigger>
           ))}
         </TabsList>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      </div>
     </Tabs>
   );
 }
