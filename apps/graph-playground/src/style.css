@@ -1,0 +1,127 @@
+:root {
+  color-scheme: light dark;
+  --ink: light-dark(#1c1917, #e7e5e4);
+  --card: light-dark(#ffffff, #292524);
+  --line: light-dark(#a8a29e, #57534e);
+  --edge: light-dark(#d6d3d1, #44403c);
+}
+
+body {
+  margin: 0;
+  font:
+    14px/1.4 system-ui,
+    sans-serif;
+  color: var(--ink);
+  background: light-dark(#fafaf9, #1c1917);
+}
+
+header {
+  position: sticky;
+  left: 0;
+  padding: 16px 24px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 16px;
+}
+
+#caption {
+  color: light-dark(#78716c, #a8a29e);
+}
+
+#graph {
+  position: relative;
+}
+
+.person,
+.edge {
+  position: absolute;
+}
+
+/* Pointing dims; only choosing moves anyone. */
+.person[data-lit="off"],
+.edge[data-lit="off"],
+.family[data-lit="off"] {
+  opacity: 0.15;
+}
+
+/* One slot per family line, in the fixed order of a validated categorical palette —
+   not cycled, and a ninth line falls back to neutral rather than reusing a hue. */
+.person[data-lineage="0"] {
+  --tint: light-dark(#2a78d6, #3987e5);
+}
+.person[data-lineage="1"] {
+  --tint: light-dark(#eb6834, #d95926);
+}
+.person[data-lineage="2"] {
+  --tint: light-dark(#1baf7a, #199e70);
+}
+.person[data-lineage="3"] {
+  --tint: light-dark(#eda100, #c98500);
+}
+.person[data-lineage="4"] {
+  --tint: light-dark(#e87ba4, #d55181);
+}
+.person[data-lineage="5"] {
+  --tint: light-dark(#008300, #008300);
+}
+.person[data-lineage="6"] {
+  --tint: light-dark(#4a3aa7, #9085e9);
+}
+.person[data-lineage="7"] {
+  --tint: light-dark(#e34948, #e66767);
+}
+
+/* The union itself, which the couple joins and the children descend from. */
+.family {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+}
+
+.person {
+  box-sizing: border-box;
+  cursor: pointer;
+  transition:
+    left 300ms ease,
+    top 300ms ease,
+    opacity 150ms ease;
+  width: 116px;
+  height: 44px;
+  padding: 6px 8px;
+  border: 1px solid var(--tint, var(--line));
+  border-radius: 8px;
+  /* The hue names the family; the text stays ink, so nothing is legible by colour
+     alone and the label carries the name anyway. */
+  background: color-mix(in oklab, var(--tint, transparent) 18%, var(--card));
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.person:hover {
+  outline: 1px solid var(--ink);
+}
+
+/* The card the keyboard is on, and the one the frame was built around. */
+.person:focus,
+.person[data-focus="on"] {
+  outline: 2px solid var(--ink);
+}
+
+.edge {
+  height: 1px;
+  background: var(--edge);
+  transform-origin: 0 0;
+}
+
+/* A marriage is not descent, so it is not drawn like one. */
+.edge.partner {
+  height: 0;
+  border-top: 1px dashed var(--line);
+  background: none;
+}
