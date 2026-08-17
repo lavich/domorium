@@ -19,6 +19,11 @@ const failures = [];
 
 const fail = (file, message) => failures.push(`${file}: ${message}`);
 
+// A change proposal is written to OpenSpec's templates, which open at the second
+// heading level and are appended to by its CLI, so the prose rules here do not
+// apply to them. Prettier still does — that is checked from the same list.
+const LINT_EXEMPT = (file) => file.startsWith("openspec/");
+
 // `--others` so an uncommitted document is checked too; the existsSync filter drops
 // files deleted from the working tree but still in the index, which git also lists.
 function markdownFiles() {
@@ -50,7 +55,7 @@ async function checkFormatting(files) {
 // is why that config carries no globs of its own.
 async function checkMarkdownLint(files) {
   await markdownlint({
-    argv: files,
+    argv: files.filter((file) => !LINT_EXEMPT(file)),
     directory: root,
     noGlobs: true,
     logMessage: () => {},
