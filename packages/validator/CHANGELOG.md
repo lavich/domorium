@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 1.8.1 - 2026-08-17
 
 - **A note written as text in a 5.5.1 file is no longer reported.** `1 NOTE plain
 text` was told to be a pointer to a `NOTE` record, though `NOTE_STRUCTURE` has
