@@ -25,8 +25,18 @@
     "vscode": "^1.100.0"
   },
   "activationEvents": [
-    "onLanguage:gedcom"
+    "onLanguage:gedcom",
+    "workspaceContains:**/*.ged"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": {
+      "supported": "limited",
+      "description": "A link to a file beside the GEDCOM cannot be followed where the workspace is not on a file system."
+    }
+  },
   "contributes": {
     "languages": [
       {
@@ -59,7 +69,12 @@
           ]
         }
       }
-    ]
+    ],
+    "configurationDefaults": {
+      "[gedcom]": {
+        "editor.semanticHighlighting.enabled": true
+      }
+    }
   },
   "vsce": {
     "dependencies": false,
