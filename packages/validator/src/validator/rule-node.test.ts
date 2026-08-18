@@ -1400,6 +1400,85 @@ ${record}
     });
   });
 
+  // #112: these carry a closed value set in the specification, and the payload
+  // types reached the switch's default branch, where anything non-empty passes.
+  describe("rule Select", () => {
+    const valueIn = (document: string, path: number[]) => {
+      const { nodes, pointers } = astBuilder(document);
+      let node = nodes[path[0]];
+      for (const step of path.slice(1)) {
+        node = node.children[step];
+      }
+      return new RuleNode(g551validation, pointers).validate(node);
+    };
+
+    const indi = (lines: string) => `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+${lines}0 @F1@ FAM
+0 TRLR
+`;
+
+    test.each([
+      [
+        "QUAY",
+        "3",
+        indi("1 BIRT\n2 SOUR a citation\n3 QUAY 3\n"),
+        [1, 0, 0, 0],
+      ],
+      ["PEDI", "birth", indi("1 FAMC @F1@\n2 PEDI birth\n"), [1, 0, 0]],
+      ["RESN", "privacy", indi("1 RESN privacy\n"), [1, 0]],
+      ["RESN", "confidential", indi("1 RESN confidential\n"), [1, 0]],
+      [
+        "STAT",
+        "challenged",
+        indi("1 FAMC @F1@\n2 STAT challenged\n"),
+        [1, 0, 0],
+      ],
+      [
+        "ADOP",
+        "BOTH",
+        indi("1 ADOP\n2 FAMC @F1@\n3 ADOP BOTH\n"),
+        [1, 0, 0, 0],
+      ],
+    ])("should pass %s with %s", async (_tag, _value, document, path) => {
+      expect(valueIn(document, path)).toEqual([]);
+    });
+
+    test.each([
+      [
+        "QUAY",
+        "9",
+        indi("1 BIRT\n2 SOUR a citation\n3 QUAY 9\n"),
+        [1, 0, 0, 0],
+      ],
+      ["PEDI", "nonsense", indi("1 FAMC @F1@\n2 PEDI nonsense\n"), [1, 0, 0]],
+      ["RESN", "whatever", indi("1 RESN whatever\n"), [1, 0]],
+      ["STAT", "nonsense", indi("1 FAMC @F1@\n2 STAT nonsense\n"), [1, 0, 0]],
+      [
+        "ADOP",
+        "nonsense",
+        indi("1 ADOP\n2 FAMC @F1@\n3 ADOP nonsense\n"),
+        [1, 0, 0, 0],
+      ],
+    ])("should report %s with %s", async (_tag, _value, document, path) => {
+      expect(valueIn(document, path).length).toBe(1);
+    });
+
+    test("should pass ORDI with yes and report anything else", async () => {
+      const subn = (value: string) => `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @S1@ SUBN
+1 ORDI ${value}
+0 TRLR
+`;
+      expect(valueIn(subn("yes"), [1, 0])).toEqual([]);
+      expect(valueIn(subn("maybe"), [1, 0]).length).toBe(1);
+    });
+  });
+
   describe("rule Xref", () => {
     const SAMPLE = `
 0 HEAD
