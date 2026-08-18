@@ -74,6 +74,12 @@ host supplies `show` and `hide`, because what a preview is drawn on — a
 tooltip, a popover — is the host's to decide; `getRecordPreviewRuns` turns the
 record into runs carrying the host's own highlight classes.
 
+Which record a pointer names, and how much of it fits, is answered by
+`getRecordPreview` in `@domorium/language-service`, so a host that speaks LSP
+gets the same preview. What belongs to this package is the gesture, the mark on
+the pointer, and the colouring; `findRecordPreview` converts that answer to the
+offsets CodeMirror works in.
+
 `trigger` decides what opens one and defaults to the platform modifier;
 `clearRecordPreview(view)` closes one from anywhere, and `hide` is called for it.
 
