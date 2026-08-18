@@ -239,8 +239,7 @@ describe("validator", () => {
     });
   });
 
-  // #252: with a tag read as written, a line carrying no level lexed cleanly and
-  // was judged as a node besides being reported as no line at all.
+  // #252: said twice, once by the parser and once about a tag.
   test("says only that a line carries no level", () => {
     const errors = new GedcomDocument()
       .createDocument(

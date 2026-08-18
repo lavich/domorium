@@ -142,8 +142,7 @@ describe("positive tests", () => {
   });
 });
 
-// #252: the tag pattern was upper case only, so `NoTe` matched as far as `N` and
-// the rest became a value — a tag that is nowhere in the file.
+// #252: matched as far as `N`, and the rest became a value.
 describe("a tag written in mixed case", () => {
   it("is read as the file wrote it", () => {
     const { tokens, errors } = gedcomLexer.tokenize("1 NoTe hello");

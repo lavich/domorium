@@ -68,9 +68,8 @@ export const Pointer = createToken({
   push_mode: "hasPointer",
 });
 
-// A tag holds A-Z, 0-9 and underscore, and one written otherwise is read as
-// written rather than truncated at the first letter that does not belong: the
-// validator says which tag is meant. See #252.
+// Read as written rather than truncated at the first letter that does not belong
+// to a tag; the validator says which tag is meant. See #252.
 export const Tag = createToken({
   name: TokenNames.TAG,
   pattern: /[A-Za-z0-9_]+/,
