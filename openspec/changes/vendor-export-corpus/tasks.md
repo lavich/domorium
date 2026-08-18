@@ -4,7 +4,7 @@
       names: a location pinned to an upstream revision, a `sha256`, the exporting
       program and version, the corpus that collected the file and its licence, and
       an empty expectation for now. No file is copied into the repository.
-- [ ] 1.2 Note on each entry that records a suspected defect of ours which issue
+- [x] 1.2 Note on each entry that records a suspected defect of ours which issue
       tracks it, once 4.1 has filed them.
 
 ## 2. The check
@@ -34,7 +34,7 @@
 
 ## 4. What the corpus found
 
-- [ ] 4.1 File an issue per suspected defect from the design's table: the `AGE`
+- [x] 4.1 File an issue per suspected defect from the design's table: the `AGE`
       modifier read only with a space after it, the code vocabulary that is three
       vocabularies, and the lexer warning on the at-sign file. Reference #190 and
       #151 rather than duplicating them. Fix nothing here.
