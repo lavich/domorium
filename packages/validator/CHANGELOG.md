@@ -4,6 +4,16 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A line the lexer cannot read is reported once, in words about GEDCOM.** An xref
+  with a space in it — `0 @NoTe ref@ NOTE …` — produced "unexpected character:
+  ->@<- at offset: 199, skipped 1 characters", which is true of the scanner and no
+  use to a reader. The lexer then resumed one character on, so the wreckage lexed
+  into a tag `N` and a value, and the line was reported a second time as an unknown
+  tag that is nowhere in the file. Such a line now yields one diagnostic, saying an
+  xref holds letters, digits and underscore between two @ marks, and its tokens are
+  dropped rather than read as something else. The lines around it are untouched.
+- **An unknown tag at the top level says `root`** where it said `undefined`. The
+  message about a missing tag has said `root` all along.
 - **A required tag missing from a childless parent is reported where it is
   missing.** The position came from the parent of the first child, so a parent with
   no children at all had no position to offer and the report landed on line 1. In a

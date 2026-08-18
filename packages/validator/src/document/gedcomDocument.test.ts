@@ -146,6 +146,50 @@ describe("validator", () => {
 
   // Every payload problem used to ship as the bare code "VAL", so a consumer
   // could not tell a missing value from a malformed one.
+  // #234: an xref may hold only letters, digits and underscore, so a space inside
+  // one leaves the line unreadable. The reader was told the offset of a character
+  // and then a second time about a tag that is not in the file.
+  describe("a line the lexer cannot read", () => {
+    const errorsFor = (line: string) =>
+      new GedcomDocument()
+        .createDocument(`0 HEAD\n1 GEDC\n2 VERS 5.5.1\n${line}\n0 TRLR\n`)
+        .getErrors()
+        .filter((error) => error.range.start.line === 3);
+
+    test("says what is wrong in its own words", () => {
+      const [error, ...rest] = errorsFor("0 @NoTe ref@ NOTE mixed case");
+
+      expect(rest).toEqual([]);
+      expect(error.code).toBe(GedcomErrorCode.Lexer);
+      expect(error.message).not.toMatch(/offset|skipped/);
+      expect(error.message).toMatch(/xref/i);
+    });
+
+    test("does not go on to read a tag out of the wreckage", () => {
+      const messages = errorsFor("0 @NoTe ref@ NOTE mixed case").map(
+        (error) => error.message,
+      );
+
+      expect(messages.join(" ")).not.toMatch(/Unknown tag/);
+    });
+
+    test("leaves the lines around it alone", () => {
+      const document = new GedcomDocument();
+      document.createDocument(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @NoTe ref@ NOTE mixed case
+0 @I1@ INDI
+1 NAME Ada /Lovelace/
+0 TRLR
+`);
+
+      expect(
+        document.getErrors().filter((error) => error.range.start.line > 3),
+      ).toEqual([]);
+    });
+  });
+
   describe("diagnostic codes", () => {
     const codeFor = (body: string) =>
       new GedcomDocument()

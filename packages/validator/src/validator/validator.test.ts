@@ -294,6 +294,25 @@ describe("validator", () => {
   // GEDCOM 5.5.1 gives OBJE two shapes in a link position — a pointer, or FILE
   // and TITL beneath it — and puts FORM beneath FILE, where 5.5 put it beneath
   // OBJE.
+  // The sibling message about a missing tag has said "root" all along.
+  test("names the root as the root, not as undefined", async () => {
+    const { nodes, validator } = validatorFor(`0 HEAD
+1 SOUR TestApp
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Submitter
+0 @X1@ FOO
+0 TRLR
+`);
+
+    const messages = validator.validate(nodes).map((error) => error.message);
+    expect(messages).toContain("Unknown tag FOO in parent root");
+  });
+
   describe("a 5.5.1 multimedia link", () => {
     const in551 = (body: string) =>
       validatorFor(`0 HEAD

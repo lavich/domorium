@@ -233,11 +233,7 @@
       "collected": "gedcom7code/test-files, vendored into cacack/gedcom-go",
       "licence": "Unlicense",
       "sha256": "a0cea8dcb970d4c08f8bf7cdac7bb3b2d5f1bb5b6a342d5b9d0a453de4f691e1",
-      "expected": [
-        "3 error unresolved-xref",
-        "13 warning LEXER",
-        "13 warning VAL001"
-      ]
+      "expected": ["3 error unresolved-xref", "13 warning LEXER"]
     },
     "age-keywords-551.ged": {
       "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/age-keywords-551.ged",
