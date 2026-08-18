@@ -2,7 +2,7 @@ import { highlightingFor } from "@codemirror/language";
 import type { EditorState, Text } from "@codemirror/state";
 
 import { semanticTokenTag } from "./extensions.js";
-import { offsetToPosition, positionToOffset } from "./positions.js";
+import { offsetToPosition, rangeToOffsets } from "./positions.js";
 import type { EditorLanguageService } from "./service.js";
 
 export interface OffsetSpan {
@@ -34,24 +34,16 @@ export function findRecordPreview(
   maxLines: number,
 ): RecordPreview | null {
   const doc = state.doc;
-  const service = language.update(doc);
-  const position = offsetToPosition(doc, offset);
-  const [definition] = service.getDefinitionRanges(position);
-  if (!definition || definition.start.line === position.line) {
+  const preview = language
+    .update(doc)
+    .getRecordPreview(offsetToPosition(doc, offset), { maxLines });
+  if (!preview) {
     return null;
   }
-  const pointer = findPointer(language, doc, offset);
-  if (!pointer) {
-    return null;
-  }
-  const startLine = definition.start.line;
-  const endLine = service.getFoldingRangeAt(startLine)?.endLine ?? startLine;
-  const lastShown = Math.min(endLine, startLine + maxLines - 1);
   return {
-    from: doc.line(startLine + 1).from,
-    to: doc.line(lastShown + 1).to,
-    truncated: endLine > lastShown,
-    pointer,
+    ...rangeToOffsets(doc, preview.range),
+    truncated: preview.truncated,
+    pointer: rangeToOffsets(doc, preview.pointer),
   };
 }
 
@@ -97,24 +89,6 @@ export function toPreviewRuns(
     push(cursor, to, null);
   }
   return runs;
-}
-
-function findPointer(
-  language: EditorLanguageService,
-  doc: Text,
-  offset: number,
-): OffsetSpan | null {
-  const highlights = language
-    .update(doc)
-    .getDocumentHighlights(offsetToPosition(doc, offset));
-  for (const highlight of highlights) {
-    const from = positionToOffset(doc, highlight.range.start);
-    const to = positionToOffset(doc, highlight.range.end);
-    if (from <= offset && offset <= to) {
-      return { from, to };
-    }
-  }
-  return null;
 }
 
 function classNameFor(
