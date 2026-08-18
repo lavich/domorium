@@ -275,6 +275,90 @@ describe("stdio entry point", () => {
     }
   }, 15000);
 
+  it("shows the record a pointer names on hover", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///hover.ged";
+
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: [
+            "0 HEAD",
+            "1 GEDC",
+            "2 VERS 7.0",
+            "0 @I1@ INDI",
+            "1 NAME Homer /Simpson/",
+            "1 NOTE see ```code``` here",
+            "1 FAMS @F1@",
+            "1 FAMC @F9@",
+            "0 @F1@ FAM",
+            "1 HUSB @I1@",
+            "0 TRLR",
+          ].join("\n"),
+        },
+      });
+
+      await expect(
+        client.request(2, "textDocument/hover", {
+          textDocument: { uri },
+          position: { line: 6, character: 9 },
+        }),
+      ).resolves.toMatchObject({
+        result: {
+          contents: {
+            kind: "markdown",
+            value: "```gedcom\n0 @F1@ FAM\n1 HUSB @I1@\n```",
+          },
+          range: {
+            start: { line: 6, character: 7 },
+            end: { line: 6, character: 11 },
+          },
+        },
+      });
+
+      // The INDI record carries a fence of its own, so ours has to outrun it.
+      await expect(
+        client.request(3, "textDocument/hover", {
+          textDocument: { uri },
+          position: { line: 9, character: 9 },
+        }),
+      ).resolves.toMatchObject({
+        result: {
+          contents: {
+            kind: "markdown",
+            value: expect.stringMatching(/^````gedcom\n0 @I1@ INDI\n/u),
+          },
+        },
+      });
+
+      const onTag = (await client.request(4, "textDocument/hover", {
+        textDocument: { uri },
+        position: { line: 4, character: 3 },
+      })) as { result: { contents: { kind: string } } };
+      expect(onTag.result.contents.kind).toBe("plaintext");
+
+      await expect(
+        client.request(5, "textDocument/hover", {
+          textDocument: { uri },
+          position: { line: 7, character: 9 },
+        }),
+      ).resolves.toMatchObject({ result: null });
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
   it("exposes reference editing operations over the LSP wire protocol", async () => {
     const bundlePath = await bundleStdio();
     const child = spawn("node", [bundlePath]);

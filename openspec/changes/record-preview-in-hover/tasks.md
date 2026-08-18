@@ -1,6 +1,6 @@
 ## 1. The shared answer
 
-- [ ] 1.1 Add the preview to `@domorium/language-service`: a `RecordPreview` type in
+- [x] 1.1 Add the preview to `@domorium/language-service`: a `RecordPreview` type in
       `src/types.ts` (record `Range`, pointer `Range`, `truncated`) and
       `getRecordPreview(position, { maxLines })` on `GedcomLanguageService`,
       implemented over `getDefinitionRanges` and `getFoldingRangeAt`, with the
@@ -8,13 +8,13 @@
       tests covering all six scenarios in the spec: target elsewhere, record
       longer than `maxLines`, record that fits, unresolved target, target
       declared on the hovered line, position not on a pointer.
-- [ ] 1.2 Rebuild the shared libraries — `npm run build:libs` — so `codemirror`
+- [x] 1.2 Rebuild the shared libraries — `npm run build:libs` — so `codemirror`
       and `language-server` compile against the new `dist` rather than stale
       output.
 
 ## 2. The CodeMirror adapter
 
-- [ ] 2.1 Replace the body of `findRecordPreview` in
+- [x] 2.1 Replace the body of `findRecordPreview` in
       `packages/codemirror/src/recordPreview.ts` with a call to
       `getRecordPreview`, converting its ranges to offsets through
       `positionToOffset`. Keep the exported signature and the `RecordPreview`
@@ -22,13 +22,13 @@
       the web editor need no change. The existing tests must pass unedited — that
       is the evidence the signature held; add one asserting `maxLines` reaches the
       shared method.
-- [ ] 2.2 Confirm `toPreviewRuns`, `getRecordPreviewRuns` and the pointer
+- [x] 2.2 Confirm `toPreviewRuns`, `getRecordPreviewRuns` and the pointer
       decoration are untouched, and that nothing in `packages/language-service`
       imports from `@codemirror/*`.
 
 ## 3. The LSP hover
 
-- [ ] 3.1 In `packages/language-server/src/createServer.ts`, make `onHover` ask
+- [x] 3.1 In `packages/language-server/src/createServer.ts`, make `onHover` ask
       `getRecordPreview(position, { maxLines: 24 })` first — the same limit the
       CodeMirror hosts default to — and where it answers, return
       `MarkupKind.Markdown` carrying the record's text in a fence tagged `gedcom`,
@@ -37,27 +37,27 @@
       the longest run of backticks in the record. Ship with tests for: hover on a
       resolved pointer, hover on a tag, hover on an unresolved pointer, and a
       record whose text contains a triple backtick.
-- [ ] 3.2 Confirm `packages/language-service` still declares no LSP dependency —
+- [x] 3.2 Confirm `packages/language-service` still declares no LSP dependency —
       `MarkupKind` is imported in `language-server` only.
 
 ## 4. Verify in the hosts
 
-- [ ] 4.1 VS Code: `npm run open -w apps/vscode`, hover an XREF in a `.ged` file,
+- [x] 4.1 VS Code: `npm run open -w apps/vscode`, hover an XREF in a `.ged` file,
       confirm the record appears and that hovering a tag still shows its
       documentation.
 - [ ] 4.2 JetBrains: build and run the plugin, hover an XREF, and confirm LSP4IJ
       renders the fenced block legibly. This is the design's stated risk — if the
       block arrives unreadable, fall back to plain text for this host in the
       adapter and record why.
-- [ ] 4.3 Web editor: `npm run dev -w apps/web-editor`, hover an XREF, confirm the
+- [x] 4.3 Web editor: `npm run dev -w apps/web-editor`, hover an XREF, confirm the
       preview is the same record, cut at the same line, coloured as before.
 
 ## 5. Documentation
 
-- [ ] 5.1 `packages/language-service/README.md`: document `getRecordPreview` and
+- [x] 5.1 `packages/language-service/README.md`: document `getRecordPreview` and
       add it to the usage example. Read the example afterwards and confirm every
       name in it still exists — nothing checks that mechanically.
-- [ ] 5.2 `packages/codemirror/README.md`: where it describes `findRecordPreview`,
+- [x] 5.2 `packages/codemirror/README.md`: where it describes `findRecordPreview`,
       say that the answer now comes from the shared layer and that the colouring
       stays here.
 - [ ] 5.3 State the publish order in the pull request description: per ADR-0003
@@ -65,11 +65,11 @@
       `codemirror`, and `codemirror`'s dependency range moves to that minor in the
       release pull request, not in this one. No version is bumped and no tag is
       created here.
-- [ ] 5.4 Read `docs/architecture.md` and confirm nothing there needs a change: no
+- [x] 5.4 Read `docs/architecture.md` and confirm nothing there needs a change: no
       layer moves and no dependency direction changes, so the expectation is that
       it does not. If it names the record preview as CodeMirror's, correct it.
 
 ## 6. Gate
 
-- [ ] 6.1 `npm run check`. Record whether `check:jetbrains` ran or was skipped for
+- [x] 6.1 `npm run check`. Record whether `check:jetbrains` ran or was skipped for
       lack of a JDK — skipped is not passed.

@@ -27,6 +27,7 @@ import {
   DocumentHighlightKind,
   DiagnosticSeverity,
   ErrorCodes,
+  MarkupKind,
   ResponseError,
   SemanticTokensBuilder,
   TextDocumentSyncKind,
@@ -42,6 +43,9 @@ import {
   GedcomLanguageService,
   semanticTokenLegend,
 } from "@domorium/language-service";
+
+/** As much as the CodeMirror hosts show by default, so the two agree. */
+const HOVER_MAX_LINES = 24;
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
@@ -249,6 +253,21 @@ export const createServer = (connection: Connection) => {
     if (!service) {
       return null;
     }
+    const document = documents.get(params.textDocument.uri);
+    if (document) {
+      const preview = service.getRecordPreview(params.position, {
+        maxLines: HOVER_MAX_LINES,
+      });
+      if (preview) {
+        return {
+          contents: {
+            kind: MarkupKind.Markdown,
+            value: fenced(document.getText(preview.range)),
+          },
+          range: preview.pointer,
+        };
+      }
+    }
     return service.getHover(params.position);
   });
 
@@ -324,6 +343,13 @@ export const createServer = (connection: Connection) => {
   documents.listen(connection);
   connection.listen();
 };
+
+/** A NOTE carries arbitrary text, so a record can hold a fence of its own. */
+function fenced(record: string): string {
+  const backticks = [...record.matchAll(/`+/gu)].map(([run]) => run.length);
+  const rail = "`".repeat(Math.max(3, ...backticks.map((run) => run + 1)));
+  return `${rail}gedcom\n${record}\n${rail}`;
+}
 
 function resolveLinkTarget(
   documentUri: string,
