@@ -7,6 +7,8 @@
  * serves both. HEBREW and FRENCH_R have months of their own.
  */
 
+import { isEpoch } from "./epoch";
+
 const LENGTHS: Record<string, number> = {
   JAN: 31,
   FEB: 29,
@@ -99,9 +101,8 @@ export function impossibleDays(value: string): ImpossibleDay[] {
     }
 
     // Rather than answer what a leap year is before the common era.
-    const epoch = tokens[at + 3];
     const year =
-      INTEGER.test(tokens[at + 2] ?? "") && epoch !== "BCE" && epoch !== "B.C."
+      INTEGER.test(tokens[at + 2] ?? "") && !isEpoch(tokens[at + 3])
         ? Number(tokens[at + 2])
         : null;
     const length = daysInMonth(month, year, calendar);

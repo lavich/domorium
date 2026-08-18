@@ -6,22 +6,22 @@
       "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/mhftb8-export.ged",
       "program": "MyHeritage Family Tree Builder 8",
       "what": "The volume case: 105 707 lines of vendor idiom, and the file #190 reproduces on.",
-      "dominates": "VAL001 ×11 617 — RIN under an event — is 91% of the 12 762 findings; unresolved-xref ×622 is #190 at scale.",
+      "dominates": "VAL001 ×11 617 — RIN under an event — is 93% of the 12 442 findings; unresolved-xref ×622 is #190 at scale.",
       "suspected": "unresolved-xref ×622 is right about the file but prints a set of several hundred xrefs into each message — #190. The code itself sits outside VAL001…VAL015 — #235.",
       "collected": "D-Jeffrey/gedcom-samples, vendored into cacack/gedcom-go",
       "collectedFrom": "queen/Queen.ged",
       "licence": "MIT OR CC0-1.0",
       "sha256": "c32e4b454a18f5d70188949ad60e7104fc8b1568b10b09e84c8d6fc0a551c8d9",
       "summary": {
-        "total": 12762,
+        "total": 12442,
         "byCode": {
           "VAL001": 11617,
           "VAL002": 17,
           "VAL003": 8,
-          "VAL004": 498,
+          "VAL004": 178,
           "unresolved-xref": 622
         },
-        "digest": "d5f7d500a8afd255379ef0a57cfd099544fcb55aaca2ddb5f77b71f63528ac4e"
+        "digest": "a6e9db58535d3ea8039c59b28e32d8a0a713d9aaaf479647fccf114640a194cd"
       }
     },
     "legacy10-2025-export.ged": {

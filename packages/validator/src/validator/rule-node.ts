@@ -10,6 +10,7 @@ import {
   undocumentedTag,
 } from "./extensions";
 import { impossibleDays } from "./calendarDays";
+import { EPOCH_SRC } from "./epoch";
 import {
   isValidDateExact,
   isValidDatePeriod,
@@ -196,7 +197,7 @@ function isValidGregorianDate(value: string, regexp: RegExp): boolean {
 // Day requires a month: "(?:\d{1,2}\s)?MONTH\s" only ever matches together,
 // so a bare "DAY YEAR" (no month) never matches.
 const GREGORIAN_DATE_SRC = `(?:(?:\\d{1,2}\\s)?${MONTH_REGEXP_SRC}\\s)?${YEAR_REGEXP_SRC}`;
-const GREGORIAN_DATE_WITH_EPOCH_SRC = `${GREGORIAN_DATE_SRC}(?:\\s(?:BCE|B\\.C\\.))?`;
+const GREGORIAN_DATE_WITH_EPOCH_SRC = `${GREGORIAN_DATE_SRC}(?:\\s?${EPOCH_SRC})?`;
 // "FROM <date> [TO <date>]" / "TO <date>" — shared by DATE_VALUE (where it's
 // one of several modifiers) and DATE_PERIOD (where it's the only grammar).
 const DATE_PERIOD_SRC =
