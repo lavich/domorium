@@ -12,8 +12,8 @@ All notable changes to `@domorium/validator` are documented here.
   names its set in the scheme and is judged by the rule that already existed for
   GEDCOM 7 enumerations. Every real export in the corpus already wrote these
   correctly, so nothing new is reported there. Completion offers the same values
-  while one is typed, because it reads the same sets: `2 PEDI ` now proposes
-  `adopted`, `birth`, `foster` and `sealing` in a 5.5.1 file.
+  while one is typed, because it reads the same sets: a `PEDI` line in a 5.5.1
+  file now proposes `adopted`, `birth`, `foster` and `sealing`.
 - **A BC year in a 5.5.1 file is read in the spellings exports write.** `1472 B.C.`
   passed while `1472 BC`, `1472BC` and `1472B.C.` were reported, though `YEAR_GREG`
   carries no epoch at all and the specification only says in prose that "(B.C.)"
