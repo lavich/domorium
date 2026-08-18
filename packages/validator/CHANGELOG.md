@@ -4,6 +4,15 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A BC year in a 5.5.1 file is read in the spellings exports write.** `1472 B.C.`
+  passed while `1472 BC`, `1472BC` and `1472B.C.` were reported, though `YEAR_GREG`
+  carries no epoch at all and the specification only says in prose that "(B.C.)"
+  appended to the year marks a date before the common era — pinning neither the
+  spelling nor the delimiter. Every spelling now reads as the same era, in the
+  validity check and in the leap-year rule alike, so `29 FEB 1000 BC` is no longer
+  judged by whether 1000 was a leap year. Free text stays reported: `609 BC Megiddo`
+  and `abt. 716 BC (or 725)` belong in `DATE_PHRASE` parentheses. GEDCOM 7 is
+  unchanged, where `epoch = %s"BCE"` says exactly what is allowed.
 - **An age in a 5.5.1 file is no longer judged by GEDCOM 7's grammar.** `AGE <8y`
   was reported while `AGE < 8y` passed, and `8Y` and `child` were reported while
   `8y` and `CHILD` passed. One expression served both versions, and it was

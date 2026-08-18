@@ -1486,6 +1486,45 @@ ${record}
       expect(errs.length).toBe(0);
     });
 
+    // #239: 5.5.1 states no epoch in YEAR_GREG and pins neither the spelling
+    // nor the delimiter, and real exports write every one of these.
+    const dateIn = (date: string) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 MARR
+2 DATE ${date}
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      return ruleEngine.validate(nodes[1].children[0].children[0]);
+    };
+
+    test.each([
+      "1472 BC",
+      "ABT 1472 BC",
+      "AFT 1032 BC",
+      "1472BC",
+      "1472B.C.",
+      "1472 B.C",
+      "1472 bc",
+      "BET 1500 BC AND 1400 BC",
+      "1472 B.C.",
+      "1472 BCE",
+    ])("should pass DATE with %s", async (date) => {
+      expect(dateIn(date)).toEqual([]);
+    });
+
+    test.each([
+      "1472 banana",
+      "609 BC Megiddo",
+      "abt. 716 BC (or 725)",
+      "POSS ABT 1500 BC",
+    ])("should return error because DATE %s is free text", async (date) => {
+      expect(dateIn(date).length).toBe(1);
+    });
+
     test("should return error because DATE is not a valid date value", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
