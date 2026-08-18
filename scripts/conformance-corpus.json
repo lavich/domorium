@@ -5,11 +5,6 @@
       "note": "Twenty of the twenty-three files are diagnostic-free. Nine diagnostics remain and eight of them are correct."
     },
     {
-      "issue": 96,
-      "where": "extensions.ged 18",
-      "what": "A tag declared twice in SCHMA with different URIs is reported, which the specification example itself does."
-    },
-    {
       "correct": true,
       "where": "extension-record.ged 10, 11, 15, extensions.ged 61, 62, 77, 82 and warnings70.ged 60",
       "what": "VAL008 is right here: those tags really are undocumented, and the specification recommends against that. Line 61 is an enumerated value rather than a tag, which the specification counts as an extension tag all the same. Not everything recorded below is a bug."
@@ -44,7 +39,6 @@
     "extensions.ged": {
       "sha256": "1a3ae5f2602f8cd72efae01af496fca6fc2e471ecae542f6254b666b32178482",
       "expected": [
-        "18 warning VAL009",
         "61 warning VAL008",
         "62 warning VAL008",
         "77 warning VAL008",

@@ -130,7 +130,21 @@ describe("validator", () => {
     expect(gedcomDocument.getLabel(skype!)).toBe("Extension tag");
   });
 
-  test("reports a tag declared twice in SCHMA", () => {
+  test("reports a tag declared twice in SCHMA with the same URI", () => {
+    const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _X http://example.com/first
+2 TAG _X http://example.com/first
+0 TRLR
+`);
+
+    const codes = gedcomDocument.getErrors().map((error) => error.code);
+    expect(codes).toContain("VAL009");
+  });
+
+  test("says nothing about a tag declared twice with different URIs", () => {
     const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
 1 GEDC
 2 VERS 7.0
@@ -141,7 +155,7 @@ describe("validator", () => {
 `);
 
     const codes = gedcomDocument.getErrors().map((error) => error.code);
-    expect(codes).toContain("VAL009");
+    expect(codes).not.toContain("VAL009");
   });
 
   // Every payload problem used to ship as the bare code "VAL", so a consumer
