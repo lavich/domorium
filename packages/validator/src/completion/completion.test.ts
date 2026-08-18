@@ -162,6 +162,29 @@ describe("GedcomDocument.getCompletions", () => {
     );
   });
 
+  // The same sets that validate 5.5.1 values are offered while one is typed, and
+  // 5.5.1 writes them in lower case where GEDCOM 7 writes them in upper.
+  it("completes every value of a 5.5.1 enum", () => {
+    const doc = document(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 FAMC @F1@
+2 PEDI
+0 @F1@ FAM
+0 TRLR
+`);
+    expect(doc.getCompletions({ line: 5, character: 7 }, "2 PEDI ")).toEqual([
+      { label: "adopted", kind: "enum" },
+      { label: "birth", kind: "enum" },
+      { label: "foster", kind: "enum" },
+      { label: "sealing", kind: "enum" },
+    ]);
+    expect(doc.getCompletions({ line: 4, character: 7 }, "1 RESN ")).toEqual(
+      expect.arrayContaining([{ label: "privacy", kind: "enum" }]),
+    );
+  });
+
   it("does not reuse a parent from a branch closed by a lower-level node", () => {
     const doc = document(`0 HEAD
 1 GEDC
