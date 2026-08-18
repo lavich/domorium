@@ -151,6 +151,19 @@ export interface FoldingRange {
   endLine: number;
 }
 
+export interface RecordPreviewOptions {
+  /** How many lines the host has room for. */
+  maxLines: number;
+}
+
+export interface RecordPreview {
+  /** The record the pointer names, cut to the lines the host asked for. */
+  range: Range;
+  /** The pointer the position is on, for a host that marks it. */
+  pointer: Range;
+  truncated: boolean;
+}
+
 export interface InlayHint {
   position: Position;
   label: string;

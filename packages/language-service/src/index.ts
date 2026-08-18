@@ -36,6 +36,8 @@ export {
   type PrepareRenameResult,
   type OffsetRange,
   type Range,
+  type RecordPreview,
+  type RecordPreviewOptions,
   type ReferenceEntry,
   type ReferenceOccurrence,
   type ReferenceOptions,

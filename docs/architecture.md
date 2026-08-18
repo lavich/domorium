@@ -58,10 +58,10 @@ newer when used directly in Node.js.
 Published to npm. Turns a validated document into editor features, while staying
 independent of any editor and of the Language Server Protocol runtime.
 
-`GedcomLanguageService` provides diagnostics, completion, hover, definitions,
-references, rename, folding ranges, document symbols, semantic tokens, document
-links, indentation hints, and code actions — one directory per concern under
-`src/libs/`.
+`GedcomLanguageService` provides diagnostics, completion, hover, the record a
+pointer names, definitions, references, rename, folding ranges, document symbols,
+semantic tokens, document links, indentation hints, and code actions — one
+directory per concern under `src/libs/`.
 
 The important constraint is `src/types.ts`. This package declares its own
 protocol-shaped types (`Position`, `Range`, `Diagnostic`, `WorkspaceEdit`, and
