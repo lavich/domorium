@@ -74,8 +74,7 @@ describe("offsetToPosition", () => {
   });
 });
 
-// #251: 5.5.1 ends a line with CR, LF, CR-LF or LF-CR. Only two of the four were
-// counted, so a CR-only file was one line.
+// #251: only two of the four terminators were counted.
 describe("line terminators", () => {
   const positionOf = (eol: string) => {
     const text = ["0 HEAD", "1 GEDC", "2 VERS 5.5.1"].join(eol);

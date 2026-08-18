@@ -304,8 +304,7 @@ describe("code actions", () => {
 
   // Names #143: an unsupported version fell through to the GEDCOM 7 record
   // set. Reached directly, since no unresolved reference is reported for one.
-  // #251: the file's terminator is the file's. Inserting LF into a document
-  // written with CR leaves it written with both.
+  // #251: the file's terminator is the file's.
   it.each([
     ["CR", "\r"],
     ["CR-LF", "\r\n"],
