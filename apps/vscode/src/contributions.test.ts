@@ -2,6 +2,7 @@ import { semanticTokenLegend } from "@domorium/language-service";
 import { describe, expect, it } from "vitest";
 
 import contributed from "../package.json";
+import { GEDCOM_DOCUMENTS } from "./documentSelector";
 
 /*
  * A theme with no rule for a semantic type falls back to the TextMate scope VS
@@ -36,5 +37,40 @@ describe("the scopes a theme reaches a GEDCOM token by", () => {
         contribution.scopes[selector as keyof typeof contribution.scopes],
       ).not.toHaveLength(0);
     }
+  });
+});
+
+// #160: undeclared, and the editor says nothing about why nothing works.
+describe("what the manifest says about where the extension may run", () => {
+  it("supports an untrusted workspace, because it executes nothing from one", () => {
+    expect(contributed.capabilities.untrustedWorkspaces).toEqual({
+      supported: true,
+    });
+  });
+
+  it("supports a virtual workspace as far as it can, and says what is missing", () => {
+    const virtual = contributed.capabilities.virtualWorkspaces;
+    expect(virtual.supported).toBe("limited");
+    expect(virtual.description).toMatch(/link/i);
+  });
+
+  it("wakes for a folder holding GEDCOM, not only for an open file", () => {
+    expect(contributed.activationEvents).toContain(
+      "workspaceContains:**/*.ged",
+    );
+  });
+
+  it("turns semantic highlighting on for GEDCOM, whatever the theme asks", () => {
+    expect(
+      contributed.contributes.configurationDefaults["[gedcom]"][
+        "editor.semanticHighlighting.enabled"
+      ],
+    ).toBe(true);
+  });
+});
+
+describe("the documents the client attaches to", () => {
+  it("names the language and not one scheme, so a virtual file counts", () => {
+    expect(GEDCOM_DOCUMENTS).toEqual([{ language: "gedcom" }]);
   });
 });

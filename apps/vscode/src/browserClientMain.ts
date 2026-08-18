@@ -3,11 +3,13 @@ import { LanguageClientOptions } from "vscode-languageclient";
 
 import { LanguageClient } from "vscode-languageclient/browser";
 
+import { GEDCOM_DOCUMENTS } from "./documentSelector";
+
 let client: LanguageClient | undefined;
 
 export async function activate(context: ExtensionContext) {
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme: "file", language: "gedcom" }],
+    documentSelector: GEDCOM_DOCUMENTS,
     synchronize: {
       fileEvents: workspace.createFileSystemWatcher("**/*.ged"),
     },
