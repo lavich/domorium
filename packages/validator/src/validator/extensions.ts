@@ -60,6 +60,7 @@ export function collectExtensions(
 ): { context: ExtensionContext; errors: GedcomError[] } {
   const tags = new Map<GedcomTag, string>();
   const aliases = new Map<GedcomTag, GedcomTag>();
+  const declared = new Set<string>();
   const errors: GedcomError[] = [];
 
   const HEAD = nodes.find((node) => node.tokens.TAG?.value === "HEAD");
@@ -77,13 +78,21 @@ export function collectExtensions(
       // RuleNode, which owns payload shape for every tag.
       continue;
     }
-    if (tags.has(def.tag)) {
+    // The schema may name one tag more than once with different URIs, which the
+    // specification's own extensions.ged does; the same URI twice says nothing
+    // the first said. Which of several URIs applies where is #94. See #96.
+    const declaration = `${def.tag} ${def.uri}`;
+    if (declared.has(declaration)) {
       errors.push({
         code: GedcomErrorCode.DuplicateDeclaration,
-        message: `Extension tag ${def.tag} is declared more than once`,
+        message: `Extension tag ${def.tag} is declared twice with the same URI`,
         range: node.tokens.VALUE?.range ?? node.range,
         level: "warning",
       });
+      continue;
+    }
+    declared.add(declaration);
+    if (tags.has(def.tag)) {
       continue;
     }
     tags.set(def.tag, def.uri);

@@ -93,13 +93,35 @@ describe("collectExtensions", () => {
     expect(context.tags.size).toBe(0);
   });
 
-  it("reports a tag declared twice and keeps the first URI", () => {
+  // #96: "The schema structure may contain the same tag more than once with
+  // different URIs", and the specification's own extensions.ged does it.
+  it("accepts a tag declared twice with different URIs, and keeps the first", () => {
     const { nodes } = astBuilder(`0 HEAD
 1 GEDC
 2 VERS 7.0
 1 SCHMA
 2 TAG _X http://example.com/first
 2 TAG _X http://example.com/second
+0 TRLR
+`);
+
+    const { context, errors } = collectExtensions(
+      nodes,
+      true,
+      schemeFor(nodes),
+    );
+
+    expect(errors).toEqual([]);
+    expect(context.tags.get(GedcomTag("_X"))).toBe("http://example.com/first");
+  });
+
+  it("reports a tag declared twice with the same URI", () => {
+    const { nodes } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _X http://example.com/first
+2 TAG _X http://example.com/first
 0 TRLR
 `);
 

@@ -4,6 +4,14 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A tag declared twice in `HEAD.SCHMA` with different URIs is no longer reported.**
+  The specification permits it — "the schema structure may contain the same tag more
+  than once with different URIs" — and its own `extensions.ged` declares `_PARTY`
+  twice, once for a substructure and once for a record. The check now asks whether
+  the same tag was declared twice with the _same_ URI, which says nothing the first
+  declaration did not. Which of several URIs applies where a tag is used is a
+  separate question.
+
 - **A line the lexer cannot read is reported once, in words about GEDCOM.** An xref
   with a space in it — `0 @NoTe ref@ NOTE …` — produced "unexpected character:
   ->@<- at offset: 199, skipped 1 characters", which is true of the scanner and no
