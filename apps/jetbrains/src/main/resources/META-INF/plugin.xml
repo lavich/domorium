@@ -159,6 +159,9 @@
                   fieldName="INSTANCE"
                   language="TEXT"
                   extensions="ged;gedcom"/>
+        <!-- Where the plugin says a file cannot be checked. See #162. -->
+        <notificationGroup id="Domorium GEDCOM"
+                           displayType="STICKY_BALLOON"/>
         <spellchecker.support language="TEXT"
                               implementationClass="domorium.jetbrains.GedcomSpellcheckingStrategy"
                               order="first"/>

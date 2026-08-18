@@ -1,11 +1,17 @@
 package domorium.jetbrains
 
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.ide.BrowserUtil
+import com.intellij.notification.NotificationAction
+import com.intellij.notification.NotificationGroupManager
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.redhat.devtools.lsp4ij.LanguageServerFactory
+import com.redhat.devtools.lsp4ij.server.CannotStartProcessException
 import com.redhat.devtools.lsp4ij.server.OSProcessStreamConnectionProvider
 import com.redhat.devtools.lsp4ij.server.StreamConnectionProvider
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
@@ -35,14 +41,15 @@ internal fun extractBundledServerScript(): java.nio.file.Path {
 
 /**
  * Launches the GEDCOM language server (packages/language-server's stdio
- * entry point) as a `node` subprocess. Assumes `node` is available on the
- * user's PATH (see design doc — no auto-detection/download in v1).
+ * entry point) as a `node` subprocess.
  */
 class GedcomServerConnectionProvider(
     serverScript: String = extractBundledServerScript().toString(),
+    private val node: File? = NodeRuntime.locate(),
+    private val reportMissingRuntime: () -> Unit = {},
 ) : OSProcessStreamConnectionProvider() {
     init {
-        val commandLine = GeneralCommandLine("node", serverScript)
+        val commandLine = GeneralCommandLine(node?.absolutePath ?: "node", serverScript)
         setCommandLine(commandLine)
         addLogErrorHandler { message ->
             LOG.warn("GEDCOM language server stderr: $message")
@@ -55,11 +62,36 @@ class GedcomServerConnectionProvider(
         }
     }
 
+    override fun start() {
+        if (node == null) {
+            reportMissingRuntime()
+            throw CannotStartProcessException(MISSING_NODE_MESSAGE)
+        }
+        super.start()
+    }
+
     private companion object {
         val LOG: Logger = Logger.getInstance(GedcomServerConnectionProvider::class.java)
     }
 }
 
 class GedcomLanguageServerFactory : LanguageServerFactory {
-    override fun createConnectionProvider(project: Project): StreamConnectionProvider = GedcomServerConnectionProvider()
+    override fun createConnectionProvider(project: Project): StreamConnectionProvider =
+        GedcomServerConnectionProvider(reportMissingRuntime = { reportMissingRuntime(project) })
+}
+
+/** The log is not where a reader looks when a file has no diagnostics. #162 */
+private fun reportMissingRuntime(project: Project) {
+    NotificationGroupManager
+        .getInstance()
+        .getNotificationGroup("Domorium GEDCOM")
+        .createNotification(
+            "GEDCOM language server did not start",
+            MISSING_NODE_MESSAGE,
+            NotificationType.WARNING,
+        ).addAction(
+            NotificationAction.createSimple("Install Node.js") {
+                BrowserUtil.browse("https://nodejs.org/")
+            },
+        ).notify(project)
 }
