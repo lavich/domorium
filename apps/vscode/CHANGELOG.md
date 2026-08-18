@@ -2,6 +2,22 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## Unreleased
+
+- **A GEDCOM file in a folder you have not trusted is read at last.** The manifest
+  declared no workspace-trust support, so VS Code disabled the extension in
+  Restricted Mode: no validation, no completion, no colour, and the reason visible
+  only in the Extensions view. Nothing here runs anything from a workspace — the
+  server is a web worker over the text of the file — so trust is now declared.
+- **A GEDCOM file opened over github.dev or vscode.dev is read as far as it can be.**
+  Virtual-workspace support is declared as limited, and the client attaches to the
+  language rather than to the `file` scheme, so everything but a link to a file
+  beside the GEDCOM works there. Such a link is withheld rather than broken.
+- **The extension wakes for a folder that holds GEDCOM**, not only once a `.ged`
+  file is open.
+- **Semantic highlighting is on for GEDCOM whatever the theme asks**, which is the
+  whole of the highlighting the extension ships.
+
 ## 1.6.1
 
 - **A note written as text in a GEDCOM 5.5.1 file is no longer reported.**
