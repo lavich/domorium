@@ -58,10 +58,7 @@ export function digestOf(diagnostics) {
   return hash.digest("hex");
 }
 
-/**
- * The summary shape, used for files that produce thousands of diagnostics: how
- * many of each code, and a digest over them all.
- */
+/** The summary shape, for files that produce thousands of diagnostics. */
 export function summaryOf(diagnostics) {
   const byCode = {};
   for (const d of diagnostics) {
@@ -149,7 +146,6 @@ function compareSummary(recorded, diagnostics) {
   return failures;
 }
 
-/** Compares a recorded expectation of either shape with today's diagnostics. */
 export function compare(recorded, diagnostics) {
   return shapeOf(recorded) === "summary"
     ? compareSummary(recorded, diagnostics)

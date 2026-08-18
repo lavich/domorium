@@ -162,8 +162,6 @@ for (const corpus of CORPORA) {
 
     if (update) {
       entry.sha256 = file.sha256;
-      // Renewed in the shape the entry already carries: `--update` must not
-      // quietly move a file onto the weaker of the two records.
       Object.assign(entry, recordOf(shapeOf(entry), diagnose(file.text)));
       continue;
     }
