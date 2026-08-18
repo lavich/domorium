@@ -2,6 +2,16 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **An age in a 5.5.1 file is no longer judged by GEDCOM 7's grammar.** `AGE <8y`
+  was reported while `AGE < 8y` passed, and `8Y` and `child` were reported while
+  `8y` and `CHILD` passed. One expression served both versions, and it was
+  written to v7's ABNF, where the delimiter after `<` or `>` is required and
+  `years = Integer %x79` pins the unit letter. 5.5.1 prints neither rule, and
+  real exports write both forms, so 5.5.1 ages are now read without a required
+  delimiter and without regard to case. v7 keeps its ABNF exactly.
+
 ## 1.8.1 - 2026-08-17
 
 - **A note written as text in a 5.5.1 file is no longer reported.** `1 NOTE plain
