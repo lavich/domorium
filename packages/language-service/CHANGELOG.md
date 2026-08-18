@@ -2,6 +2,14 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## Unreleased
+
+- **A line is read by every terminator 5.5.1 allows.** Splitting on `\r?\n` read a
+  document written with CR as one line, so the line under a diagnostic, the line
+  being completed, and the line holding `TRLR` were all wrong there. A created
+  record is also written with the terminator the file already uses, rather than
+  with LF into a file that has none.
+
 ## 1.5.0 - 2026-08-15
 
 - **A token is typed by what it is.** A tag is `keyword`, an identifier is

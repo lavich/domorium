@@ -188,6 +188,43 @@ describe("validator", () => {
     });
   });
 
+  // #251: a CR-only file collapsed into one node and its version was never found.
+  describe("every line terminator 5.5.1 allows", () => {
+    const documentWith = (eol: string) => {
+      const text = ["0 HEAD", "1 GEDC", "2 VERS 5.5.1", "0 TRLR", ""].join(eol);
+      const document = new GedcomDocument();
+      document.createDocument(text);
+      return document;
+    };
+
+    test.each([
+      ["LF", "\n"],
+      ["CR-LF", "\r\n"],
+      ["CR", "\r"],
+      ["LF-CR", "\n\r"],
+    ])("reads the records of a file ended with %s", (_name, eol) => {
+      const document = documentWith(eol);
+
+      expect(document.getNodes()).toHaveLength(2);
+      expect(
+        document
+          .getErrors()
+          .filter((error) => error.code === GedcomErrorCode.Lexer),
+      ).toEqual([]);
+    });
+
+    test.each([
+      ["CR", "\r"],
+      ["LF-CR", "\n\r"],
+    ])("finds the version in a file ended with %s", (_name, eol) => {
+      expect(
+        documentWith(eol)
+          .getErrors()
+          .map((error) => error.code),
+      ).not.toContain(GedcomErrorCode.UndeterminedVersion);
+    });
+  });
+
   describe("diagnostic codes", () => {
     const codeFor = (body: string) =>
       new GedcomDocument()
