@@ -40,9 +40,7 @@ describe("the scopes a theme reaches a GEDCOM token by", () => {
   });
 });
 
-// #160: an extension that declares no trust support is disabled in Restricted
-// Mode, and one that declares no virtual-workspace support is badged in
-// github.dev — in both cases with no word about it in the editor.
+// #160: undeclared, and the editor says nothing about why nothing works.
 describe("what the manifest says about where the extension may run", () => {
   it("supports an untrusted workspace, because it executes nothing from one", () => {
     expect(contributed.capabilities.untrustedWorkspaces).toEqual({
