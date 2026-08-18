@@ -1,6 +1,6 @@
 {
   "name": "@domorium/validator",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "GEDCOM 5.5.1 and 7.0 parser and validator",
   "keywords": [
     "gedcom",

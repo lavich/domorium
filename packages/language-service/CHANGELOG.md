@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
-## Unreleased
+## 1.5.1 - 2026-08-18
 
 - **A line is read by every terminator 5.5.1 allows.** Splitting on `\r?\n` read a
   document written with CR as one line, so the line under a diagnostic, the line

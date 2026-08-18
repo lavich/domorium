@@ -31,6 +31,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.6.2</h2>
+    <ul>
+      <li><b>A <code>.ged</code> file no longer sits silent where the IDE cannot find Node.js.</b> The bundled language server was launched as <code>node</code> against whatever the IDE&rsquo;s <code>PATH</code> held; with node missing the process failed to start and left a line in the log, so the file arrived with no diagnostics, no completion, no hover and no colour &mdash; indistinguishable from the plugin not being installed. An IDE opened from Spotlight, the Dock or Toolbox inherits no login shell&rsquo;s <code>PATH</code>, so node installed by nvm, fnm, asdf or Volta is invisible to it while it works in a terminal. Node is resolved before launch, and where it is nowhere to be found a sticky balloon names the cause and offers the download page</li>
+    </ul>
+
     <h2>1.6.1</h2>
     <ul>
       <li><b>A note written as text in a GEDCOM 5.5.1 file is no longer reported.</b> <code>1 NOTE plain text</code> was told to be a pointer to a <code>NOTE</code> record, and a source citation carrying its description &mdash; <code>1 SOUR Parish register</code> &mdash; was told the same, with <code>TEXT</code> beneath it called an unknown tag. Both are forms the specification provides, and files exported by MyHeritage, Ancestry and Gramps are full of them</li>

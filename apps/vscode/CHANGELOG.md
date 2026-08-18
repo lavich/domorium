@@ -2,7 +2,7 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
-## Unreleased
+## 1.6.2
 
 - **A GEDCOM file in a folder you have not trusted is read at last.** The manifest
   declared no workspace-trust support, so VS Code disabled the extension in

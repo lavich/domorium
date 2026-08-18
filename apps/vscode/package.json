@@ -4,7 +4,7 @@
   "displayName": "GEDCOM",
   "description": "GEDCOM language support by Domorium. Edit files with autocomplete, validation, navigation, and semantic highlighting",
   "publisher": "domorium",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "author": "Andrei Lobanov",
   "repository": "https://github.com/lavich/domorium.git",
   "icon": "images/extensionIcon.png",
