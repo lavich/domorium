@@ -68,10 +68,14 @@ export const Pointer = createToken({
   push_mode: "hasPointer",
 });
 
+// Read as written rather than truncated at the first letter that does not belong
+// to a tag; the validator says which tag is meant. See #252.
 export const Tag = createToken({
   name: TokenNames.TAG,
-  pattern: /[A-Z0-9_]+/,
-  start_chars_hint: [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"],
+  pattern: /[A-Za-z0-9_]+/,
+  start_chars_hint: [
+    ..."ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_",
+  ],
 });
 
 export const Xref = createToken({

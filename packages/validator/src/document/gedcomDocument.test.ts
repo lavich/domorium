@@ -239,6 +239,24 @@ describe("validator", () => {
     });
   });
 
+  // #252: said twice, once by the parser and once about a tag.
+  test("says only that a line carries no level", () => {
+    const errors = new GedcomDocument()
+      .createDocument(
+        `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+hello world
+0 TRLR
+`,
+      )
+      .getErrors()
+      .filter((error) => error.range.start.line === 3);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0].code).toBe(GedcomErrorCode.Parser);
+  });
+
   describe("diagnostic codes", () => {
     const codeFor = (body: string) =>
       new GedcomDocument()

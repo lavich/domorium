@@ -139,6 +139,10 @@ export class GedcomValidator {
     const ruleNode = new RuleNode(scheme, this.pointers, this.extensions);
 
     for (const node of nodes) {
+      // Not a GEDCOM line, and the parser has already said so. #252
+      if (node.tokens.LEVEL === undefined) {
+        continue;
+      }
       const tag = node.tokens.TAG?.value
         ? GedcomTag(node.tokens.TAG?.value)
         : undefined;
@@ -182,9 +186,14 @@ export class GedcomValidator {
       const rule = rules.get(tag);
 
       if (!rule) {
+        const upperCased = GedcomTag(tag.toUpperCase());
+        const meant =
+          upperCased !== tag && rules.has(upperCased) ? upperCased : null;
         errors.push({
           code: GedcomErrorCode.UnknownTag,
-          message: `Unknown tag ${tag} in parent ${parentTag || "root"}`,
+          message: meant
+            ? `A tag is written in upper case: ${meant}, not ${tag}`
+            : `Unknown tag ${tag} in parent ${parentTag || "root"}`,
           range: tagToken?.range || node.range,
           level: "warning",
         });

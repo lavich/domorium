@@ -141,3 +141,25 @@ describe("positive tests", () => {
     expect(tokens.length).toBe(22);
   });
 });
+
+// #252: matched as far as `N`, and the rest became a value.
+describe("a tag written in mixed case", () => {
+  it("is read as the file wrote it", () => {
+    const { tokens, errors } = gedcomLexer.tokenize("1 NoTe hello");
+
+    expect(errors).toEqual([]);
+    expect(tokens.map((token) => [token.tokenType.name, token.image])).toEqual([
+      ["LEVEL", "1"],
+      ["TAG", "NoTe"],
+      ["VALUE", "hello"],
+    ]);
+  });
+
+  it("does not turn a line without a level into one", () => {
+    const { tokens } = gedcomLexer.tokenize("hello world");
+
+    expect(tokens.every((token) => token.tokenType.name !== "Level")).toBe(
+      true,
+    );
+  });
+});
