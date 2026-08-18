@@ -146,9 +146,7 @@ describe("validator", () => {
 
   // Every payload problem used to ship as the bare code "VAL", so a consumer
   // could not tell a missing value from a malformed one.
-  // #234: an xref may hold only letters, digits and underscore, so a space inside
-  // one leaves the line unreadable. The reader was told the offset of a character
-  // and then a second time about a tag that is not in the file.
+  // #234: the offset of a character, and then a tag that is not in the file.
   describe("a line the lexer cannot read", () => {
     const errorsFor = (line: string) =>
       new GedcomDocument()

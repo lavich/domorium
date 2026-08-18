@@ -31,10 +31,7 @@ export interface CreateDocumentOptions {
   dialect?: GedcomDialect;
 }
 
-/**
- * The lexer says "unexpected character: ->@<- at offset: 199, skipped 1
- * characters", which is true of its own scanner and no use to a reader.
- */
+/** The scanner's own words name an offset and a count of skipped characters. */
 function unreadableLine(skipped: string): string {
   if (skipped.startsWith("@")) {
     return "An xref holds letters, digits and underscore between two @ marks, so this line cannot be read";
@@ -63,13 +60,10 @@ export class GedcomDocument {
     const lexingResult = gedcomLexer.tokenize(input);
     this.errors = [];
 
-    // One diagnostic per line, in words about GEDCOM rather than about the
-    // scanner. Where the lexer stumbled before the line's tag, the line's
-    // structure is unknown and its tokens go with it: `0 @NoTe ref@ NOTE …`
-    // resumed one character on and lexed the wreckage into a tag `N`, so the
-    // line was reported a second time as a tag that is nowhere in the file.
-    // Where it stumbled after the tag, the meaning of the line was already
-    // read and only the tail is junk. See #234.
+    // A stumble before the line's tag leaves its structure unknown, so what the
+    // lexer reads on from there is a fragment rather than the file's own tag. A
+    // stumble after the tag is only a junk tail: the line is read, and its xref
+    // is what rename works from. See #234.
     const tagColumns = new Map<number, number>();
     lexingResult.tokens.forEach((token) => {
       if (token.tokenType.name !== TokenNames.TAG) {
