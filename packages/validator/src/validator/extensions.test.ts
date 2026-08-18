@@ -93,8 +93,7 @@ describe("collectExtensions", () => {
     expect(context.tags.size).toBe(0);
   });
 
-  // #96: "The schema structure may contain the same tag more than once with
-  // different URIs", and the specification's own extensions.ged does it.
+  // #96: reported as a duplicate, though the specification permits it.
   it("accepts a tag declared twice with different URIs, and keeps the first", () => {
     const { nodes } = astBuilder(`0 HEAD
 1 GEDC

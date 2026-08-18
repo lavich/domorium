@@ -78,9 +78,8 @@ export function collectExtensions(
       // RuleNode, which owns payload shape for every tag.
       continue;
     }
-    // The schema may name one tag more than once with different URIs, which the
-    // specification's own extensions.ged does; the same URI twice says nothing
-    // the first said. Which of several URIs applies where is #94. See #96.
+    // The schema may name one tag more than once with different URIs; the same URI
+    // twice says nothing the first said. Which URI applies where is #94. See #96.
     const declaration = `${def.tag} ${def.uri}`;
     if (declared.has(declaration)) {
       errors.push({
