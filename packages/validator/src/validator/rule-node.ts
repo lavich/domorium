@@ -32,6 +32,7 @@ type FieldType =
   | "time-v7"
   | "pointer"
   | "age"
+  | "age-v7"
   | "personal-name"
   | "media-type"
   | "language-tag"
@@ -120,8 +121,13 @@ const TIME_BASE_SRC = "(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?";
 const TIME_REGEXP = new RegExp(`^${TIME_BASE_SRC}$`);
 // v7's Time additionally allows a trailing "Z" for UTC.
 const TIME_REGEXP_V7 = new RegExp(`^${TIME_BASE_SRC}Z?$`);
-const AGE_REGEXP =
-  /^[<>]\s(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$|^(?:CHILD|INFANT|STILLBORN|\d+y(?:\s\d+m)?(?:\s\d+w)?(?:\s\d+d)?|\d+m(?:\s\d+w)?(?:\s\d+d)?|\d+w(?:\s\d+d)?|\d+d)$/;
+const AGE_BODY_SRC =
+  "(?:CHILD|INFANT|STILLBORN|\\d+y(?:\\s\\d+m)?(?:\\s\\d+w)?(?:\\s\\d+d)?|\\d+m(?:\\s\\d+w)?(?:\\s\\d+d)?|\\d+w(?:\\s\\d+d)?|\\d+d)";
+// v7: Age = [[ageBound D] ageDuration], years = Integer %x79 — the delimiter is
+// required and the unit letter is case-sensitive. 5.5.1: [ < | > | <NULL>]
+// [ YYy MMm DDDd | … | CHILD ] — neither rule appears, and exports write both.
+const AGE_REGEXP_V7 = new RegExp(`^(?:[<>]\\s)?${AGE_BODY_SRC}$`);
+const AGE_REGEXP = new RegExp(`^(?:[<>]\\s*)?${AGE_BODY_SRC}$`, "i");
 // A name, with at most one pair of slashes delimiting the surname, e.g.
 // "John /Doe/" or "John /Doe/ Jr.". Zero slashes (unstructured name) is
 // also valid.
@@ -341,6 +347,8 @@ export class RuleNode {
         type = "time";
         break;
       case "https://gedcom.io/terms/v7/type-Age":
+        type = "age-v7";
+        break;
       case "https://gedcom.io/terms/v5.5.1/type-AGE_AT_EVENT":
         type = "age";
         break;
@@ -651,8 +659,10 @@ export class RuleNode {
         }
         break;
       }
-      case "age":
-        if (!value || !AGE_REGEXP.test(value)) {
+      case "age-v7":
+      case "age": {
+        const regexp = fieldType.type === "age-v7" ? AGE_REGEXP_V7 : AGE_REGEXP;
+        if (!value || !regexp.test(value)) {
           errors.push(
             valueError(
               node,
@@ -661,6 +671,7 @@ export class RuleNode {
           );
         }
         break;
+      }
       case "pointer": {
         const XREF = node.tokens.XREF;
         const isXrefExist = !!XREF?.value;

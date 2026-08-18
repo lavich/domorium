@@ -465,20 +465,23 @@ describe("payload for VERS 7", () => {
       expect(errs.length).toBe(0);
     });
 
-    test("should return error because AGE has not correct payload", async () => {
-      const { nodes, pointers } = astBuilder(`0 HEAD
+    test.each(["not_an_age", "<8y", ">8y", "8Y"])(
+      "should return error because AGE %s breaks v7's required delimiter or case",
+      async (age) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
 2 VERS 7.0
 0 @I1@ INDI
 1 DEAT
-2 AGE not_an_age
+2 AGE ${age}
 0 TRLR
 `);
-      const ruleEngine = new RuleNode(g7validationJson, pointers);
-      const AGE = nodes[1].children[0].children[0];
-      const errs = ruleEngine.validate(AGE);
-      expect(errs.length).toBe(1);
-    });
+        const ruleEngine = new RuleNode(g7validationJson, pointers);
+        const AGE = nodes[1].children[0].children[0];
+        const errs = ruleEngine.validate(AGE);
+        expect(errs.length).toBe(1);
+      },
+    );
   });
 
   describe("rule DateExact", () => {
@@ -1360,6 +1363,40 @@ ${record}
       const TIME = nodes[0].children[0].children[0];
       const errs = ruleEngine.validate(TIME);
       expect(errs.length).toBe(1);
+    });
+  });
+
+  // #233: v7's grammar judged a 5.5.1 age.
+  describe("rule Age", () => {
+    const ageIn = (age: string) => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 DEAT
+2 AGE ${age}
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g551validation, pointers);
+      return ruleEngine.validate(nodes[1].children[0].children[0]);
+    };
+
+    test.each(["<8y", ">8y", "< 8y", "> 8y", "8y", "8Y", "4y 8m 10d"])(
+      "should pass AGE with %s",
+      async (age) => {
+        expect(ageIn(age)).toEqual([]);
+      },
+    );
+
+    test.each(["CHILD", "child", "INFANT", "Infant", "STILLBORN"])(
+      "should pass AGE with %s",
+      async (age) => {
+        expect(ageIn(age)).toEqual([]);
+      },
+    );
+
+    test("should return error because AGE has not correct payload", async () => {
+      expect(ageIn("not_an_age").length).toBe(1);
     });
   });
 
