@@ -465,10 +465,8 @@ describe("payload for VERS 7", () => {
       expect(errs.length).toBe(0);
     });
 
-    // v7's ABNF is "[[ageBound D] ageDuration]" with "years = Integer %x79",
-    // so the space is required and the unit letter is case-sensitive.
     test.each(["not_an_age", "<8y", ">8y", "8Y"])(
-      "should return error because AGE %s has not correct payload",
+      "should return error because AGE %s breaks v7's required delimiter or case",
       async (age) => {
         const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
@@ -1368,9 +1366,7 @@ ${record}
     });
   });
 
-  // AGE_AT_EVENT in 5.5.1 is "[ < | > | <NULL>] [ YYy MMm DDDd | … | CHILD |
-  // INFANT | STILLBORN ]": no space after the bound, and no rule about case.
-  // Only v7's ABNF requires the space and pins the unit letters. See #233.
+  // #233: v7's grammar judged a 5.5.1 age.
   describe("rule Age", () => {
     const ageIn = (age: string) => {
       const { nodes, pointers } = astBuilder(`0 HEAD

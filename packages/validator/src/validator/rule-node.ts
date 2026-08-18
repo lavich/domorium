@@ -123,10 +123,9 @@ const TIME_REGEXP = new RegExp(`^${TIME_BASE_SRC}$`);
 const TIME_REGEXP_V7 = new RegExp(`^${TIME_BASE_SRC}Z?$`);
 const AGE_BODY_SRC =
   "(?:CHILD|INFANT|STILLBORN|\\d+y(?:\\s\\d+m)?(?:\\s\\d+w)?(?:\\s\\d+d)?|\\d+m(?:\\s\\d+w)?(?:\\s\\d+d)?|\\d+w(?:\\s\\d+d)?|\\d+d)";
-// v7's ABNF is "[[ageBound D] ageDuration]" with "years = Integer %x79": the
-// delimiter after the bound is required and the unit letter is case-sensitive.
-// 5.5.1 prints "[ < | > | <NULL>] [ YYy MMm DDDd | … | CHILD ]" — no delimiter
-// and no rule about case — and real exports write "<8y" and "8Y". See #233.
+// v7: Age = [[ageBound D] ageDuration], years = Integer %x79 — the delimiter is
+// required and the unit letter is case-sensitive. 5.5.1: [ < | > | <NULL>]
+// [ YYy MMm DDDd | … | CHILD ] — neither rule appears, and exports write both.
 const AGE_REGEXP_V7 = new RegExp(`^(?:[<>]\\s)?${AGE_BODY_SRC}$`);
 const AGE_REGEXP = new RegExp(`^(?:[<>]\\s*)?${AGE_BODY_SRC}$`, "i");
 // A name, with at most one pair of slashes delimiting the surname, e.g.
