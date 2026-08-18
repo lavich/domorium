@@ -1,8 +1,11 @@
 package domorium.jetbrains
 
+import com.redhat.devtools.lsp4ij.server.CannotStartProcessException
+import java.nio.file.Files
 import kotlin.io.path.exists
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class GedcomLanguageServerFactoryTest {
@@ -15,11 +18,30 @@ class GedcomLanguageServerFactoryTest {
     }
 
     @Test
-    fun `provider launches node with the extracted script`() {
+    fun `provider launches the node it found with the extracted script`() {
         val script = extractBundledServerScript()
-        val provider = GedcomServerConnectionProvider(script.toString())
+        val node = Files.createTempFile("node-", "").toFile()
+        node.deleteOnExit()
+        val provider = GedcomServerConnectionProvider(script.toString(), node)
 
-        assertEquals("node", provider.commandLine.exePath)
+        assertEquals(node.absolutePath, provider.commandLine.exePath)
         assertEquals(listOf(script.toString()), provider.commandLine.parametersList.parameters)
+    }
+
+    // #162: launched anyway, and the file went quiet.
+    @Test
+    fun `provider says so instead of launching a node that is not there`() {
+        var reported = false
+        val provider =
+            GedcomServerConnectionProvider(
+                extractBundledServerScript().toString(),
+                node = null,
+                reportMissingRuntime = { reported = true },
+            )
+
+        val failure = assertFailsWith<CannotStartProcessException> { provider.start() }
+
+        assertTrue(failure.message!!.contains("Node.js"))
+        assertTrue(reported)
     }
 }
