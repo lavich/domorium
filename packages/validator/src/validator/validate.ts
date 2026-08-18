@@ -184,7 +184,7 @@ export class GedcomValidator {
       if (!rule) {
         errors.push({
           code: GedcomErrorCode.UnknownTag,
-          message: `Unknown tag ${tag} in parent ${parentTag}`,
+          message: `Unknown tag ${tag} in parent ${parentTag || "root"}`,
           range: tagToken?.range || node.range,
           level: "warning",
         });

@@ -1,7 +1,7 @@
 import { GedcomError, GedcomErrorCode } from "../types/errors";
 import { ASTNode, ASTToken } from "../parser";
 import { buildAst } from "../parser/ast";
-import { ConfigurableLexer } from "../parser/lexer";
+import { ConfigurableLexer, TokenNames } from "../parser/lexer";
 import { GedcomValidator } from "../validator";
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { RuleNode } from "../validator/rule-node";
@@ -31,6 +31,14 @@ export interface CreateDocumentOptions {
   dialect?: GedcomDialect;
 }
 
+/** The scanner's own words name an offset and a count of skipped characters. */
+function unreadableLine(skipped: string): string {
+  if (skipped.startsWith("@")) {
+    return "An xref holds letters, digits and underscore between two @ marks, so this line cannot be read";
+  }
+  return `This line cannot be read from ${JSON.stringify(skipped)} onward`;
+}
+
 /** Reported only because a fragment ends where it does. */
 const BOUNDED_BY_FRAGMENT = new Set<string>([
   GedcomErrorCode.UnresolvedXref,
@@ -51,21 +59,52 @@ export class GedcomDocument {
     const gedcomLexer = new ConfigurableLexer({ zeroBased: true });
     const lexingResult = gedcomLexer.tokenize(input);
     this.errors = [];
+
+    // A stumble before the line's tag leaves its structure unknown, so what the
+    // lexer reads on from there is a fragment rather than the file's own tag. A
+    // stumble after the tag is only a junk tail: the line is read, and its xref
+    // is what rename works from. See #234.
+    const tagColumns = new Map<number, number>();
+    lexingResult.tokens.forEach((token) => {
+      if (token.tokenType.name !== TokenNames.TAG) {
+        return;
+      }
+      const line = token.startLine ?? 0;
+      const column = token.startColumn ?? 0;
+      tagColumns.set(line, Math.min(tagColumns.get(line) ?? column, column));
+    });
+
+    const unreadable = new Set<number>();
+    const reported = new Set<number>();
     lexingResult.errors.forEach((error) => {
+      const line = error.line ?? 0;
+      const column = error.column ?? 0;
+      if (column < (tagColumns.get(line) ?? Infinity)) {
+        unreadable.add(line);
+      }
+      if (reported.has(line)) {
+        return;
+      }
+      reported.add(line);
       this.errors.push({
         code: GedcomErrorCode.Lexer,
-        message: error.message,
+        message: unreadableLine(
+          input.slice(error.offset, error.offset + error.length),
+        ),
         range: {
-          start: { line: error.line ?? 0, character: error.column ?? 0 },
-          end: {
-            line: error.line ?? 0,
-            character: (error.column ?? 0) + error.length,
-          },
+          start: { line, character: column },
+          end: { line, character: column + error.length },
         },
         level: "warning",
       });
     });
-    const result = buildAst(lexingResult.tokens, input);
+
+    const tokens = unreadable.size
+      ? lexingResult.tokens.filter(
+          (token) => !unreadable.has(token.startLine ?? -1),
+        )
+      : lexingResult.tokens;
+    const result = buildAst(tokens, input);
     result.malformed.forEach((node) => {
       this.errors.push({
         code: GedcomErrorCode.Parser,
