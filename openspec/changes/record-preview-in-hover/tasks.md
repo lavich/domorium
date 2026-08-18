@@ -60,7 +60,7 @@
 - [x] 5.2 `packages/codemirror/README.md`: where it describes `findRecordPreview`,
       say that the answer now comes from the shared layer and that the colouring
       stays here.
-- [ ] 5.3 State the publish order in the pull request description: per ADR-0003
+- [x] 5.3 State the publish order in the pull request description: per ADR-0003
       and the precedent in #171, `language-service` is published before
       `codemirror`, and `codemirror`'s dependency range moves to that minor in the
       release pull request, not in this one. No version is bumped and no tag is
