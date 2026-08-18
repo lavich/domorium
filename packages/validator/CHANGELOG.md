@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 1.8.2 - 2026-08-18
 
 - **A tag written in mixed case is read as written, and the message says which tag
   is meant.** `1 NoTe hello` was reported as "Unknown tag N" — the tag pattern held
