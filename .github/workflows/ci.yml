@@ -99,7 +99,9 @@ jobs:
           if changed \
             packages \
             scripts/check-conformance.mjs \
+            scripts/conformance-record.mjs \
             scripts/conformance-corpus.json \
+            scripts/vendor-corpus.json \
             package.json \
             package-lock.json; then
             echo "conformance=true" >> "$GITHUB_OUTPUT"

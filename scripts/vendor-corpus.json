@@ -1,0 +1,284 @@
+{
+  "corpus": "Real exports from real genealogy programs, curated by cacack/gedcom-go in testdata/README.md: it names the exporting program and version, says which collection each file came from and under what licence, and redacts submitter contact details before carrying a file. Every location below is pinned to an upstream revision, so a later commit there cannot change what this check reads.",
+  "policy": "No file here is copied into this repository, however permissive its licence. See docs/adr/0011-fetch-corpora-rather-than-vendoring-them.md.",
+  "files": {
+    "mhftb8-export.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/mhftb8-export.ged",
+      "program": "MyHeritage Family Tree Builder 8",
+      "what": "The volume case: 105 707 lines of vendor idiom, and the file #190 reproduces on.",
+      "dominates": "VAL001 ×11 617 — RIN under an event — is 91% of the 12 762 findings; unresolved-xref ×622 is #190 at scale.",
+      "suspected": "unresolved-xref ×622 is right about the file but prints a set of several hundred xrefs into each message — #190. The code itself sits outside VAL001…VAL015 — #235.",
+      "collected": "D-Jeffrey/gedcom-samples, vendored into cacack/gedcom-go",
+      "collectedFrom": "queen/Queen.ged",
+      "licence": "MIT OR CC0-1.0",
+      "sha256": "c32e4b454a18f5d70188949ad60e7104fc8b1568b10b09e84c8d6fc0a551c8d9",
+      "summary": {
+        "total": 12762,
+        "byCode": {
+          "VAL001": 11617,
+          "VAL002": 17,
+          "VAL003": 8,
+          "VAL004": 498,
+          "unresolved-xref": 622
+        },
+        "digest": "d5f7d500a8afd255379ef0a57cfd099544fcb55aaca2ddb5f77b71f63528ac4e"
+      }
+    },
+    "legacy10-2025-export.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/legacy10-2025-export.ged",
+      "program": "Legacy 10.0",
+      "what": "Dates at volume, over FamilySearch-sourced data.",
+      "dominates": "VAL004 ×1 015 — dates — is 75% of the 1 349 findings, then VAL010 ×334.",
+      "collected": "D-Jeffrey/gedcom-samples, vendored into cacack/gedcom-go",
+      "collectedFrom": "ivar/IvarKingOfDublin.ged",
+      "licence": "MIT OR CC0-1.0",
+      "sha256": "32313910ba58c6cd3eb240f133e30b28edfb44921fa56762fc037034e895cb9f",
+      "summary": {
+        "total": 1349,
+        "byCode": {
+          "VAL004": 1015,
+          "VAL010": 334
+        },
+        "digest": "f2543479bd9df94be6938371c0bcab2bc738c374b3aa95e6446a38c9e3bbbb36"
+      }
+    },
+    "vendor-familyorigins5.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/vendor-familyorigins5.ged",
+      "program": "Family Origins 5.0",
+      "what": "Dates again, and a file that resolves as 5.5 rather than 5.5.1.",
+      "dominates": "VAL004 ×648 — dates — is 87% of the 745 findings.",
+      "collected": "D-Jeffrey/gedcom-samples, vendored into cacack/gedcom-go",
+      "collectedFrom": "washington/washington.ged",
+      "licence": "MIT OR CC0-1.0",
+      "sha256": "f2b78584e7b9d456b4adf902a06e05dfe1c7a4a35e1544c5cec9c079509aecff",
+      "summary": {
+        "total": 745,
+        "byCode": {
+          "VAL001": 75,
+          "VAL002": 1,
+          "VAL004": 648,
+          "VAL010": 20,
+          "VAL013": 1
+        },
+        "digest": "d6eddbb7aa17381fa0ea132db3fb1caf592b943bd3b3b3599d4f4f28a1691692"
+      }
+    },
+    "vendor-ancestris11-export.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/vendor-ancestris11-export.ged",
+      "program": "Ancestris 11",
+      "what": "Events that assert nothing, over French Bourbon data.",
+      "dominates": "VAL010 ×81 — events asserting nothing — is half of the 160 findings.",
+      "collected": "D-Jeffrey/gedcom-samples, vendored into cacack/gedcom-go",
+      "collectedFrom": "sample-bourbon/bourbon.ged",
+      "licence": "MIT OR CC0-1.0",
+      "sha256": "1b83323461e2bd4cb0696e28d3d3d8b591453e4120adf7e4a51208e1ab03ec6b",
+      "summary": {
+        "total": 160,
+        "byCode": {
+          "VAL001": 45,
+          "VAL003": 34,
+          "VAL010": 81
+        },
+        "digest": "29ae99c57117221b8f37052c5a319c675ed4c671ff4d753cf8d04c3a0a027b96"
+      }
+    },
+    "ancestry-2025-export.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/ancestry-2025-export.ged",
+      "program": "Ancestry.com 2025.08",
+      "what": "One of five current exports of the same seed tree: 14 individuals, 5 families.",
+      "collected": "cacack/gedcom-go, exported by the corpus author",
+      "licence": "MIT",
+      "sha256": "f7a6fc3e4efdf5bb2a890aba772ced4e3d8d7f444030232ee865181c8dd92e67",
+      "expected": ["16 error VAL004"]
+    },
+    "familysearch-2025-export.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/familysearch-2025-export.ged",
+      "program": "FamilySearch.org 2025",
+      "what": "The same seed tree through FamilySearch; writes two HEAD.NOTE lines.",
+      "collected": "cacack/gedcom-go, exported by the corpus author",
+      "licence": "MIT",
+      "sha256": "adce88378670c9747245b5d36ca93609ec098dc65ff1db2559898aa8c8e3f2ef",
+      "expected": ["1 error VAL002", "12 error VAL007", "15 error VAL003"]
+    },
+    "gramps-2025-export.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/gramps-2025-export.ged",
+      "program": "Gramps 6.0.6",
+      "what": "The same seed tree through Gramps.",
+      "collected": "cacack/gedcom-go, exported by the corpus author",
+      "licence": "MIT",
+      "sha256": "b4d082010b3421bf9438092b9b450ba788930387741df40247f804015efe334c",
+      "expected": ["16 error VAL003"]
+    },
+    "myheritage-2025-export.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/myheritage-2025-export.ged",
+      "program": "MyHeritage.com (5.5.1 export; the upstream corpus states no product version)",
+      "what": "The same seed tree through MyHeritage today, beside the Family Tree Builder 8 export above.",
+      "collected": "cacack/gedcom-go, exported by the corpus author",
+      "licence": "MIT",
+      "sha256": "307a335406cee67ba030f2be49e0ee0df90bf584060b82b2780bc72d52728743",
+      "expected": [
+        "1 error VAL002",
+        "32 error VAL004",
+        "37 error VAL003",
+        "57 error VAL004",
+        "77 error VAL004",
+        "118 error VAL004",
+        "122 error VAL004",
+        "148 error VAL004",
+        "218 error VAL004"
+      ]
+    },
+    "rootsmagic-2026-export.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/rootsmagic-2026-export.ged",
+      "program": "RootsMagic 11 Essentials (2026)",
+      "what": "The same seed tree through RootsMagic, with _EVDEF and _TMPLT source templates.",
+      "collected": "cacack/gedcom-go, exported by the corpus author",
+      "licence": "MIT",
+      "sha256": "10c930e83f530ce03cda279c4b287c53d80f0d9039901d87b0949d5f0a1b82cb",
+      "expected": [
+        "1 error VAL002",
+        "24 warning VAL001",
+        "34 warning VAL001",
+        "44 warning VAL001",
+        "47 warning VAL001",
+        "52 warning VAL001",
+        "58 warning VAL001",
+        "64 warning VAL001",
+        "72 warning VAL001",
+        "79 warning VAL001",
+        "85 warning VAL001",
+        "91 warning VAL001",
+        "97 warning VAL001",
+        "106 warning VAL001",
+        "113 warning VAL001",
+        "119 warning VAL001",
+        "125 warning VAL001",
+        "129 warning VAL001",
+        "138 warning VAL001",
+        "145 warning VAL001",
+        "151 warning VAL001",
+        "160 warning VAL001",
+        "168 warning VAL001",
+        "174 warning VAL001",
+        "183 warning VAL001",
+        "190 warning VAL001",
+        "196 warning VAL001",
+        "202 warning VAL001",
+        "208 warning VAL001",
+        "217 warning VAL001",
+        "224 warning VAL001",
+        "230 warning VAL001",
+        "238 warning VAL001",
+        "245 warning VAL001",
+        "251 warning VAL001",
+        "256 warning VAL001",
+        "264 warning VAL001",
+        "271 warning VAL001",
+        "277 warning VAL001",
+        "285 warning VAL001",
+        "292 warning VAL001",
+        "298 warning VAL001",
+        "306 warning VAL001",
+        "313 warning VAL001",
+        "319 warning VAL001",
+        "327 warning VAL001",
+        "334 warning VAL001",
+        "340 warning VAL001",
+        "348 warning VAL001",
+        "355 warning VAL001",
+        "361 warning VAL001",
+        "369 warning VAL001",
+        "376 warning VAL001",
+        "382 warning VAL001",
+        "389 warning VAL001",
+        "407 warning VAL001",
+        "410 warning VAL001",
+        "421 warning VAL001",
+        "426 warning VAL001",
+        "436 warning VAL001",
+        "446 warning VAL001",
+        "457 warning VAL001"
+      ]
+    },
+    "vendor-customtags-torture.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/vendor-customtags-torture.ged",
+      "what": "Vendor extensions at every structure level, nested up to six deep. No single exporting program.",
+      "suspected": "Records unresolved-xref, a code outside VAL001…VAL015 — #235.",
+      "collected": "frizbog/gedcom4j sample/, vendored into cacack/gedcom-go",
+      "licence": "MIT",
+      "sha256": "8b059a8af238d74e29acafc4b08aa1c2ebcc035dda728445c36ea2b475f92689",
+      "expected": [
+        "24 error VAL004",
+        "126 error unresolved-xref",
+        "269 error VAL004",
+        "276 error VAL004",
+        "283 warning VAL001",
+        "310 warning VAL001",
+        "312 warning VAL001"
+      ]
+    },
+    "atsign-55.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/atsign-55.ged",
+      "what": "At-sign torture: @@ doubling and @#...@ escapes in payloads. Exists to be read, so a lexer warning here is suspect.",
+      "collected": "gedcom7code/test-files, vendored into cacack/gedcom-go",
+      "licence": "Unlicense",
+      "sha256": "577aca90da64105dc3d6c959c6e7eb39fef6c1877908b9f340f1baad9d28d7f3",
+      "expected": []
+    },
+    "xref-case.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/xref-case.ged",
+      "what": "XRef case mismatch (@test@ against @TEST@) and an xref containing a space.",
+      "suspected": "The LEXER warning at line 13 and the VAL001 that follows it are ours: an xref containing a space produces an internal message and a cascading unknown tag. Tracked by #234. The record also uses codes outside VAL001…VAL015 — #235.",
+      "collected": "gedcom7code/test-files, vendored into cacack/gedcom-go",
+      "licence": "Unlicense",
+      "sha256": "a0cea8dcb970d4c08f8bf7cdac7bb3b2d5f1bb5b6a342d5b9d0a453de4f691e1",
+      "expected": [
+        "3 error unresolved-xref",
+        "13 warning LEXER",
+        "13 warning VAL001"
+      ]
+    },
+    "age-keywords-551.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/age-keywords-551.ged",
+      "what": "5.5.1 AGE keyword payloads: CHILD/INFANT/STILLBORN, case variants, < and >.",
+      "suspected": "All 24 findings are ours: AGE reads a comparison only when a space follows it, its units only in lower case and its keywords only in upper case. Tracked by #233.",
+      "collected": "gedcom7code/test-files, vendored into cacack/gedcom-go",
+      "licence": "Unlicense",
+      "sha256": "8218118fea6aba156c2ac85369f63e0dbf6595e3a14166adf755c82c09708bc6",
+      "expected": [
+        "13 error VAL004",
+        "19 error VAL004",
+        "22 error VAL004",
+        "28 error VAL004",
+        "31 error VAL004",
+        "37 error VAL004",
+        "43 error VAL004",
+        "46 error VAL004",
+        "49 error VAL004",
+        "52 error VAL004",
+        "55 error VAL004",
+        "61 error VAL004",
+        "64 error VAL004",
+        "67 error VAL004",
+        "70 error VAL004",
+        "73 error VAL004",
+        "79 error VAL004",
+        "82 error VAL004",
+        "85 error VAL004",
+        "88 error VAL004",
+        "91 error VAL004",
+        "97 error VAL004",
+        "106 error VAL004",
+        "118 error VAL004"
+      ]
+    },
+    "date-dual-years.ged": {
+      "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/date-dual-years.ged",
+      "what": "Dual-year dates (1699/00) plain, ABT, FROM/TO and BET/AND.",
+      "collected": "gedcom7code/test-files, vendored into cacack/gedcom-go",
+      "licence": "Unlicense",
+      "sha256": "1804b848f90601503e895ea71a789fb9f30adb4dd8afe1b97741c465b35c7fba",
+      "expected": []
+    }
+  }
+}

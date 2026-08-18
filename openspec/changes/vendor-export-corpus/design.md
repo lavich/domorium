@@ -66,11 +66,16 @@ history — so it gets an ADR.
 
 ### Fetch from the corpus that curated the files, pinned to a commit
 
-Each file could be fetched from its own original upstream. Fetching from the
-curating corpus instead is chosen because the curation is the thing we are using:
-it names the exporting program and version per file, gives the files intelligible
-names, and redacts personal contact details from submitter records before
-carrying them. The originals have none of that.
+The curating corpus is [cacack/gedcom-go](https://github.com/cacack/gedcom-go),
+whose `testdata/` directory holds the files and whose `testdata/README.md` is the
+curation.
+
+Each file could be fetched from its own original upstream instead. Fetching from
+the curating corpus is chosen because the curation is the thing we are using: it
+names the exporting program and version per file, says which collection the file
+came from and under what licence, gives the files intelligible names, and redacts
+personal contact details from submitter records before carrying them. The
+originals have none of that.
 
 Every recorded location is pinned to an upstream commit, so a later commit there
 cannot change what we read, and the recorded hash guards the pin rather than
@@ -112,19 +117,19 @@ Four things found while measuring look like our own defects rather than the file
 Each gets an issue, is referenced from the entry that records it, and is fixed
 elsewhere:
 
-| What                                                                                                                                         | Where seen                                          |
-| -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `AGE <8y` rejected, `AGE < 8y` accepted; `8Y` and `child` rejected                                                                           | 24 of 40 AGE payloads in the 5.5.1 age-keyword file |
-| An unresolved pointer prints a set of several hundred xrefs (#190)                                                                           | 622 findings in the MyHeritage export               |
-| `unresolved-xref`, `invalid-level`, `LEXER` sit beside `VAL001…VAL015`, so "code names a section of the specification" (#151) has exceptions | the code vocabulary itself                          |
-| A lexer warning on the at-sign quirk file, which exists to be read                                                                           | `xref-case.ged`                                     |
+| What                                                                                                                                         | Where seen                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `AGE <8y` rejected, `AGE < 8y` accepted; `8Y` and `child` rejected                                                                           | 24 of 40 AGE payloads in the 5.5.1 age-keyword file                                      |
+| An unresolved pointer prints a set of several hundred xrefs (#190)                                                                           | 622 findings in the MyHeritage export                                                    |
+| `unresolved-xref`, `invalid-level`, `LEXER` sit beside `VAL001…VAL015`, so "code names a section of the specification" (#151) has exceptions | the code vocabulary itself                                                               |
+| A lexer warning on the xref-case quirk file, which exists to be read                                                                         | `xref-case.ged` line 13, the xref containing a space; `atsign-55.ged` is diagnostic-free |
 
 Recording them keeps the corpus a measurement instead of a wish, and a fix then
 shows up here as a count going down, which is exactly the signal wanted.
 
 ### The first set
 
-Thirteen files, about 2.9 MB, chosen so each teaches something different: the
+Fourteen files, about 2.9 MB, chosen so each teaches something different: the
 MyHeritage Family Tree Builder 8 export for volume and vendor idiom; Legacy 10 and
 Family Origins 5.0 for dates and for a file that resolves as 5.5; Ancestris 11 for
 events asserting nothing; the five current exports of one seed tree — Ancestry,
