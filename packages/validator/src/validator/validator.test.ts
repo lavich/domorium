@@ -313,6 +313,43 @@ describe("validator", () => {
     expect(messages).toContain("Unknown tag FOO in parent root");
   });
 
+  // #252: the message named a tag the file does not contain.
+  describe("a tag written in mixed case", () => {
+    const messagesFor = (line: string) => {
+      const { nodes, validator } = validatorFor(`0 HEAD
+1 SOUR TestApp
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Submitter
+0 @I1@ INDI
+${line}
+0 TRLR
+`);
+      return validator.validate(nodes).map((error) => error.message);
+    };
+
+    test("names the tag the file wrote", async () => {
+      expect(messagesFor("1 NoTe hello").join(" ")).toContain("NoTe");
+    });
+
+    test("says a tag is written in upper case when that is the whole of it", async () => {
+      expect(messagesFor("1 NoTe hello")).toContainEqual(
+        expect.stringContaining("NOTE"),
+      );
+    });
+
+    test("still says only that a tag is unknown where case is not the problem", async () => {
+      const messages = messagesFor("1 NOTEE hello");
+
+      expect(messages.join(" ")).toContain("NOTEE");
+      expect(messages.join(" ")).not.toMatch(/upper case/i);
+    });
+  });
+
   describe("a 5.5.1 multimedia link", () => {
     const in551 = (body: string) =>
       validatorFor(`0 HEAD

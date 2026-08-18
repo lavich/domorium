@@ -4,6 +4,16 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A tag written in mixed case is read as written, and the message says which tag
+  is meant.** `1 NoTe hello` was reported as "Unknown tag N" — the tag pattern held
+  upper case only, so it matched as far as `N` and `oTe hello` became the value, and
+  the reader was told about a tag that is nowhere in their file. The tag is now read
+  whole and the message says a tag is written in upper case, naming `NOTE`. Where
+  case is not the problem, `1 NOTEE` still reads as an unknown tag.
+- **A line carrying no level is reported once.** The parser says a GEDCOM line must
+  begin with a level, and the validator no longer adds its own word about the tag of
+  a line that is not a line.
+
 - **A tag declared twice in `HEAD.SCHMA` with different URIs is no longer reported.**
   The specification permits it — "the schema structure may contain the same tag more
   than once with different URIs" — and its own `extensions.ged` declares `_PARTY`
