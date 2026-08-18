@@ -304,6 +304,37 @@ describe("code actions", () => {
 
   // Names #143: an unsupported version fell through to the GEDCOM 7 record
   // set. Reached directly, since no unresolved reference is reported for one.
+  // #251: the file's terminator is the file's. Inserting LF into a document
+  // written with CR leaves it written with both.
+  it.each([
+    ["CR", "\r"],
+    ["CR-LF", "\r\n"],
+    ["LF-CR", "\n\r"],
+    ["LF", "\n"],
+  ])("creates a record with the terminator the file uses: %s", (_name, eol) => {
+    const text = [
+      "0 HEAD",
+      "1 GEDC",
+      "2 VERS 7.0",
+      "0 @F1@ FAM",
+      "1 WIFE @I9@",
+      "0 TRLR",
+    ].join(eol);
+    const service = new GedcomLanguageService(text, 1);
+    const diagnostic = service
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+    const create = service
+      .getCodeActions(diagnostic.range, [diagnostic], 1)
+      .find(
+        (action) =>
+          "title" in action && action.title === "Create INDI record @I9@",
+      )!;
+
+    const inserted = "edit" in create ? create.edit.edits[0].newText : "";
+    expect(inserted).toBe(`0 @I9@ INDI${eol}`);
+  });
+
   it("creates no record for a version with no dialect", () => {
     const text = [
       "0 HEAD",

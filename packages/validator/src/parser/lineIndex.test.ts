@@ -73,3 +73,27 @@ describe("offsetToPosition", () => {
     }
   });
 });
+
+// #251: 5.5.1 ends a line with CR, LF, CR-LF or LF-CR. Only two of the four were
+// counted, so a CR-only file was one line.
+describe("line terminators", () => {
+  const positionOf = (eol: string) => {
+    const text = ["0 HEAD", "1 GEDC", "2 VERS 5.5.1"].join(eol);
+    const index = createLineIndex(text);
+    return offsetToPosition(index, text.indexOf("2 VERS"));
+  };
+
+  it.each([
+    ["LF", "\n"],
+    ["CR-LF", "\r\n"],
+    ["CR", "\r"],
+    ["LF-CR", "\n\r"],
+  ])("puts the third line on line 2 with %s", (_name, eol) => {
+    expect(positionOf(eol)).toEqual({ line: 2, character: 0 });
+  });
+
+  it("reads CR-LF as one terminator, not as an empty line between", () => {
+    const index = createLineIndex("0 HEAD\r\n1 GEDC\r\n");
+    expect(index.length).toBe(3);
+  });
+});

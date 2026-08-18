@@ -14,6 +14,13 @@ All notable changes to `@domorium/validator` are documented here.
   dropped rather than read as something else. The lines around it are untouched.
 - **An unknown tag at the top level says `root`** where it said `undefined`. The
   message about a missing tag has said `root` all along.
+- **A file whose lines end in CR is read as a file, not as one line.** 5.5.1 ends a
+  line with CR, LF, CR-LF or LF-CR; the lexer's terminator was `\r?\n` and the line
+  index counted only LF, so a CR-only document parsed to a single node, its version
+  was never found, and everything above the lexer worked from one line. All four
+  terminators now end a line, a two-character form counts as one, and positions come
+  out the same whichever is used.
+
 - **A required tag missing from a childless parent is reported where it is
   missing.** The position came from the parent of the first child, so a parent with
   no children at all had no position to offer and the report landed on line 1. In a

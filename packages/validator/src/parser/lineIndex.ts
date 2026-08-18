@@ -7,12 +7,23 @@ import type { Position } from "../types/position";
  */
 export type LineIndex = Int32Array;
 
+const LF = 10;
+const CR = 13;
+
+/** 5.5.1 ends a line with CR, LF, CR-LF or LF-CR. See #251. */
 export function createLineIndex(text: string): LineIndex {
   const starts: number[] = [0];
   for (let i = 0; i < text.length; i += 1) {
-    if (text.charCodeAt(i) === 10) {
-      starts.push(i + 1);
+    const code = text.charCodeAt(i);
+    if (code !== LF && code !== CR) {
+      continue;
     }
+    const next = text.charCodeAt(i + 1);
+    // A two-character terminator is one terminator, not two empty lines.
+    const width =
+      (code === CR && next === LF) || (code === LF && next === CR) ? 2 : 1;
+    i += width - 1;
+    starts.push(i + 1);
   }
   return Int32Array.from(starts);
 }

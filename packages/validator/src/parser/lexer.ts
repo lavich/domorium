@@ -29,7 +29,8 @@ const Delimiter = createToken({
 
 const Newline = createToken({
   name: "Newline",
-  pattern: /\r?\n/,
+  // Two-character forms first, so CR-LF is one terminator. See #251.
+  pattern: /\r\n|\n\r|\r|\n/,
   group: Lexer.SKIPPED,
   line_breaks: true,
   push_mode: "main",

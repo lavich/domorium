@@ -7,6 +7,7 @@ import type {
   Range,
 } from "../../types";
 import type { ReferenceIndex } from "../references/referenceIndex";
+import { lines } from "../position/lineTerminators";
 
 const MAX_REPLACEMENT_CHOICES = 10;
 
@@ -112,15 +113,15 @@ function unresolvedXrefActions(
     });
   }
 
-  const trailerLine = context.text
-    .split(/\r?\n/u)
-    .findIndex((line) => /^0\s+TRLR(?:\s|$)/u.test(line));
+  const trailerLine = lines(context.text).findIndex((line) =>
+    /^0\s+TRLR(?:\s|$)/u.test(line),
+  );
   if (
     trailerLine >= 0 &&
     !context.index.get(xref)?.declarations.length &&
     canCreateBareRecord(context.dialect, recordTag)
   ) {
-    const newline = context.text.includes("\r\n") ? "\r\n" : "\n";
+    const newline = terminatorOf(context.text);
     actions.push({
       title: `Create ${recordTag} record ${xref}`,
       kind: "quickfix",
@@ -141,6 +142,11 @@ function unresolvedXrefActions(
   }
 
   return actions;
+}
+
+/** The four 5.5.1 allows, longest first, so a two-character form wins. See #251. */
+function terminatorOf(text: string): string {
+  return ["\r\n", "\n\r", "\r", "\n"].find((eol) => text.includes(eol)) ?? "\n";
 }
 
 function canCreateBareRecord(
@@ -186,18 +192,18 @@ function isSafeLevelFix(text: string, diagnostic: Diagnostic): boolean {
   if (expectedLevel === undefined) {
     return false;
   }
-  const lines = text.split(/\r?\n/u);
-  const line = lines[diagnostic.range.start.line];
+  const documentLines = lines(text);
+  const line = documentLines[diagnostic.range.start.line];
   if (line === undefined) {
     return false;
   }
-  lines[diagnostic.range.start.line] =
+  documentLines[diagnostic.range.start.line] =
     line.slice(0, diagnostic.range.start.character) +
     String(expectedLevel) +
     line.slice(diagnostic.range.end.character);
 
   return !new GedcomDocument()
-    .createDocument(lines.join("\n"))
+    .createDocument(documentLines.join(terminatorOf(text)))
     .getErrors()
     .some((error) => error.range.start.line === diagnostic.range.start.line);
 }

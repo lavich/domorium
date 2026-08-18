@@ -5,6 +5,7 @@ import {
 } from "@domorium/validator";
 
 import { getCompletionItems } from "./libs/completion/completion";
+import { LINE_TERMINATOR } from "./libs/position/lineTerminators";
 import { getCodeActions } from "./libs/codeActions/codeActions";
 import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
@@ -218,7 +219,7 @@ export class GedcomLanguageService {
 
   private getLinePrefix(position: Position): string {
     const line =
-      this.text.split(/\r?\n/, position.line + 1)[position.line] ?? "";
+      this.text.split(LINE_TERMINATOR, position.line + 1)[position.line] ?? "";
     return line.slice(0, position.character);
   }
 }
