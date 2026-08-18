@@ -1,3 +1,14 @@
+import { useState } from "react";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { WebDiagnostic } from "@/editor/types";
 import { cn } from "@/lib/utils";
 
@@ -6,46 +17,205 @@ export interface ProblemsPanelProps {
   onSelect(diagnostic: WebDiagnostic): void;
 }
 
+interface Group {
+  key: string;
+  severity: WebDiagnostic["severity"];
+  code: string;
+  message: string;
+  places: WebDiagnostic[];
+}
+
+const RANK: Record<WebDiagnostic["severity"], number> = {
+  error: 0,
+  warning: 1,
+  info: 2,
+};
+
+/** Beyond this a group opens on request, however severe it is. */
+const OPEN_AT_MOST = 20;
+const FIRST_PLACES = 50;
+const FURTHER_PLACES = 200;
+
+/** A reader came for the errors; a warning waits to be asked for. */
+const opensItself = (group: Group) =>
+  group.severity === "error" && group.places.length <= OPEN_AT_MOST;
+
+/**
+ * A statement, not a line. Identical findings already carry identical messages,
+ * so the text is the key and nothing has to be normalised.
+ */
+function groupsOf(diagnostics: WebDiagnostic[]): Group[] {
+  const groups = new Map<string, Group>();
+  for (const diagnostic of diagnostics) {
+    const key = `${diagnostic.severity} ${diagnostic.code} ${diagnostic.message}`;
+    const group = groups.get(key);
+    if (group) {
+      group.places.push(diagnostic);
+    } else {
+      groups.set(key, {
+        key,
+        severity: diagnostic.severity,
+        code: diagnostic.code,
+        message: diagnostic.message,
+        places: [diagnostic],
+      });
+    }
+  }
+  return [...groups.values()].sort(
+    (a, b) =>
+      RANK[a.severity] - RANK[b.severity] ||
+      b.places.length - a.places.length ||
+      a.places[0].line - b.places[0].line,
+  );
+}
+
 export function ProblemsPanel({ diagnostics, onSelect }: ProblemsPanelProps) {
+  const groups = groupsOf(diagnostics);
+  const [shown, setShown] = useState<Record<string, number>>({});
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex h-(--shell-tabs-height) shrink-0 items-center gap-2 border-b px-3">
         <span className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
           Problems
         </span>
-        <span className="rounded bg-muted px-1.5 font-mono text-[11px] text-muted-foreground">
+        <Badge variant="secondary" className="font-mono text-[11px]">
           {diagnostics.length}
-        </span>
+        </Badge>
+        {groups.length !== diagnostics.length && (
+          <Badge variant="ghost" className="font-mono text-[11px]">
+            {groups.length} kinds
+          </Badge>
+        )}
       </div>
-      {diagnostics.length === 0 ? (
-        <p className="p-3 text-sm text-muted-foreground">
-          Nothing to report. Diagnostics update as you edit.
-        </p>
-      ) : (
-        <ul className="min-h-0 flex-1 overflow-auto">
-          {diagnostics.map((diagnostic, index) => (
-            <li key={`${diagnostic.from}-${diagnostic.to}-${index}`}>
-              <button
-                type="button"
-                onClick={() => onSelect(diagnostic)}
-                className={cn(
-                  "flex w-full flex-col items-start gap-0.5 border-b border-l-2 px-3 py-2 text-left hover:bg-accent/60",
-                  edgeColour(diagnostic.severity),
-                )}
-              >
-                <span className="font-mono text-[12px] text-muted-foreground">
-                  Line {diagnostic.line + 1}, Column {diagnostic.character + 1}
-                  {diagnostic.code ? ` · ${diagnostic.code}` : ""}
-                </span>
-                <span className="text-[13px] leading-[18px]">
-                  {diagnostic.message}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ScrollArea className="min-h-0 flex-1">
+        {diagnostics.length === 0 ? (
+          <Empty className="p-4">
+            <EmptyTitle className="text-sm">Nothing to report</EmptyTitle>
+            <EmptyDescription className="text-[12px]">
+              Diagnostics update as you edit.
+            </EmptyDescription>
+          </Empty>
+        ) : (
+          // Every group opens on its own: a reader comparing two of them should
+          // not have the first shut in their face.
+          <Accordion
+            multiple
+            defaultValue={groups.filter(opensItself).map((group) => group.key)}
+          >
+            {groups.map((group) =>
+              group.places.length === 1 ? (
+                <PlaceRow
+                  key={group.key}
+                  diagnostic={group.places[0]}
+                  onSelect={onSelect}
+                  message={group.message}
+                />
+              ) : (
+                <AccordionItem
+                  key={group.key}
+                  value={group.key}
+                  className={cn(
+                    "border-b border-l-2",
+                    edgeColour(group.severity),
+                  )}
+                >
+                  <AccordionTrigger className="items-start gap-1.5 px-3 font-normal hover:no-underline hover:bg-accent/60">
+                    <span className="flex flex-col items-start gap-0.5">
+                      <span className="font-mono text-[12px] text-muted-foreground">
+                        {group.places.length} places
+                        {group.code ? ` · ${group.code}` : ""} · first at line{" "}
+                        {group.places[0].line + 1}
+                      </span>
+                      <span className="text-[13px] leading-[18px]">
+                        {group.message}
+                      </span>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-0 pb-0">
+                    <Places
+                      group={group}
+                      shown={shown[group.key] ?? FIRST_PLACES}
+                      onShowMore={() =>
+                        setShown((state) => ({
+                          ...state,
+                          [group.key]:
+                            (state[group.key] ?? FIRST_PLACES) + FURTHER_PLACES,
+                        }))
+                      }
+                      onSelect={onSelect}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              ),
+            )}
+          </Accordion>
+        )}
+      </ScrollArea>
     </div>
+  );
+}
+
+function Places({
+  group,
+  shown,
+  onShowMore,
+  onSelect,
+}: {
+  group: Group;
+  shown: number;
+  onShowMore(): void;
+  onSelect(diagnostic: WebDiagnostic): void;
+}) {
+  const remaining = group.places.length - shown;
+  return (
+    <ul>
+      {group.places.slice(0, shown).map((place, index) => (
+        <li key={`${place.from}-${place.to}-${index}`}>
+          <PlaceRow diagnostic={place} onSelect={onSelect} />
+        </li>
+      ))}
+      {remaining > 0 && (
+        <li>
+          <button
+            type="button"
+            onClick={onShowMore}
+            className="w-full py-2 pr-3 pl-9 text-left font-mono text-[12px] text-muted-foreground hover:bg-accent/60"
+          >
+            Show {Math.min(remaining, FURTHER_PLACES)} more of {remaining}
+          </button>
+        </li>
+      )}
+    </ul>
+  );
+}
+
+function PlaceRow({
+  diagnostic,
+  onSelect,
+  message,
+}: {
+  diagnostic: WebDiagnostic;
+  onSelect(diagnostic: WebDiagnostic): void;
+  message?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(diagnostic)}
+      className={cn(
+        "flex w-full flex-col items-start gap-0.5 py-2 pr-3 text-left hover:bg-accent/60",
+        message
+          ? cn("border-b border-l-2 pl-3", edgeColour(diagnostic.severity))
+          : "pl-9",
+      )}
+    >
+      <span className="font-mono text-[12px] text-muted-foreground">
+        Line {diagnostic.line + 1}, Column {diagnostic.character + 1}
+        {message && diagnostic.code ? ` · ${diagnostic.code}` : ""}
+      </span>
+      {message && <span className="text-[13px] leading-[18px]">{message}</span>}
+    </button>
   );
 }
 

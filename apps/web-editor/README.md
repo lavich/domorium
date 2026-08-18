@@ -9,6 +9,11 @@ The interface is built with React, Tailwind CSS, and official shadcn components.
 It includes a preloaded example, local file opening, diagnostics navigation,
 light and dark themes, and a responsive editor workspace.
 
+The problems panel gathers repeats of one finding under a single line that counts
+them and names the first place, because a real vendor export can state one true
+thing thousands of times. Errors open by themselves unless there are many of them;
+anything else waits to be asked for.
+
 ## Working in a folder on your computer
 
 Where the browser supports the File System Access API — Chrome, Edge and other
