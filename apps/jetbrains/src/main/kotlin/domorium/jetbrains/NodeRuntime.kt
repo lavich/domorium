@@ -9,7 +9,6 @@ internal const val MISSING_NODE_MESSAGE =
         "An IDE opened from Spotlight, the Dock or Toolbox does not inherit a login " +
         "shell's PATH, which is where a version manager usually puts node."
 
-/** An IDE not started from a shell has its own PATH, whatever the terminal has. #162 */
 internal object NodeRuntime {
     private val NAMES: List<String> =
         if (SystemInfo.isWindows) listOf("node.exe", "node.cmd", "node") else listOf("node")

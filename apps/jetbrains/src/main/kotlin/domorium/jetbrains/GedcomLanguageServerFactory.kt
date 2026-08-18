@@ -80,7 +80,6 @@ class GedcomLanguageServerFactory : LanguageServerFactory {
         GedcomServerConnectionProvider(reportMissingRuntime = { reportMissingRuntime(project) })
 }
 
-/** The log is not where a reader looks when a file has no diagnostics. #162 */
 private fun reportMissingRuntime(project: Project) {
     NotificationGroupManager
         .getInstance()

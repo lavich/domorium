@@ -28,8 +28,7 @@ class GedcomLanguageServerFactoryTest {
         assertEquals(listOf(script.toString()), provider.commandLine.parametersList.parameters)
     }
 
-    // #162: the process failed to start, a line went to the log, and the file was
-    // left with no diagnostics, no completion and no colour.
+    // #162: launched anyway, and the file went quiet.
     @Test
     fun `provider says so instead of launching a node that is not there`() {
         var reported = false
