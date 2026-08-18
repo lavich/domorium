@@ -4,6 +4,14 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **Six closed value sets in 5.5.1 are checked at last.** `QUAY 9`, `PEDI nonsense`,
+  `RESN whatever`, `ORDI maybe`, `STAT nonsense` under `FAMC` and `ADOP nonsense`
+  under `INDI.ADOP.FAMC` all passed, because 5.5.1 states these sets in its
+  primitive definitions rather than in an enumeration vocabulary, and a payload
+  type the field-type switch did not name was validated as free text. Each now
+  names its set in the scheme and is judged by the rule that already existed for
+  GEDCOM 7 enumerations. Every real export in the corpus already wrote these
+  correctly, so nothing new is reported there.
 - **A BC year in a 5.5.1 file is read in the spellings exports write.** `1472 B.C.`
   passed while `1472 BC`, `1472BC` and `1472B.C.` were reported, though `YEAR_GREG`
   carries no epoch at all and the specification only says in prose that "(B.C.)"

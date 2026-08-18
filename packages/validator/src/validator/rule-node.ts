@@ -35,6 +35,8 @@ type FieldType =
   | "age"
   | "age-v7"
   | "personal-name"
+  | "latitude"
+  | "longitude"
   | "media-type"
   | "language-tag"
   | "tag-def"
@@ -307,6 +309,14 @@ export class RuleNode {
       case "https://gedcom.io/terms/v7/type-TagDef":
         type = "tag-def";
         break;
+      case "https://gedcom.io/terms/v7/type-Latitude":
+      case "https://gedcom.io/terms/v5.5.1/type-PLACE_LATITUDE":
+        type = "latitude";
+        break;
+      case "https://gedcom.io/terms/v7/type-Longitude":
+      case "https://gedcom.io/terms/v5.5.1/type-PLACE_LONGITUDE":
+        type = "longitude";
+        break;
       case "https://gedcom.io/terms/v7/type-Name":
       case "https://gedcom.io/terms/v5.5.1/type-NAME_PERSONAL":
         type = "personal-name";
@@ -318,6 +328,16 @@ export class RuleNode {
         type = "nonNegativeInteger";
         break;
       case "https://gedcom.io/terms/v7/type-Enum":
+        type = "select";
+        break;
+      // 5.5.1 states its closed value sets in the primitive definitions, not in
+      // an enumeration vocabulary, so each names its set in the scheme. See #112.
+      case "https://gedcom.io/terms/v5.5.1/type-CERTAINTY_ASSESSMENT":
+      case "https://gedcom.io/terms/v5.5.1/type-PEDIGREE_LINKAGE_TYPE":
+      case "https://gedcom.io/terms/v5.5.1/type-RESTRICTION_NOTICE":
+      case "https://gedcom.io/terms/v5.5.1/type-ORDINANCE_PROCESS_FLAG":
+      case "https://gedcom.io/terms/v5.5.1/type-CHILD_LINKAGE_STATUS":
+      case "https://gedcom.io/terms/v5.5.1/type-ADOPTED_BY_WHICH_PARENT":
         type = "select";
         break;
       case "https://gedcom.io/terms/v7/type-List#Enum":
@@ -500,26 +520,22 @@ export class RuleNode {
           });
         }
         break;
-      case "string": {
-        // LATI/LONG share the generic XMLSchema#string payload type in the
-        // schema (there is no dedicated URI for them), so the format check
-        // is keyed off the resolved tag name instead.
-        const rawTag = this.scheme.tag[tagType];
-        if (rawTag === "LATI" || rawTag === "LONG") {
-          const isLati = rawTag === "LATI";
-          const re = isLati ? LATITUDE_REGEXP : LONGITUDE_REGEXP;
-          if (!value || !re.test(value)) {
-            errors.push(
-              valueError(
-                node,
-                `should be correct ${
-                  isLati ? "latitude" : "longitude"
-                } (e.g. "${isLati ? "N18.150944" : "W46.6"}")`,
-              ),
-            );
-          }
-          break;
+      case "latitude":
+      case "longitude": {
+        const isLati = fieldType.type === "latitude";
+        const regexp = isLati ? LATITUDE_REGEXP : LONGITUDE_REGEXP;
+        if (!value || !regexp.test(value)) {
+          errors.push(
+            valueError(
+              node,
+              `should be correct ${isLati ? "latitude" : "longitude"} ` +
+                `(e.g. "${isLati ? "N18.150944" : "W46.6"}")`,
+            ),
+          );
         }
+        break;
+      }
+      case "string": {
         if (!value) {
           errors.push({
             code: GedcomErrorCode.MissingValue,

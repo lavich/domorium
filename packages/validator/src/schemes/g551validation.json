@@ -854,7 +854,8 @@
       "type": "pointer"
     },
     "https://gedcom.io/terms/v5.5.1/INDI-ADOP-FAMC-ADOP": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-ADOPTED_BY_WHICH_PARENT"
+      "type": "https://gedcom.io/terms/v5.5.1/type-ADOPTED_BY_WHICH_PARENT",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-ADOPTED_BY_WHICH_PARENT"
     },
     "https://gedcom.io/terms/v5.5.1/INDI-CENS": {
       "type": null
@@ -867,7 +868,8 @@
       "type": "pointer"
     },
     "https://gedcom.io/terms/v5.5.1/INDI-FAMC-STAT": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-CHILD_LINKAGE_STATUS"
+      "type": "https://gedcom.io/terms/v5.5.1/type-CHILD_LINKAGE_STATUS",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-CHILD_LINKAGE_STATUS"
     },
     "https://gedcom.io/terms/v5.5.1/INDI-NAME": {
       "type": "https://gedcom.io/terms/v5.5.1/type-NAME_PERSONAL"
@@ -897,10 +899,10 @@
       "type": "http://www.w3.org/2001/XMLSchema#string"
     },
     "https://gedcom.io/terms/v5.5.1/LATI": {
-      "type": "http://www.w3.org/2001/XMLSchema#string"
+      "type": "https://gedcom.io/terms/v5.5.1/type-PLACE_LATITUDE"
     },
     "https://gedcom.io/terms/v5.5.1/LONG": {
-      "type": "http://www.w3.org/2001/XMLSchema#string"
+      "type": "https://gedcom.io/terms/v5.5.1/type-PLACE_LONGITUDE"
     },
     "https://gedcom.io/terms/v5.5.1/MAP": {
       "type": null
@@ -974,7 +976,8 @@
       "type": "http://www.w3.org/2001/XMLSchema#string"
     },
     "https://gedcom.io/terms/v5.5.1/ORDI": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-ORDINANCE_PROCESS_FLAG"
+      "type": "https://gedcom.io/terms/v5.5.1/type-ORDINANCE_PROCESS_FLAG",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-ORDINANCE_PROCESS_FLAG"
     },
     "https://gedcom.io/terms/v5.5.1/ORDN": {
       "type": null
@@ -983,7 +986,8 @@
       "type": "http://www.w3.org/2001/XMLSchema#string"
     },
     "https://gedcom.io/terms/v5.5.1/PEDI": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-PEDIGREE_LINKAGE_TYPE"
+      "type": "https://gedcom.io/terms/v5.5.1/type-PEDIGREE_LINKAGE_TYPE",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-PEDIGREE_LINKAGE_TYPE"
     },
     "https://gedcom.io/terms/v5.5.1/PHON": {
       "type": "http://www.w3.org/2001/XMLSchema#string"
@@ -1013,7 +1017,8 @@
       "type": "http://www.w3.org/2001/XMLSchema#string"
     },
     "https://gedcom.io/terms/v5.5.1/QUAY": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-CERTAINTY_ASSESSMENT"
+      "type": "https://gedcom.io/terms/v5.5.1/type-CERTAINTY_ASSESSMENT",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-CERTAINTY_ASSESSMENT"
     },
     "https://gedcom.io/terms/v5.5.1/REFN": {
       "type": "http://www.w3.org/2001/XMLSchema#string"
@@ -1035,7 +1040,8 @@
       "type": "http://www.w3.org/2001/XMLSchema#string"
     },
     "https://gedcom.io/terms/v5.5.1/RESN": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-RESTRICTION_NOTICE"
+      "type": "https://gedcom.io/terms/v5.5.1/type-RESTRICTION_NOTICE",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-RESTRICTION_NOTICE"
     },
     "https://gedcom.io/terms/v5.5.1/RETI": {
       "type": null
@@ -1185,7 +1191,39 @@
       "type": null
     }
   },
-  "set": {},
+  "set": {
+    "https://gedcom.io/terms/v5.5.1/enumset-ADOPTED_BY_WHICH_PARENT": {
+      "BOTH": "https://gedcom.io/terms/v5.5.1/enum-ADOPTED_BY_WHICH_PARENT-BOTH",
+      "HUSB": "https://gedcom.io/terms/v5.5.1/enum-ADOPTED_BY_WHICH_PARENT-HUSB",
+      "WIFE": "https://gedcom.io/terms/v5.5.1/enum-ADOPTED_BY_WHICH_PARENT-WIFE"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-CERTAINTY_ASSESSMENT": {
+      "0": "https://gedcom.io/terms/v5.5.1/enum-CERTAINTY_ASSESSMENT-0",
+      "1": "https://gedcom.io/terms/v5.5.1/enum-CERTAINTY_ASSESSMENT-1",
+      "2": "https://gedcom.io/terms/v5.5.1/enum-CERTAINTY_ASSESSMENT-2",
+      "3": "https://gedcom.io/terms/v5.5.1/enum-CERTAINTY_ASSESSMENT-3"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-CHILD_LINKAGE_STATUS": {
+      "challenged": "https://gedcom.io/terms/v5.5.1/enum-CHILD_LINKAGE_STATUS-challenged",
+      "disproven": "https://gedcom.io/terms/v5.5.1/enum-CHILD_LINKAGE_STATUS-disproven",
+      "proven": "https://gedcom.io/terms/v5.5.1/enum-CHILD_LINKAGE_STATUS-proven"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-ORDINANCE_PROCESS_FLAG": {
+      "no": "https://gedcom.io/terms/v5.5.1/enum-ORDINANCE_PROCESS_FLAG-no",
+      "yes": "https://gedcom.io/terms/v5.5.1/enum-ORDINANCE_PROCESS_FLAG-yes"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-PEDIGREE_LINKAGE_TYPE": {
+      "adopted": "https://gedcom.io/terms/v5.5.1/enum-PEDIGREE_LINKAGE_TYPE-adopted",
+      "birth": "https://gedcom.io/terms/v5.5.1/enum-PEDIGREE_LINKAGE_TYPE-birth",
+      "foster": "https://gedcom.io/terms/v5.5.1/enum-PEDIGREE_LINKAGE_TYPE-foster",
+      "sealing": "https://gedcom.io/terms/v5.5.1/enum-PEDIGREE_LINKAGE_TYPE-sealing"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-RESTRICTION_NOTICE": {
+      "confidential": "https://gedcom.io/terms/v5.5.1/enum-RESTRICTION_NOTICE-confidential",
+      "locked": "https://gedcom.io/terms/v5.5.1/enum-RESTRICTION_NOTICE-locked",
+      "privacy": "https://gedcom.io/terms/v5.5.1/enum-RESTRICTION_NOTICE-privacy"
+    }
+  },
   "substructure": {
     "": {
       "FAM": {
