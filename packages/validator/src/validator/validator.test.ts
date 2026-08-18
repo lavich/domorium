@@ -355,6 +355,31 @@ ${body}0 TRLR
       ]);
     });
 
+    // #243: the position came from the parent of the first child, so a parent
+    // with no children at all sent the report to the top of the document.
+    test("points at the FILE that lacks the FORM, not at line 1", async () => {
+      const document = `0 @I1@ INDI
+1 OBJE
+2 FILE http://example.org/portrait.jpg
+`;
+      const { nodes, validator } = in551(document);
+      const fileLine = `0 HEAD
+1 SOUR TestApp
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Submitter
+${document}`
+        .split("\n")
+        .findIndex((line) => line.startsWith("2 FILE"));
+
+      const [error] = validator.validate(nodes);
+      expect(error.range.start.line).toBe(fileLine);
+    });
+
     test("still rejects FORM directly beneath OBJE, which is the 5.5 layout", async () => {
       const { nodes, validator } = in551(`0 @I1@ INDI
 1 OBJE

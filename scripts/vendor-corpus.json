@@ -21,8 +21,9 @@
           "VAL004": 178,
           "unresolved-xref": 622
         },
-        "digest": "a6e9db58535d3ea8039c59b28e32d8a0a713d9aaaf479647fccf114640a194cd"
-      }
+        "digest": "7ef043efb06350b27c745bf27f84bd46292fdd2e2a5070dbc4942bceccf5311e"
+      },
+      "redaction": "Ten findings measure the upstream corpus rather than the exporter: the submitter records @U2@…@U8@ lost their NAME line and the payloads of EMAIL, ADDR and ADR1 to contact redaction, so SUBM is reported as missing a required NAME seven times and a value three times."
     },
     "legacy10-2025-export.ged": {
       "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/legacy10-2025-export.ged",
