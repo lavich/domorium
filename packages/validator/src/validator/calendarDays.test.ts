@@ -112,8 +112,7 @@ describe("a day the calendar does not have", () => {
     expect(days("30 FEB 1000 BCE")).toEqual(["30 FEB"]);
   });
 
-  // #239: every spelling the 5.5.1 reader accepts marks the same era, and a
-  // year before it has no leap rule to answer to.
+  // #239: the validity check and this one knew different spellings.
   it.each(["BC", "B.C.", "B.C", "bce"])(
     "gives February its longest length before %s",
     (epoch) => {

@@ -1486,8 +1486,7 @@ ${record}
       expect(errs.length).toBe(0);
     });
 
-    // #239: 5.5.1 states no epoch in YEAR_GREG and pins neither the spelling
-    // nor the delimiter, and real exports write every one of these.
+    // #239: one spelling of the era passed, and 5.5.1 pins none.
     const dateIn = (date: string) => {
       const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
