@@ -1,13 +1,34 @@
 #!/usr/bin/env node
-// Runs the validator over the official FamilySearch GEDCOM 7.0 test files and
-// compares the diagnostics against a recorded expectation. See issue #97.
+// Runs the validator over two corpora and compares the diagnostics against a
+// recorded expectation. See issues #97 and #232.
 //
-// The files are fetched into memory and never written to disk. They live in
-// FamilySearch/GEDCOM.io, which states no licence — unlike the specification
-// repository, which is Apache-2.0 — so this repository does not carry a copy of
-// them. What is committed is the corpus file beside this script: a SHA-256 per
-// file, and the diagnostics that file is expected to produce. The hash is what
-// turns an upstream edit into a visible failure instead of a silent one.
+//   - `conformance-corpus.json`: the 23 official FamilySearch GEDCOM 7.0 test
+//     files, which say what the specification asks of us.
+//   - `vendor-corpus.json`: unmodified exports from real genealogy programs,
+//     which say what the world actually writes. Every genealogy program in use
+//     still exports 5.5.1, and a fixture written to look like a vendor export
+//     teaches nothing.
+//
+// Neither corpus is copied into this repository, however permissive its licence.
+// The files are fetched into memory and never written to disk; what is committed
+// is the record beside this script: where each file comes from, under which
+// licence, a SHA-256, and the diagnostics it is expected to produce. The hash is
+// what turns an upstream edit into a visible failure instead of a silent one, and
+// each vendor location is pinned to a full upstream revision so a later commit
+// there cannot change what we read. See
+// docs/adr/0011-fetch-corpora-rather-than-vendoring-them.md.
+//
+// An expectation takes one of two shapes, and which one an entry uses is recorded
+// in the entry rather than decided by a threshold here:
+//
+//   - `expected` — one string per diagnostic, for files whose whole output a
+//     person can read in a diff.
+//   - `summary` — the count per code plus a digest, for files that produce
+//     thousands. A file with 12 762 diagnostics would otherwise put 12 762
+//     strings into a JSON file and make `--update` a rubber stamp.
+//
+// No expectation holds a diagnostic's message. The wording is meant to get
+// clearer, and pinning it would make every improvement read as a regression.
 //
 // Two consequences follow from fetching:
 //
@@ -25,13 +46,39 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { TextDecoder } from "node:util";
 
+import {
+  compare,
+  isPinned,
+  normalise,
+  recordOf,
+  shapeOf,
+} from "./conformance-record.mjs";
+
 // The lint configuration declares no environment globals, which is why every
 // built-in above is imported by name. `fetch` has no `node:` module to be
 // imported from, so it is taken off globalThis instead.
 const { fetch } = globalThis;
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const CORPUS = resolve(root, "scripts/conformance-corpus.json");
+
+// One shape for both corpora, so there is one code path rather than two scripts
+// that drift. They differ only in how an entry addresses its file: the official
+// suite shares one base URL, while every vendor entry carries its own pinned
+// location.
+const CORPORA = [
+  {
+    file: resolve(root, "scripts/conformance-corpus.json"),
+    label: "official GEDCOM 7.0 files",
+    locate: (corpus, name) => `${corpus.source}${name}`,
+    pinned: false,
+  },
+  {
+    file: resolve(root, "scripts/vendor-corpus.json"),
+    label: "vendor exports",
+    locate: (corpus, name) => corpus.files[name].location,
+    pinned: true,
+  },
+];
 
 const update = process.argv.includes("--update");
 
@@ -49,8 +96,6 @@ try {
   process.exit(1);
 }
 
-const corpus = JSON.parse(readFileSync(CORPUS, "utf8"));
-
 /**
  * `Response.text()` runs the WHATWG UTF-8 decode algorithm, which strips a
  * leading BOM — the same thing a browser does with a dropped file, and the
@@ -61,8 +106,7 @@ function decode(bytes) {
   return new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes);
 }
 
-async function load(name) {
-  const url = `${corpus.source}${name}`;
+async function load(url) {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`${url} returned ${response.status}`);
@@ -74,94 +118,91 @@ async function load(name) {
   };
 }
 
-// Line and code, not message: the wording of a diagnostic is meant to change as
-// it gets clearer, and pinning it here would make every improvement look like a
-// regression.
 function diagnose(text) {
-  return new GedcomDocument()
-    .createDocument(text)
-    .getErrors()
-    .map((e) => ({
-      line: e.range.start.line + 1,
-      text: `${e.level} ${e.code}`,
-    }))
-    .sort((a, b) => a.line - b.line || a.text.localeCompare(b.text))
-    .map((e) => `${e.line} ${e.text}`);
+  return normalise(new GedcomDocument().createDocument(text).getErrors());
 }
-
-function difference(expected, actual) {
-  const remaining = [...expected];
-  const added = [];
-  for (const entry of actual) {
-    const at = remaining.indexOf(entry);
-    if (at === -1) {
-      added.push(entry);
-    } else {
-      remaining.splice(at, 1);
-    }
-  }
-  return { added, gone: remaining };
-}
-
-const names = Object.keys(corpus.files).sort();
-const loaded = await Promise.all(
-  names.map(async (name) => {
-    try {
-      return { name, ...(await load(name)) };
-    } catch (error) {
-      return { name, error: error.message };
-    }
-  }),
-);
 
 const failures = [];
-let checked = 0;
-let diagnostics = 0;
+const reports = [];
 
-for (const file of loaded) {
-  const recorded = corpus.files[file.name];
+for (const corpus of CORPORA) {
+  const recorded = JSON.parse(readFileSync(corpus.file, "utf8"));
+  const names = Object.keys(recorded.files).sort();
 
-  if (file.error) {
-    failures.push(`${file.name}: could not be fetched — ${file.error}`);
-    continue;
+  const loaded = await Promise.all(
+    names.map(async (name) => {
+      const url = corpus.locate(recorded, name);
+      // Refused before it is fetched: an unpinned location cannot be added
+      // later by writing it into the record and letting the hash cover it.
+      if (corpus.pinned && !isPinned(url)) {
+        return {
+          name,
+          error: `${url} is not pinned to a full upstream revision`,
+        };
+      }
+      try {
+        return { name, ...(await load(url)) };
+      } catch (error) {
+        return { name, error: error.message };
+      }
+    }),
+  );
+
+  let checked = 0;
+  let clean = 0;
+  let diagnostics = 0;
+
+  for (const file of loaded) {
+    const entry = recorded.files[file.name];
+
+    if (file.error) {
+      failures.push(`${file.name}: could not be read — ${file.error}`);
+      continue;
+    }
+
+    if (update) {
+      entry.sha256 = file.sha256;
+      // Renewed in the shape the entry already carries: `--update` must not
+      // quietly move a file onto the weaker of the two records.
+      Object.assign(entry, recordOf(shapeOf(entry), diagnose(file.text)));
+      continue;
+    }
+
+    if (entry.sha256 !== file.sha256) {
+      failures.push(
+        `${file.name}: changed upstream (sha256 ${entry.sha256.slice(0, 12)}` +
+          `… → ${file.sha256.slice(0, 12)}…). Read the new file, then ` +
+          "re-record with `npm run check:conformance -- --update`.",
+      );
+      continue;
+    }
+
+    checked += 1;
+    const actual = diagnose(file.text);
+    diagnostics += actual.length;
+    if (actual.length === 0) {
+      clean += 1;
+    }
+    for (const failure of compare(entry, actual)) {
+      failures.push(`${file.name}: ${failure}`);
+    }
   }
 
   if (update) {
-    recorded.sha256 = file.sha256;
-    recorded.expected = diagnose(file.text);
-    continue;
-  }
-
-  if (recorded.sha256 !== file.sha256) {
-    failures.push(
-      `${file.name}: changed upstream (sha256 ${recorded.sha256.slice(0, 12)}` +
-        `… → ${file.sha256.slice(0, 12)}…). Read the new file, then re-record ` +
-        "with `npm run check:conformance -- --update`.",
-    );
-    continue;
-  }
-
-  checked += 1;
-  const actual = diagnose(file.text);
-  diagnostics += actual.length;
-  const { added, gone } = difference(recorded.expected, actual);
-
-  for (const entry of added) {
-    failures.push(`${file.name}: new diagnostic at ${entry}`);
-  }
-  // A diagnostic that stopped appearing is usually a fix, and the point of
-  // recording them is that the fix has to be acknowledged here.
-  for (const entry of gone) {
-    failures.push(
-      `${file.name}: expected diagnostic no longer reported at ${entry} — ` +
-        "if this is the fix you meant, re-record with `--update`",
+    writeFileSync(corpus.file, `${JSON.stringify(recorded, null, 2)}\n`);
+    reports.push(`re-recorded ${names.length} ${corpus.label}`);
+  } else {
+    reports.push(
+      `${checked} ${corpus.label}, ${clean} of them diagnostic-free, ` +
+        `${diagnostics} diagnostics as recorded`,
     );
   }
 }
 
 if (update) {
-  writeFileSync(CORPUS, `${JSON.stringify(corpus, null, 2)}\n`);
-  console.log(`Re-recorded ${names.length} files in ${CORPUS}.`);
+  for (const report of reports) {
+    console.log(`Conformance check ${report}.`);
+  }
   process.exit(failures.length ? 1 : 0);
 }
 
@@ -173,8 +214,7 @@ if (failures.length) {
   process.exit(1);
 }
 
-const clean = names.filter((n) => corpus.files[n].expected.length === 0).length;
-console.log(
-  `Conformance check passed: ${checked} official GEDCOM 7.0 files, ` +
-    `${clean} of them diagnostic-free, ${diagnostics} diagnostics as recorded.`,
-);
+console.log("Conformance check passed:");
+for (const report of reports) {
+  console.log(`  ${report}`);
+}

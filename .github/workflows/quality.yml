@@ -86,9 +86,10 @@ jobs:
       - run: npm ci
         env:
           LEFTHOOK: 0
-      # Fetches the official test files from gedcom.io, so unlike every other
-      # job here it needs the network. See scripts/check-conformance.mjs for why
-      # they are not carried in the repository.
+      # Fetches both corpora — the official test files from gedcom.io and the
+      # vendor exports from their pinned upstream locations — so unlike every
+      # other job here it needs the network. See scripts/check-conformance.mjs
+      # for why neither is carried in the repository.
       - run: npm run check:conformance
 
   build-web:
