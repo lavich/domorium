@@ -121,6 +121,8 @@ export class GedcomValidator {
     nodes: ASTNode[],
     parentType: GedcomType = GedcomType(""),
     _scheme?: GedcomScheme,
+    /** Absent at the root, where the start of the document is the honest place. */
+    parent?: ASTNode,
   ): GedcomError[] {
     const scheme = _scheme || this.setScheme(nodes);
 
@@ -170,7 +172,7 @@ export class GedcomValidator {
         const aliased = aliasedType(this.extensions, tag, scheme);
         if (aliased) {
           errors.push(...ruleNode.validate(node, aliased));
-          errors.push(...this.validate(node.children, aliased, scheme));
+          errors.push(...this.validate(node.children, aliased, scheme, node));
         }
         // An undocumented extension defines its own payload and substructures,
         // so there is nothing to check its subtree against. See ADR-0008.
@@ -202,7 +204,7 @@ export class GedcomValidator {
 
       errors.push(...ruleNode.validate(node, rule.type));
 
-      errors.push(...this.validate(node.children, rule.type, scheme));
+      errors.push(...this.validate(node.children, rule.type, scheme, node));
     }
 
     for (const [tag, rule] of rules) {
@@ -213,7 +215,7 @@ export class GedcomValidator {
         errors.push({
           code: GedcomErrorCode.MissingTag,
           message: `Missing required tag ${tag} in ${parentTag || "root"}`,
-          range: nodes[0]?.parent?.range ?? {
+          range: parent?.range ?? {
             start: { line: 0, character: 0 },
             end: { line: 0, character: 0 },
           },

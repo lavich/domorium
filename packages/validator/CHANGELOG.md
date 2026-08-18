@@ -4,6 +4,12 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A required tag missing from a childless parent is reported where it is
+  missing.** The position came from the parent of the first child, so a parent with
+  no children at all had no position to offer and the report landed on line 1. In a
+  105 707-line export that put ten `Missing required tag FORM in FILE` diagnostics
+  at the top of the document, a hundred thousand lines from the media references
+  they describe.
 - **Six closed value sets in 5.5.1 are checked at last.** `QUAY 9`, `PEDI nonsense`,
   `RESN whatever`, `ORDI maybe`, `STAT nonsense` under `FAMC` and `ADOP nonsense`
   under `INDI.ADOP.FAMC` all passed, because 5.5.1 states these sets in its
