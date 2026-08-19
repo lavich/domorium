@@ -28,6 +28,25 @@ const grammarFile = (scopeName: string): string => {
   return join(extensionRoot, contribution.path);
 };
 
+/*
+ * Stands in for what Markdown does to a fence inside a list item or a blockquote:
+ * the host rule consumes the indent, so source.gedcom is included at a position
+ * that is not the start of the line. A `^` anchor cannot match there — which is
+ * why every pattern is anchored `(^|\G)`, as VS Code's own grammars are.
+ */
+const INDENTED_HOST = "text.gedcom-test.indented";
+const indentedHost = {
+  scopeName: INDENTED_HOST,
+  patterns: [
+    {
+      begin: "^[ \t]+",
+      end: "$",
+      contentName: "meta.embedded.block.gedcom",
+      patterns: [{ include: "source.gedcom" }],
+    },
+  ],
+};
+
 const registry = new Registry({
   onigLib: loadWASM(
     readFileSync(require.resolve("vscode-oniguruma/release/onig.wasm")),
@@ -36,6 +55,11 @@ const registry = new Registry({
     createOnigString: (text: string) => new OnigString(text),
   })),
   loadGrammar: (scopeName) => {
+    if (scopeName === INDENTED_HOST) {
+      return Promise.resolve(
+        parseRawGrammar(JSON.stringify(indentedHost), `${INDENTED_HOST}.json`),
+      );
+    }
     const path = grammarFile(scopeName);
     return Promise.resolve(parseRawGrammar(readFileSync(path, "utf8"), path));
   },
@@ -162,6 +186,20 @@ describe("what the GEDCOM grammar paints", () => {
       ["1", "comment.gedcom"],
       ["NAME", "keyword.gedcom"],
       ["x", "string.gedcom"],
+    ]);
+  });
+
+  /*
+   * Markdown consumes the indent of a fence inside a list item or a blockquote
+   * before it reaches the embedded grammar, so the line arrives already begun.
+   * Anchoring on `^` alone painted nothing there while every other test passed.
+   */
+  it("reads a line it is handed part-way through", async () => {
+    const tokens = (await tokenize(INDENTED_HOST, "  0 @I1@ INDI"))[0];
+    expect(painted(tokens)).toEqual([
+      ["0", "comment.gedcom"],
+      ["@I1@", "entity.name.function.gedcom"],
+      ["INDI", "keyword.gedcom"],
     ]);
   });
 });
