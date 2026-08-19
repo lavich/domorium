@@ -55,12 +55,14 @@ export function ImagePreview({
     { url: string; size: number; format: string } | { error: string } | null
   >(null);
   const report = useLatest(onReport);
+  const read = useLatest(load);
 
   useEffect(() => {
     let url: string | null = null;
     let active = true;
 
-    load(path)
+    read
+      .current(path)
       .then((blob) => {
         if (!active) {
           return;
@@ -93,7 +95,7 @@ export function ImagePreview({
         URL.revokeObjectURL(url);
       }
     };
-  }, [load, path, report]);
+  }, [path, read, report]);
 
   if (state && "error" in state) {
     return (
@@ -143,7 +145,11 @@ function formatOf(blob: Blob, path: string): string {
   return (type || extension).toUpperCase();
 }
 
-/** A report is sent from an effect, and must not restart it by being new. */
+/**
+ * An effect reads the file and reports what it is, and reporting renders the
+ * parent again. Holding what it calls means a fresh closure does not restart it,
+ * revoke the URL under the image and report once more.
+ */
 function useLatest<T>(value: T) {
   const held = useRef(value);
   held.current = value;
