@@ -7,5 +7,8 @@
 !LICENSE
 !images/**
 
+# Include the grammars, which are read from the package as they are
+!syntaxes/**
+
 # Include the compiled output
 !dist/**

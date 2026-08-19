@@ -1,3 +1,7 @@
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { semanticTokenLegend } from "@domorium/language-service";
 import { describe, expect, it } from "vitest";
 
@@ -37,6 +41,73 @@ describe("the scopes a theme reaches a GEDCOM token by", () => {
         contribution.scopes[selector as keyof typeof contribution.scopes],
       ).not.toHaveLength(0);
     }
+  });
+});
+
+/*
+ * The grammar is the static half of the highlighting: it paints before the
+ * language server connects, and it is the only thing that can paint a GEDCOM
+ * code fence in Markdown, where the document's language is `markdown` and
+ * semantic tokens never arrive. What that costs is a set of names that have to
+ * agree across three files — the manifest, the grammar and the injection — and
+ * every disagreement here is silent in the editor.
+ */
+describe("the grammars the extension contributes", () => {
+  const extensionRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const grammars = contributed.contributes.grammars;
+  const read = (
+    path: string,
+  ): { scopeName?: string; injectionSelector?: string } =>
+    JSON.parse(readFileSync(join(extensionRoot, path), "utf8"));
+
+  it.each(grammars)("finds the file $path names", ({ path }) => {
+    expect(existsSync(join(extensionRoot, path))).toBe(true);
+  });
+
+  /*
+   * .vscodeignore ignores everything and names what to keep, so a directory is
+   * left out of the .vsix until it is named there — and an extension whose
+   * grammar was not packaged highlights exactly as much as one with no grammar.
+   */
+  it.each(grammars)("keeps $path in the package", ({ path }) => {
+    const kept = readFileSync(join(extensionRoot, ".vscodeignore"), "utf8")
+      .split("\n")
+      .flatMap((line) => (line.startsWith("!") ? [line.slice(1)] : []));
+    expect(kept).toContain(`${path.replace(/^\.\//, "").split("/")[0]}/**`);
+  });
+
+  // A grammar whose file disagrees with the manifest is registered under the
+  // scope in the file, so nothing includes it and nothing says why.
+  it.each(grammars)(
+    "agrees with $path about its scope",
+    ({ path, scopeName }) => {
+      expect(read(path).scopeName).toBe(scopeName);
+    },
+  );
+
+  it("binds one grammar to the language the extension contributes", () => {
+    const bound = grammars.filter((grammar) => "language" in grammar);
+    expect(bound).toHaveLength(1);
+    expect(bound[0].language).toBe(contributed.contributes.languages[0]?.id);
+  });
+
+  it("injects the other into Markdown, and says so in the file too", () => {
+    const injected = grammars.filter((grammar) => "injectTo" in grammar);
+    expect(injected).toHaveLength(1);
+    const [{ path, injectTo }] = injected;
+    expect(injectTo).toEqual(["text.html.markdown"]);
+    // The L prefix puts the injection ahead of Markdown's own patterns, which is
+    // what beats its fenced_code_block_unknown catch-all.
+    expect(read(path).injectionSelector).toBe("L:text.html.markdown");
+  });
+
+  it("tells the editor a fence holds GEDCOM and not prose", () => {
+    const [injected] = grammars.filter(
+      (grammar) => "embeddedLanguages" in grammar,
+    );
+    expect(injected.embeddedLanguages).toEqual({
+      "meta.embedded.block.gedcom": "source.gedcom",
+    });
   });
 });
 

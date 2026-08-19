@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "GEDCOM",
+  "scopeName": "source.gedcom",
+  "patterns": [
+    { "include": "#record" },
+    { "include": "#pointer" },
+    { "include": "#line" }
+  ],
+  "repository": {
+    "record": {
+      "match": "^[ \\t]*([0-9]+)[ \\t]+(@[A-Za-z0-9_]+@)[ \\t]+([A-Za-z0-9_]+)(?:[ \\t](.*))?$",
+      "captures": {
+        "1": { "name": "comment.gedcom" },
+        "2": { "name": "entity.name.function.gedcom" },
+        "3": { "name": "keyword.gedcom" },
+        "4": { "name": "string.gedcom" }
+      }
+    },
+    "pointer": {
+      "match": "^[ \\t]*([0-9]+)[ \\t]+([A-Za-z0-9_]+)[ \\t](@[A-Za-z0-9_]+@)[ \\t]*$",
+      "captures": {
+        "1": { "name": "comment.gedcom" },
+        "2": { "name": "keyword.gedcom" },
+        "3": { "name": "entity.name.type.gedcom" }
+      }
+    },
+    "line": {
+      "match": "^[ \\t]*([0-9]+)[ \\t]+([A-Za-z0-9_]+)(?:[ \\t](.*))?$",
+      "captures": {
+        "1": { "name": "comment.gedcom" },
+        "2": { "name": "keyword.gedcom" },
+        "3": { "name": "string.gedcom" }
+      }
+    }
+  }
+}
