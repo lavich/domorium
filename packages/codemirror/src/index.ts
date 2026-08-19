@@ -5,6 +5,7 @@ export {
   getDiagnosticActions,
   getDocumentLinkSpecs,
   getReferenceHighlightSpecs,
+  HOVER_TIME_MS,
   semanticTokenTag,
   tokenClass,
   SETTLE_DELAY_MS,

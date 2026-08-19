@@ -83,6 +83,12 @@ offsets CodeMirror works in.
 `trigger` decides what opens one and defaults to the platform modifier;
 `clearRecordPreview(view)` closes one from anywhere, and `hide` is called for it.
 
+`delay` is how long the pointer must rest before a preview opens, and it is zero
+by default — right for a modifier gesture, where holding the modifier is already
+the intent. A host that triggers on a bare hover should pass `HOVER_TIME_MS`, the
+wait this package gives its own tag tooltip. Closing never waits: leaving a
+pointer clears the preview at once.
+
 `createStandaloneEditorExtensions` is an optional preset for a complete
 standalone editor; its lint gutter follows the `diagnostics` option. Embedded
 hosts such as IDEs and note-taking applications usually provide their own editor

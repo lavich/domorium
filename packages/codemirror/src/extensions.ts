@@ -140,6 +140,12 @@ export function getDiagnosticActions(
  */
 export const SETTLE_DELAY_MS = 250;
 
+/**
+ * CodeMirror's own default, named here so the record preview can wait exactly
+ * as long as the tag tooltip does rather than agree with it by coincidence.
+ */
+export const HOVER_TIME_MS = 300;
+
 const completionType: Record<number, string> = {
   5: "property",
   18: "variable",
@@ -210,21 +216,26 @@ function diagnosticSource(
 }
 
 function hoverSource(language: EditorLanguageService): Extension {
-  return hoverTooltip((view, offset, side) => {
-    const doc = view.state.doc;
-    const hover = language.update(doc).getHover(offsetToPosition(doc, offset));
-    if (!hover || !pointerOnRange(doc, offset, side, hover.range)) {
-      return null;
-    }
-    return {
-      pos: offset,
-      create() {
-        const dom = document.createElement("div");
-        dom.textContent = hover.contents.value;
-        return { dom };
-      },
-    };
-  });
+  return hoverTooltip(
+    (view, offset, side) => {
+      const doc = view.state.doc;
+      const hover = language
+        .update(doc)
+        .getHover(offsetToPosition(doc, offset));
+      if (!hover || !pointerOnRange(doc, offset, side, hover.range)) {
+        return null;
+      }
+      return {
+        pos: offset,
+        create() {
+          const dom = document.createElement("div");
+          dom.textContent = hover.contents.value;
+          return { dom };
+        },
+      };
+    },
+    { hoverTime: HOVER_TIME_MS },
+  );
 }
 
 function foldingSource(language: EditorLanguageService): Extension {

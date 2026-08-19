@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { EditorView } from "@codemirror/view";
+import { HOVER_TIME_MS } from "@domorium/codemirror";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createGedcomEditor } from "./createGedcomEditor";
@@ -61,7 +62,8 @@ describe("createGedcomEditor", () => {
     expect(onDiagnosticsChange).toHaveBeenCalledOnce();
   });
 
-  it("previews the record a pointer names on a hover, no modifier held", () => {
+  it("previews a record on hover, after the wait the tag tooltip uses", () => {
+    vi.useFakeTimers();
     const parent = editor({});
     const view = EditorView.findFromDOM(parent)!;
     const pointer = text.indexOf("@I1@", text.indexOf("1 HUSB")) + 1;
@@ -70,9 +72,13 @@ describe("createGedcomEditor", () => {
     view.contentDOM.dispatchEvent(
       new MouseEvent("mousemove", { bubbles: true, clientX: 1, clientY: 1 }),
     );
+    expect(document.querySelector(".gedcom-record-preview")).toBeNull();
 
-    const shown = document.querySelector(".gedcom-record-preview");
-    expect(shown?.textContent).toBe("0 @I1@ INDI\n1 NAME Ada /Lovelace/");
+    vi.advanceTimersByTime(HOVER_TIME_MS);
+
+    expect(document.querySelector(".gedcom-record-preview")?.textContent).toBe(
+      "0 @I1@ INDI\n1 NAME Ada /Lovelace/",
+    );
     posAtCoords.mockRestore();
   });
 
