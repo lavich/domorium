@@ -210,6 +210,7 @@ export class GedcomLanguageService {
         currentDiagnostics: this.getDiagnostics(),
         version: this.version,
         dialect: this.document.getDialect(),
+        nodes: this.document.getNodes(),
       },
       range,
       diagnostics,

@@ -13,22 +13,15 @@ const documentText = [
 ].join("\n");
 
 describe("code actions", () => {
-  it("offers replacement and record creation for an unresolved XREF", () => {
+  // Issue #249: the author wrote @I9@, so the record they mean to have comes
+  // before any correction of it, and discarding the identifier comes last.
+  it("offers creation, then a plausible replacement, then the empty pointer", () => {
     const service = new GedcomLanguageService(documentText, 3);
     const diagnostic = service
       .getDiagnostics()
       .find(({ code }) => code === "unresolved-xref")!;
 
     expect(service.getCodeActions(diagnostic.range, [diagnostic], 3)).toEqual([
-      {
-        title: "Replace @I9@ with @I1@",
-        kind: "quickfix",
-        diagnostics: [diagnostic],
-        edit: {
-          version: 3,
-          edits: [{ range: diagnostic.range, newText: "@I1@" }],
-        },
-      },
       {
         title: "Create INDI record @I9@",
         kind: "quickfix",
@@ -46,10 +39,30 @@ describe("code actions", () => {
           ],
         },
       },
+      {
+        title: "Replace with @I1@",
+        kind: "quickfix",
+        diagnostics: [diagnostic],
+        edit: {
+          version: 3,
+          edits: [{ range: diagnostic.range, newText: "@I1@" }],
+        },
+      },
+      {
+        title: "Point at nothing (@VOID@)",
+        kind: "quickfix",
+        diagnostics: [diagnostic],
+        edit: {
+          version: 3,
+          edits: [{ range: diagnostic.range, newText: "@VOID@" }],
+        },
+      },
     ]);
   });
 
-  it("returns choices instead of silently selecting among several records", () => {
+  // A wrong quick fix attaches a person to a stranger, the document validates
+  // clean, and nothing points at it again — so a tie offers nothing. See #249.
+  it("offers no replacement between two records equally near the xref", () => {
     const service = new GedcomLanguageService(
       documentText.replace("0 @F1@ FAM", "0 @I2@ INDI\n0 @F1@ FAM"),
       1,
@@ -57,25 +70,17 @@ describe("code actions", () => {
     const diagnostic = service
       .getDiagnostics()
       .find(({ code }) => code === "unresolved-xref")!;
+
     const actions = service.getCodeActions(diagnostic.range, [diagnostic], 1);
 
-    expect(actions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          title: "Replace @I9@ with an existing INDI record",
-          choices: [
-            expect.objectContaining({ title: "Replace with @I1@" }),
-            expect.objectContaining({ title: "Replace with @I2@" }),
-          ],
-        }),
-      ]),
-    );
+    expect(
+      actions.map((action) => ("title" in action ? action.title : "")),
+    ).toEqual(["Create INDI record @I9@", "Point at nothing (@VOID@)"]);
   });
 
-  // Hosts flatten the choices into one flat menu — CodeMirror renders them as
-  // buttons inside the diagnostic tooltip — so a document-sized list of them
-  // becomes a wall of UI. Completion still offers every xref.
-  it("caps the replacement choices in a document full of candidates", () => {
+  // A document-sized list of xrefs is not a quick fix. Completion inside @…@
+  // offers them, filtered as the reader types.
+  it("offers no replacement in a document full of candidates, none of them near", () => {
     const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
     for (let index = 1; index <= 40; index += 1) {
       lines.push(`0 @I${index}@ INDI`);
@@ -88,14 +93,96 @@ describe("code actions", () => {
 
     const actions = service.getCodeActions(diagnostic.range, [diagnostic], 1);
 
-    const replacement = Array.isArray(actions)
-      ? actions.find((action) => action.choices)
-      : undefined;
-    expect(replacement?.choices).toHaveLength(10);
-    expect(replacement?.choices?.[0].title).toBe("Replace with @I1@");
-    expect(replacement?.title).toBe(
-      "Replace @I999@ with an existing INDI record",
+    expect(
+      actions.filter(
+        (action) => "title" in action && action.title.startsWith("Replace"),
+      ),
+    ).toEqual([]);
+    expect(actions.some((action) => "choices" in action)).toBe(false);
+  });
+
+  // Issue #249: "Replace with @F285@" gave a reader nothing to choose on. A
+  // family carries no name of its own, so it is named by its spouses.
+  it("names the family it offers", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @I1@ INDI",
+        "1 NAME Gascoigne",
+        "0 @I2@ INDI",
+        "1 NAME Wardle",
+        "0 @F285@ FAM",
+        "1 HUSB @I1@",
+        "1 WIFE @I2@",
+        "0 @I3@ INDI",
+        "1 FAMC @F2850@",
+        "0 TRLR",
+      ].join("\n"),
+      1,
     );
+    const diagnostic = service
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+
+    const actions = service.getCodeActions(diagnostic.range, [diagnostic], 1);
+
+    expect(
+      actions.map((action) => ("title" in action ? action.title : "")),
+    ).toContain("Replace with @F285@ — Gascoigne / Wardle");
+  });
+
+  it("offers the xref alone where the record carries nothing to name it by", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @F285@ FAM",
+        "0 @I3@ INDI",
+        "1 FAMC @F2850@",
+        "0 TRLR",
+      ].join("\n"),
+      1,
+    );
+    const diagnostic = service
+      .getDiagnostics()
+      .find(({ code }) => code === "unresolved-xref")!;
+
+    const actions = service.getCodeActions(diagnostic.range, [diagnostic], 1);
+
+    expect(
+      actions.map((action) => ("title" in action ? action.title : "")),
+    ).toContain("Replace with @F285@");
+  });
+
+  // 5.5.1 has no @VOID@, so offering it would produce a document that fails to
+  // validate on the next keystroke.
+  it("offers the empty pointer in GEDCOM 7 and not in 5.5.1", () => {
+    const titles = (version: string) => {
+      const service = new GedcomLanguageService(
+        [
+          "0 HEAD",
+          "1 GEDC",
+          `2 VERS ${version}`,
+          "0 @I1@ INDI",
+          "0 @F1@ FAM",
+          "1 WIFE @I9@",
+          "0 TRLR",
+        ].join("\n"),
+        1,
+      );
+      const diagnostic = service
+        .getDiagnostics()
+        .find(({ code }) => code === "unresolved-xref")!;
+      return service
+        .getCodeActions(diagnostic.range, [diagnostic], 1)
+        .map((action) => ("title" in action ? action.title : ""));
+    };
+
+    expect(titles("7.0")).toContain("Point at nothing (@VOID@)");
+    expect(titles("5.5.1")).not.toContain("Point at nothing (@VOID@)");
   });
 
   it("offers a one-token correction for an invalid level", () => {
@@ -296,8 +383,7 @@ describe("code actions", () => {
     const actions = service.getCodeActions(diagnostic.range, [diagnostic], 1);
     expect(
       actions.some(
-        (action) =>
-          "title" in action && action.title.startsWith("Replace @I9@"),
+        (action) => "title" in action && action.title.startsWith("Replace"),
       ),
     ).toBe(false);
   });
@@ -356,6 +442,7 @@ describe("code actions", () => {
         currentDiagnostics: service.getDiagnostics(),
         version: 1,
         dialect: undefined,
+        nodes: service.getDocument().getNodes(),
       },
       diagnostic.range,
       [diagnostic],
@@ -366,6 +453,6 @@ describe("code actions", () => {
       Array.isArray(actions)
         ? actions.map((action) => ("title" in action ? action.title : ""))
         : actions,
-    ).toEqual(["Replace @I9@ with @I1@"]);
+    ).toEqual(["Replace with @I1@"]);
   });
 });
