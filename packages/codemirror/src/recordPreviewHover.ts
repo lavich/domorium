@@ -1,5 +1,5 @@
 import type { Extension } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { EditorView, ViewPlugin } from "@codemirror/view";
 
 import {
   hoveredPointer,
@@ -17,6 +17,13 @@ export interface RecordPreviewHoverOptions {
   maxLines?: number;
   /** Whether an event asks for a preview. Defaults to the platform modifier. */
   trigger?: (event: MouseEvent) => boolean;
+  /**
+   * How long the pointer must rest before a preview opens. Zero, the default,
+   * answers the first move, which is what a modifier gesture wants — the
+   * modifier is already the intent. A host triggering on a bare hover wants the
+   * wait its tag tooltip uses, `HOVER_TIME_MS`.
+   */
+  delay?: number;
   /** Draw the preview. The event carries the element a popover can hang from. */
   show(preview: RecordPreview, view: EditorView, event: MouseEvent): void;
   hide(view: EditorView): void;
@@ -51,6 +58,13 @@ export function recordPreviewHover(
 ): Extension {
   const trigger =
     options.trigger ?? ((event: MouseEvent) => event.metaKey || event.ctrlKey);
+  const delay = options.delay ?? 0;
+  let pending: ReturnType<typeof setTimeout> | undefined;
+
+  const cancel = (): void => {
+    clearTimeout(pending);
+    pending = undefined;
+  };
 
   const settle = (
     view: EditorView,
@@ -70,10 +84,28 @@ export function recordPreviewHover(
     options.show(preview!, view, event!);
   };
 
+  const answer = (view: EditorView, event: MouseEvent): void => {
+    const offset = view.posAtCoords({ x: event.clientX, y: event.clientY });
+    settle(
+      view,
+      offset === null
+        ? null
+        : findRecordPreview(
+            view.state,
+            options.language,
+            offset,
+            options.maxLines ?? DEFAULT_MAX_LINES,
+          ),
+      event,
+    );
+  };
+
   // The field comes with the gesture: it is what the gesture marks, and a host
   // that forgot it would dispatch into a state that cannot hold the mark.
   return [
     hoveredPointerField,
+    // A pending wait outlives the view it would answer for otherwise.
+    ViewPlugin.define(() => ({ destroy: cancel })),
     // hide answers the mark going away, not the gesture letting go, so a host
     // that closes a preview itself is told about it.
     EditorView.updateListener.of((update) => {
@@ -83,30 +115,31 @@ export function recordPreviewHover(
     }),
     EditorView.domEventHandlers({
       mousemove: (event, view) => {
+        cancel();
         if (!trigger(event)) {
           settle(view, null, event);
           return;
         }
-        const offset = view.posAtCoords({ x: event.clientX, y: event.clientY });
-        settle(
-          view,
-          offset === null
-            ? null
-            : findRecordPreview(
-                view.state,
-                options.language,
-                offset,
-                options.maxLines ?? DEFAULT_MAX_LINES,
-              ),
-          event,
-        );
+        // An open preview answers at once, so leaving a pointer closes it
+        // without a wait and moving to the next one switches without a stale
+        // record in between. The wait is for opening, not for keeping up.
+        if (delay === 0 || hoveredPointer(view.state)) {
+          answer(view, event);
+          return;
+        }
+        pending = setTimeout(() => {
+          pending = undefined;
+          answer(view, event);
+        }, delay);
       },
       mouseleave: (_event, view) => {
+        cancel();
         settle(view, null, null);
       },
       // Only while the editor has focus; elsewhere is the host's to watch.
       keyup: (event, view) => {
         if (!event.metaKey && !event.ctrlKey) {
+          cancel();
           settle(view, null, null);
         }
       },

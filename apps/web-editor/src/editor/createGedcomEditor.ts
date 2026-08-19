@@ -22,6 +22,7 @@ import {
   EditorLanguageService,
   goToDefinition,
   goToNextReference,
+  HOVER_TIME_MS,
   offsetToPosition,
   rangeToOffsets,
   recordPreviewHover,
@@ -152,6 +153,7 @@ export function createGedcomEditor(
       recordPreviewHover({
         language,
         trigger: () => true,
+        delay: HOVER_TIME_MS,
         show: (preview, view) =>
           view.dispatch({ effects: setRecordPreview.of(preview) }),
         hide: (view) => view.dispatch({ effects: setRecordPreview.of(null) }),

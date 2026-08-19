@@ -30,13 +30,14 @@ afterEach(() => {
 
 function mount(
   options: Partial<Parameters<typeof recordPreviewHover>[0]> = {},
+  doc = "0 HEAD\n1 FAMS @F1@\n0 TRLR",
 ) {
   const show = vi.fn();
   const hide = vi.fn();
   view = new EditorView({
     parent: document.createElement("div"),
     state: EditorState.create({
-      doc: "0 HEAD\n1 FAMS @F1@\n0 TRLR",
+      doc,
       extensions: [
         recordPreviewHover({
           language: new EditorLanguageService(),
@@ -136,5 +137,61 @@ describe("the trigger a host chooses", () => {
 
     expect(trigger).toHaveBeenCalledTimes(1);
     expect(trigger.mock.calls[0]?.[0]).toBeInstanceOf(MouseEvent);
+  });
+});
+
+describe("waiting before a preview opens", () => {
+  // `@I1@` of `1 HUSB @I1@` starts at offset 52, and the record it names is
+  // declared on the first line.
+  const DOC = [
+    "0 @I1@ INDI",
+    "1 NAME Ada /Lovelace/",
+    "0 @F1@ FAM",
+    "1 HUSB @I1@",
+  ].join("\n");
+  const move = (view: EditorView) =>
+    view.contentDOM.dispatchEvent(
+      new MouseEvent("mousemove", { bubbles: true, clientX: 1, clientY: 1 }),
+    );
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("says nothing until the pointer has rested for as long as asked", () => {
+    vi.useFakeTimers();
+    const { view, show } = mount({ trigger: () => true, delay: 300 }, DOC);
+    vi.spyOn(view, "posAtCoords").mockReturnValue(53);
+
+    move(view);
+    expect(show).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(300);
+    expect(show).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops a wait the pointer left before it was up", () => {
+    vi.useFakeTimers();
+    const { view, show } = mount({ trigger: () => true, delay: 300 }, DOC);
+    vi.spyOn(view, "posAtCoords").mockReturnValue(53);
+
+    move(view);
+    view.contentDOM.dispatchEvent(
+      new MouseEvent("mouseleave", { bubbles: true }),
+    );
+    vi.advanceTimersByTime(300);
+
+    expect(show).not.toHaveBeenCalled();
+  });
+
+  it("closes an open preview without waiting", () => {
+    vi.useFakeTimers();
+    const { view, hide } = mount({ trigger: () => true, delay: 300 }, DOC);
+    view.dispatch({ effects: setHoveredPointer.of({ from: 52, to: 56 }) });
+    vi.spyOn(view, "posAtCoords").mockReturnValue(null);
+
+    move(view);
+
+    expect(hide).toHaveBeenCalledTimes(1);
   });
 });
