@@ -4,6 +4,14 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A document with more than about 125k diagnostics reports all of them instead of
+  none.** Diagnostics were gathered by spreading each level's array into its
+  parent's `push`, and a spread is one argument per element: V8 refuses somewhere
+  past 125k, so `createDocument` threw a `RangeError` for exceeding the call stack
+  and the caller got an exception where it had asked a question — not a truncated
+  list, none. A file of 130 000 records each carrying one tag the schema does not
+  define there now reports its 130 000 warnings. One array is carried down the walk
+  and pushed into, so nothing is capped and no array is allocated per node.
 - **A line below one carrying a pointer but no tag answers nothing instead of
   throwing.** `0 @I1@`, what a truncated export leaves behind, still becomes a node
   and adopts the lines indented under it, so the walk from a node to the root met a

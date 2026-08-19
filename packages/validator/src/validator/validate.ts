@@ -121,20 +121,38 @@ export class GedcomValidator {
     nodes: ASTNode[],
     parentType: GedcomType = GedcomType(""),
     _scheme?: GedcomScheme,
-    /** Absent at the root, where the start of the document is the honest place. */
     parent?: ASTNode,
   ): GedcomError[] {
-    const scheme = _scheme || this.setScheme(nodes);
+    const errors: GedcomError[] = [];
+    this.collect(
+      errors,
+      nodes,
+      parentType,
+      _scheme || this.setScheme(nodes),
+      parent,
+    );
+    return errors;
+  }
 
+  // The accumulator is carried down the walk rather than returned at each level:
+  // spreading a returned array into push is one argument per element, and V8
+  // has an argument limit a document's diagnostics can exceed.
+  collect(
+    errors: GedcomError[],
+    nodes: ASTNode[],
+    parentType: GedcomType,
+    scheme: GedcomScheme,
+    /** Absent at the root, where the start of the document is the honest place. */
+    parent?: ASTNode,
+  ): void {
     const rules = getRules(scheme, parentType);
     if (!rules) {
-      return [];
+      return;
     }
 
     // The rule table is shared, so occurrences are tallied here instead of
     // being subtracted from it.
     const occurrences = new Map<GedcomTag, number>();
-    const errors: GedcomError[] = [];
     const parentTag = scheme.tag[GedcomType(parentType)];
     const ruleNode = new RuleNode(scheme, this.pointers, this.extensions);
 
@@ -175,8 +193,8 @@ export class GedcomValidator {
         // not document it, so this parent's rule table is not consulted.
         const aliased = aliasedType(this.extensions, tag, scheme);
         if (aliased) {
-          errors.push(...ruleNode.validate(node, aliased));
-          errors.push(...this.validate(node.children, aliased, scheme, node));
+          ruleNode.collect(errors, node, aliased);
+          this.collect(errors, node.children, aliased, scheme, node);
         }
         // An undocumented extension defines its own payload and substructures,
         // so there is nothing to check its subtree against. See ADR-0008.
@@ -211,9 +229,9 @@ export class GedcomValidator {
         });
       }
 
-      errors.push(...ruleNode.validate(node, rule.type));
+      ruleNode.collect(errors, node, rule.type);
 
-      errors.push(...this.validate(node.children, rule.type, scheme, node));
+      this.collect(errors, node.children, rule.type, scheme, node);
     }
 
     for (const [tag, rule] of rules) {
@@ -232,7 +250,5 @@ export class GedcomValidator {
         });
       }
     }
-
-    return errors;
   }
 }

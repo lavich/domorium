@@ -601,6 +601,22 @@ ${document}`
     expect(elapsed).toBeLessThan(2000);
   }, 300_000);
 
+  test("returns every diagnostic of a subtree that has more than 125k of them", async () => {
+    const children = 130_000;
+    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0", "0 @I1@ INDI"];
+    for (let i = 1; i <= children; i += 1) {
+      lines.push(`1 ZZZ${i} x`);
+    }
+    lines.push("0 TRLR", "");
+    const { nodes, pointers } = astBuilder(lines.join("\n"));
+
+    const errs = new GedcomValidator(pointers).validate(nodes);
+
+    expect(
+      errs.filter((error) => error.code === GedcomErrorCode.UnknownTag),
+    ).toHaveLength(children);
+  }, 120_000);
+
   test("accepts an extension record at level 0", async () => {
     const { nodes, validator } = validatorFor(`0 HEAD
 1 GEDC
