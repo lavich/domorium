@@ -206,6 +206,38 @@ describe("an image in a preview", () => {
     expect(reports).toEqual([]);
   });
 
+  // Reporting what the file is makes its parent render again, which hands the
+  // preview a fresh reader; reading again would revoke the URL under the image and
+  // report again — the loop the reader sees as a flicker.
+  it("reads the file once, however often its parent renders", async () => {
+    const reads: string[] = [];
+    const reader = () => (path: string) => {
+      reads.push(path);
+      return Promise.resolve(new Blob([new Uint8Array(2048)]));
+    };
+    const view = render(
+      <ImagePreview
+        name="portrait.jpg"
+        path="media/portrait.jpg"
+        load={reader()}
+        onReport={vi.fn()}
+      />,
+    );
+    await waitFor(() => expect(created).toHaveLength(1));
+
+    view.rerender(
+      <ImagePreview
+        name="portrait.jpg"
+        path="media/portrait.jpg"
+        load={reader()}
+        onReport={vi.fn()}
+      />,
+    );
+
+    expect(reads).toEqual(["media/portrait.jpg"]);
+    expect(revoked).toEqual([]);
+  });
+
   it("says so when the file cannot be read", async () => {
     const load = vi.fn(() =>
       Promise.reject(new Error("portrait.jpg is not in this folder")),
