@@ -55,6 +55,23 @@
         }
       }
     ],
+    "grammars": [
+      {
+        "language": "gedcom",
+        "scopeName": "source.gedcom",
+        "path": "./syntaxes/gedcom.tmLanguage.json"
+      },
+      {
+        "scopeName": "markdown.gedcom.codeblock",
+        "path": "./syntaxes/gedcom.markdown.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.gedcom": "source.gedcom"
+        }
+      }
+    ],
     "semanticTokenScopes": [
       {
         "language": "gedcom",
@@ -100,6 +117,8 @@
   "devDependencies": {
     "@types/node": "^26.2.0",
     "@types/vscode": "1.100.0",
-    "@vscode/test-web": "^0.0.81"
+    "@vscode/test-web": "^0.0.81",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
   }
 }

@@ -2,6 +2,30 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## Unreleased
+
+- **A GEDCOM file is coloured the moment it opens.** Until now every colour came
+  from the language server, so a file was grey until it connected. A syntax
+  grammar now paints the level, the tag, the XREF and the value from the text
+  alone, and the language server refines the same colours over the top. The two
+  agree on what they paint, so nothing changes appearance when it connects, and
+  nothing goes grey if it never does.
+- **A `gedcom` code block in a Markdown file is coloured.** A language server
+  cannot reach one: inside a `.md` file the document is Markdown, and VS Code
+  routes no fenced block to another language's server. The grammar is injected
+  into Markdown, so a GEDCOM sample in a README or a note is coloured as it would
+  be in a `.ged` file. Tilde fences and fences indented under a list item too.
+- **The grammar says nothing about whether GEDCOM is valid.** `1 SEX Male` is
+  coloured as an ordinary value rather than marked as an error, and a line the
+  grammar cannot read is left plain. What is valid is answered by the validator,
+  against the version of the specification the file declares, and a second answer
+  guessed from the text would contradict it a keystroke later.
+- Colours will not match the ones github.com shows for the same file. GitHub
+  renders GEDCOM through a different grammar, which colours tags by category and
+  picks out dates and surnames — distinctions the language server cannot make, so
+  reproducing them would mean a file that visibly recoloured as soon as it
+  connected.
+
 ## 1.6.2
 
 - **A GEDCOM file in a folder you have not trusted is read at last.** The manifest
