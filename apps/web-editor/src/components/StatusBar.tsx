@@ -1,45 +1,63 @@
 import type { VersionResolution } from "@domorium/language-service";
 
-import { cn } from "@/lib/utils";
+import type { DocumentReport } from "@/editor/types";
+import { cn, kilobytes } from "@/lib/utils";
 
 export interface StatusBarProps {
-  resolution: VersionResolution | undefined;
-  line: number;
-  character: number;
-  problemCount: number;
+  report: DocumentReport | null;
 }
 
-export function StatusBar({
-  resolution,
-  line,
-  character,
-  problemCount,
-}: StatusBarProps) {
-  const version = versionLabel(resolution);
+export function StatusBar({ report }: StatusBarProps) {
   return (
     <footer className="flex h-(--shell-status-height) shrink-0 items-center justify-between border-t bg-muted/30 px-3 font-mono text-[12px] text-muted-foreground">
-      <div className="flex items-center gap-3">
-        <span className="flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className={cn("size-1.5 rounded-full", stateColour(resolution))}
-          />
-          {version}
-        </span>
-        <Rule />
-        <span>{stateLabel(resolution)}</span>
-        <Rule />
-        <span>
-          Ln {line + 1}, Col {character + 1}
-        </span>
-        <Rule />
-        <span>
-          {problemCount} {problemCount === 1 ? "issue" : "issues"}
-        </span>
-      </div>
+      <div className="flex items-center gap-3">{facts(report)}</div>
       <span>read locally — nothing is uploaded</span>
     </footer>
   );
+}
+
+/** What is true of the file in front, and nothing of the one before it. */
+function facts(report: DocumentReport | null) {
+  if (!report) {
+    return null;
+  }
+  if (report.kind === "markdown") {
+    return joined(["Markdown", "read-only"]);
+  }
+  if (report.kind === "image") {
+    return joined([
+      report.format,
+      report.width !== null && report.height !== null
+        ? `${report.width} × ${report.height}`
+        : null,
+      kilobytes(report.bytes),
+    ]);
+  }
+  const { resolution, line, character } = report.status;
+  const count = report.diagnostics.length;
+  return joined([
+    <span key="version" className="flex items-center gap-1.5">
+      <span
+        aria-hidden
+        className={cn("size-1.5 rounded-full", stateColour(resolution))}
+      />
+      {versionLabel(resolution)}
+    </span>,
+    stateLabel(resolution),
+    `Ln ${line + 1}, Col ${character + 1}`,
+    `${count} ${count === 1 ? "issue" : "issues"}`,
+  ]);
+}
+
+function joined(parts: (React.ReactNode | null)[]) {
+  return parts
+    .filter((part) => part !== null)
+    .map((part, index) => (
+      <span key={index} className="flex items-center gap-3">
+        {index > 0 ? <Rule /> : null}
+        {part}
+      </span>
+    ));
 }
 
 function Rule() {

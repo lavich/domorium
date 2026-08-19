@@ -12,6 +12,7 @@ const document = (over: Partial<OpenFile> = {}): OpenFile => ({
   kind: "gedcom",
   initialText: "0 HEAD\n0 TRLR\n",
   modified: true,
+  report: null,
   editorKey: 0,
   ...over,
 });

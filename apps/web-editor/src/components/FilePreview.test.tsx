@@ -1,9 +1,16 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ImagePreview, MarkdownPreview } from "./FilePreview";
+import type { DocumentReport } from "@/editor/types";
 
 afterEach(cleanup);
 
@@ -12,7 +19,7 @@ describe("a note in a preview", () => {
   it("shows what it carries without running any of it", () => {
     const note =
       '# Note\n<script>window.pwned = true</script>\n<img src=x onerror="window.pwned = true">\n';
-    render(<MarkdownPreview name="notes.md" text={note} />);
+    render(<MarkdownPreview name="notes.md" text={note} onReport={vi.fn()} />);
 
     const preview = screen.getByLabelText("Preview of notes.md");
     expect(preview.querySelector("script")).toBeNull();
@@ -24,9 +31,25 @@ describe("a note in a preview", () => {
   });
 
   it("says it cannot be edited", () => {
-    render(<MarkdownPreview name="notes.md" text="# Note" />);
+    render(
+      <MarkdownPreview name="notes.md" text="# Note" onReport={vi.fn()} />,
+    );
 
     expect(screen.getByText("read-only")).toBeTruthy();
+  });
+
+  // What the window says about the file in front comes from the file in front.
+  it("says what it is, so the window stops describing the file before it", () => {
+    const reports: DocumentReport[] = [];
+    render(
+      <MarkdownPreview
+        name="notes.md"
+        text="# Note"
+        onReport={(report) => reports.push(report)}
+      />,
+    );
+
+    expect(reports).toEqual([{ kind: "markdown" }]);
   });
 });
 
@@ -57,6 +80,7 @@ describe("an image in a preview", () => {
         name="portrait.jpg"
         path="media/portrait.jpg"
         load={load}
+        onReport={vi.fn()}
       />,
     );
 
@@ -75,6 +99,7 @@ describe("an image in a preview", () => {
         name="portrait.jpg"
         path="media/portrait.jpg"
         load={load}
+        onReport={vi.fn()}
       />,
     );
 
@@ -89,16 +114,96 @@ describe("an image in a preview", () => {
       Promise.resolve(new Blob([new Uint8Array(path.length)])),
     );
     const view = render(
-      <ImagePreview name="one.jpg" path="media/one.jpg" load={load} />,
+      <ImagePreview
+        name="one.jpg"
+        path="media/one.jpg"
+        load={load}
+        onReport={vi.fn()}
+      />,
     );
     await waitFor(() => expect(created).toHaveLength(1));
 
     view.rerender(
-      <ImagePreview name="two.jpg" path="media/two.jpg" load={load} />,
+      <ImagePreview
+        name="two.jpg"
+        path="media/two.jpg"
+        load={load}
+        onReport={vi.fn()}
+      />,
     );
     await waitFor(() => expect(created).toHaveLength(2));
 
     expect(revoked).toEqual([created[0]]);
+  });
+
+  it("states its format and its size as soon as the bytes are read", async () => {
+    const reports: DocumentReport[] = [];
+    const load = vi.fn(() =>
+      Promise.resolve(new Blob([new Uint8Array(2048)], { type: "image/jpeg" })),
+    );
+    render(
+      <ImagePreview
+        name="portrait.jpg"
+        path="media/portrait.jpg"
+        load={load}
+        onReport={(report) => reports.push(report)}
+      />,
+    );
+
+    await waitFor(() => expect(reports).toHaveLength(1));
+    expect(reports[0]).toEqual({
+      kind: "image",
+      format: "JPEG",
+      bytes: 2048,
+      width: null,
+      height: null,
+    });
+  });
+
+  // jsdom decodes nothing, so the dimensions arrive with the load event itself.
+  it("states its pixels once the browser has decoded them", async () => {
+    const reports: DocumentReport[] = [];
+    const load = vi.fn(() =>
+      Promise.resolve(new Blob([new Uint8Array(2048)], { type: "image/png" })),
+    );
+    render(
+      <ImagePreview
+        name="portrait.png"
+        path="media/portrait.png"
+        load={load}
+        onReport={(report) => reports.push(report)}
+      />,
+    );
+    const image = await screen.findByAltText("portrait.png");
+    Object.defineProperty(image, "naturalWidth", { value: 1024 });
+    Object.defineProperty(image, "naturalHeight", { value: 768 });
+    fireEvent.load(image);
+
+    expect(reports.at(-1)).toEqual({
+      kind: "image",
+      format: "PNG",
+      bytes: 2048,
+      width: 1024,
+      height: 768,
+    });
+  });
+
+  it("claims nothing about a file it could not read", async () => {
+    const reports: DocumentReport[] = [];
+    const load = vi.fn(() => Promise.reject(new Error("not in this folder")));
+    render(
+      <ImagePreview
+        name="portrait.jpg"
+        path="media/portrait.jpg"
+        load={load}
+        onReport={(report) => reports.push(report)}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText(/could not be shown/)).toBeTruthy(),
+    );
+    expect(reports).toEqual([]);
   });
 
   it("says so when the file cannot be read", async () => {
@@ -110,6 +215,7 @@ describe("an image in a preview", () => {
         name="portrait.jpg"
         path="media/portrait.jpg"
         load={load}
+        onReport={vi.fn()}
       />,
     );
 

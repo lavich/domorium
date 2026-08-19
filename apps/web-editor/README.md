@@ -14,6 +14,11 @@ them and names the first place, because a real vendor export can state one true
 thing thousands of times. Errors open by themselves unless there are many of them;
 anything else waits to be asked for.
 
+The panel stands beside the document it describes, and the status bar reads that
+document: its GEDCOM version, the place in it, what was found in it. A tab holding
+a note or a photograph shows no version and no findings — it states what is true of
+that file instead, and the panel is not there to be read as an all-clear.
+
 ## Working in a folder on your computer
 
 Where the browser supports the File System Access API — Chrome, Edge and other

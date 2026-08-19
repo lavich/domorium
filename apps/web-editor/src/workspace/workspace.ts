@@ -1,4 +1,5 @@
 import { isGedcomFileName } from "../editor/documentSession";
+import type { DocumentReport } from "../editor/types";
 
 export type FileKind = "gedcom" | "markdown" | "image" | "unsupported";
 
@@ -14,6 +15,8 @@ export interface OpenFile {
    */
   initialText: string | null;
   modified: boolean;
+  /** What the surface showing this file last said about it. */
+  report: DocumentReport | null;
   /** Changing this remounts the editor, which is how a reopened file is reread. */
   editorKey: number;
 }
@@ -36,6 +39,7 @@ export type WorkspaceAction =
   | { type: "file-closed"; path: string }
   | { type: "edited"; path: string }
   | { type: "text-kept"; path: string; text: string }
+  | { type: "reported"; path: string; report: DocumentReport }
   | { type: "saved"; path: string }
   | { type: "notice"; message: string | null };
 
@@ -85,6 +89,7 @@ export function workspaceReducer(
             kind: action.kind,
             initialText: action.text,
             modified: false,
+            report: null,
             editorKey: state.nextEditorKey,
           },
         ],
@@ -129,6 +134,15 @@ export function workspaceReducer(
           ? { ...file, initialText: action.text }
           : file,
       );
+
+    // Keyed by path rather than by which tab is in front: the editor is destroyed
+    // and recreated on a switch, so a lint finishing after one would otherwise be
+    // read as the report of the document that replaced it.
+    case "reported":
+      return mapFile(state, action.path, (file) => ({
+        ...file,
+        report: action.report,
+      }));
 
     case "saved":
       return mapFile(state, action.path, (file) =>

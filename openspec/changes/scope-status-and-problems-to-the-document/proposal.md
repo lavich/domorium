@@ -35,9 +35,9 @@ they outlive it.
   `App.tsx` loses its `diagnostics` and `status` state and the two props that
   carried them down.
 - **Every surface reports its own facts.** The GEDCOM editor keeps the two
-  callbacks it has; a markdown preview reports its line count; an image preview
-  reports its format, its size and — on load — the dimensions nothing measures
-  today.
+  callbacks it has; a markdown preview reports that it is a note; an image preview
+  reports its format, its size and — once the browser has decoded the bytes — the
+  dimensions nothing measures today.
 - **The status bar reads the active file's report and nothing else.** A GEDCOM tab
   reads as it does today; a note reads `Markdown · read-only`; a photograph reads
   `JPEG · 1 024 × 768 · 210 KB`; with nothing open, only the line that is true of

@@ -51,7 +51,7 @@ file, and matches on path rather than on "the active one".
 ```ts
 type DocumentReport =
   | { kind: "gedcom"; status: WebEditorStatus; diagnostics: WebDiagnostic[] }
-  | { kind: "markdown"; lines: number }
+  | { kind: "markdown" }
   | {
       kind: "image";
       format: string;
@@ -71,6 +71,21 @@ the blob, and only the browser knows the pixels.
 there instead. It is carried on the report because it is the report that the status
 bar renders, and a report whose shape had to be confirmed against a second field
 would be a report that can disagree with itself.
+
+A note's report carries nothing beyond its kind. The line count is on the preview's
+own header, where the reader is already looking, and a field the bar does not read
+is a field that goes stale unnoticed.
+
+### One report per document, assembled where the two halves arrive
+
+CodeMirror says "the cursor moved" and "the document was checked" separately, and
+both can land in one update. The pane keeps the last of each against the editor
+that said it and dispatches the pair, so the file carries one report rather than
+two halves overwriting each other.
+
+It is held against `editorKey` rather than against the path: closing a file and
+opening it again gives a new editor, and matching on the path alone would let a
+cursor movement resurrect the findings of the session before it.
 
 ### The problems column moves inside the pane
 
