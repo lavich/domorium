@@ -18,7 +18,6 @@ export const recordPreview = (
     return null;
   }
   const [declaration] = index.get(occurrence.id)?.declarations ?? [];
-  // Showing the reader the line they are already pointing at says nothing.
   if (!declaration || declaration.range.start.line === position.line) {
     return null;
   }

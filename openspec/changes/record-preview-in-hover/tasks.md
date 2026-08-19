@@ -45,10 +45,14 @@
 - [x] 4.1 VS Code: `npm run open -w apps/vscode`, hover an XREF in a `.ged` file,
       confirm the record appears and that hovering a tag still shows its
       documentation.
-- [ ] 4.2 JetBrains: build and run the plugin, hover an XREF, and confirm LSP4IJ
-      renders the fenced block legibly. This is the design's stated risk — if the
-      block arrives unreadable, fall back to plain text for this host in the
-      adapter and record why.
+- [x] 4.2 JetBrains: build and run the plugin, hover an XREF, and confirm LSP4IJ
+      renders the fenced block legibly. **Confirmed in a sandbox IDE: the record
+      renders and reads, so the design's stated risk did not materialise and no
+      per-host fallback is needed.** It renders uncoloured, as it does in VS Code —
+      but not for the same reason. VS Code needs the TextMate grammar of #58;
+      LSP4IJ colours a fence by mapping its tag to a platform `Language` with a
+      lexer, and this plugin registers a file type and no lexer, so #58 would not
+      answer for this host.
 - [x] 4.3 Web editor: `npm run dev -w apps/web-editor`, hover an XREF, confirm the
       preview is the same record, cut at the same line, coloured as before.
 

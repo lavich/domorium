@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { GedcomLanguageService } from "../../languageService";
 
-// Line 6 is `1 FAMS @F1@`, and the FAM record it names runs from line 8 to 10.
 const GEDCOM = [
   "0 HEAD",
   "1 GEDC",

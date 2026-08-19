@@ -152,7 +152,6 @@ export class GedcomLanguageService {
     return this.foldingByStartLine.get(line);
   }
 
-  /** Ranges rather than text: every caller already holds the document. */
   getRecordPreview(
     position: Position,
     { maxLines }: RecordPreviewOptions,
