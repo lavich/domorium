@@ -4,6 +4,13 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A line below one carrying a pointer but no tag answers nothing instead of
+  throwing.** `0 @I1@`, what a truncated export leaves behind, still becomes a node
+  and adopts the lines indented under it, so the walk from a node to the root met a
+  step with no tag and threw `TypeError: Cannot read properties of undefined`. Asking
+  for the type, the label or the pointer target of such a node — hovering
+  `1 NAME John /Doe/` is one way in — now gives the same empty answer already given
+  for a path the schema does not resolve.
 - **An unresolved pointer names the xref that failed, and lists nothing.** A `FAMC`
   pointing at a family the file does not declare was reported as "Value for FAMC
   should be in set [@F70@, @F75@, … 2853 more]" — the vocabulary of a closed set,
