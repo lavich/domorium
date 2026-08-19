@@ -151,6 +151,7 @@ export function createGedcomEditor(
       recordPreviewTooltip(language),
       recordPreviewHover({
         language,
+        trigger: () => true,
         show: (preview, view) =>
           view.dispatch({ effects: setRecordPreview.of(preview) }),
         hide: (view) => view.dispatch({ effects: setRecordPreview.of(null) }),

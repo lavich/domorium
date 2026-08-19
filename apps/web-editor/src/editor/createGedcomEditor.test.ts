@@ -61,6 +61,21 @@ describe("createGedcomEditor", () => {
     expect(onDiagnosticsChange).toHaveBeenCalledOnce();
   });
 
+  it("previews the record a pointer names on a hover, no modifier held", () => {
+    const parent = editor({});
+    const view = EditorView.findFromDOM(parent)!;
+    const pointer = text.indexOf("@I1@", text.indexOf("1 HUSB")) + 1;
+    const posAtCoords = vi.spyOn(view, "posAtCoords").mockReturnValue(pointer);
+
+    view.contentDOM.dispatchEvent(
+      new MouseEvent("mousemove", { bubbles: true, clientX: 1, clientY: 1 }),
+    );
+
+    const shown = document.querySelector(".gedcom-record-preview");
+    expect(shown?.textContent).toBe("0 @I1@ INDI\n1 NAME Ada /Lovelace/");
+    posAtCoords.mockRestore();
+  });
+
   // A copy of the whole document per keystroke costs in proportion to the
   // document — 37 ms per character at 15.6 MB — and the application does not
   // need it while the user types. It needs to know an edit happened, which
