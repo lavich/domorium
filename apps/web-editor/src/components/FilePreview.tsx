@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import type { DocumentReport } from "@/editor/types";
+import { kilobytes } from "@/lib/utils";
 
 /**
  * A note is shown as the text it is: rendering it would mean running the HTML and
@@ -11,10 +13,17 @@ import { Badge } from "@/components/ui/badge";
 export function MarkdownPreview({
   name,
   text,
+  onReport,
 }: {
   name: string;
   text: string;
+  onReport(report: DocumentReport): void;
 }) {
+  const report = useLatest(onReport);
+  useEffect(() => {
+    report.current({ kind: "markdown" });
+  }, [report]);
+
   return (
     <section aria-label={`Preview of ${name}`} className="flex h-full flex-col">
       <PreviewHeader name={name} detail={`${text.split("\n").length} lines`} />
@@ -35,14 +44,17 @@ export function ImagePreview({
   name,
   path,
   load,
+  onReport,
 }: {
   name: string;
   path: string;
   load(path: string): Promise<Blob>;
+  onReport(report: DocumentReport): void;
 }) {
   const [state, setState] = useState<
-    { url: string; size: number } | { error: string } | null
+    { url: string; size: number; format: string } | { error: string } | null
   >(null);
+  const report = useLatest(onReport);
 
   useEffect(() => {
     let url: string | null = null;
@@ -54,7 +66,15 @@ export function ImagePreview({
           return;
         }
         url = URL.createObjectURL(blob);
-        setState({ url, size: blob.size });
+        const format = formatOf(blob, path);
+        setState({ url, size: blob.size, format });
+        report.current({
+          kind: "image",
+          format,
+          bytes: blob.size,
+          width: null,
+          height: null,
+        });
       })
       .catch((cause: unknown) => {
         if (active) {
@@ -73,7 +93,7 @@ export function ImagePreview({
         URL.revokeObjectURL(url);
       }
     };
-  }, [load, path]);
+  }, [load, path, report]);
 
   if (state && "error" in state) {
     return (
@@ -88,11 +108,7 @@ export function ImagePreview({
     <section aria-label={`Preview of ${name}`} className="flex h-full flex-col">
       <PreviewHeader
         name={name}
-        detail={
-          state
-            ? `${Math.max(1, Math.round(state.size / 1024))} KB`
-            : "reading…"
-        }
+        detail={state ? kilobytes(state.size) : "reading…"}
       />
       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
         {state ? (
@@ -100,11 +116,38 @@ export function ImagePreview({
             src={state.url}
             alt={name}
             className="max-h-full max-w-full object-contain"
+            onLoad={(event) =>
+              report.current({
+                kind: "image",
+                format: state.format,
+                bytes: state.size,
+                width: event.currentTarget.naturalWidth,
+                height: event.currentTarget.naturalHeight,
+              })
+            }
           />
         ) : null}
       </div>
     </section>
   );
+}
+
+/**
+ * The blob's type is what the browser decoded, and a folder can hold a file whose
+ * name says one thing and whose bytes say another; the extension answers only
+ * where the type is missing.
+ */
+function formatOf(blob: Blob, path: string): string {
+  const type = blob.type.replace(/^image\//, "").replace(/\+.*$/, "");
+  const extension = path.slice(path.lastIndexOf(".") + 1);
+  return (type || extension).toUpperCase();
+}
+
+/** A report is sent from an effect, and must not restart it by being new. */
+function useLatest<T>(value: T) {
+  const held = useRef(value);
+  held.current = value;
+  return held;
 }
 
 function PreviewHeader({ name, detail }: { name: string; detail: string }) {

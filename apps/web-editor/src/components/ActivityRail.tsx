@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 export interface ActivityRailProps {
   explorerOpen: boolean;
   problemsOpen: boolean;
-  problemCount: number;
+  /** Null where the file in front is not one the editor checks. */
+  problemCount: number | null;
   onToggleExplorer(): void;
   onToggleProblems(): void;
   onOpenSearch(): void;
@@ -41,12 +42,13 @@ export function ActivityRail({
         <SearchIcon />
       </RailButton>
       <RailButton
-        label={problemCount === 1 ? "1 problem" : `${problemCount} problems`}
+        label={problemsLabel(problemCount)}
         active={problemsOpen}
+        disabled={problemCount === null}
         onClick={onToggleProblems}
       >
         <ListChecksIcon />
-        {problemCount > 0 ? (
+        {problemCount !== null && problemCount > 0 ? (
           <span
             aria-hidden
             className="absolute right-1 top-1 size-1.5 rounded-full bg-destructive"
@@ -57,14 +59,23 @@ export function ActivityRail({
   );
 }
 
+function problemsLabel(count: number | null): string {
+  if (count === null) {
+    return "Problems, for a GEDCOM file";
+  }
+  return count === 1 ? "1 problem" : `${count} problems`;
+}
+
 function RailButton({
   label,
   active,
+  disabled,
   onClick,
   children,
 }: {
   label: string;
   active?: boolean;
+  disabled?: boolean;
   onClick(): void;
   children: React.ReactNode;
 }) {
@@ -77,6 +88,7 @@ function RailButton({
             size="icon"
             aria-label={label}
             aria-pressed={active}
+            disabled={disabled}
             onClick={onClick}
             className={cn(
               "relative size-8 rounded text-muted-foreground",

@@ -40,11 +40,7 @@ import {
   workspaceReducer,
   type OpenFile,
 } from "@/workspace/workspace";
-import type {
-  GedcomEditorHandle,
-  WebDiagnostic,
-  WebEditorStatus,
-} from "@/editor/types";
+import type { GedcomEditorHandle } from "@/editor/types";
 
 type PendingReplacement =
   { type: "file"; fileName: string; text: string } | { type: "demo" } | null;
@@ -70,12 +66,6 @@ function AppContent() {
   const [demoText, setDemoText] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [diagnostics, setDiagnostics] = useState<WebDiagnostic[]>([]);
-  const [status, setStatus] = useState<WebEditorStatus>({
-    line: 0,
-    character: 0,
-    resolution: undefined,
-  });
   const [pendingReplacement, setPendingReplacement] =
     useState<PendingReplacement>(null);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -98,7 +88,6 @@ function AppContent() {
       kind: fileKindOf(path),
       text: fileKindOf(path) === "image" ? null : await next.readText(path),
     });
-    setDiagnostics([]);
   }, []);
 
   useEffect(() => {
@@ -500,15 +489,14 @@ function AppContent() {
           ) : (
             <EditorWorkspace
               workspace={workspace}
-              diagnostics={diagnostics}
-              status={status}
               theme={resolvedTheme}
               editorRef={editorRef}
               onChange={() =>
                 file ? dispatch({ type: "edited", path: file.path }) : undefined
               }
-              onDiagnosticsChange={setDiagnostics}
-              onStatusChange={setStatus}
+              onReport={(path, report) =>
+                dispatch({ type: "reported", path, report })
+              }
               onFollowLink={(link) => {
                 const followed = followLink(link, {
                   path: file?.path ?? "",

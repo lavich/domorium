@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { DocumentReport } from "../editor/types";
 import {
   activeFile,
   emptyWorkspace,
@@ -192,5 +193,67 @@ describe("what counts as unsaved", () => {
         text: "0 HEAD\n",
       }),
     ).toBe(state);
+  });
+});
+
+describe("what a surface reported about a document", () => {
+  const findings = (count: number): DocumentReport => ({
+    kind: "gedcom",
+    status: { line: 0, character: 0, resolution: undefined },
+    diagnostics: Array.from({ length: count }, () => ({
+      severity: "error" as const,
+      code: "VAL001",
+      message: "unknown tag",
+      from: 0,
+      to: 4,
+      line: 0,
+      character: 0,
+    })),
+  });
+
+  const report = (path: string, count: number) =>
+    ({ type: "reported", path, report: findings(count) }) as const;
+
+  it("keeps it on the file it names", () => {
+    const state = after([opened("tree.ged"), report("tree.ged", 3)], granted());
+
+    expect(activeFile(state)?.report).toEqual(findings(3));
+  });
+
+  // The editor is destroyed and recreated on a tab switch, so a lint finishing
+  // afterwards would otherwise be read as the new document's.
+  it("gives each open file its own, and lets neither speak for the other", () => {
+    const state = after(
+      [
+        opened("tree.ged"),
+        opened("other.ged"),
+        report("tree.ged", 3),
+        report("other.ged", 1),
+      ],
+      granted(),
+    );
+
+    expect(state.files[0].report).toEqual(findings(3));
+    expect(state.files[1].report).toEqual(findings(1));
+  });
+
+  it("discards one that names no open file", () => {
+    const state = after([opened("tree.ged")], granted());
+
+    expect(workspaceReducer(state, report("closed.ged", 3))).toBe(state);
+  });
+
+  it("forgets it with the file, and reopening starts with none", () => {
+    const state = after(
+      [
+        opened("tree.ged"),
+        report("tree.ged", 3),
+        { type: "file-closed", path: "tree.ged" },
+        opened("tree.ged"),
+      ],
+      granted(),
+    );
+
+    expect(state.files[0].report).toBeNull();
   });
 });
