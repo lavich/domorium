@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "agent",
+            "if": "Bash(git push*)",
+            "model": "claude-sonnet-5",
+            "timeout": 180,
+            "statusMessage": "Checking added comments against the AGENTS.md rule",
+            "prompt": "A push is about to happen from this repository. Check the comments this branch adds against the Comments section of AGENTS.md, and nothing else — not the code, not the tests, not the commit message.\n\nGet the added lines with:\n\n  git diff origin/main...HEAD -- '*.ts' '*.tsx' '*.mjs' '*.cjs' '*.js' '*.kt' '*.kts'\n\nConsider only added lines that are comments. Read the Comments section of AGENTS.md for the rule as written; the summary below is not a replacement for it.\n\nFlag a comment when it restates the identifier or signature it sits above, argues the change to a reviewer (that belongs in the commit message or the pull request), records history with words like 'used to', 'previously', 'was' or 'now', or carries a measurement or a count (that belongs in the changelog or the issue).\n\nDo not flag a comment that quotes or cites a specification, standard, RFC or ADR — that is a rule from outside the code, and in this repository the longest comments are of exactly this kind. Do not flag a comment that explains why an obvious simplification is wrong. Do not flag a comment in a test that names the bug the test catches. Length is not a signal: measured across this repository, every comment flagged for length alone was legitimate, so never flag one for being long.\n\nBe conservative. If a comment can be read either way, allow it. A false alarm costs more than a miss here, because a check that cries wolf gets turned off and then the rule is worse off than with no check at all.\n\nAllow the push if you find nothing to flag. If you do find something, deny it and name each comment by file and line with one sentence saying which part of the rule it fails, so it can be fixed and the push retried."
+          }
+        ]
+      }
+    ]
+  }
+}
