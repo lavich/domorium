@@ -50,6 +50,19 @@ keeping those honest is on whoever changes the API.
 Formatting failures reported by `check:docs` are fixed with
 `npx prettier --write <files>`; everything else it reports is a real edit to make.
 
+One check sits outside the gate on purpose:
+
+```bash
+node scripts/check-comments.mjs --base origin/main
+```
+
+It reads the comments your branch adds and reports two kinds: one whose words the
+name below it already carries, and a block comment past four lines. It always
+exits 0, and nothing runs it for you. Whether it graduates into the gate and the
+pre-commit hook is a question about how often it is wrong;
+[issue #142](https://github.com/lavich/domorium/issues/142) is where that is
+recorded.
+
 Tests are Vitest, colocated as `*.test.ts` beside the code they cover. New
 behavior in a package ships with tests in that package.
 
