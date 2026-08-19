@@ -1696,6 +1696,23 @@ ${lines}0 @F1@ FAM
       expect(() => ruleEngine.getNodeType(FILE)).not.toThrow();
     });
 
+    test("should not throw for a line carrying a pointer but no tag", async () => {
+      const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@
+1 NAME John /Doe/
+0 TRLR
+`);
+      const ruleEngine = new RuleNode(g7validationJson, pointers);
+      const tagless = nodes[1];
+      const NAME = tagless.children[0];
+      expect(() => ruleEngine.getNodeType(tagless)).not.toThrow();
+      expect(ruleEngine.getNodeType(tagless)).toBe("");
+      expect(() => ruleEngine.getNodeType(NAME)).not.toThrow();
+      expect(ruleEngine.getNodeType(NAME)).toBe("");
+    });
+
     test("should not throw for a tag unknown to the schema", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC

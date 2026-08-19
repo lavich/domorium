@@ -474,7 +474,11 @@ export class RuleNode {
 
     let tempNode: ASTNode | undefined = node;
     while (tempNode) {
-      stack.push(GedcomTag(tempNode.tokens.TAG!.value!));
+      const step = tempNode.tokens.TAG?.value;
+      if (!step) {
+        return GedcomType("");
+      }
+      stack.push(GedcomTag(step));
       tempNode = tempNode.parent;
     }
 
