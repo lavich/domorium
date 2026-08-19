@@ -494,4 +494,21 @@ hello world
       });
     });
   });
+
+  test("reports every diagnostic of a document that has more than 125k of them", () => {
+    const records = 130_000;
+    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
+    for (let i = 1; i <= records; i += 1) {
+      lines.push(`0 @I${i}@ INDI`, "1 ZZZ x");
+    }
+    lines.push("0 TRLR", "");
+
+    const errors = new GedcomDocument()
+      .createDocument(lines.join("\n"))
+      .getErrors();
+
+    expect(
+      errors.filter((error) => error.code === GedcomErrorCode.UnknownTag),
+    ).toHaveLength(records);
+  }, 120_000);
 });

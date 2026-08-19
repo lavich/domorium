@@ -499,13 +499,18 @@ export class RuleNode {
 
   validate(node: ASTNode, _tagType?: GedcomType): GedcomError[] {
     const errors: GedcomError[] = [];
+    this.collect(errors, node, _tagType);
+    return errors;
+  }
+
+  collect(errors: GedcomError[], node: ASTNode, _tagType?: GedcomType): void {
     const tagType = _tagType || this.getNodeType(node);
     const fieldType = this.getFieldType(tagType);
     const value = resolveValue(node).trim();
     const TAG = node.tokens.TAG;
 
     if (!value && this.mayOmitPayload(tagType)) {
-      return errors;
+      return;
     }
 
     switch (fieldType.type) {
@@ -739,6 +744,5 @@ export class RuleNode {
         break;
       }
     }
-    return errors;
   }
 }

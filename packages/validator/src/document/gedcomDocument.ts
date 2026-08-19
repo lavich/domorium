@@ -124,7 +124,7 @@ export class GedcomDocument {
     this.nodes = nodes;
     this.pointers = pointers;
     this.xRefs = xrefs;
-    this.errors.push(...this.validateLevels(nodes));
+    this.validateLevels(this.errors, nodes);
 
     const resolution = resolveGedcomVersion(nodes);
     this.resolution = resolution;
@@ -205,16 +205,15 @@ export class GedcomDocument {
       this.scheme,
     );
     this.extensions = context;
-    this.errors.push(...errors);
+    for (const error of errors) {
+      this.errors.push(error);
+    }
     const validator = new GedcomValidator(
       this.pointers,
       context,
       options.fragment ?? false,
     );
-    // Passed explicitly: validate() otherwise chooses a schema of its own.
-    this.errors.push(
-      ...validator.validate(this.nodes, GedcomType(""), this.scheme),
-    );
+    validator.collect(this.errors, this.nodes, GedcomType(""), this.scheme);
     if (options.fragment) {
       this.errors = this.errors.filter(
         (error) => !BOUNDED_BY_FRAGMENT.has(error.code),
@@ -222,8 +221,11 @@ export class GedcomDocument {
     }
   }
 
-  private validateLevels(nodes: ASTNode[], expectedLevel = 0): GedcomError[] {
-    const errors: GedcomError[] = [];
+  private validateLevels(
+    errors: GedcomError[],
+    nodes: ASTNode[],
+    expectedLevel = 0,
+  ): void {
     for (const node of nodes) {
       if (node.level !== expectedLevel) {
         errors.push({
@@ -237,9 +239,8 @@ export class GedcomDocument {
           level: "error",
         });
       }
-      errors.push(...this.validateLevels(node.children, node.level + 1));
+      this.validateLevels(errors, node.children, node.level + 1);
     }
-    return errors;
   }
 
   getLabel(node: ASTNode): string | undefined {
