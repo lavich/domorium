@@ -16,8 +16,9 @@ See proposal.md — Why. The constraints that shape the approach:
   records." Naming a family means resolving pointers, which is why it stopped.
 - `CodeAction` has no `isPreferred`. Order in the array is the only way to say which
   action matters, and it is what all four hosts render.
-- The recorded conformance corpora contain the message text, so any wording change
-  is a recorded change.
+- Neither conformance corpus records a diagnostic's message, by decision: the
+  wording is meant to get clearer, and pinning it would make every improvement read
+  as a regression. A wording change must therefore leave both corpora untouched.
 
 ## Goals / Non-Goals
 
@@ -46,11 +47,11 @@ See proposal.md — Why. The constraints that shape the approach:
 
 `rule-node.ts`, `case "pointer"`, keeps three situations and gives each one sentence:
 
-| Situation                                          | Message                                                                                              | Code              |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------- |
-| xref present, names no record of the required type | `No FAM record carries @F1450@`, or `No record carries @F1450@` where the schema names no target tag | `unresolved-xref` |
-| payload present but not xref-shaped                | `Value for SOUR should be a pointer to a SOUR record, written as "@xref@"` — unchanged               | `missing-ref`     |
-| payload and children both absent                   | as above — unchanged                                                                                 | `missing-ref`     |
+| Situation                                          | Message                                                                                | Code              |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------- |
+| xref present, names no record of the required type | `No FAM record carries @F1450@`                                                        | `unresolved-xref` |
+| payload present but not xref-shaped                | `Value for SOUR should be a pointer to a SOUR record, written as "@xref@"` — unchanged | `missing-ref`     |
+| payload and children both absent                   | as above — unchanged                                                                   | `missing-ref`     |
 
 The `candidates?.length` branch and the "names no `FAM` record, and this document
 declares none" branch collapse into the first row, which means the
@@ -59,6 +60,11 @@ explains that the call is placed inside the failure branch because it is only ne
 to name candidates; with no candidates to name it is needed nowhere, and the comment
 goes with it. `error.data` keeps `{ xref, requiredRecordTag }` unchanged, so the code
 action wiring is untouched.
+
+`fieldType.to` is optional in the type, so the "no record carries" wording without a
+type stays as its fallback — but both shipped schemas map all 17 pointer payloads to a
+record tag, and every one of those tags resolves, so no document reaches it. It is not
+given a test, because there is no defect for the test to catch.
 
 _What is lost:_ the reader no longer learns that the document declares no `FAM` at
 all. The actions say it better — no replacement offered means nothing is near, and
@@ -162,10 +168,10 @@ is recorded above and does not change a boundary.
 - **Naming a candidate reads other records** → two resolutions and two `NAME` reads,
   on a request for one range. It does not touch the index build, which is what #210
   is about.
-- **The conformance diff is large** — 621 messages in one file, and every unresolved
-  pointer in every corpus file — while the violation count should not move at all. A
-  count that _does_ move means a code changed with the message, and that is a defect
-  to find before the diff is accepted.
+- **A wording change could move what fires** → the corpora record codes and counts
+  and not messages, so `check:conformance` passing with both files untouched is the
+  proof that it did not. A moved count would mean a code changed along with the
+  message, and that is the defect to find.
 - **Two packages ship in sequence** → `validator` before `language-service`, per
   ADR-0003. The release stays a separate, deliberate act.
 
@@ -175,7 +181,7 @@ is recorded above and does not change a boundary.
    `language-service` compiles against the new `dist`.
 2. `language-service`: `nearestXref`, the resolver on `recordLabel`, the rewritten
    actions, `nodes` on the context, and tests for each.
-3. `npm run check:conformance -- --update`, and read the diff.
+3. `npm run check:conformance`, which must pass with both corpus files unchanged.
 4. Changelogs and README, then `npm run check`.
 
 Rollback is local to each: the message is one branch in one `case`, and the actions

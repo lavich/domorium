@@ -27,11 +27,9 @@ document, and a sample of it is not information about the line that failed.
 - **THEN** the diagnostic is the same sentence as when other `SOUR` records exist,
   because the reader's next action is the same either way
 
-#### Scenario: A pointer whose schema names no target record type
-
-- **WHEN** the failing pointer's type does not resolve to a record tag
-- **THEN** the diagnostic says that no record carries that xref, naming the xref and
-  no type
+Both shipped schemas map every pointer payload to a record tag, so the type is always
+named in practice. Naming no type is retained only because the schema type permits it,
+and it is not a situation a document can produce.
 
 #### Scenario: The data a quick fix reads is unchanged
 

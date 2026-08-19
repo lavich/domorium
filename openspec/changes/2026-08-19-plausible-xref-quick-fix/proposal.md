@@ -100,10 +100,11 @@ None. No existing spec describes diagnostics or code actions.
   nothing in `language-service` produces it after this change, and pruning that
   optional field from two published packages is a breaking change that belongs to
   its own decision, not this one.
-- **Conformance:** the recorded corpora carry the old message text, so
-  `npm run check:conformance -- --update` re-records both and the diff is read. The
-  violation _count_ is expected to hold — this changes what a diagnostic says, not
-  whether it fires.
+- **Conformance:** no re-recording. Neither corpus holds a diagnostic's message —
+  `check-conformance.mjs` records codes, counts and a digest precisely because
+  "pinning it would make every improvement read as a regression". So the evidence
+  wanted here is the check passing _unchanged_: same 14 781 diagnostics, same codes,
+  proving the wording moved and what fires did not.
 - **Releases:** two publishing units are touched. `@domorium/language-service`
   depends on `@domorium/validator` by version range, so per ADR-0003 `validator`
   publishes first. No version is bumped and no tag is created in this change.
