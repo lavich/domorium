@@ -2,6 +2,27 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## Unreleased
+
+- **An unresolved pointer offers one replacement, or none, and creation comes
+  first.** The quick fixes for an unresolved XREF were the first ten records of the
+  required type in index order, related to the failing pointer only by their tag. In
+  genealogy that is worse than offering nothing: clicking one attaches a person to a
+  family of strangers, the document then validates clean, and nothing points at the
+  mistake again. A replacement is now offered only where one candidate is nearer to
+  the XREF the author wrote than every other and within two edits of it — `@F145@`
+  for `@F1450@` — and nothing is offered where two are equally near. Browsing the
+  file's records stays with completion inside `@…@`, which filters as the reader
+  types.
+- **An offered record is named.** `Replace with @F285@ — Gascoigne / Wardle`. A
+  family carries no name of its own, so it is named by its spouses; a record with
+  nothing to name it by is offered by its XREF alone. The document outline is
+  unchanged.
+- **Creating the record the author named is offered first**, and in GEDCOM 7
+  `@VOID@` — the pointer the specification provides for a target deliberately left
+  out — is offered last. GEDCOM 5.5.1 has no such value and is offered no such
+  action.
+
 ## 1.5.1 - 2026-08-18
 
 - **A line is read by every terminator 5.5.1 allows.** Splitting on `\r?\n` read a

@@ -1,4 +1,8 @@
-import { GedcomDocument, type GedcomDialect } from "@domorium/validator";
+import {
+  GedcomDocument,
+  type ASTNode,
+  type GedcomDialect,
+} from "@domorium/validator";
 import type {
   CodeAction,
   Diagnostic,
@@ -8,8 +12,11 @@ import type {
 } from "../../types";
 import type { ReferenceIndex } from "../references/referenceIndex";
 import { lines } from "../position/lineTerminators";
+import { recordLabel } from "../symbols/recordLabel";
+import { nearestXref } from "./nearestXref";
 
-const MAX_REPLACEMENT_CHOICES = 10;
+/** The pointer 7.0 provides for a target deliberately left out. */
+const VOID_POINTER = "@VOID@";
 
 interface CodeActionContext {
   text: string;
@@ -17,6 +24,7 @@ interface CodeActionContext {
   currentDiagnostics: Diagnostic[];
   version: DocumentVersion;
   dialect: GedcomDialect | undefined;
+  nodes: ASTNode[];
 }
 
 export function getCodeActions(
@@ -81,38 +89,10 @@ function unresolvedXrefActions(
     return [];
   }
 
-  const candidates = Array.from(context.index.entries())
-    .filter(({ declarations }) => declarations.length === 1)
-    .map(({ declarations }) => declarations[0])
-    .filter((declaration) => declaration.recordTag === recordTag);
   const actions: CodeAction[] = [];
 
-  if (candidates.length === 1) {
-    const candidate = candidates[0];
-    actions.push({
-      title: `Replace ${xref} with ${candidate.id}`,
-      kind: "quickfix",
-      diagnostics: [diagnostic],
-      edit: replacementEdit(context.version, diagnostic.range, candidate.id),
-    });
-  } else if (candidates.length > 1) {
-    actions.push({
-      title: `Replace ${xref} with an existing ${recordTag} record`,
-      kind: "quickfix",
-      diagnostics: [diagnostic],
-      choices: candidates
-        .slice(0, MAX_REPLACEMENT_CHOICES)
-        .map((candidate) => ({
-          title: `Replace with ${candidate.id}`,
-          edit: replacementEdit(
-            context.version,
-            diagnostic.range,
-            candidate.id,
-          ),
-        })),
-    });
-  }
-
+  // The author wrote an identifier for a record they mean to have, so this
+  // reads their intent where a replacement can only guess at it. See #249.
   const trailerLine = lines(context.text).findIndex((line) =>
     /^0\s+TRLR(?:\s|$)/u.test(line),
   );
@@ -141,7 +121,44 @@ function unresolvedXrefActions(
     });
   }
 
+  const candidates = Array.from(context.index.entries())
+    .filter(({ declarations }) => declarations.length === 1)
+    .map(({ declarations }) => declarations[0])
+    .filter((declaration) => declaration.recordTag === recordTag)
+    .map((declaration) => declaration.id);
+  const candidate = nearestXref(xref, candidates);
+  if (candidate) {
+    const label = labelOf(context.nodes, candidate);
+    actions.push({
+      title: label
+        ? `Replace with ${candidate} — ${label}`
+        : `Replace with ${candidate}`,
+      kind: "quickfix",
+      diagnostics: [diagnostic],
+      edit: replacementEdit(context.version, diagnostic.range, candidate),
+    });
+  }
+
+  // Last: it is the one action that discards the identifier the author wrote.
+  if (context.dialect === "7.0") {
+    actions.push({
+      title: `Point at nothing (${VOID_POINTER})`,
+      kind: "quickfix",
+      diagnostics: [diagnostic],
+      edit: replacementEdit(context.version, diagnostic.range, VOID_POINTER),
+    });
+  }
+
   return actions;
+}
+
+/** Reached only once a candidate is worth naming, so the map is built here. */
+function labelOf(nodes: ASTNode[], xref: string): string | undefined {
+  const byXref = new Map(
+    nodes.map((node) => [node.tokens.POINTER?.value ?? "", node]),
+  );
+  const record = byXref.get(xref);
+  return record && recordLabel(record, (target) => byXref.get(target));
 }
 
 /** The four 5.5.1 allows, longest first, so a two-character form wins. See #251. */

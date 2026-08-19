@@ -459,7 +459,7 @@ describe("stdio entry point", () => {
             diagnostics: [
               {
                 code: "unresolved-xref",
-                message: "Value for WIFE should be in set [@I1@]",
+                message: "No INDI record carries @I9@",
                 range: {
                   start: { line: 8, character: 7 },
                   end: { line: 8, character: 11 },
@@ -470,16 +470,20 @@ describe("stdio entry point", () => {
           },
         }),
       ).resolves.toMatchObject({
-        result: expect.arrayContaining([
-          expect.objectContaining({
-            title: "Replace @I9@ with @I1@",
-            kind: "quickfix",
-          }),
+        result: [
           expect.objectContaining({
             title: "Create INDI record @I9@",
             kind: "quickfix",
           }),
-        ]),
+          expect.objectContaining({
+            title: "Replace with @I1@",
+            kind: "quickfix",
+          }),
+          expect.objectContaining({
+            title: "Point at nothing (@VOID@)",
+            kind: "quickfix",
+          }),
+        ],
       });
     } finally {
       child.kill();

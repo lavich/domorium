@@ -101,12 +101,11 @@ describe("GEDCOM editor extensions", () => {
 
     const actions = getDiagnosticActions(language, diagnostic, apply);
 
-    expect(actions.map(({ name }) => name)).toEqual(
-      expect.arrayContaining([
-        "Replace @I9@ with @I1@",
-        "Create INDI record @I9@",
-      ]),
-    );
+    expect(actions.map(({ name }) => name)).toEqual([
+      "Create INDI record @I9@",
+      "Replace with @I1@",
+      "Point at nothing (@VOID@)",
+    ]);
     actions[0].apply();
     expect(apply).toHaveBeenCalledOnce();
   });

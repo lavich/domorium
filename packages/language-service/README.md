@@ -29,6 +29,31 @@ The service also provides completion, hover, definitions, folding ranges,
 document symbols, semantic tokens, indentation hints, and the edits that retarget
 a file a document points at. `getDocument()` returns the parse behind all of it.
 
+## The quick fixes for a pointer that names nothing
+
+`getCodeActions` answers what a reader can do about a diagnostic. For an XREF that
+names no record, it offers in this order:
+
+```typescript
+const service = new GedcomLanguageService(
+  "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME Ada\n0 @F1@ FAM\n1 WIFE @I9@\n0 TRLR\n",
+);
+const [unresolved] = service
+  .getDiagnostics()
+  .filter(({ code }) => code === "unresolved-xref");
+
+service.getCodeActions(unresolved.range, [unresolved], 0);
+// "Create INDI record @I9@"      — the record the author named, first
+// "Replace with @I1@ — Ada"      — only where one candidate is plausibly meant
+// "Point at nothing (@VOID@)"    — GEDCOM 7 only, last
+```
+
+A replacement appears only where one candidate is nearer to the XREF than every
+other and within two edits of it. Where two are equally near, none is offered:
+applying the wrong one attaches a record to an unrelated one and the document then
+validates clean. Every record of the required type is reachable through completion
+inside `@…@` instead, filtered as the reader types.
+
 ## The record a pointer names
 
 `getRecordPreview` answers what an XREF points at, so a host can show it where

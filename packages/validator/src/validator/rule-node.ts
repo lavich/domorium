@@ -709,21 +709,10 @@ export class RuleNode {
           // An xref that names nothing is a different problem from a payload
           // that is not an xref at all. The second is what a program writes
           // when it puts a URL or a title where a citation belongs, and there
-          // the candidates are no help — the shape is what's wrong.
-          //
-          // getAvailableValues is only needed to name those candidates, so it
-          // runs here rather than for every pointer in the document.
-          const candidates = isXrefExist
-            ? this.getAvailableValues(tagType)
-            : null;
-          let message: string;
-          if (candidates?.length) {
-            message = `Value for ${TAG?.value} should be in set [${formatValueSet(candidates)}]`;
-          } else if (isXrefExist) {
-            message = `Value for ${TAG?.value} names no ${target}, and this document declares none`;
-          } else {
-            message = `Value for ${TAG?.value} should be a pointer to a ${target}, written as "@xref@"`;
-          }
+          // the shape is what's wrong rather than the identifier.
+          const message = isXrefExist
+            ? `No ${target} carries ${XREF.value}`
+            : `Value for ${TAG?.value} should be a pointer to a ${target}, written as "@xref@"`;
           errors.push({
             code:
               isXrefExist && XREF?.value !== VOID_POINTER
