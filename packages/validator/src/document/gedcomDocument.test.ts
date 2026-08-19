@@ -130,6 +130,24 @@ describe("validator", () => {
     expect(gedcomDocument.getLabel(skype!)).toBe("Extension tag");
   });
 
+  test("labels nothing under a line carrying a pointer but no tag", () => {
+    const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@
+1 NAME John /Doe/
+0 TRLR
+`);
+
+    const tagless = gedcomDocument.getNodes().find((node) => !node.tokens.TAG);
+    const name = tagless?.children.find(
+      (node) => node.tokens.TAG?.value === "NAME",
+    );
+
+    expect(() => gedcomDocument.getLabel(name!)).not.toThrow();
+    expect(gedcomDocument.getLabel(name!)).toBeUndefined();
+  });
+
   test("reports a tag declared twice in SCHMA with the same URI", () => {
     const gedcomDocument = new GedcomDocument().createDocument(`0 HEAD
 1 GEDC

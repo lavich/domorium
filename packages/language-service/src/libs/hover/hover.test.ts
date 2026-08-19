@@ -39,6 +39,22 @@ describe("getHover", () => {
     expect(hover?.contents.value).not.toMatch(/[*_`[\]<>]/);
   });
 
+  it("returns null over a line nested under a tag-less one", () => {
+    const truncated = new GedcomDocument();
+    truncated.createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@
+1 NAME John /Doe/
+`);
+
+    const hover = () =>
+      getHover(truncated, truncated.getNodes(), { line: 4, character: 3 });
+
+    expect(hover).not.toThrow();
+    expect(hover()).toBeNull();
+  });
+
   it("returns null when not hovering over a TAG", () => {
     const hover = getHover(gedcomDocument, gedcomDocument.getNodes(), {
       line: 4,
