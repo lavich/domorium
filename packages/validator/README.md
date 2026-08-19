@@ -73,22 +73,27 @@ const unresolved = errors.filter(
 );
 ```
 
-| Code              | Member                 | Reported when                                               |
-| ----------------- | ---------------------- | ----------------------------------------------------------- |
-| `VAL001`          | `UnknownTag`           | a tag the schema does not define in this position           |
-| `VAL002`          | `MissingTag`           | a structure the schema requires is absent                   |
-| `VAL003`          | `MissingValue`         | the payload is absent where one is required                 |
-| `VAL004`          | `IncorrectValue`       | the payload does not match its data type                    |
-| `VAL005`          | `ShouldBeSetValue`     | the payload is not one of the permitted values              |
-| `VAL006`          | `MissingRef`           | a pointer payload that is not written as a pointer          |
-| `VAL007`          | `ManyOccurrences`      | more occurrences than the cardinality allows                |
-| `VAL008`          | `UndocumentedTag`      | a GEDCOM 7 extension tag with no `HEAD`.`SCHMA` declaration |
-| `VAL009`          | `DuplicateDeclaration` | a tag declared more than once in `HEAD`.`SCHMA`             |
-| `VAL010`          | `EmptyEvent`           | an event with neither a payload nor substructures           |
-| `unresolved-xref` | `UnresolvedXref`       | an xref naming no record of the required type               |
-| `invalid-level`   | `InvalidLevel`         | a level that cannot follow the line above it                |
-| `LEXER`           | `Lexer`                | the text could not be tokenized                             |
-| `PARSER`          | `Parser`               | the tokens could not be assembled into a tree               |
+| Code              | Member                  | Reported when                                                                  |
+| ----------------- | ----------------------- | ------------------------------------------------------------------------------ |
+| `VAL001`          | `UnknownTag`            | a tag the schema does not define in this position                              |
+| `VAL002`          | `MissingTag`            | a structure the schema requires is absent                                      |
+| `VAL003`          | `MissingValue`          | the payload is absent where one is required                                    |
+| `VAL004`          | `IncorrectValue`        | the payload does not match its data type                                       |
+| `VAL005`          | `ShouldBeSetValue`      | the payload is not one of the permitted values                                 |
+| `VAL006`          | `MissingRef`            | a pointer payload that is not written as a pointer                             |
+| `VAL007`          | `ManyOccurrences`       | more occurrences than the cardinality allows                                   |
+| `VAL008`          | `UndocumentedTag`       | a GEDCOM 7 extension tag with no `HEAD`.`SCHMA` declaration                    |
+| `VAL009`          | `DuplicateDeclaration`  | a tag declared more than once in `HEAD`.`SCHMA`                                |
+| `VAL010`          | `EmptyEvent`            | an event with neither a payload nor substructures                              |
+| `VAL011`          | `UnsupportedVersion`    | the version is one no schema in this package describes                         |
+| `VAL012`          | `UndeterminedVersion`   | no version could be read from `HEAD`.`GEDC`.`VERS`                             |
+| `VAL013`          | `SubstitutedVersion`    | a version checked against a different version's schema                         |
+| `VAL014`          | `ImpossibleDay`         | a date naming a day its calendar does not have, such as `31 FEB`               |
+| `VAL015`          | `PersonalAncestralFile` | a header naming `SYST` before `GEDC`, so the file is a Personal Ancestral File |
+| `unresolved-xref` | `UnresolvedXref`        | an xref naming no record of the required type                                  |
+| `invalid-level`   | `InvalidLevel`          | a level that cannot follow the line above it                                   |
+| `LEXER`           | `Lexer`                 | the text could not be tokenized                                                |
+| `PARSER`          | `Parser`                | the tokens could not be assembled into a tree                                  |
 
 ## Scripts
 
