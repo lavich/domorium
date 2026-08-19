@@ -922,16 +922,27 @@ describe("payload for VERS 7", () => {
       );
     });
 
-    test("should name the candidates when the xref resolves to nothing", async () => {
+    // Issue #249: the message listed the xrefs that were not the problem and
+    // never stated the one that was.
+    test("should state that no record of that type carries the xref", async () => {
       const WIFE = nodes[2].children[1];
 
       const errs = ruleEngine.validate(WIFE);
 
       expect(errs).toHaveLength(1);
       expect(errs[0].code).toBe("unresolved-xref");
-      expect(errs[0].message).toBe(
-        "Value for WIFE should be in set [@Homer_Simpson@]",
-      );
+      expect(errs[0].message).toBe("No INDI record carries @Marge_Simpson@");
+    });
+
+    test("should keep carrying the xref and the record tag for a quick fix", async () => {
+      const WIFE = nodes[2].children[1];
+
+      const errs = ruleEngine.validate(WIFE);
+
+      expect(errs[0].data).toEqual({
+        xref: "@Marge_Simpson@",
+        requiredRecordTag: "INDI",
+      });
     });
 
     test("should pass @VOID@ pointer with no children (deliberately empty reference)", async () => {
@@ -965,10 +976,10 @@ describe("payload for VERS 7", () => {
   });
 
   describe("candidate list in a message", () => {
-    // The message ends up in an editor tooltip, which sizes itself to its
-    // content. An uncapped list of every xref in the document made that
-    // tooltip wider than the screen.
-    test("should list only the first candidates and count the rest", async () => {
+    // Issue #249: a pointer's set is the population of the document, so a
+    // sample of it said nothing about the line that failed. Issue #190 saw the
+    // same message list 1707 xrefs.
+    test("should name no candidate for a pointer, however many the document holds", async () => {
       const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
       for (let index = 1; index <= 60; index += 1) {
         lines.push(`0 @I${index}@ INDI`);
@@ -981,10 +992,7 @@ describe("payload for VERS 7", () => {
       const errs = ruleEngine.validate(ASSO);
 
       expect(errs).toHaveLength(1);
-      expect(errs[0].message).toBe(
-        "Value for ASSO should be in set [@I1@, @I2@, @I3@, @I4@, @I5@, " +
-          "@I6@, @I7@, @I8@, @I9@, @I10@, … 51 more]",
-      );
+      expect(errs[0].message).toBe("No INDI record carries @NOBODY@");
     });
 
     test("should list a short set in full", async () => {
@@ -1005,7 +1013,7 @@ describe("payload for VERS 7", () => {
       );
     });
 
-    test("should not offer an empty set when the document declares none", async () => {
+    test("should read the same when the document declares no such record at all", async () => {
       const { nodes, pointers } = astBuilder(`0 HEAD
 1 GEDC
 2 VERS 7.0
@@ -1018,9 +1026,7 @@ describe("payload for VERS 7", () => {
 
       const errs = ruleEngine.validate(SOUR);
 
-      expect(errs[0].message).toBe(
-        "Value for SOUR names no SOUR record, and this document declares none",
-      );
+      expect(errs[0].message).toBe("No SOUR record carries @S1@");
     });
   });
 

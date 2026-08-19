@@ -2,6 +2,18 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **An unresolved pointer names the xref that failed, and lists nothing.** A `FAMC`
+  pointing at a family the file does not declare was reported as "Value for FAMC
+  should be in set [@F70@, @F75@, … 2853 more]" — the vocabulary of a closed set,
+  spent on ten families that were not the problem, ending in an admission that it
+  gave up. A pointer's set is the population of the document, so the diagnostic now
+  states the fact about the line: "No FAM record carries @F1450@". An enumeration
+  still lists its values, because for `SEX` the four of them are the whole answer.
+  Where the payload is not a pointer at all the message is unchanged — there the
+  shape is what is wrong, not the identifier.
+
 ## 1.8.2 - 2026-08-18
 
 - **A tag written in mixed case is read as written, and the message says which tag
