@@ -22,10 +22,7 @@ describe("validator", () => {
 2 VERS 7.0
 0 TRLR
 `);
-    const nodes = gedcomDocument.getNodes();
-    expect(nodes.length).toBe(2);
-    expect(gedcomDocument.pointers.size).toBe(0);
-    expect(gedcomDocument.xRefs.size).toBe(0);
+    expect(gedcomDocument.getNodes().length).toBe(2);
   });
 
   test("minimal valid test pointers", async () => {
@@ -38,10 +35,7 @@ describe("validator", () => {
 1 WIFE @indi1@
 0 TRLR
 `);
-    const nodes = gedcomDocument.getNodes();
-    expect(nodes.length).toBe(4);
-    expect(gedcomDocument.pointers.size).toBe(2);
-    expect(gedcomDocument.xRefs.size).toBe(1);
+    expect(gedcomDocument.getNodes().length).toBe(4);
   });
 
   test("reports structured metadata for an unresolved pointer", () => {

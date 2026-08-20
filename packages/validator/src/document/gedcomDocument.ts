@@ -1,5 +1,5 @@
 import { GedcomError, GedcomErrorCode } from "../types/errors";
-import { ASTNode, ASTToken } from "../parser";
+import { ASTNode } from "../parser";
 import { buildAst } from "../parser/ast";
 import { ConfigurableLexer, TokenNames } from "../parser/lexer";
 import { GedcomValidator } from "../validator";
@@ -47,8 +47,7 @@ const BOUNDED_BY_FRAGMENT = new Set<string>([
 
 export class GedcomDocument {
   private nodes: ASTNode[] = [];
-  public pointers = new Map<string, ASTNode[]>();
-  public xRefs = new Map<string, ASTToken[]>();
+  private pointers = new Map<string, ASTNode[]>();
   private errors: GedcomError[] = [];
   private scheme: GedcomScheme | undefined;
   private resolution: VersionResolution | undefined;
@@ -120,10 +119,9 @@ export class GedcomDocument {
     text: string,
     options: CreateDocumentOptions = {},
   ): GedcomDocument {
-    const { nodes, pointers, xrefs } = this.parseGedcom(text);
+    const { nodes, pointers } = this.parseGedcom(text);
     this.nodes = nodes;
     this.pointers = pointers;
-    this.xRefs = xrefs;
     this.scheme = undefined;
     this.requiresSchmaDeclaration = false;
     this.extensions = emptyExtensions();
@@ -315,15 +313,11 @@ export class GedcomDocument {
     });
   }
 
-  updateDocument(_text: string, _range: Range): GedcomDocument {
-    return this;
-  }
-
-  getErrors(_lang?: string): GedcomError[] {
+  getErrors(): GedcomError[] {
     return this.errors;
   }
 
-  getNodes(_range?: Range): ASTNode[] {
+  getNodes(): ASTNode[] {
     return this.nodes;
   }
 }

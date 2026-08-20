@@ -27,6 +27,16 @@ All notable changes to `@domorium/validator` are documented here.
   `SCHMA` while completing the header of a Personal Ancestral File, and labelled
   a tag with a URI declared by a `HEAD`.`SCHMA` in another file. Parsing now
   clears all three, so every call answers for its own text.
+- **`GedcomDocument` no longer carries members nothing reads.** `updateDocument`
+  returned `this` and did nothing; `getErrors` took a language it never read and
+  `getNodes` a range it never read — and that `Range` was the DOM's, ambient
+  because the package pinned no `lib`, so `getNodes(new Range())` compiled in a
+  package that must also run in Node. `pointers` and `xRefs` were mutable parse
+  products no consumer outside the package read, and assigning to `pointers`
+  poisoned the pointer-target cache keyed on it. `getErrors()` and `getNodes()`
+  take no arguments, `pointers` is private and `updateDocument` and `xRefs` are
+  gone; the package compiles against `ES2023` alone, so a DOM global cannot be
+  named by accident again.
 - **A document with more than about 125k diagnostics reports all of them instead of
   none.** Diagnostics were gathered by spreading each level's array into its
   parent's `push`, and a spread is one argument per element: V8 refuses somewhere

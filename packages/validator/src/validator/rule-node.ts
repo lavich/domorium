@@ -245,21 +245,23 @@ function targetsByTag(
     return cached;
   }
   const index = new Map<string, Set<string>>();
-  for (const node of pointers.values().flatMap((nodes) => nodes)) {
-    const tag = node.tokens.TAG?.value;
-    const xref = node.tokens.POINTER?.value;
-    if (!tag || !xref) {
-      continue;
-    }
-    // A record written under an aliased tag is a record of the standard type,
-    // so a pointer naming either tag finds it.
-    for (const key of new Set([tag, resolveTag(extensions, tag)])) {
-      let targets = index.get(key);
-      if (!targets) {
-        targets = new Set();
-        index.set(key, targets);
+  for (const nodes of pointers.values()) {
+    for (const node of nodes) {
+      const tag = node.tokens.TAG?.value;
+      const xref = node.tokens.POINTER?.value;
+      if (!tag || !xref) {
+        continue;
       }
-      targets.add(xref);
+      // A record written under an aliased tag is a record of the standard type,
+      // so a pointer naming either tag finds it.
+      for (const key of new Set([tag, resolveTag(extensions, tag)])) {
+        let targets = index.get(key);
+        if (!targets) {
+          targets = new Set();
+          index.set(key, targets);
+        }
+        targets.add(xref);
+      }
     }
   }
   pointerTargets.set(pointers, index);
