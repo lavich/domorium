@@ -31,6 +31,17 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.7.0</h2>
+    <ul>
+      <li><b>A hover below a line carrying no tag no longer fails.</b> <code>0 @I1@</code>, what a truncated export leaves behind, still becomes a line and adopts the lines indented under it; hovering one of those threw where the honest answer was silence, so the request failed instead of answering nothing</li>
+      <li><b>A file with more than about 125k problems reports all of them.</b> Past that count the whole document came back with none at all, not a shortened list, because every level of the walk spread its findings into its parent's and the runtime refuses past roughly 125k arguments</li>
+      <li><b>A tag typed in lower case is completed.</b> <code>1 sex</code> offered nothing where <code>1 SEX</code> offered the values of the enumeration, though the file itself is read either way</li>
+      <li><b>Completion on a large file answers in under a millisecond.</b> A 300,000-line document paid 69&nbsp;ms per keystroke rebuilding a tree that had not changed since the last parse</li>
+      <li><b>A GEDCOM 5.5.1 date is read against the calendar its escape names, and completion offers that calendar's months.</b> <code>@#DHEBREW@ 45 XXX 5760</code> passed unexamined, and a 5.5.1 date was offered no month at all where a 7.0 date was offered twelve</li>
+      <li><b>A 5.5.1 multimedia format and the four LDS ordinance statuses are held to the values the specification lists.</b> <code>2 FORM png</code> is reported — 5.5.1 has no spelling for it — while <code>2 FORM JPG</code> is not, since that list is read without regard to case</li>
+      <li><b>An unresolved pointer names the identifier that failed instead of listing the document's families.</b> A <code>FAMC</code> pointing at a family the file does not declare was answered with a list of up to ten families that were not the problem</li>
+    </ul>
+
     <h2>1.6.2</h2>
     <ul>
       <li><b>A <code>.ged</code> file no longer sits silent where the IDE cannot find Node.js.</b> The bundled language server was launched as <code>node</code> against whatever the IDE&rsquo;s <code>PATH</code> held; with node missing the process failed to start and left a line in the log, so the file arrived with no diagnostics, no completion, no hover and no colour &mdash; indistinguishable from the plugin not being installed. An IDE opened from Spotlight, the Dock or Toolbox inherits no login shell&rsquo;s <code>PATH</code>, so node installed by nvm, fnm, asdf or Volta is invisible to it while it works in a terminal. Node is resolved before launch, and where it is nowhere to be found a sticky balloon names the cause and offers the download page</li>
