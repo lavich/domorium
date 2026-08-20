@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { GedcomDocument } from "../document/gedcomDocument";
+import type { ASTNode } from "../parser";
 
 const document = (text: string) => new GedcomDocument().createDocument(text);
+const labelOf = (item: { label: string }) => item.label;
 
 describe("GedcomDocument.getCompletions", () => {
   it("offers GEDCOM 7 root tags when the version is not available", () => {
@@ -247,6 +249,26 @@ describe("GedcomDocument.getCompletions", () => {
     expect(items.map((item) => item.label)).toContain("EMAIL");
   });
 
+  // The lexer reads a tag whatever its case (#252) and the validator answers
+  // VAL001; completion is the way out of that mistake and said nothing.
+  it("offers tags and values for a tag typed in lower case", () => {
+    const doc = document(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME Ada /Lovelace/
+
+0 TRLR
+`);
+
+    expect(
+      doc.getCompletions({ line: 5, character: 4 }, "1 se").map(labelOf),
+    ).toContain("SEX");
+    expect(
+      doc.getCompletions({ line: 5, character: 6 }, "1 sex ").map(labelOf),
+    ).toEqual(expect.arrayContaining(["M", "F"]));
+  });
+
   it("offers no root tags inside an extension subtree", () => {
     const doc = document(`0 HEAD
 1 GEDC
@@ -311,5 +333,89 @@ describe("completion inside a DATE payload", () => {
   it("offers an exact date its months, and no calendar to put them in", () => {
     expect(offers("1 DATE 1 ", "")).toContain("APR");
     expect(offers("1 DATE ", "")).toEqual([]);
+  });
+});
+
+describe("the cost of a completion", () => {
+  const record = (index: number) =>
+    `0 @I${index}@ INDI\n1 NAME Ada /Lovelace${index}/\n1 SEX F\n`;
+  const file = (records: number) =>
+    `0 HEAD\n1 GEDC\n2 VERS 7.0\n` +
+    Array.from({ length: records }, (_, index) => record(index)).join("") +
+    `0 @I${records}@ INDI\n\n0 TRLR\n`;
+  const at = (records: number) => records * 3 + 4;
+
+  // Every read of `children` walks a node, so counting them says "the tree is
+  // walked once per parse" without a clock: on a slow machine a rebuilt array
+  // still beats a fast machine's cached one.
+  const countingChildren = (nodes: ASTNode[], read: () => void) => {
+    nodes.forEach((node) => {
+      const children = node.children;
+      countingChildren(children, read);
+      Object.defineProperty(node, "children", {
+        get: () => {
+          read();
+          return children;
+        },
+      });
+    });
+  };
+
+  it("walks the tree once however many completions one parse answers", () => {
+    const doc = document(file(500));
+    let reads = 0;
+    countingChildren(doc.getNodes(), () => (reads += 1));
+
+    doc.getCompletions({ line: at(500), character: 2 }, "1 ");
+    const walked = reads;
+    reads = 0;
+    doc.getCompletions({ line: at(500), character: 2 }, "1 ");
+
+    expect(walked).toBeGreaterThan(500);
+    // One today: the parent's own children, counted against cardinality.
+    expect(reads).toBeLessThan(10);
+  });
+
+  // A node's range is computed on access, so a filter over every node paid for
+  // one per node before the cursor. Counting the reads is what says the search
+  // halves; a wall clock says only how fast the machine is.
+  const countingRange = (nodes: ASTNode[], read: () => void) => {
+    nodes.forEach((node) => {
+      countingRange(node.children, read);
+      const range = node.range;
+      Object.defineProperty(node, "range", {
+        get: () => {
+          read();
+          return range;
+        },
+      });
+    });
+  };
+
+  it("finds the line the cursor is on without reading every node before it", () => {
+    const doc = document(file(500));
+    let reads = 0;
+    countingRange(doc.getNodes(), () => (reads += 1));
+
+    doc.getCompletions({ line: at(500), character: 2 }, "1 ");
+
+    // Eleven today, of 1505 nodes: log2 probes and the line itself.
+    expect(reads).toBeLessThan(40);
+  });
+
+  it("walks the tree of the document it was last given", () => {
+    const doc = new GedcomDocument();
+    doc.createDocument(file(2));
+    expect(
+      doc.getCompletions({ line: at(2), character: 2 }, "1 ").map(labelOf),
+    ).toContain("SEX");
+
+    doc.createDocument(`0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @F1@ FAM\n\n0 TRLR\n`);
+
+    const labels = doc
+      .getCompletions({ line: 4, character: 2 }, "1 ")
+      .map(labelOf);
+    expect(labels).toContain("HUSB");
+    expect(labels).not.toContain("SEX");
   });
 });

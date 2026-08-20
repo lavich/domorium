@@ -4,6 +4,21 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A tag typed in lower case is completed.** The lexer reads `1 sex` as the SEX
+  tag and the validator names the mistake — a tag is written in upper case, SEX —
+  but completion, which is the way out of it, matched upper case only: `1 se`
+  offered nothing where `1 SE` offered 62 tags, and a payload typed after `1 sex`
+  was offered nothing where after `1 SEX` it was offered the four values of the
+  enumeration. The typed tag is now read as the lexer reads it, and the schema is
+  asked about the tag it names rather than about the letters as they were typed.
+- **A completion on a large document is answered in under a millisecond.** Every
+  request rebuilt the flattened node array and then filtered it, so a 300k-line
+  file paid 69 ms per keystroke — for a tree the last parse built and nothing has
+  touched since, where parsing and validating that whole file takes 492 ms once.
+  The walk is now cached against the array a parse replaces, and the line the
+  cursor sits on is found by halving the nodes rather than by reading the range of
+  every one before it: 6 ms for the first completion after a parse, 0.1 ms for
+  each one after that.
 - **A document with more than about 125k diagnostics reports all of them instead of
   none.** Diagnostics were gathered by spreading each level's array into its
   parent's `push`, and a spread is one argument per element: V8 refuses somewhere
