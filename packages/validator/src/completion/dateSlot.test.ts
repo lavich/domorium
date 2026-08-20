@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import g551validation from "../schemes/g551validation.json";
+import g7validation from "../schemes/g7validation.json";
 import { dateSlot } from "./dateSlot";
 
-const value = (typed: string) => dateSlot(typed, "value");
-const period = (typed: string) => dateSlot(typed, "period");
-const exact = (typed: string) => dateSlot(typed, "exact");
+const value = (typed: string) => dateSlot(g7validation, typed, "value");
+const period = (typed: string) => dateSlot(g7validation, typed, "period");
+const exact = (typed: string) => dateSlot(g7validation, typed, "exact");
+const value551 = (typed: string) => dateSlot(g551validation, typed, "value");
 
 describe("where the cursor is in a date value", () => {
   it("opens with the calendars, the modifiers and the months", () => {
@@ -124,5 +127,27 @@ describe("where the cursor is in an exact date", () => {
   it("offers no calendar and no epoch, which the grammar does not admit", () => {
     expect(exact("1 ").calendars).toBe(false);
     expect(exact("1 APR 1911 ").epochs).toBeNull();
+  });
+});
+
+describe("where the cursor is in a 5.5.1 date value", () => {
+  it("reads the calendar 5.5.1 writes as an escape", () => {
+    expect(value551("@#DJULIAN@ ").months).toBe("JULIAN");
+    expect(value551("@#DJULIAN@ ").calendars).toBe(false);
+  });
+
+  it("reads an escape whose calendar name carries a space", () => {
+    expect(value551("@#DFRENCH R@ ").months).toBe("FRENCH R");
+  });
+
+  it("keeps each date of a range under its own calendar", () => {
+    expect(value551("BET @#DJULIAN@ 1700 AND @#DHEBREW@ 1 ").months).toBe(
+      "HEBREW",
+    );
+  });
+
+  it("offers the epochs 5.5.1 spells for itself", () => {
+    expect(value551("1 JAN 2000 ").epochs).toBe("GREGORIAN");
+    expect(value551("1 JAN 2000 B.C. ").epochs).toBeNull();
   });
 });

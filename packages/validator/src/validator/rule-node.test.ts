@@ -1843,3 +1843,56 @@ describe("payload types the schemes declare", () => {
     );
   });
 });
+
+// Issue #207: a non-Gregorian escape was waved through on a non-empty check
+// alone, so `@#DHEBREW@ 45 XXX 5760` passed.
+describe("a 5.5.1 date under the calendar its escape names", () => {
+  const dateIn = (value: string) => {
+    const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 MARR
+2 DATE ${value}
+0 TRLR
+`);
+    const ruleEngine = new RuleNode(g551validation, pointers);
+    return ruleEngine.validate(nodes[1].children[0].children[0]);
+  };
+
+  test.each([
+    "12 JAN 2000",
+    "ABT 1950",
+    "BET 1900 AND 1910",
+    "FROM 1900 TO 1910",
+    "1857/58",
+    "INT 1950 (around 1950)",
+    "(unknown)",
+    "@#DGREGORIAN@ 9 MAR 2007",
+    "@#DJULIAN@ 12 JAN 2000",
+    "@#DHEBREW@ 1 TSH 5760",
+    "@#DFRENCH R@ 2 PLUV 1",
+  ])("should pass DATE with %s", async (value) => {
+    expect(dateIn(value)).toEqual([]);
+  });
+
+  test.each([
+    "@#DHEBREW@ 45 XXX 5760",
+    "@#DHEBREW@ 1 JAN 5760",
+    "@#DJULIAN@ 1 VEND 8",
+    "@#DGREGORIAN@ 1 TSH 5760",
+    "@#DJULIAN@ not a date",
+    "not a date",
+  ])("should report DATE with %s", async (value) => {
+    expect(dateIn(value)).toHaveLength(1);
+  });
+
+  // 5.5.1 names ROMAN and UNKNOWN as calendars and defines no month for
+  // either, so an empty month table says nothing rather than forbidding all.
+  test.each(["@#DROMAN@ 45 XXX 5760", "@#DUNKNOWN@ whenever it was"])(
+    "should pass DATE with %s, whose months 5.5.1 leaves undefined",
+    async (value) => {
+      expect(dateIn(value)).toEqual([]);
+    },
+  );
+});

@@ -2,14 +2,18 @@
  * The part of a date the grammar cannot express: `31 FEB` is two well-formed
  * tokens naming a day February does not have.
  *
- * GREGORIAN and JULIAN share the twelve month tags and their lengths, and
- * differ only in which years February gets a 29th, which is why one table
- * serves both. HEBREW and FRENCH_R have months of their own.
+ * Which calendars there are and which months each takes is the schema's, read
+ * through calendars.ts. What is here is the arithmetic the specification never
+ * states: how long a month is, and which years February gets a 29th in.
+ * GREGORIAN and JULIAN share the twelve month tags and their lengths and differ
+ * only in that rule, which is why one table serves both.
  */
 
+import { GedcomScheme } from "../schemes/schema-types";
+import { calendarNamed, dateTokens, DEFAULT_CALENDAR } from "./calendars";
 import { isEpoch } from "./epoch";
 
-const LENGTHS: Record<string, number> = {
+export const LENGTHS: Record<string, number> = {
   JAN: 31,
   FEB: 29,
   MAR: 31,
@@ -24,26 +28,10 @@ const LENGTHS: Record<string, number> = {
   DEC: 31,
 };
 
-const CHECKED_CALENDARS = new Set(["GREGORIAN", "JULIAN"]);
+// The calendars whose arithmetic LENGTHS states. A date in any other is left
+// alone rather than judged by the Gregorian year.
+const CHECKED_CALENDARS = new Set([DEFAULT_CALENDAR, "JULIAN"]);
 const INTEGER = /^\d+$/u;
-// Both dialects reach this check, and 5.5.1 writes a calendar as an escape.
-const CALENDAR_ESCAPE = /^@#D([A-Z][A-Z_ ]*)@$/u;
-const CALENDARS = new Set([
-  ...CHECKED_CALENDARS,
-  "HEBREW",
-  "FRENCH_R",
-  "FRENCH R",
-  "ROMAN",
-  "UNKNOWN",
-]);
-
-function calendarOf(token: string): string | null {
-  const escaped = CALENDAR_ESCAPE.exec(token)?.[1];
-  if (escaped !== undefined) {
-    return escaped;
-  }
-  return CALENDARS.has(token) ? token : null;
-}
 
 export interface ImpossibleDay {
   day: number;
@@ -78,14 +66,17 @@ function withoutPhrases(value: string): string {
   return value.replace(/\([^()]*\)/gu, " ");
 }
 
-export function impossibleDays(value: string): ImpossibleDay[] {
-  const tokens = withoutPhrases(value).trim().split(/\s+/u);
+export function impossibleDays(
+  scheme: GedcomScheme,
+  value: string,
+): ImpossibleDay[] {
+  const tokens = dateTokens(withoutPhrases(value));
   const found: ImpossibleDay[] = [];
-  let calendar = "GREGORIAN";
+  let calendar: string = DEFAULT_CALENDAR;
 
   for (let at = 0; at < tokens.length; at += 1) {
     const token = tokens[at];
-    const named = calendarOf(token);
+    const named = calendarNamed(scheme, token);
     if (named !== null) {
       calendar = named;
       continue;

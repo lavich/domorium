@@ -4,6 +4,14 @@
  * tokens earlier, and the keywords depend on what the value opened with.
  */
 
+import { GedcomScheme, GedcomTag } from "../schemes/schema-types";
+import {
+  calendarNamed,
+  dateTokens,
+  DEFAULT_CALENDAR,
+  vocabularyOf,
+} from "../validator/calendars";
+
 export type DateGrammar = "value" | "period" | "exact";
 
 export interface DateSlot {
@@ -27,17 +35,14 @@ const NOTHING: DateSlot = {
 const MODIFIERS = ["ABT", "CAL", "EST", "BEF", "AFT", "BET", "FROM", "TO"];
 const PERIOD_MODIFIERS = ["FROM", "TO"];
 const CONNECTORS: Record<string, string> = { BET: "AND", FROM: "TO" };
-const CALENDARS = ["GREGORIAN", "JULIAN", "HEBREW", "FRENCH_R"];
-const DEFAULT_CALENDAR = "GREGORIAN";
 const INTEGER = /^\d+$/u;
-const EPOCHS = ["BCE", "B.C."];
 
 /**
  * The word under the cursor is a prefix the client filters by, not a decision
  * the reader has to make, so only whole tokens shape the answer.
  */
 function completedTokens(typed: string): string[] {
-  const tokens = typed.split(/\s+/u).filter(Boolean);
+  const tokens = dateTokens(typed);
   return /\s$/u.test(typed) ? tokens : tokens.slice(0, -1);
 }
 
@@ -46,11 +51,13 @@ interface Reading extends DateSlot {
   complete: boolean;
 }
 
-function readDate(tokens: string[]): Reading {
+function readDate(scheme: GedcomScheme, tokens: string[]): Reading {
   let at = 0;
-  let calendar = DEFAULT_CALENDAR;
-  if (tokens[0] !== undefined && CALENDARS.includes(tokens[0])) {
-    calendar = tokens[0];
+  let calendar: GedcomTag = DEFAULT_CALENDAR;
+  const named =
+    tokens[0] === undefined ? null : calendarNamed(scheme, tokens[0]);
+  if (named !== null) {
+    calendar = named;
     at = 1;
   }
   const rest = tokens.slice(at);
@@ -64,7 +71,11 @@ function readDate(tokens: string[]): Reading {
       complete: false,
     };
   }
-  if (rest.some((token) => EPOCHS.includes(token))) {
+  // An extension tag is admissible as a month and as an epoch alike, so only a
+  // spelling the calendar names closes the date; taking one for an epoch would
+  // stop the reader a slot early.
+  const { epochs } = vocabularyOf(scheme, calendar);
+  if (rest.some((token) => epochs?.has(token))) {
     return { ...NOTHING, complete: true };
   }
 
@@ -100,7 +111,11 @@ function readDate(tokens: string[]): Reading {
   };
 }
 
-export function dateSlot(typed: string, grammar: DateGrammar): DateSlot {
+export function dateSlot(
+  scheme: GedcomScheme,
+  typed: string,
+  grammar: DateGrammar,
+): DateSlot {
   const tokens = completedTokens(typed);
 
   if (grammar === "exact") {
@@ -127,7 +142,7 @@ export function dateSlot(typed: string, grammar: DateGrammar): DateSlot {
   // "BET a AND b" and "FROM a TO b" hold two dates; the cursor is in the one
   // after the connector once it has been typed.
   const at = connector === undefined ? -1 : body.indexOf(connector);
-  const reading = readDate(at === -1 ? body : body.slice(at + 1));
+  const reading = readDate(scheme, at === -1 ? body : body.slice(at + 1));
 
   return {
     calendars: reading.calendars,

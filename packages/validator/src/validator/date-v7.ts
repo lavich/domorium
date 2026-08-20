@@ -5,6 +5,7 @@ import {
   isExtensionTag,
   resolveTag,
 } from "./extensions";
+import { DEFAULT_CALENDAR, permits, vocabularyOf } from "./calendars";
 
 /**
  * GEDCOM 7 dates, from gedcom-2-data-types.md:
@@ -35,59 +36,7 @@ const INTEGER = /^\d+$/;
 // is what lets a date be read greedily and still stop before the next keyword.
 const APPROXIMATE = ["ABT", "CAL", "EST"];
 
-// An absent calendar is GREGORIAN, per Appendix A.
-const DEFAULT_CALENDAR = GedcomTag("GREGORIAN");
-
 const NOT_A_DATE = -1;
-
-interface Vocabulary {
-  /** Permitted months, or null when the calendar is an extension. */
-  months: Set<string> | null;
-  epochs: Set<string> | null;
-}
-
-const EXTENSION_VOCABULARY: Vocabulary = { months: null, epochs: null };
-
-// What a calendar permits is fixed by the schema, so the sets are built once per
-// calendar rather than once per date.
-const vocabularies = new WeakMap<GedcomScheme, Map<GedcomTag, Vocabulary>>();
-
-function vocabularyOf(scheme: GedcomScheme, calendar: GedcomTag): Vocabulary {
-  let byCalendar = vocabularies.get(scheme);
-  if (!byCalendar) {
-    byCalendar = new Map();
-    vocabularies.set(scheme, byCalendar);
-  }
-
-  const cached = byCalendar.get(calendar);
-  if (cached) {
-    return cached;
-  }
-
-  const known = scheme.calendar[calendar];
-  if (!known) {
-    return EXTENSION_VOCABULARY;
-  }
-  const vocabulary: Vocabulary = {
-    months: new Set(Object.keys(known.months)),
-    epochs: new Set(known.epochs),
-  };
-  byCalendar.set(calendar, vocabulary);
-  return vocabulary;
-}
-
-/**
- * An extension tag that is not an alias is accepted in any of the three slots a
- * calendar constrains: an extension calendar defines its own months and epochs,
- * and rejecting an undeclared one here would report files this validator cannot
- * prove wrong. An alias resolves to the standard tag it abbreviates and is held
- * to the calendar's own vocabulary like any other standard tag.
- */
-function permits(vocabulary: Set<string> | null, token: string): boolean {
-  return vocabulary === null
-    ? isExtensionTag(token)
-    : vocabulary.has(token) || isExtensionTag(token);
-}
 
 function readDate(
   tokens: string[],
