@@ -368,7 +368,7 @@ ${body}0 TRLR
       const { nodes, validator } = in551(`0 @I1@ INDI
 1 OBJE
 2 FILE http://example.org/portrait.jpg
-3 FORM jpeg
+3 FORM jpg
 `);
 
       expect(validator.validate(nodes)).toEqual([]);
@@ -378,7 +378,7 @@ ${body}0 TRLR
       const { nodes, validator } = in551(`0 @I1@ INDI
 1 OBJE
 2 FILE http://example.org/portrait.jpg
-3 FORM jpeg
+3 FORM jpg
 4 MEDI photo
 `);
 
@@ -389,7 +389,7 @@ ${body}0 TRLR
       const { nodes, validator } = in551(`0 @I1@ INDI
 1 OBJE
 2 FILE http://example.org/portrait.jpg
-3 FORM jpeg
+3 FORM jpg
 2 TITL A portrait
 `);
 
@@ -457,7 +457,7 @@ ${document}`
 1 OBJE @M1@
 0 @M1@ OBJE
 1 FILE portrait.jpg
-2 FORM jpeg
+2 FORM jpg
 `);
 
       expect(validator.validate(nodes)).toEqual([]);

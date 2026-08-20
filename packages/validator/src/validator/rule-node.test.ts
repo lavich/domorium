@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { RuleNode } from "./rule-node";
+import { PAYLOAD_FIELD_TYPES, RuleNode } from "./rule-node";
+import { GedcomScheme, GedcomType } from "../schemes/schema-types";
 import { ConfigurableLexer } from "../parser/lexer";
 import { buildAst } from "../parser/ast";
 import g7validationJson from "../schemes/g7validation.json";
@@ -1472,6 +1473,73 @@ ${lines}0 @F1@ FAM
       expect(valueIn(document, path).length).toBe(1);
     });
 
+    const objeForm = (value: string) => `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @O1@ OBJE
+1 FILE portrait
+2 FORM ${value}
+0 TRLR
+`;
+
+    test.each(["jpg", "tif", "wav"])(
+      "should pass OBJE.FILE.FORM with %s",
+      async (value) => {
+        expect(valueIn(objeForm(value), [1, 0, 0])).toEqual([]);
+      },
+    );
+
+    // 5.5 spelled these jpeg and tiff; 5.5.1 spells them jpg and tif, and
+    // exporters that changed the version line did not always change these.
+    test.each(["jpeg", "tiff", "png", "exe"])(
+      "should report OBJE.FILE.FORM with %s",
+      async (value) => {
+        expect(valueIn(objeForm(value), [1, 0, 0]).length).toBe(1);
+      },
+    );
+
+    const ordinance = (tag: string, value: string) => `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 ${tag}
+2 STAT ${value}
+0 TRLR
+`;
+
+    test.each([
+      ["BAPL", "COMPLETED"],
+      ["CONL", "PRE-1970"],
+      ["ENDL", "STILLBORN"],
+      ["SLGC", "BIC"],
+    ])("should pass %s.STAT with %s", async (tag, value) => {
+      expect(valueIn(ordinance(tag, value), [1, 0, 0])).toEqual([]);
+    });
+
+    // The LDS statuses are upper case where PEDI and RESN are lower, so a
+    // validator that folded case would accept a file that mixes them.
+    test.each([
+      ["BAPL", "completed"],
+      ["ENDL", "BIC"],
+      ["SLGC", "CANCELED"],
+      ["SLGC", "nonsense"],
+    ])("should report %s.STAT with %s", async (tag, value) => {
+      expect(valueIn(ordinance(tag, value), [1, 0, 0]).length).toBe(1);
+    });
+
+    test("should pass SLGS.STAT with DNS/CAN and report DNS/CANCELED", async () => {
+      const fam = (value: string) => `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @F1@ FAM
+1 SLGS
+2 STAT ${value}
+0 TRLR
+`;
+      expect(valueIn(fam("DNS/CAN"), [1, 0, 0])).toEqual([]);
+      expect(valueIn(fam("DNS/CANCELED"), [1, 0, 0]).length).toBe(1);
+    });
+
     test("should pass ORDI with yes and report anything else", async () => {
       const subn = (value: string) => `0 HEAD
 1 GEDC
@@ -1726,5 +1794,52 @@ ${lines}0 @F1@ FAM
       expect(() => ruleEngine.getNodeType(CUSTOM)).not.toThrow();
       expect(ruleEngine.getNodeType(CUSTOM)).toBe("");
     });
+  });
+});
+
+describe("payload types the schemes declare", () => {
+  const schemes: [string, GedcomScheme][] = [
+    ["g7validation.json", g7validationJson],
+    ["g551validation.json", g551validation],
+  ];
+
+  test.each(schemes)(
+    "%s declares no payload type the field type table leaves unnamed",
+    async (_name, scheme) => {
+      const unnamed = Object.values(scheme.payload)
+        .map((payload) => payload.type)
+        .filter(
+          (type) =>
+            type !== null &&
+            type !== "pointer" &&
+            !(type in PAYLOAD_FIELD_TYPES),
+        );
+      expect([...new Set(unnamed)].sort()).toEqual([]);
+    },
+  );
+
+  // A payload type the table does not name is one the schema describes and
+  // this file does not. Reading it as a required non-empty string reports a
+  // missing value on every structure that legitimately omits it. #112
+  test("says nothing about a payload type the table does not name", async () => {
+    const unmodelled = GedcomType("https://gedcom.io/terms/v7/UNRELEASED");
+    const scheme: GedcomScheme = {
+      ...g7validationJson,
+      payload: {
+        ...g7validationJson.payload,
+        [unmodelled]: { type: "https://gedcom.io/terms/v7/type-Unreleased" },
+      },
+    };
+    const { nodes, pointers } = astBuilder(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME
+0 TRLR
+`);
+    const node = nodes[1].children[0];
+    expect(new RuleNode(scheme, pointers).validate(node, unmodelled)).toEqual(
+      [],
+    );
   });
 });

@@ -68,19 +68,21 @@
       "location": "https://raw.githubusercontent.com/cacack/gedcom-go/0cefb2b064af77e243aec0515a122d4c8bb1962f/testdata/edge-cases/vendor-ancestris11-export.ged",
       "program": "Ancestris 11",
       "what": "Events that assert nothing, over French Bourbon data.",
-      "dominates": "VAL010 ×81 — events asserting nothing — is half of the 160 findings.",
+      "dominates": "VAL010 ×81 — events asserting nothing — is 81 of the 174 findings.",
+      "correct": "VAL005 ×14 is right: 5.5.1 writes a multimedia FORM as one of [bmp, gif, jpg, ole, pcx, tif, wav], and this file writes png ×10, pdf ×2 and JPG ×2 beside jpg ×44. The specification has no spelling for a PNG, which is why 7.0 replaced the list with a media type.",
       "collected": "D-Jeffrey/gedcom-samples, vendored into cacack/gedcom-go",
       "collectedFrom": "sample-bourbon/bourbon.ged",
       "licence": "MIT OR CC0-1.0",
       "sha256": "1b83323461e2bd4cb0696e28d3d3d8b591453e4120adf7e4a51208e1ab03ec6b",
       "summary": {
-        "total": 160,
+        "total": 174,
         "byCode": {
           "VAL001": 45,
           "VAL003": 34,
+          "VAL005": 14,
           "VAL010": 81
         },
-        "digest": "29ae99c57117221b8f37052c5a319c675ed4c671ff4d753cf8d04c3a0a027b96"
+        "digest": "819bd0ca803aadeade53fc9bf2693c5b9e6d705302c2ab270ae1d54eb45c3b1f"
       }
     },
     "ancestry-2025-export.ged": {

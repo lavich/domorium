@@ -187,6 +187,34 @@ describe("GedcomDocument.getCompletions", () => {
     );
   });
 
+  // The LDS statuses are upper case where PEDI and RESN are lower, so what is
+  // offered has to come from the set rather than from a house style.
+  it("completes a 5.5.1 multimedia format and an LDS ordinance status", () => {
+    const doc = document(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @O1@ OBJE
+1 FILE portrait
+2 FORM
+0 @I1@ INDI
+1 SLGC
+2 STAT
+0 TRLR
+`);
+    expect(doc.getCompletions({ line: 5, character: 7 }, "2 FORM ")).toEqual([
+      { label: "bmp", kind: "enum" },
+      { label: "gif", kind: "enum" },
+      { label: "jpg", kind: "enum" },
+      { label: "ole", kind: "enum" },
+      { label: "pcx", kind: "enum" },
+      { label: "tif", kind: "enum" },
+      { label: "wav", kind: "enum" },
+    ]);
+    expect(doc.getCompletions({ line: 8, character: 7 }, "2 STAT ")).toEqual(
+      expect.arrayContaining([{ label: "BIC", kind: "enum" }]),
+    );
+  });
+
   it("does not reuse a parent from a branch closed by a lower-level node", () => {
     const doc = document(`0 HEAD
 1 GEDC

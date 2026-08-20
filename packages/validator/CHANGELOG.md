@@ -37,6 +37,23 @@ All notable changes to `@domorium/validator` are documented here.
   take no arguments, `pointers` is private and `updateDocument` and `xRefs` are
   gone; the package compiles against `ES2023` alone, so a DOM global cannot be
   named by accident again.
+- **A 5.5.1 multimedia format and the four LDS ordinance statuses are read against
+  the value sets the specification spells out.** `3 FORM exe` beneath a FILE, and
+  `2 STAT nonsense` beneath BAPL, CONL, ENDL, SLGC or SLGS, were accepted: 5.5.1
+  states these closed sets in its primitive definitions rather than in an
+  enumeration vocabulary, so the scheme recorded only a type URI and the payload
+  was checked for one thing, that it was not empty. A multimedia FORM is now one
+  of `[bmp, gif, jpg, ole, pcx, tif, wav]` — 5.5 spelled two of those `jpeg` and
+  `tiff` — and each ordinance status one of the seven or eight the specification
+  lists for it. Their values are upper case where `PEDI` and `RESN` are lower, and
+  a file that mixes the two is now told so. Completion offers these values as well.
+- **A payload type the validator does not describe is left alone, rather than
+  required to be a non-empty string.** Every payload type either schema declares is
+  now named, and a test over both says so. A type new to an upstream release used to
+  reach the same check as free text and report a missing value on every structure
+  that legitimately omits it; it now fails that test instead, where a person can see
+  it.
+
 - **A document with more than about 125k diagnostics reports all of them instead of
   none.** Diagnostics were gathered by spreading each level's array into its
   parent's `push`, and a spread is one argument per element: V8 refuses somewhere
