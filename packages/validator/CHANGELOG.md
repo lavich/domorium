@@ -4,6 +4,15 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A 5.5.1 multimedia format is read without regard to case.** `2 FORM JPG` was
+  reported against a set the specification writes in lower case, so a file holding
+  the right value in the wrong spelling read as one holding a format 5.5.1 does not
+  have — and `FORM` is required under every `OBJE`.`FILE`, so an export writing
+  extensions in upper case earned an error per photograph. That set is now compared
+  without regard to case; `png` and `pdf`, which the specification has no spelling
+  for, are still reported. The LDS status sets, which 5.5.1 writes in upper case,
+  are unchanged: the case matters differently per set, so the set is named rather
+  than the comparison.
 - **A tag typed in lower case is completed.** The lexer reads `1 sex` as the SEX
   tag and the validator names the mistake — a tag is written in upper case, SEX —
   but completion, which is the way out of it, matched upper case only: `1 se`

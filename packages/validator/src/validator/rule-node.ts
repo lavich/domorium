@@ -80,6 +80,15 @@ const TEXT_OR_POINTER = new Set([
   "https://gedcom.io/terms/v5.5.1/SOUR-XREF_SOUR",
 ]);
 
+// 5.5.1 writes this production in lower case — [bmp gif jpg ole pcx tif wav] —
+// while its LDS status productions are upper case, so a file writing `JPG` has
+// the right value in the wrong case rather than a value the specification does
+// not have. One policy for every set would be wrong in one direction or the
+// other, which is why this names the set rather than the comparison.
+const CASE_INSENSITIVE_SETS = new Set([
+  "https://gedcom.io/terms/v5.5.1/enumset-MULTIMEDIA_FORMAT",
+]);
+
 const GEDCOM_7_TYPE_PREFIX = "https://gedcom.io/terms/v7/";
 
 const MAX_LISTED_VALUES = 10;
@@ -507,8 +516,7 @@ export class RuleNode {
   }
 
   // An enumeration may be extended with values matching extTag, but may not
-  // borrow a standard value belonging to another enumeration set. Only the two
-  // GEDCOM 7 Enum payloads reach here; v5.5.1 declares no enumerated sets.
+  // borrow a standard value belonging to another enumeration set.
   private validateEnumeration(
     values: string[],
     tagType: GedcomType,
@@ -530,8 +538,15 @@ export class RuleNode {
       errors.push(undocumentedTag(GedcomTag(value), range));
     }
 
+    const set = this.scheme.payload[tagType]?.set;
+    const fold = set !== undefined && CASE_INSENSITIVE_SETS.has(set);
+    const permitted = fold
+      ? availableValues?.map((value) => value.toLowerCase())
+      : availableValues;
     const borrowed = values.some(
-      (value) => !isExtensionTag(value) && !availableValues?.includes(value),
+      (value) =>
+        !isExtensionTag(value) &&
+        !permitted?.includes(fold ? value.toLowerCase() : value),
     );
     if (borrowed) {
       errors.push(
