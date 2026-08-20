@@ -19,6 +19,24 @@ All notable changes to `@domorium/validator` are documented here.
   cursor sits on is found by halving the nodes rather than by reading the range of
   every one before it: 6 ms for the first completion after a parse, 0.1 ms for
   each one after that.
+- **A second `createDocument` on one instance answers for the file it was given.**
+  A header naming a system before `GEDC`, a version no schema describes, and a
+  header naming no version at all each return before a schema is chosen, and the
+  schema, the extension tags and the GEDCOM 7 flag of the document read before
+  them stayed where they were: an instance that had read a 7.0 file offered
+  `SCHMA` while completing the header of a Personal Ancestral File, and labelled
+  a tag with a URI declared by a `HEAD`.`SCHMA` in another file. Parsing now
+  clears all three, so every call answers for its own text.
+- **`GedcomDocument` no longer carries members nothing reads.** `updateDocument`
+  returned `this` and did nothing; `getErrors` took a language it never read and
+  `getNodes` a range it never read — and that `Range` was the DOM's, ambient
+  because the package pinned no `lib`, so `getNodes(new Range())` compiled in a
+  package that must also run in Node. `pointers` and `xRefs` were mutable parse
+  products no consumer outside the package read, and assigning to `pointers`
+  poisoned the pointer-target cache keyed on it. `getErrors()` and `getNodes()`
+  take no arguments, `pointers` is private and `updateDocument` and `xRefs` are
+  gone; the package compiles against `ES2023` alone, so a DOM global cannot be
+  named by accident again.
 - **A document with more than about 125k diagnostics reports all of them instead of
   none.** Diagnostics were gathered by spreading each level's array into its
   parent's `push`, and a spread is one argument per element: V8 refuses somewhere
