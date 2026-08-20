@@ -2,7 +2,14 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 2.0.0 - 2026-08-20
+
+Removes three members of `GedcomDocument` that no consumer read, which is what
+makes this a major: `updateDocument`, which returned `this` and did nothing;
+`xRefs`, a parse product nothing outside the package looked at; and the public
+`pointers`, now private because writing to it poisoned the pointer-target cache
+keyed on it. `getErrors` and `getNodes` lose parameters they never read — a
+change to their types only, since JavaScript discards a surplus argument.
 
 - **A 5.5.1 multimedia format is read without regard to case.** `2 FORM JPG` was
   reported against a set the specification writes in lower case, so a file holding

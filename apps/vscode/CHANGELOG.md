@@ -2,7 +2,7 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
-## Unreleased
+## 1.7.0
 
 - **A GEDCOM file is coloured the moment it opens.** Until now every colour came
   from the language server, so a file was grey until it connected. A syntax

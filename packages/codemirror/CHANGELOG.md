@@ -2,6 +2,20 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## 2.0.0 - 2026-08-20
+
+Carries `@domorium/language-service` 2.0.0 and, through it, `@domorium/validator`
+2.0.0. This package re-exports `GedcomDocument`, so the three members that version
+removes — `updateDocument`, `xRefs` and the public `pointers` — are gone from here
+as well, and `getErrors` and `getNodes` no longer accept the arguments they never
+read. Nothing in this package's own surface changed.
+
+Everything the two carry arrives with it: a hover below a line with no tag answers
+instead of throwing, a document of more than 125k diagnostics reports all of them,
+a tag typed in lower case is completed, a completion on a large document is
+answered in under a millisecond, and a 5.5.1 date is read against the calendar its
+escape names.
+
 ## 1.5.1 - 2026-08-15
 
 - **The editor installs again beside a host that carries its own CodeMirror.**

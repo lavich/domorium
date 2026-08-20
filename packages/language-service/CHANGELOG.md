@@ -2,7 +2,10 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
-## Unreleased
+## 2.0.0 - 2026-08-20
+
+Carries `@domorium/validator` 2.0.0, whose `GedcomDocument` this package
+re-exports, so the members that version removes are gone from here too.
 
 - **An unresolved pointer offers one replacement, or none, and creation comes
   first.** The quick fixes for an unresolved XREF were the first ten records of the
