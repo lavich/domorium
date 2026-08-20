@@ -2,6 +2,18 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## Unreleased
+
+- **A host reading document symbols through this package can name them.**
+  `getDocumentSymbols` was reachable, `DocumentSymbol` was not, and
+  `DocumentSymbolKind` is an enum rather than a type, so its members could only be
+  compared as the numbers they happen to be. Both are re-exported now, beside the
+  `Range` and `WorkspaceEdit` that already were. This does not remove a host's need
+  to depend on `@domorium/language-service` directly — `GedcomLanguageService`
+  itself lives there, and so do `Diagnostic`, `InlayHint`, `SemanticToken` and
+  `semanticTokenLegend`. See lavich/domorium-obsidian#71, which named this gap and
+  left it for whichever release came next.
+
 ## 2.0.0 - 2026-08-20
 
 Carries `@domorium/language-service` 2.0.0 and, through it, `@domorium/validator`
