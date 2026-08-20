@@ -229,12 +229,32 @@ const DATE_PERIOD_REGEXP = new RegExp(`^(?:${DATE_PERIOD_SRC})$`);
 
 // How a declared payload URI is read. Both versions name several of the same
 // readings under different URIs, and `pointer` is absent because it is the one
-// payload whose declaration carries a target as well as a type.
-const PAYLOAD_FIELD_TYPES: Record<string, Exclude<FieldType, null>> = {
+// payload whose declaration carries a target as well as a type. Every payload
+// type either scheme declares appears here; a test over both says so.
+export const PAYLOAD_FIELD_TYPES: Record<string, Exclude<FieldType, null>> = {
   "Y|<NULL>": "boolean",
 
   "http://www.w3.org/2001/XMLSchema#string": "string",
   "https://gedcom.io/terms/v7/type-List#Text": "string",
+  // Read as free text, though five of these have a grammar the specification
+  // states and this file does not read: v7's FilePath and anyURI, and the
+  // comma-separated lists NAME_PIECE_GIVEN, NAME_PIECE_NICKNAME and
+  // EVENTS_RECORDED. #112
+  "http://www.w3.org/2001/XMLSchema#anyURI": "string",
+  "https://gedcom.io/terms/v7/type-FilePath": "string",
+  "https://gedcom.io/terms/v5.5.1/type-CHARACTER_SET": "string",
+  "https://gedcom.io/terms/v5.5.1/type-EVENTS_RECORDED": "string",
+  "https://gedcom.io/terms/v5.5.1/type-GEDCOM_FORM": "string",
+  "https://gedcom.io/terms/v5.5.1/type-LANGUAGE_ID": "string",
+  "https://gedcom.io/terms/v5.5.1/type-NAME_PIECE_GIVEN": "string",
+  "https://gedcom.io/terms/v5.5.1/type-NAME_PIECE_NICKNAME": "string",
+  "https://gedcom.io/terms/v5.5.1/type-NAME_PIECE_PREFIX": "string",
+  "https://gedcom.io/terms/v5.5.1/type-NAME_PIECE_SUFFIX": "string",
+  "https://gedcom.io/terms/v5.5.1/type-NAME_PIECE_SURNAME": "string",
+  "https://gedcom.io/terms/v5.5.1/type-NAME_PIECE_SURNAME_PREFIX": "string",
+  "https://gedcom.io/terms/v5.5.1/type-PERMANENT_RECORD_FILE_NUMBER": "string",
+  "https://gedcom.io/terms/v5.5.1/type-PLACE_NAME": "string",
+  "https://gedcom.io/terms/v5.5.1/type-SOURCE_MEDIA_TYPE": "string",
 
   "http://www.w3.org/2001/XMLSchema#Language": "language-tag",
   "http://www.w3.org/ns/dcat#mediaType": "media-type",
@@ -259,6 +279,12 @@ const PAYLOAD_FIELD_TYPES: Record<string, Exclude<FieldType, null>> = {
   "https://gedcom.io/terms/v5.5.1/type-ORDINANCE_PROCESS_FLAG": "select",
   "https://gedcom.io/terms/v5.5.1/type-CHILD_LINKAGE_STATUS": "select",
   "https://gedcom.io/terms/v5.5.1/type-ADOPTED_BY_WHICH_PARENT": "select",
+  "https://gedcom.io/terms/v5.5.1/type-MULTIMEDIA_FORMAT": "select",
+  "https://gedcom.io/terms/v5.5.1/type-LDS_BAPTISM_DATE_STATUS": "select",
+  "https://gedcom.io/terms/v5.5.1/type-LDS_ENDOWMENT_DATE_STATUS": "select",
+  "https://gedcom.io/terms/v5.5.1/type-LDS_CHILD_SEALING_DATE_STATUS": "select",
+  "https://gedcom.io/terms/v5.5.1/type-LDS_SPOUSE_SEALING_DATE_STATUS":
+    "select",
 
   "https://gedcom.io/terms/v7/type-Date": "date-v7",
   "https://gedcom.io/terms/v5.5.1/type-DATE_VALUE": "date",
@@ -435,11 +461,12 @@ export class RuleNode {
     if (payload?.type === "pointer") {
       return { type: "pointer", to: payload.to };
     }
-    if (payload?.type === null) {
-      return { type: null, to: undefined };
-    }
+    // A payload URI the table does not name is one the schema describes and
+    // this file does not. Reading it as a required non-empty string would
+    // report a missing value on every structure that legitimately omits it,
+    // so an unnamed type is one nothing is said about. #112
     return {
-      type: PAYLOAD_FIELD_TYPES[payload?.type ?? ""] ?? "string",
+      type: PAYLOAD_FIELD_TYPES[payload?.type ?? ""] ?? null,
       to: undefined,
     };
   }

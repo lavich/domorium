@@ -741,7 +741,8 @@
       "type": null
     },
     "https://gedcom.io/terms/v5.5.1/ENDL-STAT": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-LDS_ENDOWMENT_DATE_STATUS"
+      "type": "https://gedcom.io/terms/v5.5.1/type-LDS_ENDOWMENT_DATE_STATUS",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-LDS_ENDOWMENT_DATE_STATUS"
     },
     "https://gedcom.io/terms/v5.5.1/ENGA": {
       "type": null
@@ -954,7 +955,8 @@
       "type": "http://www.w3.org/2001/XMLSchema#string"
     },
     "https://gedcom.io/terms/v5.5.1/OBJE-FILE-FORM": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-MULTIMEDIA_FORMAT"
+      "type": "https://gedcom.io/terms/v5.5.1/type-MULTIMEDIA_FORMAT",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-MULTIMEDIA_FORMAT"
     },
     "https://gedcom.io/terms/v5.5.1/OBJE-FILE-FORM-TYPE": {
       "type": "https://gedcom.io/terms/v5.5.1/type-SOURCE_MEDIA_TYPE"
@@ -966,7 +968,8 @@
       "type": "http://www.w3.org/2001/XMLSchema#string"
     },
     "https://gedcom.io/terms/v5.5.1/OBJE-NULL-FILE-FORM": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-MULTIMEDIA_FORMAT"
+      "type": "https://gedcom.io/terms/v5.5.1/type-MULTIMEDIA_FORMAT",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-MULTIMEDIA_FORMAT"
     },
     "https://gedcom.io/terms/v5.5.1/OBJE-XREF_OBJE": {
       "to": "https://gedcom.io/terms/v5.5.1/record-OBJE",
@@ -1059,13 +1062,15 @@
       "type": null
     },
     "https://gedcom.io/terms/v5.5.1/SLGC-STAT": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-LDS_CHILD_SEALING_DATE_STATUS"
+      "type": "https://gedcom.io/terms/v5.5.1/type-LDS_CHILD_SEALING_DATE_STATUS",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-LDS_CHILD_SEALING_DATE_STATUS"
     },
     "https://gedcom.io/terms/v5.5.1/SLGS": {
       "type": null
     },
     "https://gedcom.io/terms/v5.5.1/SLGS-STAT": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-LDS_SPOUSE_SEALING_DATE_STATUS"
+      "type": "https://gedcom.io/terms/v5.5.1/type-LDS_SPOUSE_SEALING_DATE_STATUS",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-LDS_SPOUSE_SEALING_DATE_STATUS"
     },
     "https://gedcom.io/terms/v5.5.1/SOUR-DATA": {
       "type": null
@@ -1108,7 +1113,8 @@
       "type": "http://www.w3.org/2001/XMLSchema#string"
     },
     "https://gedcom.io/terms/v5.5.1/STAT-LDS_BAPTISM_DATE_STATUS": {
-      "type": "https://gedcom.io/terms/v5.5.1/type-LDS_BAPTISM_DATE_STATUS"
+      "type": "https://gedcom.io/terms/v5.5.1/type-LDS_BAPTISM_DATE_STATUS",
+      "set": "https://gedcom.io/terms/v5.5.1/enumset-LDS_BAPTISM_DATE_STATUS"
     },
     "https://gedcom.io/terms/v5.5.1/SUBM": {
       "to": "https://gedcom.io/terms/v5.5.1/record-SUBM",
@@ -1207,6 +1213,53 @@
       "challenged": "https://gedcom.io/terms/v5.5.1/enum-CHILD_LINKAGE_STATUS-challenged",
       "disproven": "https://gedcom.io/terms/v5.5.1/enum-CHILD_LINKAGE_STATUS-disproven",
       "proven": "https://gedcom.io/terms/v5.5.1/enum-CHILD_LINKAGE_STATUS-proven"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-LDS_BAPTISM_DATE_STATUS": {
+      "CHILD": "https://gedcom.io/terms/v5.5.1/enum-LDS_BAPTISM_DATE_STATUS-CHILD",
+      "COMPLETED": "https://gedcom.io/terms/v5.5.1/enum-LDS_BAPTISM_DATE_STATUS-COMPLETED",
+      "EXCLUDED": "https://gedcom.io/terms/v5.5.1/enum-LDS_BAPTISM_DATE_STATUS-EXCLUDED",
+      "PRE-1970": "https://gedcom.io/terms/v5.5.1/enum-LDS_BAPTISM_DATE_STATUS-PRE-1970",
+      "STILLBORN": "https://gedcom.io/terms/v5.5.1/enum-LDS_BAPTISM_DATE_STATUS-STILLBORN",
+      "SUBMITTED": "https://gedcom.io/terms/v5.5.1/enum-LDS_BAPTISM_DATE_STATUS-SUBMITTED",
+      "UNCLEARED": "https://gedcom.io/terms/v5.5.1/enum-LDS_BAPTISM_DATE_STATUS-UNCLEARED"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-LDS_CHILD_SEALING_DATE_STATUS": {
+      "BIC": "https://gedcom.io/terms/v5.5.1/enum-LDS_CHILD_SEALING_DATE_STATUS-BIC",
+      "COMPLETED": "https://gedcom.io/terms/v5.5.1/enum-LDS_CHILD_SEALING_DATE_STATUS-COMPLETED",
+      "DNS": "https://gedcom.io/terms/v5.5.1/enum-LDS_CHILD_SEALING_DATE_STATUS-DNS",
+      "EXCLUDED": "https://gedcom.io/terms/v5.5.1/enum-LDS_CHILD_SEALING_DATE_STATUS-EXCLUDED",
+      "PRE-1970": "https://gedcom.io/terms/v5.5.1/enum-LDS_CHILD_SEALING_DATE_STATUS-PRE-1970",
+      "STILLBORN": "https://gedcom.io/terms/v5.5.1/enum-LDS_CHILD_SEALING_DATE_STATUS-STILLBORN",
+      "SUBMITTED": "https://gedcom.io/terms/v5.5.1/enum-LDS_CHILD_SEALING_DATE_STATUS-SUBMITTED",
+      "UNCLEARED": "https://gedcom.io/terms/v5.5.1/enum-LDS_CHILD_SEALING_DATE_STATUS-UNCLEARED"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-LDS_ENDOWMENT_DATE_STATUS": {
+      "CHILD": "https://gedcom.io/terms/v5.5.1/enum-LDS_ENDOWMENT_DATE_STATUS-CHILD",
+      "COMPLETED": "https://gedcom.io/terms/v5.5.1/enum-LDS_ENDOWMENT_DATE_STATUS-COMPLETED",
+      "EXCLUDED": "https://gedcom.io/terms/v5.5.1/enum-LDS_ENDOWMENT_DATE_STATUS-EXCLUDED",
+      "PRE-1970": "https://gedcom.io/terms/v5.5.1/enum-LDS_ENDOWMENT_DATE_STATUS-PRE-1970",
+      "STILLBORN": "https://gedcom.io/terms/v5.5.1/enum-LDS_ENDOWMENT_DATE_STATUS-STILLBORN",
+      "SUBMITTED": "https://gedcom.io/terms/v5.5.1/enum-LDS_ENDOWMENT_DATE_STATUS-SUBMITTED",
+      "UNCLEARED": "https://gedcom.io/terms/v5.5.1/enum-LDS_ENDOWMENT_DATE_STATUS-UNCLEARED"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-LDS_SPOUSE_SEALING_DATE_STATUS": {
+      "CANCELED": "https://gedcom.io/terms/v5.5.1/enum-LDS_SPOUSE_SEALING_DATE_STATUS-CANCELED",
+      "COMPLETED": "https://gedcom.io/terms/v5.5.1/enum-LDS_SPOUSE_SEALING_DATE_STATUS-COMPLETED",
+      "DNS": "https://gedcom.io/terms/v5.5.1/enum-LDS_SPOUSE_SEALING_DATE_STATUS-DNS",
+      "DNS/CAN": "https://gedcom.io/terms/v5.5.1/enum-LDS_SPOUSE_SEALING_DATE_STATUS-DNS/CAN",
+      "EXCLUDED": "https://gedcom.io/terms/v5.5.1/enum-LDS_SPOUSE_SEALING_DATE_STATUS-EXCLUDED",
+      "PRE-1970": "https://gedcom.io/terms/v5.5.1/enum-LDS_SPOUSE_SEALING_DATE_STATUS-PRE-1970",
+      "SUBMITTED": "https://gedcom.io/terms/v5.5.1/enum-LDS_SPOUSE_SEALING_DATE_STATUS-SUBMITTED",
+      "UNCLEARED": "https://gedcom.io/terms/v5.5.1/enum-LDS_SPOUSE_SEALING_DATE_STATUS-UNCLEARED"
+    },
+    "https://gedcom.io/terms/v5.5.1/enumset-MULTIMEDIA_FORMAT": {
+      "bmp": "https://gedcom.io/terms/v5.5.1/enum-MULTIMEDIA_FORMAT-bmp",
+      "gif": "https://gedcom.io/terms/v5.5.1/enum-MULTIMEDIA_FORMAT-gif",
+      "jpg": "https://gedcom.io/terms/v5.5.1/enum-MULTIMEDIA_FORMAT-jpg",
+      "ole": "https://gedcom.io/terms/v5.5.1/enum-MULTIMEDIA_FORMAT-ole",
+      "pcx": "https://gedcom.io/terms/v5.5.1/enum-MULTIMEDIA_FORMAT-pcx",
+      "tif": "https://gedcom.io/terms/v5.5.1/enum-MULTIMEDIA_FORMAT-tif",
+      "wav": "https://gedcom.io/terms/v5.5.1/enum-MULTIMEDIA_FORMAT-wav"
     },
     "https://gedcom.io/terms/v5.5.1/enumset-ORDINANCE_PROCESS_FLAG": {
       "no": "https://gedcom.io/terms/v5.5.1/enum-ORDINANCE_PROCESS_FLAG-no",
