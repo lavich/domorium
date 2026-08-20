@@ -25,8 +25,10 @@ interface CompletionContext {
   lineText: string;
 }
 
-const TAG_PREFIX = /^(\d+)\s+(?:@[^\s@]+@\s+)?([A-Z0-9_]*)$/;
-const VALUE_PREFIX = /^(\d+)\s+(?:@[^\s@]+@\s+)?([A-Z0-9_]+)\s+(.*)$/;
+// The tag half matches what the lexer accepts as a tag, case and all: a tag
+// written in lower case is read as that tag, and VAL001 names the mistake.
+const TAG_PREFIX = /^(\d+)\s+(?:@[^\s@]+@\s+)?([A-Za-z0-9_]*)$/;
+const VALUE_PREFIX = /^(\d+)\s+(?:@[^\s@]+@\s+)?([A-Za-z0-9_]+)\s+(.*)$/;
 
 function flattenNodes(nodes: ASTNode[]): ASTNode[] {
   return nodes.flatMap((node) => [node, ...flattenNodes(node.children)]);
@@ -183,7 +185,9 @@ function completeValues(
   }
 
   const childType =
-    context.scheme.substructure[parent.parentType]?.[GedcomTag(tag)]?.type;
+    context.scheme.substructure[parent.parentType]?.[
+      GedcomTag(tag.toUpperCase())
+    ]?.type;
   if (!childType) {
     return [];
   }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { GedcomDocument } from "../document/gedcomDocument";
 
 const document = (text: string) => new GedcomDocument().createDocument(text);
+const labelOf = (item: { label: string }) => item.label;
 
 describe("GedcomDocument.getCompletions", () => {
   it("offers GEDCOM 7 root tags when the version is not available", () => {
@@ -245,6 +246,26 @@ describe("GedcomDocument.getCompletions", () => {
     });
     // Not NAME: SUBM allows one and the fixture already spends it.
     expect(items.map((item) => item.label)).toContain("EMAIL");
+  });
+
+  // The lexer reads a tag whatever its case (#252) and the validator answers
+  // VAL001; completion is the way out of that mistake and said nothing.
+  it("offers tags and values for a tag typed in lower case", () => {
+    const doc = document(`0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME Ada /Lovelace/
+
+0 TRLR
+`);
+
+    expect(
+      doc.getCompletions({ line: 5, character: 4 }, "1 se").map(labelOf),
+    ).toContain("SEX");
+    expect(
+      doc.getCompletions({ line: 5, character: 6 }, "1 sex ").map(labelOf),
+    ).toEqual(expect.arrayContaining(["M", "F"]));
   });
 
   it("offers no root tags inside an extension subtree", () => {
