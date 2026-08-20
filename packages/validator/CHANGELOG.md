@@ -62,6 +62,22 @@ All notable changes to `@domorium/validator` are documented here.
   reach the same check as free text and report a missing value on every structure
   that legitimately omits it; it now fails that test instead, where a person can see
   it.
+- **A 5.5.1 date is read against the calendar its escape names, and completion
+  offers one.** The twelve month tags lived in four places — the 5.5.1 date grammar,
+  the day-length table, the 7.0 `calendar` section and the completion reader's own
+  list — and 5.5.1, whose `calendar` section was empty, could use none of them. That
+  section now describes all six calendars 5.5.1 names, `validator/calendars.ts` is
+  the only reader of it, and the lengths stay in code with a test binding them to the
+  months both schemes name. `@#DHEBREW@ 45 XXX 5760` is reported rather than waved
+  through on a non-empty check, `@#DJULIAN@ 12 JAN 2000` is checked as a date rather
+  than accepted for being non-empty, and a date under `@#DROMAN@` or `@#DUNKNOWN@` —
+  calendars 5.5.1 names and gives no month — is still accepted, because an empty
+  month table says nothing rather than forbidding everything. Completion in a 5.5.1
+  file went from 8 candidates with the cursor after `2 DATE` to 26, the escapes and
+  the Gregorian months joining the modifiers; from none after `2 DATE 12` to 14; and
+  from none after `2 DATE 12 JAN 2000` to the two epoch spellings 5.5.1 writes.
+  Neither conformance corpus moved: 8 diagnostics over 23 official files, 14 795
+  over 14 vendor exports. See docs/adr/0012.
 
 - **A document with more than about 125k diagnostics reports all of them instead of
   none.** Diagnostics were gathered by spreading each level's array into its

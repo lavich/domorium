@@ -5,6 +5,7 @@ import {
   GedcomType,
   type GedcomScheme,
 } from "../schemes/schema-types";
+import { calendarEscape } from "../validator/calendars";
 import { RuleNode } from "../validator/rule-node";
 import { dateSlot, type DateGrammar } from "./dateSlot";
 import type { ExtensionContext } from "../validator/extensions";
@@ -178,13 +179,19 @@ function completeTags(
   return [...standardTags, ...extensionTags];
 }
 
-const DATE_GRAMMARS: Record<string, DateGrammar> = {
-  "date-v7": "value",
-  date: "value",
-  "date-period-v7": "period",
-  "date-period": "period",
-  "date-exact-v7": "exact",
-  "date-exact": "exact",
+// 5.5.1 writes a calendar as an escape, `@#DJULIAN@`, so which dialect a date
+// belongs to decides what a calendar is offered as, not only which grammar reads
+// it. The payload type is what says which dialect it is.
+const DATE_GRAMMARS: Record<
+  string,
+  { grammar: DateGrammar; escaped: boolean }
+> = {
+  "date-v7": { grammar: "value", escaped: false },
+  date: { grammar: "value", escaped: true },
+  "date-period-v7": { grammar: "period", escaped: false },
+  "date-period": { grammar: "period", escaped: true },
+  "date-exact-v7": { grammar: "exact", escaped: false },
+  "date-exact": { grammar: "exact", escaped: true },
 };
 
 /**
@@ -194,15 +201,18 @@ const DATE_GRAMMARS: Record<string, DateGrammar> = {
  */
 function completeDate(
   context: CompletionContext,
-  grammar: DateGrammar,
+  { grammar, escaped }: { grammar: DateGrammar; escaped: boolean },
   typed: string,
 ): GedcomCompletion[] {
-  const slot = dateSlot(typed, grammar);
+  const slot = dateSlot(context.scheme, typed, grammar);
   const calendar = (name: string | null) =>
     name === null ? undefined : context.scheme.calendar[GedcomTag(name)];
+  const named = Object.keys(context.scheme.calendar).map((name) =>
+    escaped ? calendarEscape(name) : name,
+  );
 
   return [
-    ...(slot.calendars ? Object.keys(context.scheme.calendar) : []),
+    ...(slot.calendars ? named : []),
     ...Object.keys(calendar(slot.months)?.months ?? {}),
     ...(calendar(slot.epochs)?.epochs ?? []),
     ...slot.keywords,

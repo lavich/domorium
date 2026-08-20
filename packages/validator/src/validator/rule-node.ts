@@ -10,6 +10,7 @@ import {
   undocumentedTag,
 } from "./extensions";
 import { impossibleDays } from "./calendarDays";
+import { DEFAULT_CALENDAR, stripCalendarEscape } from "./calendars";
 import { EPOCH_SRC } from "./epoch";
 import {
   isValidDateExact,
@@ -116,8 +117,12 @@ function valueError(
   };
 }
 
-function impossibleDayErrors(node: ASTNode, value: string): GedcomError[] {
-  return impossibleDays(value).map(({ day, month, length }) =>
+function impossibleDayErrors(
+  scheme: GedcomScheme,
+  node: ASTNode,
+  value: string,
+): GedcomError[] {
+  return impossibleDays(scheme, value).map(({ day, month, length }) =>
     valueError(
       node,
       `names ${day} ${month}, and ${month} has ${length} days`,
@@ -174,67 +179,90 @@ const LANGUAGE_TAG_REGEXP = new RegExp(
   "i",
 );
 
-const MONTH_REGEXP_SRC = "(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)";
 const YEAR_REGEXP_SRC = "\\d+(?:/\\d{2})?";
-const DATE_EXACT_REGEXP = new RegExp(
-  `^\\d{1,2}\\s${MONTH_REGEXP_SRC}\\s${YEAR_REGEXP_SRC}$`,
-);
-// Leading calendar escape, e.g. "@#DHEBREW@ 1 TISHREI 5761". Only the
-// Gregorian calendar's grammar is validated (see design doc); any other
-// escape name is accepted with just a non-empty-remainder check, so
-// real-world non-Gregorian files aren't blocked.
-//
+
 // v5.5.1 syntax, and everything below it is the v5.5.1 reader. GEDCOM 7 dates
 // are parsed in date-v7.ts.
-const CALENDAR_ESCAPE_REGEXP = /^@#D([A-Z][A-Z ]*)@\s*/;
+interface DateGrammars {
+  value: RegExp;
+  period: RegExp;
+  exact: RegExp;
+}
 
-function stripCalendarEscape(value: string): {
-  calendar: string | null;
-  rest: string;
-} {
-  const match = value.match(CALENDAR_ESCAPE_REGEXP);
-  if (!match) {
-    return { calendar: null, rest: value };
+// The months belong to the calendar in force, so a grammar is built per calendar
+// rather than once — and cached against the scheme, which never changes.
+const grammars = new WeakMap<GedcomScheme, Map<string, DateGrammars | null>>();
+
+function buildGrammars(months: string[]): DateGrammars {
+  const month = `(?:${months.join("|")})`;
+  // Day requires a month: "(?:\d{1,2}\s)?MONTH\s" only ever matches together,
+  // so a bare "DAY YEAR" (no month) never matches.
+  const date = `(?:(?:\\d{1,2}\\s)?${month}\\s)?${YEAR_REGEXP_SRC}`;
+  const dated = `${date}(?:\\s?${EPOCH_SRC})?`;
+  // "FROM <date> [TO <date>]" / "TO <date>" — shared by DATE_VALUE (where it's
+  // one of several modifiers) and DATE_PERIOD (where it's the only grammar).
+  const period = `FROM\\s${dated}(?:\\sTO\\s${dated})?|TO\\s${dated}`;
+
+  return {
+    value: new RegExp(
+      "^(?:" +
+        `(?:ABT|CAL|EST)\\s${dated}` +
+        "|" +
+        `(?:BEF|AFT)\\s${dated}` +
+        "|" +
+        `BET\\s${dated}\\sAND\\s${dated}` +
+        "|" +
+        period +
+        "|" +
+        `INT\\s${dated}\\s\\([^()]*\\)` +
+        "|" +
+        `${dated}` +
+        "|" +
+        "\\([^()]*\\)" +
+        ")$",
+    ),
+    period: new RegExp(`^(?:${period})$`),
+    exact: new RegExp(`^\\d{1,2}\\s${month}\\s${YEAR_REGEXP_SRC}$`),
+  };
+}
+
+/**
+ * Null where the schema names no month for the calendar: 5.5.1 lists ROMAN and
+ * UNKNOWN as calendars and defines a month for neither, and an escape may name
+ * a calendar no dialect describes at all. Saying nothing there is the point —
+ * a real file in a calendar we cannot spell out is not a file to report.
+ */
+function grammarsFor(
+  scheme: GedcomScheme,
+  calendar: string,
+): DateGrammars | null {
+  let byCalendar = grammars.get(scheme);
+  if (!byCalendar) {
+    byCalendar = new Map();
+    grammars.set(scheme, byCalendar);
   }
-  return { calendar: match[1], rest: value.slice(match[0].length) };
+  const cached = byCalendar.get(calendar);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const months = Object.keys(
+    scheme.calendar[GedcomTag(calendar)]?.months ?? {},
+  );
+  const built = months.length === 0 ? null : buildGrammars(months);
+  byCalendar.set(calendar, built);
+  return built;
 }
 
-function isValidGregorianDate(value: string, regexp: RegExp): boolean {
+function isValidDate(
+  scheme: GedcomScheme,
+  value: string,
+  grammar: keyof DateGrammars,
+): boolean {
   const { calendar, rest } = stripCalendarEscape(value);
-  const isNonGregorianCalendar = calendar !== null && calendar !== "GREGORIAN";
-  return isNonGregorianCalendar ? !!rest : regexp.test(rest);
+  const rules = grammarsFor(scheme, calendar ?? DEFAULT_CALENDAR);
+  return rules === null ? !!rest : rules[grammar].test(rest);
 }
-
-// Day requires a month: "(?:\d{1,2}\s)?MONTH\s" only ever matches together,
-// so a bare "DAY YEAR" (no month) never matches.
-const GREGORIAN_DATE_SRC = `(?:(?:\\d{1,2}\\s)?${MONTH_REGEXP_SRC}\\s)?${YEAR_REGEXP_SRC}`;
-const GREGORIAN_DATE_WITH_EPOCH_SRC = `${GREGORIAN_DATE_SRC}(?:\\s?${EPOCH_SRC})?`;
-// "FROM <date> [TO <date>]" / "TO <date>" — shared by DATE_VALUE (where it's
-// one of several modifiers) and DATE_PERIOD (where it's the only grammar).
-const DATE_PERIOD_SRC =
-  `FROM\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}(?:\\sTO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC})?` +
-  "|" +
-  `TO\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}`;
-
-const DATE_VALUE_REGEXP = new RegExp(
-  "^(?:" +
-    `(?:ABT|CAL|EST)\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
-    "|" +
-    `(?:BEF|AFT)\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
-    "|" +
-    `BET\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}\\sAND\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
-    "|" +
-    DATE_PERIOD_SRC +
-    "|" +
-    `INT\\s${GREGORIAN_DATE_WITH_EPOCH_SRC}\\s\\([^()]*\\)` +
-    "|" +
-    `${GREGORIAN_DATE_WITH_EPOCH_SRC}` +
-    "|" +
-    "\\([^()]*\\)" +
-    ")$",
-);
-
-const DATE_PERIOD_REGEXP = new RegExp(`^(?:${DATE_PERIOD_SRC})$`);
 
 // How a declared payload URI is read. Both versions name several of the same
 // readings under different URIs, and `pointer` is absent because it is the one
@@ -370,8 +398,8 @@ const VALUE_RULES: Partial<Record<Exclude<FieldType, null>, ValueRule>> = {
     message: `should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
   },
   date: {
-    test: (value) => isValidGregorianDate(value, DATE_VALUE_REGEXP),
-    message: `should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
+    test: (value, scheme) => isValidDate(scheme, value, "value"),
+    message: `should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "@#DJULIAN@ 3 MAR 1721", "(unknown)")`,
     calendarDays: true,
   },
   "date-v7": {
@@ -380,7 +408,7 @@ const VALUE_RULES: Partial<Record<Exclude<FieldType, null>, ValueRule>> = {
     calendarDays: true,
   },
   "date-period": {
-    test: (value) => isValidGregorianDate(value, DATE_PERIOD_REGEXP),
+    test: (value, scheme) => isValidDate(scheme, value, "period"),
     message: `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
     calendarDays: true,
   },
@@ -390,7 +418,7 @@ const VALUE_RULES: Partial<Record<Exclude<FieldType, null>, ValueRule>> = {
     calendarDays: true,
   },
   "date-exact": {
-    test: (value) => isValidGregorianDate(value, DATE_EXACT_REGEXP),
+    test: (value, scheme) => isValidDate(scheme, value, "exact"),
     message: `should be an exact date in day month year order (e.g. "1 APR 1911")`,
     calendarDays: true,
   },
@@ -621,7 +649,7 @@ export class RuleNode {
       if (!value || !rule.test(value, this.scheme, this.extensions)) {
         errors.push(valueError(node, rule.message));
       } else if (rule.calendarDays) {
-        errors.push(...impossibleDayErrors(node, value));
+        errors.push(...impossibleDayErrors(this.scheme, node, value));
       }
       return;
     }

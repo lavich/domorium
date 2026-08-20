@@ -1,9 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-import { daysInMonth, impossibleDays, isLeapYear } from "./calendarDays";
+import g551validation from "../schemes/g551validation.json";
+import g7validation from "../schemes/g7validation.json";
+import { GedcomScheme, GedcomTag } from "../schemes/schema-types";
+import {
+  daysInMonth,
+  impossibleDays,
+  isLeapYear,
+  LENGTHS,
+} from "./calendarDays";
 
 const days = (value: string) =>
-  impossibleDays(value).map((found) => `${found.day} ${found.month}`);
+  impossibleDays(g7validation, value).map(
+    (found) => `${found.day} ${found.month}`,
+  );
+const days551 = (value: string) =>
+  impossibleDays(g551validation, value).map(
+    (found) => `${found.day} ${found.month}`,
+  );
 
 describe("how long a month is", () => {
   it("gives every month the length it has", () => {
@@ -120,11 +134,52 @@ describe("a day the calendar does not have", () => {
     },
   );
 
+  it("reads an escape whose calendar name carries a space", () => {
+    expect(days551("@#DFRENCH R@ 30 VEND 1")).toEqual([]);
+    expect(days551("@#DJULIAN@ 29 FEB 1700")).toEqual([]);
+  });
+
   it("says what the month does have, not only that the day is wrong", () => {
-    expect(impossibleDays("31 FEB 1900")[0]).toEqual({
+    expect(impossibleDays(g7validation, "31 FEB 1900")[0]).toEqual({
       day: 31,
       month: "FEB",
       length: 28,
     });
+  });
+});
+
+// #207: the month tags are the schema's, the lengths are here, and this is the
+// seam between them. A month either schema names and this table does not is a
+// day check silently switched off.
+describe("the months the lengths are stated for", () => {
+  const schemes: [string, GedcomScheme][] = [
+    ["g7validation.json", g7validation],
+    ["g551validation.json", g551validation],
+  ];
+
+  it.each(schemes)(
+    "covers every month %s gives GREGORIAN and JULIAN",
+    (_name, scheme) => {
+      const named = ["GREGORIAN", "JULIAN"].flatMap((calendar) =>
+        Object.keys(scheme.calendar[GedcomTag(calendar)]?.months ?? {}),
+      );
+
+      expect(named.length).toBeGreaterThan(0);
+      expect(named.filter((month) => LENGTHS[month] === undefined)).toEqual([]);
+    },
+  );
+
+  it("states a length for no month either schema leaves out", () => {
+    const named = new Set(
+      schemes.flatMap(([, scheme]) =>
+        ["GREGORIAN", "JULIAN"].flatMap((calendar) =>
+          Object.keys(scheme.calendar[GedcomTag(calendar)]?.months ?? {}),
+        ),
+      ),
+    );
+
+    expect(Object.keys(LENGTHS).filter((month) => !named.has(month))).toEqual(
+      [],
+    );
   });
 });
