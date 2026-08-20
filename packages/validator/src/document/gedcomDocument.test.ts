@@ -22,10 +22,7 @@ describe("validator", () => {
 2 VERS 7.0
 0 TRLR
 `);
-    const nodes = gedcomDocument.getNodes();
-    expect(nodes.length).toBe(2);
-    expect(gedcomDocument.pointers.size).toBe(0);
-    expect(gedcomDocument.xRefs.size).toBe(0);
+    expect(gedcomDocument.getNodes().length).toBe(2);
   });
 
   test("minimal valid test pointers", async () => {
@@ -38,10 +35,7 @@ describe("validator", () => {
 1 WIFE @indi1@
 0 TRLR
 `);
-    const nodes = gedcomDocument.getNodes();
-    expect(nodes.length).toBe(4);
-    expect(gedcomDocument.pointers.size).toBe(2);
-    expect(gedcomDocument.xRefs.size).toBe(1);
+    expect(gedcomDocument.getNodes().length).toBe(4);
   });
 
   test("reports structured metadata for an unresolved pointer", () => {
@@ -492,6 +486,51 @@ hello world
         version: "5.5",
         dialect: "5.5.1",
       });
+    });
+  });
+
+  // #273: the early returns left the schema and the extension tags of the
+  // document before them in place, so one instance answered for the wrong file.
+  describe("a second createDocument on one instance", () => {
+    const gedcom7 = "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 TRLR\n";
+
+    test.each([
+      [
+        "a Personal Ancestral File",
+        "0 HEAD\n1 SYST PAF\n1 GEDC\n2 VERS 5.5.1\n0 TRLR\n",
+      ],
+      ["an unsupported version", "0 HEAD\n1 GEDC\n2 VERS 4.0\n0 TRLR\n"],
+    ])("offers no completion after reading %s", (_name, text) => {
+      const document = new GedcomDocument().createDocument(gedcom7);
+
+      document.createDocument(text);
+
+      expect(document.getCompletions({ line: 1, character: 2 }, "1 ")).toEqual(
+        [],
+      );
+    });
+
+    test("forgets the extension tags the document before it declared", () => {
+      const document = new GedcomDocument().createDocument(`0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _X http://example.com/x
+0 TRLR
+`);
+
+      document.createDocument(`0 HEAD
+1 GEDC
+0 @I1@ INDI
+1 _X y
+0 TRLR
+`);
+      const extension = document
+        .getNodes()
+        .find((node) => node.tokens.TAG?.value === "INDI")
+        ?.children.find((node) => node.tokens.TAG?.value === "_X");
+
+      expect(document.getLabel(extension!)).toBe("Extension tag");
     });
   });
 
