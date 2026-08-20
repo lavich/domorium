@@ -23,6 +23,7 @@ number.
 | [0009](0009-gedcom-version-resolution.md)                | Resolve the GEDCOM version by longest match                | Accepted |
 | [0010](0010-two-form-structures-in-5-5-1.md)             | Model a 5.5.1 structure written two ways as one structure  | Accepted |
 | [0011](0011-fetch-corpora-rather-than-vendoring-them.md) | Fetch test corpora rather than vendoring them              | Accepted |
+| [0012](0012-calendar-vocabulary-in-the-schema.md)        | Keep calendar vocabulary in the schema, arithmetic in code | Accepted |
 
 ## What belongs in an ADR
 

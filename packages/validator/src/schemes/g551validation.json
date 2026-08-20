@@ -1,5 +1,96 @@
 {
-  "calendar": {},
+  "calendar": {
+    "FRENCH R": {
+      "epochs": [],
+      "months": {
+        "BRUM": "https://gedcom.io/terms/v5.5.1/month-BRUM",
+        "COMP": "https://gedcom.io/terms/v5.5.1/month-COMP",
+        "FLOR": "https://gedcom.io/terms/v5.5.1/month-FLOR",
+        "FRIM": "https://gedcom.io/terms/v5.5.1/month-FRIM",
+        "FRUC": "https://gedcom.io/terms/v5.5.1/month-FRUC",
+        "GERM": "https://gedcom.io/terms/v5.5.1/month-GERM",
+        "MESS": "https://gedcom.io/terms/v5.5.1/month-MESS",
+        "NIVO": "https://gedcom.io/terms/v5.5.1/month-NIVO",
+        "PLUV": "https://gedcom.io/terms/v5.5.1/month-PLUV",
+        "PRAI": "https://gedcom.io/terms/v5.5.1/month-PRAI",
+        "THER": "https://gedcom.io/terms/v5.5.1/month-THER",
+        "VEND": "https://gedcom.io/terms/v5.5.1/month-VEND",
+        "VENT": "https://gedcom.io/terms/v5.5.1/month-VENT"
+      },
+      "type": "https://gedcom.io/terms/v5.5.1/cal-FRENCH_R"
+    },
+    "GREGORIAN": {
+      "epochs": [
+        "BCE",
+        "B.C."
+      ],
+      "months": {
+        "APR": "https://gedcom.io/terms/v5.5.1/month-APR",
+        "AUG": "https://gedcom.io/terms/v5.5.1/month-AUG",
+        "DEC": "https://gedcom.io/terms/v5.5.1/month-DEC",
+        "FEB": "https://gedcom.io/terms/v5.5.1/month-FEB",
+        "JAN": "https://gedcom.io/terms/v5.5.1/month-JAN",
+        "JUL": "https://gedcom.io/terms/v5.5.1/month-JUL",
+        "JUN": "https://gedcom.io/terms/v5.5.1/month-JUN",
+        "MAR": "https://gedcom.io/terms/v5.5.1/month-MAR",
+        "MAY": "https://gedcom.io/terms/v5.5.1/month-MAY",
+        "NOV": "https://gedcom.io/terms/v5.5.1/month-NOV",
+        "OCT": "https://gedcom.io/terms/v5.5.1/month-OCT",
+        "SEP": "https://gedcom.io/terms/v5.5.1/month-SEP"
+      },
+      "type": "https://gedcom.io/terms/v5.5.1/cal-GREGORIAN"
+    },
+    "HEBREW": {
+      "epochs": [],
+      "months": {
+        "AAV": "https://gedcom.io/terms/v5.5.1/month-AAV",
+        "ADR": "https://gedcom.io/terms/v5.5.1/month-ADR",
+        "ADS": "https://gedcom.io/terms/v5.5.1/month-ADS",
+        "CSH": "https://gedcom.io/terms/v5.5.1/month-CSH",
+        "ELL": "https://gedcom.io/terms/v5.5.1/month-ELL",
+        "IYR": "https://gedcom.io/terms/v5.5.1/month-IYR",
+        "KSL": "https://gedcom.io/terms/v5.5.1/month-KSL",
+        "NSN": "https://gedcom.io/terms/v5.5.1/month-NSN",
+        "SHV": "https://gedcom.io/terms/v5.5.1/month-SHV",
+        "SVN": "https://gedcom.io/terms/v5.5.1/month-SVN",
+        "TMZ": "https://gedcom.io/terms/v5.5.1/month-TMZ",
+        "TSH": "https://gedcom.io/terms/v5.5.1/month-TSH",
+        "TVT": "https://gedcom.io/terms/v5.5.1/month-TVT"
+      },
+      "type": "https://gedcom.io/terms/v5.5.1/cal-HEBREW"
+    },
+    "JULIAN": {
+      "epochs": [
+        "BCE",
+        "B.C."
+      ],
+      "months": {
+        "APR": "https://gedcom.io/terms/v5.5.1/month-APR",
+        "AUG": "https://gedcom.io/terms/v5.5.1/month-AUG",
+        "DEC": "https://gedcom.io/terms/v5.5.1/month-DEC",
+        "FEB": "https://gedcom.io/terms/v5.5.1/month-FEB",
+        "JAN": "https://gedcom.io/terms/v5.5.1/month-JAN",
+        "JUL": "https://gedcom.io/terms/v5.5.1/month-JUL",
+        "JUN": "https://gedcom.io/terms/v5.5.1/month-JUN",
+        "MAR": "https://gedcom.io/terms/v5.5.1/month-MAR",
+        "MAY": "https://gedcom.io/terms/v5.5.1/month-MAY",
+        "NOV": "https://gedcom.io/terms/v5.5.1/month-NOV",
+        "OCT": "https://gedcom.io/terms/v5.5.1/month-OCT",
+        "SEP": "https://gedcom.io/terms/v5.5.1/month-SEP"
+      },
+      "type": "https://gedcom.io/terms/v5.5.1/cal-JULIAN"
+    },
+    "ROMAN": {
+      "epochs": [],
+      "months": {},
+      "type": "https://gedcom.io/terms/v5.5.1/cal-ROMAN"
+    },
+    "UNKNOWN": {
+      "epochs": [],
+      "months": {},
+      "type": "https://gedcom.io/terms/v5.5.1/cal-UNKNOWN"
+    }
+  },
   "label": {
     "https://gedcom.io/terms/v5.5.1/ABBR": {
       "en-US": "Abbreviation"

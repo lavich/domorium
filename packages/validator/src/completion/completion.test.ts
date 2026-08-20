@@ -447,3 +447,63 @@ describe("the cost of a completion", () => {
     expect(labels).not.toContain("SEX");
   });
 });
+
+describe("completion inside a 5.5.1 DATE payload", () => {
+  const offers = (line: string, body: string) => {
+    const text = `0 HEAD\n1 GEDC\n2 VERS 5.5.1\n${body}${line}\n0 TRLR\n`;
+    const at = text.slice(0, text.indexOf(line)).split("\n").length - 1;
+    return document(text)
+      .getCompletions({ line: at, character: line.length }, line)
+      .map((item) => item.label);
+  };
+  const inBirth = (line: string) => offers(line, "0 @I1@ INDI\n1 BIRT\n");
+
+  it("offers the calendars in the form 5.5.1 writes them", () => {
+    const labels = inBirth("2 DATE ");
+
+    expect(labels).toContain("@#DGREGORIAN@");
+    expect(labels).toContain("@#DJULIAN@");
+    expect(labels).toContain("@#DFRENCH R@");
+    expect(labels).not.toContain("GREGORIAN");
+  });
+
+  it("offers the modifiers and the Gregorian months at the start", () => {
+    const labels = inBirth("2 DATE ");
+
+    expect(labels).toContain("BET");
+    expect(labels).toContain("JAN");
+    expect(labels).toContain("DEC");
+  });
+
+  it("offers a month after a number, which may yet turn out to be a day", () => {
+    const labels = inBirth("2 DATE 12 ");
+
+    expect(labels).toContain("JAN");
+    expect(labels).toContain("DEC");
+    expect(labels).toContain("BCE");
+  });
+
+  it("offers the epoch once the year is there", () => {
+    expect(inBirth("2 DATE 12 JAN 2000 ")).toContain("BCE");
+  });
+
+  it("offers the months of the calendar the escape names", () => {
+    const labels = inBirth("2 DATE @#DHEBREW@ 1 ");
+
+    expect(labels).toContain("TSH");
+    expect(labels).not.toContain("JAN");
+  });
+
+  it("reads an escape whose calendar name carries a space", () => {
+    expect(inBirth("2 DATE @#DFRENCH R@ ")).toContain("VEND");
+  });
+
+  it("offers no month for a calendar 5.5.1 leaves undefined", () => {
+    expect(inBirth("2 DATE @#DROMAN@ ")).toEqual([]);
+  });
+
+  it("offers an exact date its months, and no calendar to put them in", () => {
+    expect(offers("1 DATE 1 ", "")).toContain("APR");
+    expect(offers("1 DATE ", "")).toEqual([]);
+  });
+});
