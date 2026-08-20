@@ -19,6 +19,14 @@ All notable changes to `@domorium/validator` are documented here.
   for the type, the label or the pointer target of such a node — hovering
   `1 NAME John /Doe/` is one way in — now gives the same empty answer already given
   for a path the schema does not resolve.
+- **A year followed by an extension epoch is a date.** `2 DATE 2000 _MYEPOCH` was
+  reported as an invalid date value. An extension tag is admissible as a month and
+  as an epoch alike, and the reader took the pair for a day and a month — leaving
+  the date with no year, which every date must have. A month is now read only when
+  the year it must precede follows it, so the epoch reading is the one left. The
+  same value under an extension calendar, `2 DATE _MYCAL 1900 _MYEPOCH`, was
+  rejected for the same reason and is now read too.
+
 - **An unresolved pointer names the xref that failed, and lists nothing.** A `FAMC`
   pointing at a family the file does not declare was reported as "Value for FAMC
   should be in set [@F70@, @F75@, … 2853 more]" — the vocabulary of a closed set,
