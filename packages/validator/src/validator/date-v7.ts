@@ -107,15 +107,22 @@ function readDate(
   }
   const { months, epochs } = vocabularyOf(scheme, calendar);
 
-  // [[day D] month D] — a day only exists alongside a month, so a bare number
-  // in front of the year is the year itself.
+  // [[day D] month D] — a day only exists alongside a month, so a bare number in
+  // front of the year is the year itself. An extension tag is permitted as a month
+  // and as an epoch alike, so a month is read only when the year it must precede
+  // is in sight: "2000 _MYEPOCH" is otherwise a day and a month with no year.
   if (
     INTEGER.test(tokens[at] ?? "") &&
     tokens[at + 1] !== undefined &&
-    permits(months, tokens[at + 1])
+    permits(months, tokens[at + 1]) &&
+    INTEGER.test(tokens[at + 2] ?? "")
   ) {
     at += 2;
-  } else if (tokens[at] !== undefined && permits(months, tokens[at])) {
+  } else if (
+    tokens[at] !== undefined &&
+    permits(months, tokens[at]) &&
+    INTEGER.test(tokens[at + 1] ?? "")
+  ) {
     at += 1;
   }
 

@@ -18,7 +18,9 @@ import {
   undocumentedTag,
 } from "./extensions";
 
-function parseCardinality(str: string): { min: number; max: number } | null {
+export function parseCardinality(
+  str: string,
+): { min: number; max: number } | null {
   const re = /^\{(?<a>\d+):(?<b>\d+|M)}$/;
   const match = str.match(re);
   if (!match?.groups) {
