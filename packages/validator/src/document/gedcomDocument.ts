@@ -124,6 +124,9 @@ export class GedcomDocument {
     this.nodes = nodes;
     this.pointers = pointers;
     this.xRefs = xrefs;
+    this.scheme = undefined;
+    this.requiresSchmaDeclaration = false;
+    this.extensions = emptyExtensions();
     this.validateLevels(this.errors, nodes);
 
     const resolution = resolveGedcomVersion(nodes);
