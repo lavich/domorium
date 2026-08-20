@@ -30,8 +30,47 @@ interface CompletionContext {
 const TAG_PREFIX = /^(\d+)\s+(?:@[^\s@]+@\s+)?([A-Za-z0-9_]*)$/;
 const VALUE_PREFIX = /^(\d+)\s+(?:@[^\s@]+@\s+)?([A-Za-z0-9_]+)\s+(.*)$/;
 
+// A keystroke asks for completions again, and the tree it walks is the one the
+// last parse built and never touched since. The walk is cached against that
+// array, which a fresh parse replaces.
+const flattened = new WeakMap<ASTNode[], ASTNode[]>();
+
 function flattenNodes(nodes: ASTNode[]): ASTNode[] {
-  return nodes.flatMap((node) => [node, ...flattenNodes(node.children)]);
+  const cached = flattened.get(nodes);
+  if (cached) {
+    return cached;
+  }
+  const flat: ASTNode[] = [];
+  const walk = (level: ASTNode[]) => {
+    for (const node of level) {
+      flat.push(node);
+      walk(node.children);
+    }
+  };
+  walk(nodes);
+  flattened.set(nodes, flat);
+  return flat;
+}
+
+/**
+ * The index of the last node beginning at or before `line`, or -1.
+ *
+ * One node is one line and the walk yields them in document order, so their
+ * start lines ascend and the cursor's line is found by halving them. Reading
+ * `range` allocates, so the fewer of them read the better.
+ */
+function lastNodeAtOrBefore(nodes: ASTNode[], line: number): number {
+  let low = 0;
+  let high = nodes.length;
+  while (low < high) {
+    const middle = (low + high) >> 1;
+    if (nodes[middle].range.start.line <= line) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return low - 1;
 }
 
 function parseMax(cardinality: string): number | null {
@@ -60,12 +99,12 @@ function resolveParent(context: CompletionContext, level: number) {
     return { parentType: GedcomType(""), siblings: context.nodes };
   }
 
-  const nodes = flattenNodes(context.nodes).filter(
-    (node) => node.range.start.line <= context.position.line,
-  );
-  const current = nodes.find(
-    (node) => node.range.start.line === context.position.line,
-  );
+  const nodes = flattenNodes(context.nodes);
+  const last = lastNodeAtOrBefore(nodes, context.position.line);
+  const current =
+    last >= 0 && nodes[last].range.start.line === context.position.line
+      ? nodes[last]
+      : undefined;
   let parent: ASTNode | undefined;
   if (current) {
     if (current.level !== level || current.parent?.level !== level - 1) {
@@ -73,11 +112,8 @@ function resolveParent(context: CompletionContext, level: number) {
     }
     parent = current.parent;
   } else {
-    const preceding = nodes.filter(
-      (node) => node.range.start.line < context.position.line,
-    );
-    for (let index = preceding.length - 1; index >= 0; index -= 1) {
-      const node = preceding[index];
+    for (let index = last; index >= 0; index -= 1) {
+      const node = nodes[index];
       if (node.level < level - 1) {
         return null;
       }
