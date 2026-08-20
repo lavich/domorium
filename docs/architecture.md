@@ -43,7 +43,9 @@ validated against schemas derived from the official GEDCOM 5.5.1 and 7.0
 specifications: structure, cardinality, and payload types. `GedcomDocument` is
 the entry point; `getErrors()` returns structural diagnostics.
 
-Both schemas are consumed by `src/validator/validate.ts`, but they are maintained
+Both schemas are imported by `src/validator/versionRegistry.ts`, which chooses
+between them from the version in the header, and by `src/validator/validate.ts`,
+which falls back to one when no caller names a schema. They are maintained
 differently. `src/schemes/g7validation.json` is generated from the upstream
 GEDCOM 7 specification by `npm run generate -w packages/validator` and must not
 be hand-edited. `src/schemes/g551validation.json` has no generator — GEDCOM 5.5.1
