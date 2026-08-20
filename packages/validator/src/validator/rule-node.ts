@@ -227,6 +227,145 @@ const DATE_VALUE_REGEXP = new RegExp(
 
 const DATE_PERIOD_REGEXP = new RegExp(`^(?:${DATE_PERIOD_SRC})$`);
 
+// How a declared payload URI is read. Both versions name several of the same
+// readings under different URIs, and `pointer` is absent because it is the one
+// payload whose declaration carries a target as well as a type.
+const PAYLOAD_FIELD_TYPES: Record<string, Exclude<FieldType, null>> = {
+  "Y|<NULL>": "boolean",
+
+  "http://www.w3.org/2001/XMLSchema#string": "string",
+  "https://gedcom.io/terms/v7/type-List#Text": "string",
+
+  "http://www.w3.org/2001/XMLSchema#Language": "language-tag",
+  "http://www.w3.org/ns/dcat#mediaType": "media-type",
+  "http://www.w3.org/2001/XMLSchema#nonNegativeInteger": "nonNegativeInteger",
+  "https://gedcom.io/terms/v7/type-TagDef": "tag-def",
+
+  "https://gedcom.io/terms/v7/type-Latitude": "latitude",
+  "https://gedcom.io/terms/v5.5.1/type-PLACE_LATITUDE": "latitude",
+  "https://gedcom.io/terms/v7/type-Longitude": "longitude",
+  "https://gedcom.io/terms/v5.5.1/type-PLACE_LONGITUDE": "longitude",
+
+  "https://gedcom.io/terms/v7/type-Name": "personal-name",
+  "https://gedcom.io/terms/v5.5.1/type-NAME_PERSONAL": "personal-name",
+
+  "https://gedcom.io/terms/v7/type-Enum": "select",
+  "https://gedcom.io/terms/v7/type-List#Enum": "multiselect",
+  // 5.5.1 states its closed value sets in the primitive definitions, not in
+  // an enumeration vocabulary, so each names its set in the scheme. See #112.
+  "https://gedcom.io/terms/v5.5.1/type-CERTAINTY_ASSESSMENT": "select",
+  "https://gedcom.io/terms/v5.5.1/type-PEDIGREE_LINKAGE_TYPE": "select",
+  "https://gedcom.io/terms/v5.5.1/type-RESTRICTION_NOTICE": "select",
+  "https://gedcom.io/terms/v5.5.1/type-ORDINANCE_PROCESS_FLAG": "select",
+  "https://gedcom.io/terms/v5.5.1/type-CHILD_LINKAGE_STATUS": "select",
+  "https://gedcom.io/terms/v5.5.1/type-ADOPTED_BY_WHICH_PARENT": "select",
+
+  "https://gedcom.io/terms/v7/type-Date": "date-v7",
+  "https://gedcom.io/terms/v5.5.1/type-DATE_VALUE": "date",
+  "https://gedcom.io/terms/v7/type-Date#period": "date-period-v7",
+  "https://gedcom.io/terms/v5.5.1/type-DATE_PERIOD": "date-period",
+  "https://gedcom.io/terms/v7/type-Date#exact": "date-exact-v7",
+  "https://gedcom.io/terms/v5.5.1/type-DATE_EXACT": "date-exact",
+
+  "https://gedcom.io/terms/v7/type-Time": "time-v7",
+  "https://gedcom.io/terms/v5.5.1/type-TIME_VALUE": "time",
+
+  "https://gedcom.io/terms/v7/type-Age": "age-v7",
+  "https://gedcom.io/terms/v5.5.1/type-AGE_AT_EVENT": "age",
+};
+
+interface ValueRule {
+  test: (
+    value: string,
+    scheme: GedcomScheme,
+    extensions: ExtensionContext,
+  ) => boolean;
+  message: string;
+  /** A date the grammar accepts may still name a day its month does not have. */
+  calendarDays?: true;
+}
+
+// The readings that are a predicate and a sentence. What is left in `collect`
+// is what is not that shape: a boolean carries its own code, an enumeration
+// reads the scheme, a pointer resolves an xref, and an absent string is
+// reported against the tag rather than the value.
+const VALUE_RULES: Partial<Record<Exclude<FieldType, null>, ValueRule>> = {
+  latitude: {
+    test: (value) => LATITUDE_REGEXP.test(value),
+    message: `should be correct latitude (e.g. "N18.150944")`,
+  },
+  longitude: {
+    test: (value) => LONGITUDE_REGEXP.test(value),
+    message: `should be correct longitude (e.g. "W46.6")`,
+  },
+  "personal-name": {
+    test: (value) => PERSONAL_NAME_REGEXP.test(value),
+    message: `should be a name, with the surname (if any) wrapped in a single pair of slashes (e.g. "John /Doe/")`,
+  },
+  "media-type": {
+    test: (value) => MEDIA_TYPE_REGEXP.test(value),
+    message: `should be a media type in the form "type/subtype" (e.g. "image/jpeg")`,
+  },
+  "language-tag": {
+    test: (value) => LANGUAGE_TAG_REGEXP.test(value),
+    message: `should be a valid RFC 5646 language tag (e.g. "en", "en-US")`,
+  },
+  "tag-def": {
+    test: (value) => !!parseTagDef(value),
+    message: `should be an extension tag and its URI (e.g. "_SKYPEID http://xmlns.com/foaf/0.1/skypeID")`,
+  },
+  nonNegativeInteger: {
+    test: (value) => NON_NEGATIVE_INTEGER_REGEXP.test(value),
+    message: "should be a whole number, zero or greater",
+  },
+  time: {
+    test: (value) => TIME_REGEXP.test(value),
+    message: "should be correct time",
+  },
+  "time-v7": {
+    test: (value) => TIME_REGEXP_V7.test(value),
+    message: "should be correct time",
+  },
+  age: {
+    test: (value) => AGE_REGEXP.test(value),
+    message: `should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
+  },
+  "age-v7": {
+    test: (value) => AGE_REGEXP_V7.test(value),
+    message: `should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
+  },
+  date: {
+    test: (value) => isValidGregorianDate(value, DATE_VALUE_REGEXP),
+    message: `should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
+    calendarDays: true,
+  },
+  "date-v7": {
+    test: isValidDateValue,
+    message: `should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`,
+    calendarDays: true,
+  },
+  "date-period": {
+    test: (value) => isValidGregorianDate(value, DATE_PERIOD_REGEXP),
+    message: `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
+    calendarDays: true,
+  },
+  "date-period-v7": {
+    test: isValidDatePeriod,
+    message: `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
+    calendarDays: true,
+  },
+  "date-exact": {
+    test: (value) => isValidGregorianDate(value, DATE_EXACT_REGEXP),
+    message: `should be an exact date in day month year order (e.g. "1 APR 1911")`,
+    calendarDays: true,
+  },
+  "date-exact-v7": {
+    test: isValidDateExact,
+    message: `should be an exact date in day month year order (e.g. "1 APR 1911")`,
+    calendarDays: true,
+  },
+};
+
 // Which xrefs a pointer may name, grouped by the record tag it points at.
 // A RuleNode is built for each validated node, so indexing per node would cost
 // records × pointers. The map is rebuilt by every parse and never mutated
@@ -293,99 +432,16 @@ export class RuleNode {
     to: GedcomType | undefined;
   } {
     const payload = this.scheme.payload[tagType];
-    let type: FieldType;
-    let to: GedcomType | undefined = undefined;
-    switch (payload?.type) {
-      case "Y|<NULL>":
-        type = "boolean";
-        break;
-      case "http://www.w3.org/2001/XMLSchema#string":
-        type = "string";
-        break;
-      case "http://www.w3.org/2001/XMLSchema#Language":
-        type = "language-tag";
-        break;
-      case "http://www.w3.org/ns/dcat#mediaType":
-        type = "media-type";
-        break;
-      case "https://gedcom.io/terms/v7/type-TagDef":
-        type = "tag-def";
-        break;
-      case "https://gedcom.io/terms/v7/type-Latitude":
-      case "https://gedcom.io/terms/v5.5.1/type-PLACE_LATITUDE":
-        type = "latitude";
-        break;
-      case "https://gedcom.io/terms/v7/type-Longitude":
-      case "https://gedcom.io/terms/v5.5.1/type-PLACE_LONGITUDE":
-        type = "longitude";
-        break;
-      case "https://gedcom.io/terms/v7/type-Name":
-      case "https://gedcom.io/terms/v5.5.1/type-NAME_PERSONAL":
-        type = "personal-name";
-        break;
-      case "https://gedcom.io/terms/v7/type-List#Text":
-        type = "string";
-        break;
-      case "http://www.w3.org/2001/XMLSchema#nonNegativeInteger":
-        type = "nonNegativeInteger";
-        break;
-      case "https://gedcom.io/terms/v7/type-Enum":
-        type = "select";
-        break;
-      // 5.5.1 states its closed value sets in the primitive definitions, not in
-      // an enumeration vocabulary, so each names its set in the scheme. See #112.
-      case "https://gedcom.io/terms/v5.5.1/type-CERTAINTY_ASSESSMENT":
-      case "https://gedcom.io/terms/v5.5.1/type-PEDIGREE_LINKAGE_TYPE":
-      case "https://gedcom.io/terms/v5.5.1/type-RESTRICTION_NOTICE":
-      case "https://gedcom.io/terms/v5.5.1/type-ORDINANCE_PROCESS_FLAG":
-      case "https://gedcom.io/terms/v5.5.1/type-CHILD_LINKAGE_STATUS":
-      case "https://gedcom.io/terms/v5.5.1/type-ADOPTED_BY_WHICH_PARENT":
-        type = "select";
-        break;
-      case "https://gedcom.io/terms/v7/type-List#Enum":
-        type = "multiselect";
-        break;
-      case "https://gedcom.io/terms/v7/type-Date":
-        type = "date-v7";
-        break;
-      case "https://gedcom.io/terms/v5.5.1/type-DATE_VALUE":
-        type = "date";
-        break;
-      case "https://gedcom.io/terms/v7/type-Date#period":
-        type = "date-period-v7";
-        break;
-      case "https://gedcom.io/terms/v5.5.1/type-DATE_PERIOD":
-        type = "date-period";
-        break;
-      case "https://gedcom.io/terms/v7/type-Date#exact":
-        type = "date-exact-v7";
-        break;
-      case "https://gedcom.io/terms/v5.5.1/type-DATE_EXACT":
-        type = "date-exact";
-        break;
-      case "https://gedcom.io/terms/v7/type-Time":
-        type = "time-v7";
-        break;
-      case "https://gedcom.io/terms/v5.5.1/type-TIME_VALUE":
-        type = "time";
-        break;
-      case "https://gedcom.io/terms/v7/type-Age":
-        type = "age-v7";
-        break;
-      case "https://gedcom.io/terms/v5.5.1/type-AGE_AT_EVENT":
-        type = "age";
-        break;
-      case "pointer":
-        type = "pointer";
-        to = payload.to;
-        break;
-      case null:
-        type = null;
-        break;
-      default:
-        type = "string";
+    if (payload?.type === "pointer") {
+      return { type: "pointer", to: payload.to };
     }
-    return { type, to };
+    if (payload?.type === null) {
+      return { type: null, to: undefined };
+    }
+    return {
+      type: PAYLOAD_FIELD_TYPES[payload?.type ?? ""] ?? "string",
+      to: undefined,
+    };
   }
 
   private mayOmitPayload(tagType: GedcomType): boolean {
@@ -514,6 +570,19 @@ export class RuleNode {
     if (!value && this.mayOmitPayload(tagType)) {
       return;
     }
+    if (fieldType.type === null) {
+      return;
+    }
+
+    const rule = VALUE_RULES[fieldType.type];
+    if (rule) {
+      if (!value || !rule.test(value, this.scheme, this.extensions)) {
+        errors.push(valueError(node, rule.message));
+      } else if (rule.calendarDays) {
+        errors.push(...impossibleDayErrors(node, value));
+      }
+      return;
+    }
 
     switch (fieldType.type) {
       case "boolean":
@@ -531,22 +600,7 @@ export class RuleNode {
           });
         }
         break;
-      case "latitude":
-      case "longitude": {
-        const isLati = fieldType.type === "latitude";
-        const regexp = isLati ? LATITUDE_REGEXP : LONGITUDE_REGEXP;
-        if (!value || !regexp.test(value)) {
-          errors.push(
-            valueError(
-              node,
-              `should be correct ${isLati ? "latitude" : "longitude"} ` +
-                `(e.g. "${isLati ? "N18.150944" : "W46.6"}")`,
-            ),
-          );
-        }
-        break;
-      }
-      case "string": {
+      case "string":
         if (!value) {
           errors.push({
             code: GedcomErrorCode.MissingValue,
@@ -556,55 +610,6 @@ export class RuleNode {
           });
         }
         break;
-      }
-      case "personal-name":
-        if (!value || !PERSONAL_NAME_REGEXP.test(value)) {
-          errors.push(
-            valueError(
-              node,
-              `should be a name, with the surname (if any) wrapped in a single pair of slashes (e.g. "John /Doe/")`,
-            ),
-          );
-        }
-        break;
-      case "media-type":
-        if (!value || !MEDIA_TYPE_REGEXP.test(value)) {
-          errors.push(
-            valueError(
-              node,
-              `should be a media type in the form "type/subtype" (e.g. "image/jpeg")`,
-            ),
-          );
-        }
-        break;
-      case "language-tag":
-        if (!value || !LANGUAGE_TAG_REGEXP.test(value)) {
-          errors.push(
-            valueError(
-              node,
-              `should be a valid RFC 5646 language tag (e.g. "en", "en-US")`,
-            ),
-          );
-        }
-        break;
-      case "tag-def":
-        if (!parseTagDef(value)) {
-          errors.push(
-            valueError(
-              node,
-              `should be an extension tag and its URI (e.g. "_SKYPEID http://xmlns.com/foaf/0.1/skypeID")`,
-            ),
-          );
-        }
-        break;
-      case "nonNegativeInteger":
-        if (!NON_NEGATIVE_INTEGER_REGEXP.test(value)) {
-          errors.push(
-            valueError(node, "should be a whole number, zero or greater"),
-          );
-        }
-        break;
-
       case "select":
         errors.push(...this.validateEnumeration([value], tagType, node));
         break;
@@ -617,89 +622,6 @@ export class RuleNode {
           ),
         );
         break;
-      case "date-v7":
-        if (!isValidDateValue(value, this.scheme, this.extensions)) {
-          errors.push(
-            valueError(
-              node,
-              `should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`,
-            ),
-          );
-        } else {
-          errors.push(...impossibleDayErrors(node, value));
-        }
-        break;
-      case "date":
-        if (!isValidGregorianDate(value, DATE_VALUE_REGEXP)) {
-          errors.push(
-            valueError(
-              node,
-              `should be a valid Gregorian date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "(unknown)")`,
-            ),
-          );
-        } else {
-          errors.push(...impossibleDayErrors(node, value));
-        }
-        break;
-      case "date-period-v7":
-      case "date-period": {
-        const isValid =
-          fieldType.type === "date-period-v7"
-            ? isValidDatePeriod(value, this.scheme, this.extensions)
-            : isValidGregorianDate(value, DATE_PERIOD_REGEXP);
-        if (!isValid) {
-          errors.push(
-            valueError(
-              node,
-              `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
-            ),
-          );
-        } else {
-          errors.push(...impossibleDayErrors(node, value));
-        }
-        break;
-      }
-      case "date-exact-v7":
-      case "date-exact": {
-        const isValid =
-          fieldType.type === "date-exact-v7"
-            ? isValidDateExact(value, this.scheme, this.extensions)
-            : isValidGregorianDate(value, DATE_EXACT_REGEXP);
-        if (!isValid) {
-          errors.push(
-            valueError(
-              node,
-              `should be an exact date in day month year order (e.g. "1 APR 1911")`,
-            ),
-          );
-        } else {
-          errors.push(...impossibleDayErrors(node, value));
-        }
-        break;
-      }
-      case "time-v7":
-      case "time": {
-        // Only v7's Time allows a trailing "Z" for UTC.
-        const regexp =
-          fieldType.type === "time-v7" ? TIME_REGEXP_V7 : TIME_REGEXP;
-        if (!value || !regexp.test(value)) {
-          errors.push(valueError(node, "should be correct time"));
-        }
-        break;
-      }
-      case "age-v7":
-      case "age": {
-        const regexp = fieldType.type === "age-v7" ? AGE_REGEXP_V7 : AGE_REGEXP;
-        if (!value || !regexp.test(value)) {
-          errors.push(
-            valueError(
-              node,
-              `should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
-            ),
-          );
-        }
-        break;
-      }
       case "pointer": {
         const XREF = node.tokens.XREF;
         const isXrefExist = !!XREF?.value;
