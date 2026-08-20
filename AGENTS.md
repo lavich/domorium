@@ -68,10 +68,6 @@ Violating one means the change is at the wrong layer. Move the code instead.
 - Before writing one, find where the rule is already stated — a test name, a
   type, the symbol itself. A comment repeating a guard is not a second guard,
   and it goes stale while the guard does not.
-- An agent pushing from this repository has its added comments read against this
-  section first, by the hook in [.claude/settings.json](.claude/settings.json).
-  It reports what it cannot justify and lets the push be retried; it judges
-  meaning, so it neither counts lines nor matches words. See #142.
 
 ## Releases
 
