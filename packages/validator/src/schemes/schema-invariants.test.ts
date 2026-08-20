@@ -68,4 +68,24 @@ describe.each(schemes)("%s", (_name, scheme) => {
     );
     expect(untagged).toEqual([]);
   });
+
+  it("labels every payload type", () => {
+    const unlabelled = Object.keys(scheme.payload).filter(
+      (type) => !(type in scheme.label),
+    );
+    expect(unlabelled).toEqual([]);
+  });
+
+  it("resolves every type in tagInContext.struct against payload", () => {
+    const unresolved = Object.entries(scheme.tagInContext.struct).flatMap(
+      ([context, children]) => [
+        // Both schemes key the document root as "", which names no structure.
+        ...(context === "" || context in scheme.payload ? [] : [context]),
+        ...Object.keys(children)
+          .filter((child) => !(child in scheme.payload))
+          .map((child) => `${context} > ${child}`),
+      ],
+    );
+    expect(unresolved).toEqual([]);
+  });
 });
