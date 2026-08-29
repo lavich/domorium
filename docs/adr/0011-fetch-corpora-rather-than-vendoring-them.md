@@ -1,6 +1,6 @@
 # 0011. Fetch test corpora rather than vendoring them
 
-- **Status:** Accepted
+- **Status:** Superseded by [0013](0013-cache-the-fetched-corpora-in-ci.md)
 - **Date:** 2026-08-18
 
 ## Context
