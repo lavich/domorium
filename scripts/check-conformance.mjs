@@ -10,13 +10,25 @@
 //     teaches nothing.
 //
 // Neither corpus is copied into this repository, however permissive its licence.
-// The files are fetched into memory and never written to disk; what is committed
-// is the record beside this script: where each file comes from, under which
-// licence, a SHA-256, and the diagnostics it is expected to produce. The hash is
-// what turns an upstream edit into a visible failure instead of a silent one, and
-// each vendor location is pinned to a full upstream revision so a later commit
-// there cannot change what we read. See
-// docs/adr/0011-fetch-corpora-rather-than-vendoring-them.md.
+// What is committed is the record beside this script: where each file comes from,
+// under which licence, a SHA-256, and the diagnostics it is expected to produce.
+// The hash is what turns an upstream edit into a visible failure instead of a
+// silent one, and each vendor location is pinned to a full upstream revision so a
+// later commit there cannot change what we read. See
+// docs/adr/0011-fetch-corpora-rather-than-vendoring-them.md and
+// docs/adr/0013-cache-the-fetched-corpora-in-ci.md.
+//
+// Two environment variables govern where the bytes come from. With neither set
+// the files are fetched into memory and nothing is written, which is what a
+// developer running this gets:
+//
+//   - `CONFORMANCE_CACHE` names a directory a fetched file is kept in and a
+//     later run may read instead of fetching. A copy is hashed against the
+//     record on the way in exactly as a fetched file is, so the cache decides
+//     what is read and never whether it is right.
+//   - `CONFORMANCE_REFRESH` makes the run fetch from upstream whatever that
+//     directory holds, and rewrite it. The scheduled CI run sets it, and is
+//     what carries upstream drift back to us.
 //
 // An expectation takes one of two shapes, and which one an entry uses is recorded
 // in the entry rather than decided by a threshold here:
@@ -30,24 +42,24 @@
 // No expectation holds a diagnostic's message. The wording is meant to get
 // clearer, and pinning it would make every improvement read as a regression.
 //
-// Two consequences follow from fetching:
+// Two consequences follow from reading the corpus from upstream:
 //
 //   - This needs network, so it is not part of `npm run check`, which has to
 //     work on a plane. CI runs it as its own job.
-//   - A file that cannot be fetched is a failure, not a skip. A conformance
+//   - A file that cannot be obtained is a failure, not a skip. A conformance
 //     suite that quietly checks nothing is worse than none at all.
 
 import console from "node:console";
 import process from "node:process";
-import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { TextDecoder } from "node:util";
 
+import * as cache from "./conformance-cache.mjs";
 import {
   compare,
+  contentOf,
   isPinned,
   normalise,
   recordOf,
@@ -67,12 +79,14 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // location.
 const CORPORA = [
   {
+    key: "official",
     file: resolve(root, "scripts/conformance-corpus.json"),
     label: "official GEDCOM 7.0 files",
     locate: (corpus, name) => `${corpus.source}${name}`,
     pinned: false,
   },
   {
+    key: "vendor",
     file: resolve(root, "scripts/vendor-corpus.json"),
     label: "vendor exports",
     locate: (corpus, name) => corpus.files[name].location,
@@ -81,6 +95,11 @@ const CORPORA = [
 ];
 
 const update = process.argv.includes("--update");
+const cacheDirectory = process.env.CONFORMANCE_CACHE;
+// `--update` renews the record from what upstream holds. Reading a copy this
+// script wrote from an earlier record would record nothing.
+const refresh =
+  update || cache.refreshRequested(process.env.CONFORMANCE_REFRESH);
 
 // Through the package name and the workspace link, so this exercises the entry
 // point a consumer gets rather than a path into the source tree.
@@ -96,26 +115,32 @@ try {
   process.exit(1);
 }
 
-/**
- * `Response.text()` runs the WHATWG UTF-8 decode algorithm, which strips a
- * leading BOM — the same thing a browser does with a dropped file, and the
- * reason #95 went unseen there. Decoding the bytes ourselves keeps the BOM, so
- * these run as a Node consumer reading from disk sees them.
- */
-function decode(bytes) {
-  return new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes);
-}
-
-async function load(url) {
+async function fetchBytes(url) {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`${url} returned ${response.status}`);
   }
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  return {
-    sha256: createHash("sha256").update(bytes).digest("hex"),
-    text: decode(bytes),
-  };
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+/** One entry's bytes, from the cache when it holds them and upstream when not. */
+async function load(corpus, name, url) {
+  const path = cacheDirectory
+    ? cache.pathOf(cacheDirectory, corpus.key, name)
+    : undefined;
+
+  if (path && !refresh) {
+    const held = cache.read(path);
+    if (held) {
+      return contentOf(held);
+    }
+  }
+
+  const bytes = await fetchBytes(url);
+  if (path) {
+    cache.write(path, bytes);
+  }
+  return contentOf(bytes);
 }
 
 function diagnose(text) {
@@ -141,7 +166,7 @@ for (const corpus of CORPORA) {
         };
       }
       try {
-        return { name, ...(await load(url)) };
+        return { name, ...(await load(corpus, name, url)) };
       } catch (error) {
         return { name, error: error.message };
       }

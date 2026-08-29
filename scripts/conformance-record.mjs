@@ -1,11 +1,29 @@
-// The parts of the conformance check worth testing on their own: turning
-// validator diagnostics into a normalised record, the two shapes an expectation
-// can take, and comparing a recorded expectation with what the validator says
-// today. `check-conformance.mjs` does the fetching and the reporting around
-// these; nothing here touches the network or the filesystem.
+// The parts of the conformance check worth testing on their own: reading a
+// file's bytes into the hash and text a record is about, turning validator
+// diagnostics into a normalised record, the two shapes an expectation can take,
+// and comparing a recorded expectation with what the validator says today.
+// `check-conformance.mjs` does the fetching and the reporting around these;
+// nothing here touches the network or the filesystem.
 
 import { createHash } from "node:crypto";
 import { URL } from "node:url";
+import { TextDecoder } from "node:util";
+
+/**
+ * One reading of a file's bytes, whichever way they arrived, so a copy and a
+ * fetch are hashed and decoded by the same rule.
+ *
+ * `Response.text()` runs the WHATWG UTF-8 decode algorithm, which strips a
+ * leading BOM — the same thing a browser does with a dropped file, and the
+ * reason #95 went unseen there. Decoding the bytes here keeps it, so the corpus
+ * runs as a Node consumer reading from disk sees it.
+ */
+export function contentOf(bytes) {
+  return {
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    text: new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes),
+  };
+}
 
 /**
  * Line, column, level and code — never the message. The wording of a diagnostic
