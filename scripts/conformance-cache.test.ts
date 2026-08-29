@@ -3,11 +3,6 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-// The corpus copy a CI run keeps between jobs. What matters here is that the
-// cache cannot change what the check concludes: bytes that go through it come
-// back reading exactly as fetched bytes do, an entry it cannot serve is a miss
-// rather than a failure, and a name that is not a plain file name never
-// addresses a path.
 import {
   pathOf,
   read,
@@ -92,9 +87,6 @@ describe("write", () => {
 });
 
 describe("a file that went through the cache", () => {
-  // The whole safety of caching rests on this: the recorded SHA-256 is what
-  // makes a wrong file visible, so a copy has to read as the fetch it stood in
-  // for — byte for byte, BOM included.
   it("reads exactly as the bytes that were fetched", () => {
     const fetched = new Uint8Array([
       0xef, 0xbb, 0xbf, 0x30, 0x20, 0x48, 0x45, 0x41, 0x44, 0x0a,

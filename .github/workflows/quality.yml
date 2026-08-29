@@ -91,15 +91,10 @@ jobs:
       - run: npm ci
         env:
           LEFTHOOK: 0
-      # Reads both corpora — the official test files from gedcom.io and the
+      # Fetches both corpora — the official test files from gedcom.io and the
       # vendor exports from their pinned upstream locations — so unlike every
-      # other job here it needs the network whenever this entry misses. The key
-      # covers both record files whole, so re-pointing an entry or re-recording
-      # a hash is a different key and fetches afresh; there are no restore-keys
-      # because a prefix match would serve the previous record's bytes in
-      # exactly the case where fresh ones are the point. See
-      # scripts/check-conformance.mjs for why neither corpus is carried in the
-      # repository.
+      # other job here it needs the network. See scripts/check-conformance.mjs
+      # for why neither is carried in the repository.
       - uses: actions/cache@v6
         with:
           path: .conformance-cache

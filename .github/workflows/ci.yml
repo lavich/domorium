@@ -6,8 +6,6 @@ on:
   push:
     branches: [main]
   schedule:
-    # The weekly corpus refresh. See
-    # docs/adr/0013-cache-the-fetched-corpora-in-ci.md.
     - cron: "17 6 * * 0"
   workflow_dispatch:
 
@@ -15,8 +13,6 @@ permissions:
   contents: read
 
 concurrency:
-  # The event is part of the group so a push to main cannot cancel the weekly
-  # refresh, which is the only run that reads upstream.
   group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
@@ -67,8 +63,6 @@ jobs:
             exit 0
           fi
 
-          # The scheduled run exists to read upstream, and reaches the job that
-          # does so only by being named here; it has no diff to filter on.
           if [[ "$EVENT_NAME" == "schedule" ]]; then
             emit_only conformance
             exit 0

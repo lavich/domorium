@@ -46,8 +46,6 @@ function diagnostic(
 
 describe("contentOf", () => {
   it("hashes the bytes as they arrived", () => {
-    // The SHA-256 of "abc", so the digest is checked against something other
-    // than a second call to the code under test.
     expect(contentOf(new Uint8Array([0x61, 0x62, 0x63])).sha256).toBe(
       "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
     );

@@ -18,18 +18,6 @@
 // docs/adr/0011-fetch-corpora-rather-than-vendoring-them.md and
 // docs/adr/0013-cache-the-fetched-corpora-in-ci.md.
 //
-// Two environment variables govern where the bytes come from. With neither set
-// the files are fetched into memory and nothing is written, which is what a
-// developer running this gets:
-//
-//   - `CONFORMANCE_CACHE` names a directory a fetched file is kept in and a
-//     later run may read instead of fetching. A copy is hashed against the
-//     record on the way in exactly as a fetched file is, so the cache decides
-//     what is read and never whether it is right.
-//   - `CONFORMANCE_REFRESH` makes the run fetch from upstream whatever that
-//     directory holds, and rewrite it. The scheduled CI run sets it, and is
-//     what carries upstream drift back to us.
-//
 // An expectation takes one of two shapes, and which one an entry uses is recorded
 // in the entry rather than decided by a threshold here:
 //
@@ -96,8 +84,6 @@ const CORPORA = [
 
 const update = process.argv.includes("--update");
 const cacheDirectory = process.env.CONFORMANCE_CACHE;
-// `--update` renews the record from what upstream holds. Reading a copy this
-// script wrote from an earlier record would record nothing.
 const refresh =
   update || cache.refreshRequested(process.env.CONFORMANCE_REFRESH);
 
@@ -123,7 +109,6 @@ async function fetchBytes(url) {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-/** One entry's bytes, from the cache when it holds them and upstream when not. */
 async function load(corpus, name, url) {
   const path = cacheDirectory
     ? cache.pathOf(cacheDirectory, corpus.key, name)

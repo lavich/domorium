@@ -10,13 +10,10 @@ import { URL } from "node:url";
 import { TextDecoder } from "node:util";
 
 /**
- * One reading of a file's bytes, whichever way they arrived, so a copy and a
- * fetch are hashed and decoded by the same rule.
- *
  * `Response.text()` runs the WHATWG UTF-8 decode algorithm, which strips a
  * leading BOM — the same thing a browser does with a dropped file, and the
- * reason #95 went unseen there. Decoding the bytes here keeps it, so the corpus
- * runs as a Node consumer reading from disk sees it.
+ * reason #95 went unseen there. Decoding the bytes ourselves keeps the BOM, so
+ * these run as a Node consumer reading from disk sees them.
  */
 export function contentOf(bytes) {
   return {
