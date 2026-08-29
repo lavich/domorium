@@ -16,3 +16,5 @@ yarn-error.log*
 
 # Playwright MCP session artifacts
 /.playwright-mcp
+
+/.conformance-cache

@@ -5,13 +5,15 @@ on:
     branches: [main]
   push:
     branches: [main]
+  schedule:
+    - cron: "17 6 * * 0"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -36,10 +38,20 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.sha }}
         run: |
-          emit_all() {
-            for component in quality tests conformance web vscode jetbrains; do
-              echo "$component=true" >> "$GITHUB_OUTPUT"
+          COMPONENTS="quality tests conformance web vscode jetbrains"
+
+          emit_only() {
+            for component in $COMPONENTS; do
+              if [[ " $* " == *" $component "* ]]; then
+                echo "$component=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "$component=false" >> "$GITHUB_OUTPUT"
+              fi
             done
+          }
+
+          emit_all() {
+            emit_only $COMPONENTS
           }
 
           changed() {
@@ -48,6 +60,11 @@ jobs:
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             emit_all
+            exit 0
+          fi
+
+          if [[ "$EVENT_NAME" == "schedule" ]]; then
+            emit_only conformance
             exit 0
           fi
 
@@ -88,6 +105,7 @@ jobs:
             apps/web-editor/src \
             apps/vscode/src \
             packages \
+            scripts \
             vitest.config.ts \
             package.json \
             package-lock.json; then
@@ -99,6 +117,7 @@ jobs:
           if changed \
             packages \
             scripts/check-conformance.mjs \
+            scripts/conformance-cache.mjs \
             scripts/conformance-record.mjs \
             scripts/conformance-corpus.json \
             scripts/vendor-corpus.json \
@@ -150,6 +169,7 @@ jobs:
       run_quality: ${{ needs.changes.outputs.quality == 'true' }}
       run_tests: ${{ needs.changes.outputs.tests == 'true' }}
       run_conformance: ${{ needs.changes.outputs.conformance == 'true' }}
+      refresh_conformance: ${{ github.event_name == 'schedule' }}
       run_web: ${{ needs.changes.outputs.web == 'true' }}
       run_vscode: ${{ needs.changes.outputs.vscode == 'true' }}
       run_jetbrains: ${{ needs.changes.outputs.jetbrains == 'true' }}

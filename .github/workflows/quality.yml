@@ -18,6 +18,11 @@ on:
         required: false
         type: boolean
         default: true
+      refresh_conformance:
+        description: Fetch the corpora from upstream rather than from the cache
+        required: false
+        type: boolean
+        default: false
       run_web:
         description: Build the web editor
         required: false
@@ -90,7 +95,14 @@ jobs:
       # vendor exports from their pinned upstream locations — so unlike every
       # other job here it needs the network. See scripts/check-conformance.mjs
       # for why neither is carried in the repository.
+      - uses: actions/cache@v6
+        with:
+          path: .conformance-cache
+          key: conformance-corpus-${{ hashFiles('scripts/conformance-corpus.json', 'scripts/vendor-corpus.json') }}
       - run: npm run check:conformance
+        env:
+          CONFORMANCE_CACHE: .conformance-cache
+          CONFORMANCE_REFRESH: ${{ inputs.refresh_conformance }}
 
   build-web:
     if: inputs.run_web

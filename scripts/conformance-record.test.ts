@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 // location — while fetching and reporting stay in the script around them.
 import {
   compare,
+  contentOf,
   digestOf,
   expectationOf,
   isPinned,
@@ -42,6 +43,19 @@ function diagnostic(
 ): Diagnostic {
   return { line, column, level, code };
 }
+
+describe("contentOf", () => {
+  it("hashes the bytes as they arrived", () => {
+    expect(contentOf(new Uint8Array([0x61, 0x62, 0x63])).sha256).toBe(
+      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    );
+  });
+
+  it("keeps a leading BOM, which the fetch response would strip — #95", () => {
+    const bytes = new Uint8Array([0xef, 0xbb, 0xbf, 0x30, 0x20, 0x48]);
+    expect(contentOf(bytes).text).toBe("\ufeff0 H");
+  });
+});
 
 describe("normalise", () => {
   it("makes positions one-based and drops the message", () => {
