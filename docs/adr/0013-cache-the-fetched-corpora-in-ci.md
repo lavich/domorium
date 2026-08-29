@@ -35,8 +35,7 @@ property. It is not the property.
 
 The conformance job restores the corpus from an `actions/cache` entry keyed on
 the content of `scripts/conformance-corpus.json` and `scripts/vendor-corpus.json`,
-and a weekly scheduled run fetches from upstream regardless of that entry and
-refills it.
+and a weekly scheduled run fetches from upstream regardless of that entry.
 
 - `CONFORMANCE_CACHE` names a directory the script may read a corpus file from
   and write a fetched one to. Unset — a developer running
@@ -52,7 +51,9 @@ refills it.
 - `--update` fetches from upstream. A record renewed from a copy of itself would
   record nothing.
 - The scheduled run is the one that fetches, so the rule that an unreadable file
-  is a failure rather than a skip is what makes it report upstream loss.
+  is a failure rather than a skip is what makes it report upstream loss. A key
+  that hit is never written again, so an entry is filled on a miss and the
+  schedule reports drift rather than replacing stored bytes.
 
 ## Consequences
 
