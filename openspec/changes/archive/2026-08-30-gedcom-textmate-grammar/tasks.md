@@ -44,10 +44,16 @@
 - [x] 4.2 Add an `## Unreleased` entry to `apps/vscode/CHANGELOG.md` — colour
       before the server connects, colour in a Markdown fence, and the deliberate
       difference from github.com's colours.
-- [ ] 4.3 Confirm no ADR is needed: ADR-0004 already records the vocabulary and
+- [x] 4.3 Confirm no ADR is needed: ADR-0004 already records the vocabulary and
       already considered "a TextMate grammar instead of semantic tokens". This
       change adds one underneath rather than instead, which the record does not
-      contradict. Say so in the pull request rather than writing a record.
+      contradict. Confirmed here rather than in a pull request: the work landed
+      as direct commits to main, so this archived file is where the confirmation
+      is kept. One nuance for whoever reads ADR-0004 next — it rejects a grammar
+      because declaration-versus-reference is "not decidable by a regular
+      grammar", and the grammar shipped here does decide that one positionally.
+      The decision is unchanged: semantic tokens remain the vocabulary, and the
+      rationale holds for the rest of the vocabulary it named.
 
 ## 5. Verification
 
