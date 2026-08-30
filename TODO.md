@@ -4,7 +4,9 @@ Near-term work. Longer-range directions live in [docs/roadmap.md](docs/roadmap.m
 
 ## Priority: Low
 
-- [ ] **`updateDocument()`** — implement partial/incremental update instead of full re-parse (currently a stub at `gedcomDocument.ts:66`).
+- [ ] **Incremental re-parse** — an edit re-parses and revalidates the whole
+      document, which is what makes a large file freeze the CodeMirror hosts.
+      See [#210](https://github.com/lavich/domorium/issues/210).
 
 ## packages/validator
 
