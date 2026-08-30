@@ -109,7 +109,7 @@ async function fetchBytes(url) {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-async function load(corpus, name, url) {
+async function load(corpus, name, url, expected) {
   const path = cacheDirectory
     ? cache.pathOf(cacheDirectory, corpus.key, name)
     : undefined;
@@ -122,10 +122,11 @@ async function load(corpus, name, url) {
   }
 
   const bytes = await fetchBytes(url);
-  if (path) {
+  const content = contentOf(bytes);
+  if (path && cache.matchesRecord(content.sha256, expected)) {
     cache.write(path, bytes);
   }
-  return contentOf(bytes);
+  return content;
 }
 
 function diagnose(text) {
@@ -151,7 +152,8 @@ for (const corpus of CORPORA) {
         };
       }
       try {
-        return { name, ...(await load(corpus, name, url)) };
+        const expected = update ? undefined : recorded.files[name].sha256;
+        return { name, ...(await load(corpus, name, url, expected)) };
       } catch (error) {
         return { name, error: error.message };
       }
