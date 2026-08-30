@@ -184,8 +184,7 @@ const YEAR_REGEXP_SRC = "\\d+(?:/\\d{2})?";
 // v5.5.1 syntax, and everything below it is the v5.5.1 reader. GEDCOM 7 dates
 // are parsed in date-v7.ts.
 interface DateGrammars {
-  value: RegExp;
-  period: RegExp;
+  dated: RegExp;
   exact: RegExp;
 }
 
@@ -198,30 +197,9 @@ function buildGrammars(months: string[]): DateGrammars {
   // Day requires a month: "(?:\d{1,2}\s)?MONTH\s" only ever matches together,
   // so a bare "DAY YEAR" (no month) never matches.
   const date = `(?:(?:\\d{1,2}\\s)?${month}\\s)?${YEAR_REGEXP_SRC}`;
-  const dated = `${date}(?:\\s?${EPOCH_SRC})?`;
-  // "FROM <date> [TO <date>]" / "TO <date>" — shared by DATE_VALUE (where it's
-  // one of several modifiers) and DATE_PERIOD (where it's the only grammar).
-  const period = `FROM\\s${dated}(?:\\sTO\\s${dated})?|TO\\s${dated}`;
 
   return {
-    value: new RegExp(
-      "^(?:" +
-        `(?:ABT|CAL|EST)\\s${dated}` +
-        "|" +
-        `(?:BEF|AFT)\\s${dated}` +
-        "|" +
-        `BET\\s${dated}\\sAND\\s${dated}` +
-        "|" +
-        period +
-        "|" +
-        `INT\\s${dated}\\s\\([^()]*\\)` +
-        "|" +
-        `${dated}` +
-        "|" +
-        "\\([^()]*\\)" +
-        ")$",
-    ),
-    period: new RegExp(`^(?:${period})$`),
+    dated: new RegExp(`^${date}(?:\\s?${EPOCH_SRC})?$`),
     exact: new RegExp(`^\\d{1,2}\\s${month}\\s${YEAR_REGEXP_SRC}$`),
   };
 }
@@ -254,14 +232,70 @@ function grammarsFor(
   return built;
 }
 
-function isValidDate(
-  scheme: GedcomScheme,
-  value: string,
-  grammar: keyof DateGrammars,
-): boolean {
-  const { calendar, rest } = stripCalendarEscape(value);
+/**
+ * One `<DATE>`, with the escape that names its calendar. 5.5.1 puts the escape
+ * inside `<DATE>` and `<DATE>` after the modifier, so a calendar binds to the
+ * date it precedes and never to the payload: `BET` and `FROM` hold two dates,
+ * and each names its own.
+ */
+function isValidDateSlot(scheme: GedcomScheme, slot: string): boolean {
+  const { calendar, rest } = stripCalendarEscape(slot);
   const rules = grammarsFor(scheme, calendar ?? DEFAULT_CALENDAR);
-  return rules === null ? !!rest : rules[grammar].test(rest);
+  return rules === null ? rest.length > 0 : rules.dated.test(rest);
+}
+
+// A date carries no keyword, so the last one in the payload is the separator
+// however greedily it is matched.
+const INTERPRETED = /^INT\s(.+)\s\([^()]*\)$/;
+const PHRASE = /^\([^()]*\)$/;
+const APPROXIMATED = /^(?:ABT|CAL|EST|BEF|AFT)\s(.+)$/;
+const RANGE = /^BET\s(.+)\sAND\s(.+)$/;
+const FROM_TO = /^FROM\s(.+)\sTO\s(.+)$/;
+const FROM = /^FROM\s(.+)$/;
+const TO = /^TO\s(.+)$/;
+
+function isValidDatePeriod551(scheme: GedcomScheme, value: string): boolean {
+  const fromTo = FROM_TO.exec(value);
+  if (fromTo) {
+    return (
+      isValidDateSlot(scheme, fromTo[1]) && isValidDateSlot(scheme, fromTo[2])
+    );
+  }
+  const from = FROM.exec(value) ?? TO.exec(value);
+  return from !== null && isValidDateSlot(scheme, from[1]);
+}
+
+function isValidDateValue551(scheme: GedcomScheme, value: string): boolean {
+  if (PHRASE.test(value)) {
+    return true;
+  }
+  const interpreted = INTERPRETED.exec(value);
+  if (interpreted) {
+    return isValidDateSlot(scheme, interpreted[1]);
+  }
+  const range = RANGE.exec(value);
+  if (range) {
+    return (
+      isValidDateSlot(scheme, range[1]) && isValidDateSlot(scheme, range[2])
+    );
+  }
+  if (FROM.test(value) || TO.test(value)) {
+    return isValidDatePeriod551(scheme, value);
+  }
+  const approximated = APPROXIMATED.exec(value);
+  if (approximated) {
+    return isValidDateSlot(scheme, approximated[1]);
+  }
+  return isValidDateSlot(scheme, value);
+}
+
+/**
+ * `DATE_EXACT` is `<DAY> <MONTH> <YEAR_GREG>`: Gregorian, and no slot for a
+ * calendar, so an escape is not stripped before the grammar reads it.
+ */
+function isValidDateExact551(scheme: GedcomScheme, value: string): boolean {
+  const rules = grammarsFor(scheme, DEFAULT_CALENDAR);
+  return rules === null ? value.length > 0 : rules.exact.test(value);
 }
 
 // How a declared payload URI is read. Both versions name several of the same
@@ -398,7 +432,7 @@ const VALUE_RULES: Partial<Record<Exclude<FieldType, null>, ValueRule>> = {
     message: `should be correct age (e.g. "35y 11m 8w 21d", "< 1y", "CHILD")`,
   },
   date: {
-    test: (value, scheme) => isValidDate(scheme, value, "value"),
+    test: (value, scheme) => isValidDateValue551(scheme, value),
     message: `should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "@#DJULIAN@ 3 MAR 1721", "(unknown)")`,
     calendarDays: true,
   },
@@ -408,7 +442,7 @@ const VALUE_RULES: Partial<Record<Exclude<FieldType, null>, ValueRule>> = {
     calendarDays: true,
   },
   "date-period": {
-    test: (value, scheme) => isValidDate(scheme, value, "period"),
+    test: (value, scheme) => isValidDatePeriod551(scheme, value),
     message: `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
     calendarDays: true,
   },
@@ -418,7 +452,7 @@ const VALUE_RULES: Partial<Record<Exclude<FieldType, null>, ValueRule>> = {
     calendarDays: true,
   },
   "date-exact": {
-    test: (value, scheme) => isValidDate(scheme, value, "exact"),
+    test: (value, scheme) => isValidDateExact551(scheme, value),
     message: `should be an exact date in day month year order (e.g. "1 APR 1911")`,
     calendarDays: true,
   },

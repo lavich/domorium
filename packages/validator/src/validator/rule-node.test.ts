@@ -1621,6 +1621,24 @@ ${lines}0 @F1@ FAM
       const errs = ruleEngine.validate(DATE);
       expect(errs.length).toBe(1);
     });
+
+    // DATE_EXACT is <DAY> <MONTH> <YEAR_GREG> — Gregorian, with no slot for a
+    // calendar. Stripping the escape before the grammar ran admitted one, and
+    // the GEDCOM 7 rule rejects it.
+    test.each(["@#DHEBREW@ 1 TSH 5760", "@#DJULIAN@ 3 MAR 1721"])(
+      "should return error because an exact DATE names the calendar %s",
+      async (date) => {
+        const { nodes, pointers } = astBuilder(`0 HEAD
+1 DATE ${date}
+1 GEDC
+2 VERS 5.5.1
+0 TRLR
+`);
+        const ruleEngine = new RuleNode(g551validation, pointers);
+        const errs = ruleEngine.validate(nodes[0].children[0]);
+        expect(errs.length).toBe(1);
+      },
+    );
   });
 
   describe("rule Date", () => {
@@ -1691,6 +1709,56 @@ ${lines}0 @F1@ FAM
       const errs = ruleEngine.validate(DATE);
       expect(errs.length).toBe(1);
     });
+
+    // 5.5.1 puts the escape inside <DATE>, which follows the modifier, so an
+    // escape was only ever read at the front of the payload and every
+    // conforming form below was reported.
+    test.each([
+      "@#DJULIAN@ 3 MAR 1721",
+      "ABT @#DJULIAN@ 1700",
+      "ABT @#DHEBREW@ TSH 5760",
+      "BEF @#DJULIAN@ 1 JAN 1700",
+      "BET @#DJULIAN@ 1 JAN 1700 AND @#DJULIAN@ 1 JAN 1710",
+      "FROM @#DJULIAN@ 1 JAN 1700 TO @#DJULIAN@ 1 JAN 1710",
+      "TO @#DHEBREW@ 1 TSH 5760",
+      "INT @#DJULIAN@ 1700 (guessed)",
+    ])("should pass DATE with %s", async (date) => {
+      expect(dateIn(date)).toEqual([]);
+    });
+
+    // Each <DATE> carries its own calendar, so the second one is not read in the
+    // first one's months.
+    test.each([
+      "FROM @#DJULIAN@ 1 JAN 1700 TO 1 JAN 1710",
+      "FROM @#DHEBREW@ 1 TSH 5760 TO @#DJULIAN@ 1 JAN 2000",
+      "BET @#DHEBREW@ 1 TSH 5760 AND @#DFRENCH R@ 1 VEND 12",
+    ])("should pass DATE mixing calendars in %s", async (date) => {
+      expect(dateIn(date)).toEqual([]);
+    });
+
+    test.each([
+      "@#DJULIAN@ 1 TSH 1700",
+      "FROM @#DJULIAN@ 1 JAN 1700 TO @#DJULIAN@ 1 TSH 1710",
+      "BET @#DHEBREW@ 1 JAN 5760 AND @#DHEBREW@ 1 TSH 5761",
+    ])(
+      "should return error because %s uses another calendar's month",
+      async (date) => {
+        expect(dateIn(date).length).toBe(1);
+      },
+    );
+
+    // The escape belongs to the date, not to the payload, so it cannot stand in
+    // front of the modifier.
+    test.each([
+      "@#DJULIAN@ FROM 1 JAN 1700 TO 1 JAN 1710",
+      "@#DJULIAN@ BET 1700 AND 1710",
+      "@#DHEBREW@ ABT 5760",
+    ])(
+      "should return error because the escape in %s precedes the modifier",
+      async (date) => {
+        expect(dateIn(date).length).toBe(1);
+      },
+    );
   });
 
   describe("rule DatePeriod", () => {

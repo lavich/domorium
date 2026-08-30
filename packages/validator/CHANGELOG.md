@@ -2,6 +2,23 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **A 5.5.1 date names its calendar where the specification puts it.** 5.5.1
+  writes the escape inside `<DATE>`, and `<DATE>` comes after the modifier:
+  `ABT <DATE>`, `BET <DATE> AND <DATE>`, `FROM <DATE> TO <DATE>`. The escape was
+  read only at the front of the whole payload, so `ABT @#DHEBREW@ TSH 5760` and
+  a Julian `FROM`/`TO` range were reported as invalid dates, while
+  `@#DJULIAN@ FROM 1 JAN 1700 TO 1 JAN 1710`, which the grammar does not admit,
+  passed. Each `<DATE>` now carries its own calendar and is read in
+  that calendar's months, so a range may cross calendars and neither half is
+  read in the other's vocabulary.
+- **An exact date is Gregorian, and says so.** `DATE_EXACT` is
+  `<DAY> <MONTH> <YEAR_GREG>` with no slot for a calendar, but the escape was
+  stripped before the grammar ran, so `1 CHAN` / `2 DATE @#DHEBREW@ 1 TSH 5760`
+  validated clean — where the GEDCOM 7 rule for the same payload rejects it. The
+  two dialects agreed on every other date rule and disagreed on this one.
+
 ## 2.0.0 - 2026-08-20
 
 Removes three members of `GedcomDocument` that no consumer read, which is what
