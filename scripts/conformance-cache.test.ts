@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
+  matchesRecord,
   pathOf,
   read,
   refreshRequested,
@@ -74,6 +75,16 @@ describe("read", () => {
   it("is a miss rather than a failure when the path is a directory", () => {
     expect(read(directory)).toBeUndefined();
   });
+
+  // write is mkdir then writeFileSync, so an interrupted one leaves a file of
+  // no bytes. A zero-length Uint8Array is truthy, and the run failed on a hash
+  // mismatch rather than fetching the file again.
+  it("is a miss when an interrupted write left no bytes behind", () => {
+    const path = pathOf(directory, "official", "empty.ged");
+    write(path, new Uint8Array([0x30]));
+    writeFileSync(path, "");
+    expect(read(path)).toBeUndefined();
+  });
 });
 
 describe("write", () => {
@@ -83,6 +94,24 @@ describe("write", () => {
     expect(read(path)).toEqual(
       new Uint8Array([0x30, 0x20, 0x48, 0x45, 0x41, 0x44]),
     );
+  });
+});
+
+// An entry is written once and read on every later run, and its key is a hash
+// of the corpus records rather than of what upstream serves. Cached bytes the
+// record does not vouch for would be restored and fail identically until
+// someone purged the cache by hand.
+describe("matchesRecord", () => {
+  it("holds bytes the record vouches for", () => {
+    expect(matchesRecord("abc123", "abc123")).toBe(true);
+  });
+
+  it("refuses bytes that are not what was recorded", () => {
+    expect(matchesRecord("truncated", "abc123")).toBe(false);
+  });
+
+  it("holds anything when the record is being rewritten", () => {
+    expect(matchesRecord("whatever", undefined)).toBe(true);
   });
 });
 
