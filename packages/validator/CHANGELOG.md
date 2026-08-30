@@ -18,6 +18,15 @@ All notable changes to `@domorium/validator` are documented here.
   stripped before the grammar ran, so `1 CHAN` / `2 DATE @#DHEBREW@ 1 TSH 5760`
   validated clean — where the GEDCOM 7 rule for the same payload rejects it. The
   two dialects agreed on every other date rule and disagreed on this one.
+- **A day is measured against the calendar its own date names.** A calendar binds
+  to the date that follows it, which is what `FROM JULIAN 1670 TO 1800` says: two
+  dates, two calendars. The day-length check set the calendar once and carried it
+  to the end of the payload, so `FROM JULIAN 1 JAN 1700 TO 29 FEB 1900` reported
+  nothing — the second date is Gregorian, 1900 is not a Gregorian leap year, and
+  it was measured by the Julian rule, which has no exception for a century. The
+  same leading calendar suppressed the check for every later date in a range.
+  Each word that ends one date and begins the next now returns the calendar to
+  Gregorian, so a date names its own or is read as Gregorian.
 
 ## 2.0.0 - 2026-08-20
 

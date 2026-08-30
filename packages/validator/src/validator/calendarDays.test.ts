@@ -111,6 +111,22 @@ describe("a day the calendar does not have", () => {
     ]);
   });
 
+  // A calendar binds to the date that follows it, so the date after the keyword
+  // names none and is Gregorian — it was read in the first date's calendar, and
+  // the Julian rule has no exception for a century.
+  it("does not carry a calendar past the keyword that ends its date", () => {
+    expect(days("FROM JULIAN 1 JAN 1700 TO 29 FEB 1900")).toEqual(["29 FEB"]);
+    expect(days("BET JULIAN 1 JAN 1700 AND 29 FEB 1900")).toEqual(["29 FEB"]);
+    expect(days551("FROM @#DJULIAN@ 1 JAN 1700 TO 29 FEB 1900")).toEqual([
+      "29 FEB",
+    ]);
+  });
+
+  it("still reads a calendar that follows the keyword", () => {
+    expect(days("FROM 1 JAN 1900 TO JULIAN 29 FEB 1700")).toEqual([]);
+    expect(days551("FROM 1 JAN 1900 TO @#DJULIAN@ 29 FEB 1700")).toEqual([]);
+  });
+
   it("leaves a date with no day alone", () => {
     expect(days("FEB 1900")).toEqual([]);
     expect(days("1900")).toEqual([]);
