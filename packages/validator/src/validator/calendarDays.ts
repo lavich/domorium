@@ -33,6 +33,22 @@ export const LENGTHS: Record<string, number> = {
 const CHECKED_CALENDARS = new Set([DEFAULT_CALENDAR, "JULIAN"]);
 const INTEGER = /^\d+$/u;
 
+// Every word that ends one <DATE> and begins the next, in either dialect. A
+// calendar binds to the date that follows it, so the date after one of these
+// names its own or is Gregorian. No calendar, month or epoch spells any of them.
+const SEPARATORS = new Set([
+  "ABT",
+  "AFT",
+  "AND",
+  "BEF",
+  "BET",
+  "CAL",
+  "EST",
+  "FROM",
+  "INT",
+  "TO",
+]);
+
 export interface ImpossibleDay {
   day: number;
   month: string;
@@ -76,6 +92,10 @@ export function impossibleDays(
 
   for (let at = 0; at < tokens.length; at += 1) {
     const token = tokens[at];
+    if (SEPARATORS.has(token)) {
+      calendar = DEFAULT_CALENDAR;
+      continue;
+    }
     const named = calendarNamed(scheme, token);
     if (named !== null) {
       calendar = named;
