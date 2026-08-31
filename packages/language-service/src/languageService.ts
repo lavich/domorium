@@ -12,6 +12,7 @@ import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
 import { documentLinks } from "./libs/links/documentLinks";
 import { retargetFileLinks } from "./libs/links/retargetFileLinks";
+import { mediaAt } from "./libs/media/mediaAt";
 import { ReferenceIndex } from "./libs/references/referenceIndex";
 import {
   getDocumentHighlights,
@@ -36,6 +37,7 @@ import type {
   FoldingRange,
   Hover,
   InlayHint,
+  MediaReference,
   OffsetRange,
   Position,
   PrepareRenameResult,
@@ -164,6 +166,17 @@ export class GedcomLanguageService {
       },
       position,
       maxLines,
+    );
+  }
+
+  getMediaAt(position: Position): MediaReference | null {
+    return mediaAt(
+      {
+        nodes: this.document.getNodes(),
+        index: this.referenceIndex,
+        dialect: this.document.getDialect(),
+      },
+      position,
     );
   }
 

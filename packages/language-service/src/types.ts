@@ -93,6 +93,34 @@ export interface DocumentLink {
   kind: DocumentLinkKind;
 }
 
+export type MediaKind = "image" | "audio" | "video" | "document" | "unknown";
+
+/**
+ * A rectangle of the image, as the document wrote it. It may name an extent
+ * larger than the image: the extent is not knowable from the document, so
+ * clamping belongs to whoever holds the file.
+ */
+export interface MediaCrop {
+  top: number;
+  left: number;
+  height: number;
+  width: number;
+}
+
+/**
+ * The media a position refers to. `targetText` and `kind` read as they do on a
+ * DocumentLink; `range` is the file's own payload, which is not the line the
+ * caller asked about when the position was on a link.
+ */
+export interface MediaReference extends DocumentLink {
+  /** What the document says the file is, not what a host can render. */
+  mediaKind: MediaKind;
+  /** The caption the author wrote, where there is one. */
+  title?: string;
+  /** Absent where the document names no rectangle, or names one that cannot be applied. */
+  crop?: MediaCrop;
+}
+
 export type DiagnosticSeverity = "error" | "warning" | "info";
 
 export interface Diagnostic {
