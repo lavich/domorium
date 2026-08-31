@@ -2,6 +2,29 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## Unreleased
+
+- **`getMediaAt(position)` answers what media a line refers to.** A host that
+  wants to show a photograph on hover had only `DocumentLink`, which carries a
+  target and says nothing about whether it names an image or which part of one a
+  reference points at. The new query answers for one position with the file as
+  the document wrote it, how that text is to be read, what the format says the
+  file is — `image`, `audio`, `video`, `document` or `unknown` — the caption the
+  author gave it, and the rectangle a multimedia link asks for. Both dialects
+  answer: GEDCOM 7 reads `FORM` as a media type and `CROP` from the link, and
+  5.5.1 reads `FORM` from the closed list its specification permits, including
+  the inline form with `FILE` beneath `OBJE`.
+- **A rectangle is named only where it can be applied.** GEDCOM 7 puts `CROP` on
+  the multimedia _link_, so one group photograph referenced by five people
+  carries five different rectangles, and each position answers with its own. A
+  rectangle with no extent, one written in 5.5.1 — whose specification describes
+  none — and one on a link to a record carrying several files all yield the file
+  without a rectangle, so a host shows the whole image rather than nothing.
+  Clamping a rectangle to its image stays with whoever holds the file: the extent
+  of an image is not knowable from the document.
+- `MediaReference`, `MediaCrop` and `MediaKind` are exported. Nothing existing
+  changed shape, and `getDocumentLinks` is untouched.
+
 ## 2.0.0 - 2026-08-20
 
 Carries `@domorium/validator` 2.0.0, whose `GedcomDocument` this package

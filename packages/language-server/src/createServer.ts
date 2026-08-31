@@ -42,6 +42,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   GedcomLanguageService,
   semanticTokenLegend,
+  type MediaReference,
 } from "@domorium/language-service";
 
 /** As much as the CodeMirror hosts show by default, so the two agree. */
@@ -253,20 +254,29 @@ export const createServer = (connection: Connection) => {
     if (!service) {
       return null;
     }
+    const media = service.getMediaAt(params.position);
+    const image = media && imageMarkdown(media, params.textDocument.uri);
     const document = documents.get(params.textDocument.uri);
     if (document) {
       const preview = service.getRecordPreview(params.position, {
         maxLines: HOVER_MAX_LINES,
       });
       if (preview) {
+        const record = fenced(document.getText(preview.range));
         return {
           contents: {
             kind: MarkupKind.Markdown,
-            value: fenced(document.getText(preview.range)),
+            value: image ? `${record}\n\n${image}` : record,
           },
           range: preview.pointer,
         };
       }
+    }
+    if (media && image) {
+      return {
+        contents: { kind: MarkupKind.Markdown, value: image },
+        range: media.range,
+      };
     }
     return service.getHover(params.position);
   });
@@ -349,6 +359,27 @@ function fenced(record: string): string {
   const backticks = [...record.matchAll(/`+/gu)].map(([run]) => run.length);
   const rail = "`".repeat(Math.max(3, ...backticks.map((run) => run + 1)));
   return `${rail}gedcom\n${record}\n${rail}`;
+}
+
+/**
+ * A hover renders Markdown, so the whole image reaches VS Code and JetBrains
+ * without a request of their own. Neither can apply the crop — a hover has no
+ * CSS — so what they get is the picture, not the rectangle of it.
+ */
+function imageMarkdown(
+  media: MediaReference,
+  documentUri: string,
+): string | undefined {
+  if (media.mediaKind !== "image") {
+    return undefined;
+  }
+  const target = resolveLinkTarget(documentUri, media);
+  if (!target) {
+    return undefined;
+  }
+  // Parentheses would close the Markdown link early.
+  const url = target.replace(/[()]/gu, encodeURIComponent);
+  return `![${media.title?.replace(/[[\]]/gu, "") ?? ""}](${url})`;
 }
 
 function resolveLinkTarget(

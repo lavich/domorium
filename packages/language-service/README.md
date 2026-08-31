@@ -81,3 +81,57 @@ pointed at — there, showing it would tell the reader nothing.
 Ranges rather than text: the caller already holds the document, and slicing it is
 cheaper than a second copy of the same bytes. `maxLines` is what the host has room
 for, and `truncated` says whether the record outran it.
+
+## The media a line refers to
+
+`getMediaAt` answers, for one position, the file that line refers to — the
+payload as written, how to read it, what the format says the file is, the caption
+the author gave it, and the rectangle a multimedia link asks for.
+
+```typescript
+const album = new GedcomLanguageService(
+  [
+    "0 HEAD",
+    "1 GEDC",
+    "2 VERS 7.0",
+    "0 @I1@ INDI",
+    "1 OBJE @O1@",
+    "2 CROP",
+    "3 TOP 10",
+    "3 LEFT 20",
+    "3 HEIGHT 100",
+    "3 WIDTH 200",
+    "0 @O1@ OBJE",
+    "1 FILE media/family.jpg",
+    "2 FORM image/jpeg",
+    "2 TITL The Simpson family",
+    "0 TRLR",
+  ].join("\n"),
+);
+
+// Character 9 of line 4 is inside the `@O1@` of `1 OBJE @O1@`.
+const media = album.getMediaAt({ line: 4, character: 9 });
+// media.targetText — "media/family.jpg", as the document wrote it
+// media.kind       — "file-relative"; also "http" and "file-absolute"
+// media.mediaKind  — "image"; also "audio", "video", "document", "unknown"
+// media.title      — "The Simpson family", the caption
+// media.crop       — { top: 10, left: 20, height: 100, width: 200 }
+// media.range      — line 11 characters 7 to 23, the file's own payload
+```
+
+GEDCOM 7 puts `CROP` on the multimedia _link_, so one group photograph
+referenced by five people carries five different rectangles and each position
+answers with its own. A rectangle is named only where it can be applied: one with
+no extent, one written in GEDCOM 5.5.1 — whose specification describes none — and
+one on a link to a record carrying several files all answer with the file and no
+rectangle, so a host shows the whole image rather than nothing.
+
+It answers `null` where the position names no media, where a pointer resolves to
+no record or to a record that is not multimedia, and where a multimedia record
+carries no file. `HEAD.FILE` names the transmission rather than media, so it
+answers nothing there either.
+
+The answer describes and does not fetch: reading the file, resolving it against a
+workspace, reaching the network, and measuring the image stay with the caller. A
+rectangle is carried as written even where it names an extent larger than its
+image, because the extent of an image is not knowable from the document.

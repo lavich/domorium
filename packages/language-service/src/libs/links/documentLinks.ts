@@ -8,6 +8,22 @@ import type { DocumentLink } from "../../types";
 const ABSOLUTE_PATH = /^(?:\/|[A-Za-z]:[\\/]|\\\\)/u;
 const URI_SCHEME = /^[A-Za-z][A-Za-z0-9+.-]*:/u;
 
+/**
+ * How a FILE payload is to be read, or nothing where the dialect cannot carry
+ * it. Shared with the media query so both answer for the same set of files.
+ */
+export function fileLinkKind(
+  targetText: string,
+  dialect: GedcomDialect | undefined,
+): DocumentLink["kind"] | undefined {
+  if (dialect === undefined) {
+    return undefined;
+  }
+  return dialect === "7.0"
+    ? (supportedUrlKind(targetText) ?? gedcom7LocalFileKind(targetText))
+    : gedcom551FileKind(targetText);
+}
+
 export function documentLinks(
   nodes: ASTNode[],
   dialect: GedcomDialect | undefined,
@@ -16,16 +32,13 @@ export function documentLinks(
   if (dialect === undefined) {
     return links;
   }
-  const isGedcom7 = dialect === "7.0";
 
   const visit = (node: ASTNode): void => {
     const tag = node.tokens[TokenNames.TAG]?.value;
     const value = node.tokens[TokenNames.VALUE];
     if (tag === "FILE" && value?.value.trim()) {
       const targetText = value.value.trim();
-      const kind = isGedcom7
-        ? (supportedUrlKind(targetText) ?? gedcom7LocalFileKind(targetText))
-        : gedcom551FileKind(targetText);
+      const kind = fileLinkKind(targetText, dialect);
       if (kind) {
         links.push({ range: value.range, targetText, kind });
       }

@@ -359,6 +359,81 @@ describe("stdio entry point", () => {
     }
   }, 15000);
 
+  it("shows the image a file payload and a multimedia link refer to", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///tree/family.ged";
+
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: [
+            "0 HEAD", //                     0
+            "1 GEDC", //                     1
+            "2 VERS 7.0", //                 2
+            "0 @I1@ INDI", //                3
+            "1 OBJE @O1@", //                4
+            "2 CROP", //                     5
+            "3 TOP 10", //                   6
+            "3 LEFT 20", //                  7
+            "3 HEIGHT 100", //               8
+            "3 WIDTH 200", //                9
+            "2 TITL Homer at the plant", //  10
+            "0 @O1@ OBJE", //               11
+            "1 FILE media/family.jpg", //   12
+            "2 FORM image/jpeg", //         13
+            "2 TITL The Simpson family", // 14
+            "0 TRLR", //                    15
+          ].join("\n"),
+        },
+      });
+
+      // The path is resolved against the document: a hover cannot follow a
+      // path relative to a file it does not know it is beside.
+      await expect(
+        client.request(2, "textDocument/hover", {
+          textDocument: { uri },
+          position: { line: 12, character: 12 },
+        }),
+      ).resolves.toMatchObject({
+        result: {
+          contents: {
+            kind: "markdown",
+            value: "![The Simpson family](file:///tree/media/family.jpg)",
+          },
+          range: {
+            start: { line: 12, character: 7 },
+            end: { line: 12, character: "1 FILE media/family.jpg".length },
+          },
+        },
+      });
+
+      // On a link the record still fences, and the image comes beside it with
+      // the caption the link gave it.
+      const onLink = (await client.request(3, "textDocument/hover", {
+        textDocument: { uri },
+        position: { line: 4, character: 9 },
+      })) as { result: { contents: { value: string } } };
+
+      expect(onLink.result.contents.value).toContain("```gedcom\n0 @O1@ OBJE");
+      expect(onLink.result.contents.value).toContain(
+        "![Homer at the plant](file:///tree/media/family.jpg)",
+      );
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
   it("exposes reference editing operations over the LSP wire protocol", async () => {
     const bundlePath = await bundleStdio();
     const child = spawn("node", [bundlePath]);
