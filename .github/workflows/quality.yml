@@ -135,6 +135,19 @@ jobs:
         env:
           LEFTHOOK: 0
       - run: npm run build:vscode
+      # vsce validates what Vite and tsc have no opinion about — the
+      # @types/vscode floor against engines.vscode, a missing repository, an
+      # activation event naming no command. release-vscode.yml reaches the same
+      # validations through `vsce publish`, where a failure has already cost a tag.
+      - name: Package extension
+        run: npx @vscode/vsce package --no-dependencies --out extension.vsix
+        working-directory: apps/vscode
+      - uses: actions/upload-artifact@v7
+        if: success()
+        with:
+          name: vscode-extension
+          path: apps/vscode/extension.vsix
+          if-no-files-found: error
 
   build-jetbrains:
     if: inputs.run_jetbrains
