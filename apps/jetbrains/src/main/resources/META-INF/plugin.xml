@@ -31,6 +31,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.7.1</h2>
+    <ul>
+      <li><b>A GEDCOM 5.5.1 date names its calendar where the specification puts it.</b> The escape sits inside <code>&lt;DATE&gt;</code>, which comes after the modifier, so <code>ABT @#DHEBREW@ TSH 5760</code> and a Julian <code>FROM</code>/<code>TO</code> range were reported as invalid dates, while <code>@#DJULIAN@ FROM 1 JAN 1700 TO 1 JAN 1710</code>, which the grammar does not admit, passed. Each date now carries its own calendar and is read in that calendar&rsquo;s months</li>
+      <li><b>An exact date is Gregorian, and says so.</b> <code>1 CHAN</code> / <code>2 DATE @#DHEBREW@ 1 TSH 5760</code> validated clean in a 5.5.1 file where the GEDCOM 7 rule for the same payload rejects it: <code>DATE_EXACT</code> has no slot for a calendar</li>
+      <li><b>A day is measured against the calendar its own date names.</b> <code>FROM JULIAN 1 JAN 1700 TO 29 FEB 1900</code> reported nothing &mdash; the second date is Gregorian, 1900 is not a Gregorian leap year, and it was measured by the Julian rule, which has no exception for a century</li>
+    </ul>
+
     <h2>1.7.0</h2>
     <ul>
       <li><b>A hover below a line carrying no tag no longer fails.</b> <code>0 @I1@</code>, what a truncated export leaves behind, still becomes a line and adopts the lines indented under it; hovering one of those threw where the honest answer was silence, so the request failed instead of answering nothing</li>
