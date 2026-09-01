@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 2.0.1
 
 - **A 5.5.1 date names its calendar where the specification puts it.** 5.5.1
   writes the escape inside `<DATE>`, and `<DATE>` comes after the modifier:

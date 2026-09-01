@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
-## Unreleased
+## 2.1.0
 
 - **`getMediaAt(position)` answers what media a line refers to.** A host that
   wants to show a photograph on hover had only `DocumentLink`, which carries a

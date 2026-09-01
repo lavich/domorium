@@ -2,6 +2,24 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## 1.7.1
+
+- **A 5.5.1 date names its calendar where the specification puts it.** The escape
+  sits inside `<DATE>`, which comes after the modifier, so `ABT @#DHEBREW@ TSH 5760`
+  and a Julian `FROM`/`TO` range were reported as invalid dates, while
+  `@#DJULIAN@ FROM 1 JAN 1700 TO 1 JAN 1710`, which the grammar does not admit,
+  passed. Each date now carries its own calendar and is read in that calendar's
+  months, so a range may cross calendars and neither half is read in the other's
+  vocabulary.
+- **An exact date is Gregorian, and says so.** `1 CHAN` / `2 DATE @#DHEBREW@ 1 TSH 5760`
+  validated clean in a 5.5.1 file where the GEDCOM 7 rule for the same payload
+  rejects it: `DATE_EXACT` has no slot for a calendar.
+- **A day is measured against the calendar its own date names.**
+  `FROM JULIAN 1 JAN 1700 TO 29 FEB 1900` reported nothing — the second date is
+  Gregorian, 1900 is not a Gregorian leap year, and it was measured by the Julian
+  rule, which has no exception for a century. A date now names its own calendar or
+  is read as Gregorian.
+
 ## 1.7.0
 
 - **A GEDCOM file is coloured the moment it opens.** Until now every colour came

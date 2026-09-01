@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "domorium"
-version = "1.7.0"
+version = "1.7.1"
 
 repositories {
     mavenCentral()

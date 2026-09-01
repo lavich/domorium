@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
-## Unreleased
+## 2.1.0
 
 - **A host reading document symbols through this package can name them.**
   `getDocumentSymbols` was reachable, `DocumentSymbol` was not, and
