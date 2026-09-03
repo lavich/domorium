@@ -2,6 +2,19 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## Unreleased
+
+- **A `FORM` of `constructor` no longer answers with something that is not a
+  media kind.** The tables `getMediaAt` consults to decide whether a file is an
+  `image`, `audio`, `video`, a `document` or `unknown` were indexed by text the
+  document supplies, and reached `Object.prototype` on the way, so a 5.5.1 file
+  declaring `2 FORM constructor` — or naming a file whose extension is
+  `constructor` or `__proto__` — was answered with an inherited member instead
+  of one of the five kinds `MediaKind` names. The declared format and the
+  extension are now both read from a table with no prototype, so an unrecognised
+  format falls through to the extension as it always should have, and an
+  unrecognised extension is `unknown` (#330).
+
 ## 2.1.0
 
 - **`getMediaAt(position)` answers what media a line refers to.** A host that
