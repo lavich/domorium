@@ -2,11 +2,19 @@ import type { GedcomDialect } from "@domorium/validator";
 import type { MediaKind } from "../../types";
 
 /**
+ * A table keyed by text the document supplies, so it must not reach
+ * `Object.prototype`: a `FORM` of `constructor` would otherwise be a hit.
+ */
+const lookupTable = (
+  kinds: Record<string, MediaKind>,
+): Record<string, MediaKind> => Object.assign(Object.create(null), kinds);
+
+/**
  * The formats GEDCOM 5.5.1 permits, and nothing else: its `FORM` is a closed
  * list (enumset-MULTIMEDIA_FORMAT), not a media type. `ole` is an embedded
  * object, which names no medium a host can show.
  */
-export const GEDCOM_551_FORMAT_KINDS: Record<string, MediaKind> = {
+export const GEDCOM_551_FORMAT_KINDS = lookupTable({
   bmp: "image",
   gif: "image",
   jpg: "image",
@@ -14,9 +22,9 @@ export const GEDCOM_551_FORMAT_KINDS: Record<string, MediaKind> = {
   pcx: "image",
   tif: "image",
   wav: "audio",
-};
+});
 
-const EXTENSION_KINDS: Record<string, MediaKind> = {
+const EXTENSION_KINDS = lookupTable({
   avi: "video",
   avif: "image",
   bmp: "image",
@@ -54,7 +62,7 @@ const EXTENSION_KINDS: Record<string, MediaKind> = {
   webp: "image",
   wma: "audio",
   wmv: "video",
-};
+});
 
 const DOCUMENT_MEDIA_SUBTYPES = new Set(["epub+zip", "msword", "pdf", "rtf"]);
 

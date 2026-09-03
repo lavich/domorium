@@ -70,4 +70,28 @@ describe("what the format says a file is", () => {
       );
     }
   });
+
+  // #330: a lookup key comes from the document, so it must not reach
+  // `Object.prototype`. Lowercasing spares every other inherited member, so
+  // these two keys stand for the rest.
+  it.each(["constructor", "__proto__"])(
+    "reads a declared %s as no format at all",
+    (format) => {
+      expect(mediaKind(format, "family.png", "5.5.1")).toBe("image");
+      expect(mediaKind(format, "family.xyz", "5.5.1")).toBe("unknown");
+    },
+  );
+
+  it.each(["constructor", "__proto__"])(
+    "reads an extension of %s as unknown",
+    (extension) => {
+      expect(mediaKind(undefined, `family.${extension}`, "7.0")).toBe(
+        "unknown",
+      );
+    },
+  );
+
+  it("carries no inherited member in the 5.5.1 table it exports", () => {
+    expect(GEDCOM_551_FORMAT_KINDS["constructor"]).toBeUndefined();
+  });
 });
