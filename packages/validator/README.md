@@ -59,8 +59,58 @@ interface GedcomError {
 }
 ```
 
-`data` carries the facts a quick fix is built from — which xref failed to
-resolve, and what record tag it needed.
+| Field     | Type                             | What it holds                                                                                                     |
+| --------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `code`    | `string`, a `GedcomErrorCode`    | What kind of problem this is. Match on this.                                                                      |
+| `message` | `string`                         | Written for a person to read, and rewritten when a clearer wording is found. Do not match on it.                  |
+| `hint`    | `string?`                        | Declared for advice alongside the message. Nothing in this package sets it yet, so treat it as absent.            |
+| `data`    | object?                          | The structured facts a quick fix is built from, where the diagnostic has any.                                     |
+| `range`   | `Range`                          | Zero-based line and character, `end` exclusive, over the smallest text that is wrong — the payload, not the line. |
+| `level`   | `"error" \| "warning" \| "info"` | How much it matters.                                                                                              |
+
+`data` is what makes a fix offerable rather than merely reportable: an
+unresolved pointer reports the xref that failed and the record tag it needed, so
+a host can offer to create that record.
+
+For this file, where `SEX` carries a value its schema does not permit and `FAMC`
+points at a record that is not there:
+
+```gedcom
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME Lisa /Simpson/
+1 SEX Q
+1 FAMC @F9@
+0 TRLR
+```
+
+`getErrors()` answers:
+
+```json
+[
+  {
+    "code": "VAL005",
+    "message": "Value for SEX should be in set [F, M, U, X]",
+    "range": {
+      "start": { "line": 5, "character": 6 },
+      "end": { "line": 5, "character": 7 }
+    },
+    "level": "error"
+  },
+  {
+    "code": "unresolved-xref",
+    "message": "No FAM record carries @F9@",
+    "data": { "xref": "@F9@", "requiredRecordTag": "FAM" },
+    "range": {
+      "start": { "line": 6, "character": 7 },
+      "end": { "line": 6, "character": 11 }
+    },
+    "level": "error"
+  }
+]
+```
 
 Match on `code` rather than on `message`; messages are written for people and
 change. `GedcomErrorCode` is exported for this:
@@ -94,6 +144,72 @@ const unresolved = errors.filter(
 | `invalid-level`   | `InvalidLevel`          | a level that cannot follow the line above it                                   |
 | `LEXER`           | `Lexer`                 | the text could not be tokenized                                                |
 | `PARSER`          | `Parser`                | the tokens could not be assembled into a tree                                  |
+
+## Reading the tree
+
+`getNodes()` returns the records — the level-0 nodes — each holding its
+substructures in `children`. A node carries its line's tokens in a `tokens` map
+keyed by `TokenNames`, and which key holds the text is the thing to get right:
+
+| Token     | Written as    | Holds                                  |
+| --------- | ------------- | -------------------------------------- |
+| `LEVEL`   | `1`           | The level, as it was written.          |
+| `POINTER` | `0 @I1@ INDI` | The xref a record declares for itself. |
+| `TAG`     | `1 NAME`      | The tag.                               |
+| `XREF`    | `1 FAMC @F1@` | An xref a line points at.              |
+| `VALUE`   | `1 NAME Lisa` | A payload that is not a pointer.       |
+
+`POINTER` and `XREF` are the pair worth reading twice: a record's own xref is
+never in `XREF`, and a pointer payload is never in `VALUE`.
+
+Pulling every person's name out of a file:
+
+```typescript
+import { GedcomDocument, TokenNames } from "@domorium/validator";
+import type { ASTNode } from "@domorium/validator";
+
+const document = new GedcomDocument().createDocument(gedcomString);
+
+const payload = (node: ASTNode, tag: string): string | undefined =>
+  node.children.find((child) => child.tokens[TokenNames.TAG]?.value === tag)
+    ?.tokens[TokenNames.VALUE]?.value;
+
+for (const record of document.getNodes()) {
+  if (record.tokens[TokenNames.TAG]?.value !== "INDI") continue;
+  console.log({
+    xref: record.tokens[TokenNames.POINTER]?.value,
+    name: payload(record, "NAME"),
+    line: record.range.start.line,
+  });
+}
+```
+
+```text
+{ xref: '@I1@', name: 'Lisa /Simpson/', line: 3 }
+```
+
+`range` on a node or a token is computed from the offsets on every access, not
+stored: a large file has millions of tokens and a stored range costs three
+objects apiece. Read it freely at the edges, and use `startOffset` and
+`endOffset` inside a loop over the whole document.
+
+## What a document answers
+
+Every method reads the document last given to `createDocument`, which returns
+the same instance so the two can be chained.
+
+| Method                               | Answers                                                                                                                                                        |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createDocument(text, options?)`     | Parses and validates, and returns the document itself.                                                                                                         |
+| `getErrors()`                        | Every diagnostic, in the order found.                                                                                                                          |
+| `getNodes()`                         | The records, each with its substructures.                                                                                                                      |
+| `getVersion()`                       | The version read from `HEAD`.`GEDC`.`VERS`, as written.                                                                                                        |
+| `getDialect()`                       | Which rules were applied: `"5.5.1"` or `"7.0"`.                                                                                                                |
+| `getVersionResolution()`             | How that was decided — `supported`, `substituted`, `unsupported`, `undetermined`, or `paf` for a file whose header names a writing program before its version. |
+| `getLabel(node)`                     | The specification's name for a structure, for a UI to show instead of the tag: `HEAD` answers `Header`.                                                        |
+| `getPointerTargetTag(node)`          | The record tag a pointer line must name: `FAMC` answers `FAM`.                                                                                                 |
+| `isRecordDeclaration(node)`          | Whether the node declares a record other lines can point at.                                                                                                   |
+| `getCompletions(position, lineText)` | What may be written at a position — `{ label, kind: "tag" \| "enum" \| "pointer", detail? }`.                                                                  |
 
 ## Scripts
 
