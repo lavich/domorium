@@ -11,10 +11,6 @@ import { toggled, treeRows, type TreeNode } from "@/workspace/tree";
 /** Asked of the browser once, and not before something renders. */
 let support: ReturnType<typeof detectWorkspaceSupport> | undefined;
 
-/**
- * The rows the explorer draws, and which directories are open. Both belong to the
- * panel: nothing else in the application has ever needed them.
- */
 class ExplorerModel {
   private files: FileOperations | null = null;
   private expanded: ReadonlySet<string> = new Set();

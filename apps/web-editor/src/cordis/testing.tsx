@@ -5,10 +5,6 @@ import type { WorkspaceAction } from "@/workspace/workspace";
 import { createAppContext, type AppContext } from "./app";
 import { CordisProvider } from "./react";
 
-/**
- * An application context with the panels plugged and the commands stubbed, for a
- * test that renders part of the window without the window around it.
- */
 export async function testApp(
   ...actions: WorkspaceAction[]
 ): Promise<AppContext> {

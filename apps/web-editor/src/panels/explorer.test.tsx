@@ -65,7 +65,6 @@ describe("the explorer, as a plugin", () => {
     expect(await screen.findByText("copy.ged")).toBeTruthy();
   });
 
-  // What the arrangement is for: the panel goes away with the plugin.
   it("takes its rail button with it when it is unplugged", async () => {
     wide();
     const app = await testApp();

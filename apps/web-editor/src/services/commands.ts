@@ -1,9 +1,6 @@
 import { Service, type Context } from "cordis";
 
-/**
- * Every action a panel can ask for without being wired to whoever performs it.
- * A plugin that adds one declares it here, the way a service is declared.
- */
+/** A plugin that adds a command declares it here, the way a service is declared. */
 export interface Commands {
   "workspace.openFile"(): void;
   "workspace.openFolder"(): void;
@@ -14,7 +11,6 @@ export interface Commands {
 
 type Handler = (...args: never[]) => void;
 
-/** Registered for as long as the fiber that registered it lives. */
 export class CommandService extends Service {
   private readonly handlers = new Map<string, Handler>();
 
@@ -22,6 +18,7 @@ export class CommandService extends Service {
     super(ctx, "commands");
   }
 
+  /** Registered for as long as the fiber that registered it lives. */
   register<K extends keyof Commands>(id: K, run: Commands[K]) {
     return this.ctx.effect(
       () => {

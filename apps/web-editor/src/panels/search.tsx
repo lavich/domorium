@@ -1,7 +1,6 @@
 import type { Context } from "cordis";
 import { SearchIcon } from "lucide-react";
 
-/** An item with no panel: the rail presses it, the editor answers. */
 export const searchAction = {
   name: "action-search",
 
