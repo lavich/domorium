@@ -9,11 +9,7 @@ import {
   type WorkspaceAction,
 } from "@/workspace/workspace";
 
-/**
- * The open tabs, off React's reducer and onto the context, so a panel reads them
- * instead of being handed them. The reducer is unchanged: this owns when it runs
- * and who hears about it, not what it decides.
- */
+/** Owns when the reducer runs and who hears about it, not what it decides. */
 export class WorkspaceService extends Service {
   private state: Workspace = emptyWorkspace;
   private readonly listeners = new Set<() => void>();

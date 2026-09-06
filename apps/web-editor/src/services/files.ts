@@ -3,8 +3,8 @@ import { Service, type Context, type Fiber } from "cordis";
 import type { FileGateway, FileOperations } from "@/workspace/fileGateway";
 
 /**
- * The workspace in front, as a service. The workspace's own name is `label`:
- * `Service` owns `name`, and every service answers with the key it is reached by.
+ * The workspace's own name is `label`: `Service` owns `name`, and every service
+ * answers with the key it is reached by.
  */
 export class FilesService extends Service implements FileOperations {
   constructor(
@@ -48,9 +48,8 @@ export class FilesService extends Service implements FileOperations {
 }
 
 /**
- * Which gateway `ctx.files` is. Opening another disposes the fiber that provided
- * the last one, and that is what reruns everything injected on `files` and unwinds
- * what the workspace being left had registered.
+ * Disposing the fiber that provided a gateway is what reruns everything injected
+ * on `files` and unwinds what the workspace being left had registered.
  */
 export class GatewayService extends Service {
   private mounted: Fiber | undefined;
@@ -77,7 +76,6 @@ declare module "cordis" {
   }
 
   interface Events {
-    /** The workspace holds something it did not a moment ago. */
     "files/changed"(): void;
   }
 }

@@ -13,13 +13,9 @@ export interface RailItem {
   /** Ascending; ties keep registration order. */
   order?: number;
   icon: ComponentType<{ className?: string }>;
-  /**
-   * Told what the badge says, because "3 problems" is the label a reader needs.
-   * Null where the item has nothing to count for the file in front.
-   */
+  /** Told what the badge says, because "3 problems" is the label a reader needs. */
   label(badge: number | null): string;
   badge?(): number | null;
-  /** Whether the item can be reached at all for the file in front. */
   enabled?(): boolean;
   slot?: RailSlot;
   render?(): ReactNode;
@@ -34,10 +30,6 @@ export interface RailState {
   open: ReadonlySet<string>;
 }
 
-/**
- * What the activity rail offers. Every entry is contributed by whoever implements
- * it, so the rail itself never learns the list.
- */
 export class RailService extends Service {
   private readonly registered = new Map<string, RailItem>();
   private readonly opened = new Set<string>();
@@ -73,7 +65,7 @@ export class RailService extends Service {
     return this.state;
   }
 
-  /** The panel showing in a slot, if any: one at a time, as a rail implies. */
+  /** One panel at a time, as a rail implies. */
   openIn(slot: RailSlot): RailItem | undefined {
     return openIn(this.state, slot);
   }

@@ -33,7 +33,6 @@ describe("RailService", () => {
     ]);
   });
 
-  // What the whole arrangement is for: a panel is removed by unplugging it.
   it("withdraws the items of a plugin that is unplugged", async () => {
     const ctx = railContext();
     const panel = ctx.plugin((inner: Context) => {

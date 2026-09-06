@@ -10,12 +10,9 @@ import { RailService } from "@/services/rail";
 import { WorkspaceService } from "@/services/workspace";
 
 /**
- * What this application is made of. The panels below are the whole contribution:
- * removing one from this list removes its rail button, its panel and its
- * subscriptions, and nothing else has to be told.
- *
  * The services are constructed rather than plugged because `ctx.plugin` settles a
- * microtask later, and the first render must already find them.
+ * microtask later, and the first render must already find them. A test that
+ * asserts on what a panel contributed waits on `ready` for the same reason.
  */
 export function createAppContext(): AppContext {
   const ctx = new Context();
@@ -37,10 +34,5 @@ export function createAppContext(): AppContext {
 
 export interface AppContext {
   ctx: Context;
-  /**
-   * Settles once the panels have contributed. `ctx.plugin` is a microtask, so the
-   * first render finds an empty rail however synchronous the plugins themselves
-   * are; a test that asserts on the rail waits for this.
-   */
   ready: Promise<void>;
 }

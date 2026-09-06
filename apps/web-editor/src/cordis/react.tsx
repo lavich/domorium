@@ -32,8 +32,6 @@ export function useCordis(): Context {
 }
 
 /**
- * The service under this name, or undefined while nothing provides it.
- *
  * The subscription counts changes rather than holding the service: cordis builds
  * a fresh proxy on every read, so a snapshot read through the context would be a
  * new object each render and React would never settle.
