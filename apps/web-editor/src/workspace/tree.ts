@@ -1,4 +1,4 @@
-import type { DirectoryEntry, FileGateway } from "./fileGateway";
+import type { DirectoryEntry, FileOperations } from "./fileGateway";
 import { fileKindOf, type FileKind } from "./workspace";
 
 export interface TreeNode extends DirectoryEntry {
@@ -14,7 +14,7 @@ export interface TreeNode extends DirectoryEntry {
  * what it holds.
  */
 export async function treeRows(
-  gateway: FileGateway,
+  gateway: FileOperations,
   expanded: ReadonlySet<string>,
 ): Promise<TreeNode[]> {
   const rows: TreeNode[] = [];

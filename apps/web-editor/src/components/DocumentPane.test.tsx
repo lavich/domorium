@@ -1,24 +1,18 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DocumentPane } from "./DocumentPane";
+import { InApp, testApp } from "@/cordis/testing";
+import type { AppContext } from "@/cordis/app";
 import type {
   DocumentReport,
-  GedcomEditorHandle,
   WebDiagnostic,
   WebEditorStatus,
 } from "@/editor/types";
-import {
-  emptyWorkspace,
-  fileKindOf,
-  workspaceReducer,
-  type Workspace,
-  type WorkspaceAction,
-} from "@/workspace/workspace";
+import { fileKindOf, type WorkspaceAction } from "@/workspace/workspace";
 
 vi.mock("@/editor/GedcomEditor", () => ({
   GedcomEditor: ({
@@ -76,16 +70,6 @@ const found = (message: string): DocumentReport => ({
   diagnostics: [finding(message)],
 });
 
-const workspaceOf = (...actions: WorkspaceAction[]): Workspace =>
-  actions.reduce(
-    workspaceReducer,
-    workspaceReducer(emptyWorkspace, {
-      type: "workspace-opened",
-      name: "Webb Family",
-      writable: true,
-    }),
-  );
-
 const open = (path: string) =>
   ({
     type: "file-opened",
@@ -94,76 +78,60 @@ const open = (path: string) =>
     text: fileKindOf(path) === "image" ? null : "0 HEAD\n",
   }) as const;
 
-const paneWith = (
-  workspace: Workspace,
-  problemsOpen = true,
-  onReport: (path: string, report: DocumentReport) => void = vi.fn(),
-) => (
-  <DocumentPane
-    workspace={workspace}
-    theme="light"
-    editorRef={createRef<GedcomEditorHandle>()}
-    wideEnoughForPanels
-    problemsOpen={problemsOpen}
-    onChange={vi.fn()}
-    onReport={onReport}
-    onFollowLink={vi.fn()}
-    onActivate={vi.fn()}
-    onClose={vi.fn()}
-    readBytes={() => Promise.resolve(new Blob())}
-  />
-);
+const paneWith = async (...actions: WorkspaceAction[]): Promise<AppContext> => {
+  const app = await testApp(
+    { type: "workspace-opened", name: "Webb Family", writable: true },
+    ...actions,
+  );
+  render(
+    <InApp app={app}>
+      <DocumentPane theme="light" wideEnoughForPanels onFollowLink={vi.fn()} />
+    </InApp>,
+  );
+  return app;
+};
 
 const problems = () =>
   screen.queryByRole("complementary", { name: /GEDCOM problems/i });
 
 describe("the pane that holds one document", () => {
-  it("stands the problems panel beside a GEDCOM document, listing its findings", () => {
-    render(
-      paneWith(
-        workspaceOf(open("tree.ged"), {
-          type: "reported",
-          path: "tree.ged",
-          report: found("unknown tag"),
-        }),
-      ),
-    );
+  it("stands the problems panel beside a GEDCOM document, listing its findings", async () => {
+    await paneWith(open("tree.ged"), {
+      type: "reported",
+      path: "tree.ged",
+      report: found("unknown tag"),
+    });
 
     expect(problems()).not.toBeNull();
     expect(screen.getByText(/unknown tag/)).toBeTruthy();
   });
 
-  // A picture in front used to be shown beside another file's findings.
-  it("takes the panel away when the tab in front is not a GEDCOM file", () => {
-    render(
-      paneWith(
-        workspaceOf(
-          open("tree.ged"),
-          { type: "reported", path: "tree.ged", report: found("unknown tag") },
-          open("media/portrait.jpg"),
-        ),
-      ),
+  // A picture in front was shown beside another file's findings.
+  it("takes the panel away when the tab in front is not a GEDCOM file", async () => {
+    await paneWith(
+      open("tree.ged"),
+      { type: "reported", path: "tree.ged", report: found("unknown tag") },
+      open("media/portrait.jpg"),
     );
 
     expect(problems()).toBeNull();
     expect(screen.queryByText(/unknown tag/)).toBeNull();
   });
 
-  it("shows one GEDCOM document's findings and never its neighbour's", () => {
-    const both = workspaceOf(
+  it("shows one GEDCOM document's findings and never its neighbour's", async () => {
+    await paneWith(
       open("tree.ged"),
       { type: "reported", path: "tree.ged", report: found("unknown tag") },
       open("other.ged"),
       { type: "reported", path: "other.ged", report: found("date not read") },
     );
-    render(paneWith(both));
 
     expect(screen.getByText(/date not read/)).toBeTruthy();
     expect(screen.queryByText(/unknown tag/)).toBeNull();
   });
 
-  it("reports nothing for a GEDCOM document that has not been checked yet", () => {
-    render(paneWith(workspaceOf(open("tree.ged"))));
+  it("reports nothing for a GEDCOM document that has not been checked yet", async () => {
+    await paneWith(open("tree.ged"));
 
     expect(problems()).not.toBeNull();
     expect(screen.getByText("Nothing to report")).toBeTruthy();
@@ -172,53 +140,50 @@ describe("the pane that holds one document", () => {
   // The cursor moving and the document being checked are two events, and the file
   // carries one report: the second must not blank what the first said.
   it("carries where the cursor is and what was found as one report", async () => {
-    const said: { path: string; report: DocumentReport }[] = [];
-    render(
-      paneWith(workspaceOf(open("tree.ged")), true, (path, report) =>
-        said.push({ path, report }),
-      ),
-    );
+    const app = await paneWith(open("tree.ged"));
     const user = userEvent.setup();
 
     await user.click(screen.getByText("moved"));
     await user.click(screen.getByText("checked"));
 
-    expect(said.at(-1)).toEqual({
-      path: "tree.ged",
-      report: {
-        kind: "gedcom",
-        status: { line: 4, character: 2, resolution: undefined },
-        diagnostics: [finding("unknown tag")],
-      },
+    expect(app.ctx.workspace.active?.report).toEqual({
+      kind: "gedcom",
+      status: { line: 4, character: 2, resolution: undefined },
+      diagnostics: [finding("unknown tag")],
     });
   });
 
   // Two notes in a row are the same component in the same place: without a key
   // the second never reports, and the bar goes on describing the first.
   it("has each note report for itself", async () => {
-    const said: string[] = [];
-    const notes = workspaceOf(open("first.md"), open("second.md"));
-    const view = render(
-      paneWith({ ...notes, activePath: "first.md" }, true, (path) =>
-        said.push(path),
-      ),
-    );
-    view.rerender(paneWith(notes, true, (path) => said.push(path)));
+    const app = await paneWith(open("first.md"), open("second.md"));
+    await act(async () => {
+      app.ctx.workspace.dispatch({ type: "file-activated", path: "first.md" });
+    });
+    await act(async () => {
+      app.ctx.workspace.dispatch({ type: "file-activated", path: "second.md" });
+    });
 
-    expect(said).toEqual(["first.md", "second.md"]);
+    expect(
+      app.ctx.workspace.snapshot.files.map((file) => [
+        file.path,
+        file.report !== null,
+      ]),
+    ).toEqual([
+      ["first.md", true],
+      ["second.md", true],
+    ]);
   });
 
-  it("leaves the panel out when the reader has closed it", () => {
-    render(
-      paneWith(
-        workspaceOf(open("tree.ged"), {
-          type: "reported",
-          path: "tree.ged",
-          report: found("unknown tag"),
-        }),
-        false,
-      ),
-    );
+  it("leaves the panel out when the reader has closed it", async () => {
+    const app = await paneWith(open("tree.ged"), {
+      type: "reported",
+      path: "tree.ged",
+      report: found("unknown tag"),
+    });
+    await act(async () => {
+      app.ctx.rail.toggle("problems");
+    });
 
     expect(problems()).toBeNull();
   });
