@@ -1,90 +1,86 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/react";
+import { Context } from "cordis";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { StatusBar } from "./StatusBar";
-import type { VersionResolution } from "@domorium/language-service";
-
-import type { DocumentReport } from "@/editor/types";
+import { CordisProvider } from "@/cordis/react";
+import { SurfaceService, type DocumentSurface } from "@/services/surfaces";
+import { WorkspaceService } from "@/services/workspace";
 
 afterEach(cleanup);
 
 const bar = () => screen.getByRole("contentinfo").textContent ?? "";
 
-// A resolution carries the schema it chose, which the bar never reads.
-const supported = {
-  kind: "supported",
-  version: "5.5.1",
-  dialect: "5.5.1",
-} as VersionResolution;
+const STANDING = "read locally — nothing is uploaded";
 
-const gedcom: DocumentReport = {
-  kind: "gedcom",
-  status: { line: 11, character: 4, resolution: supported },
-  diagnostics: [],
-};
-
-describe("what the bar says about the file in front", () => {
-  it("states the version, the place in the document and the count", () => {
-    render(<StatusBar report={gedcom} />);
-
-    expect(bar()).toContain("GEDCOM 5.5.1");
-    expect(bar()).toContain("supported");
-    expect(bar()).toContain("Ln 12, Col 5");
-    expect(bar()).toContain("0 issues");
+function barWith(
+  surface: Partial<DocumentSurface<"markdown">>,
+  opened: boolean,
+  report: { kind: "markdown" } | null = { kind: "markdown" },
+) {
+  const ctx = new Context();
+  new WorkspaceService(ctx);
+  new SurfaceService(ctx);
+  ctx.surfaces.register({
+    id: "markdown",
+    claims: () => true,
+    reads: "text",
+    render: () => null,
+    ...surface,
   });
 
-  it("says a note is a note and cannot be written", () => {
-    render(<StatusBar report={{ kind: "markdown" }} />);
+  if (opened) {
+    ctx.workspace.dispatch({
+      type: "workspace-opened",
+      name: "Webb Family",
+      writable: true,
+    });
+    ctx.workspace.dispatch({
+      type: "file-opened",
+      path: "notes.md",
+      kind: "markdown",
+      editable: false,
+      text: "# Note",
+    });
+    if (report) {
+      ctx.workspace.dispatch({ type: "reported", path: "notes.md", report });
+    }
+  }
+
+  render(
+    <CordisProvider ctx={ctx}>
+      <StatusBar />
+    </CordisProvider>,
+  );
+}
+
+describe("what the bar says about the file in front", () => {
+  it("states the facts the file's own surface gives it", () => {
+    barWith({ facts: () => ["Markdown", "read-only"] }, true);
 
     expect(bar()).toContain("Markdown");
     expect(bar()).toContain("read-only");
-    expect(bar()).not.toContain("GEDCOM 5.5.1");
-    expect(bar()).not.toContain("issue");
-  });
-
-  it("states a photograph's format, its pixels and its size", () => {
-    render(
-      <StatusBar
-        report={{
-          kind: "image",
-          format: "JPEG",
-          bytes: 215_040,
-          width: 1024,
-          height: 768,
-        }}
-      />,
-    );
-
-    expect(bar()).toContain("JPEG");
-    expect(bar()).toContain("1024 × 768");
-    expect(bar()).toContain("210 KB");
-  });
-
-  // The bytes are read before the browser decodes them.
-  it("claims no pixels until the photograph has been decoded", () => {
-    render(
-      <StatusBar
-        report={{
-          kind: "image",
-          format: "PNG",
-          bytes: 2048,
-          width: null,
-          height: null,
-        }}
-      />,
-    );
-
-    expect(bar()).toContain("PNG");
-    expect(bar()).toContain("2 KB");
-    expect(bar()).not.toContain("×");
+    expect(bar()).toContain(STANDING);
   });
 
   // A stale version and a stale count are what this bar was reading before.
   it("states only what is true of the window when nothing is open", () => {
-    render(<StatusBar report={null} />);
+    barWith({ facts: () => ["Markdown"] }, false);
 
-    expect(bar()).toBe("read locally — nothing is uploaded");
+    expect(bar()).toBe(STANDING);
+  });
+
+  it("states nothing of a file whose surface has not reported yet", () => {
+    barWith({ facts: () => ["Markdown"] }, true, null);
+
+    expect(bar()).toBe(STANDING);
+  });
+
+  it("states nothing of a surface that offers no facts at all", () => {
+    barWith({}, true);
+
+    expect(bar()).toBe(STANDING);
   });
 });

@@ -1,10 +1,11 @@
+import type { SurfaceId } from "../editor/types";
 import type { DirectoryEntry, FileOperations } from "./fileGateway";
-import { fileKindOf, type FileKind } from "./workspace";
 
 export interface TreeNode extends DirectoryEntry {
   /** Depth from the root, for the indentation the explorer draws. */
   depth: number;
-  kindIfFile: FileKind | null;
+  /** The surface that would show it; null for a directory, or for a file none claims. */
+  kindIfFile: SurfaceId | null;
   expanded: boolean;
 }
 
@@ -16,6 +17,7 @@ export interface TreeNode extends DirectoryEntry {
 export async function treeRows(
   gateway: FileOperations,
   expanded: ReadonlySet<string>,
+  shownBy: (path: string) => SurfaceId | null,
 ): Promise<TreeNode[]> {
   const rows: TreeNode[] = [];
 
@@ -25,7 +27,7 @@ export async function treeRows(
       rows.push({
         ...entry,
         depth,
-        kindIfFile: entry.kind === "file" ? fileKindOf(entry.path) : null,
+        kindIfFile: entry.kind === "file" ? shownBy(entry.path) : null,
         expanded: open,
       });
       if (open) {

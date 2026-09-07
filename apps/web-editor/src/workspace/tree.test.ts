@@ -3,6 +3,20 @@ import { describe, expect, it, vi } from "vitest";
 import { createMemoryGateway } from "./memoryGateway";
 import { toggled, treeRows } from "./tree";
 
+/** Stands in for the surface registry: what would show each file, if anything. */
+const shownBy = (path: string) => {
+  if (/\.(md|markdown)$/.test(path)) {
+    return "markdown" as const;
+  }
+  if (/\.(png|jpe?g)$/.test(path)) {
+    return "image" as const;
+  }
+  if (/\.(ged|gedcom)$/.test(path)) {
+    return "gedcom" as const;
+  }
+  return null;
+};
+
 const folder = () =>
   createMemoryGateway({
     "tree.ged": "0 HEAD\n",
@@ -14,20 +28,20 @@ const folder = () =>
 
 describe("the rows the explorer draws", () => {
   it("lists the root, saying what each row is", async () => {
-    const rows = await treeRows(folder(), new Set());
+    const rows = await treeRows(folder(), new Set(), shownBy);
 
     expect(
       rows.map((row) => [row.name, row.kind, row.kindIfFile, row.depth]),
     ).toEqual([
       ["media", "directory", null, 0],
       ["notes.md", "file", "markdown", 0],
-      ["receipt.pdf", "file", "unsupported", 0],
+      ["receipt.pdf", "file", null, 0],
       ["tree.ged", "file", "gedcom", 0],
     ]);
   });
 
   it("shows a directory's entries once it is expanded, one level deeper", async () => {
-    const rows = await treeRows(folder(), new Set(["media"]));
+    const rows = await treeRows(folder(), new Set(["media"]), shownBy);
 
     expect(rows.map((row) => [row.path, row.depth])).toEqual([
       ["media", 0],
@@ -44,11 +58,11 @@ describe("the rows the explorer draws", () => {
     const gateway = folder();
     const list = vi.spyOn(gateway, "list");
 
-    await treeRows(gateway, new Set());
+    await treeRows(gateway, new Set(), shownBy);
     expect(list).toHaveBeenCalledTimes(1);
 
     list.mockClear();
-    await treeRows(gateway, new Set(["media", "media/people"]));
+    await treeRows(gateway, new Set(["media", "media/people"]), shownBy);
     expect(list.mock.calls.map(([path]) => path)).toEqual([
       "",
       "media",

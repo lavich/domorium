@@ -1,23 +1,12 @@
 import { useEffect, useState } from "react";
 
-import type { DocumentLink } from "@domorium/codemirror";
-
 import { ActivityRail } from "./ActivityRail";
 import { DocumentPane } from "./DocumentPane";
 import { StatusBar } from "./StatusBar";
-import { useRail, useWorkspace } from "@/cordis/react";
+import { useRail } from "@/cordis/react";
 import { openIn } from "@/services/rail";
-import { activeFile } from "@/workspace/workspace";
-import type { WebTheme } from "@/editor/types";
 
-export function EditorWorkspace({
-  theme,
-  onFollowLink,
-}: {
-  theme: WebTheme;
-  onFollowLink(link: DocumentLink): void;
-}) {
-  const workspace = useWorkspace();
+export function EditorWorkspace() {
   const rail = useRail();
   const wideEnoughForPanels = useMediaQuery("(min-width: 768px)");
   const side = wideEnoughForPanels ? openIn(rail, "side") : undefined;
@@ -27,13 +16,9 @@ export function EditorWorkspace({
       <div className="flex min-h-0 flex-1">
         <ActivityRail />
         {side?.render?.()}
-        <DocumentPane
-          theme={theme}
-          wideEnoughForPanels={wideEnoughForPanels}
-          onFollowLink={onFollowLink}
-        />
+        <DocumentPane wideEnoughForPanels={wideEnoughForPanels} />
       </div>
-      <StatusBar report={activeFile(workspace)?.report ?? null} />
+      <StatusBar />
     </div>
   );
 }

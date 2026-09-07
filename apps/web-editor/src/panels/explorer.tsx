@@ -62,7 +62,11 @@ class ExplorerModel {
       return;
     }
     try {
-      const rows = await treeRows(files, this.expanded);
+      const rows = await treeRows(
+        files,
+        this.expanded,
+        (path) => this.ctx.surfaces.claiming(path)?.id ?? null,
+      );
       if (mine === this.walk) {
         this.rows = rows;
         this.publish();

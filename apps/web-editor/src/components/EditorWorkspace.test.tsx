@@ -4,9 +4,9 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EditorWorkspace } from "./EditorWorkspace";
-import { InApp, testApp } from "@/cordis/testing";
+import { InApp, opened, testApp } from "@/cordis/testing";
 import type { DocumentReport } from "@/editor/types";
-import { fileKindOf, type WorkspaceAction } from "@/workspace/workspace";
+import type { WorkspaceAction } from "@/workspace/workspace";
 
 vi.mock("@/editor/GedcomEditor", () => ({
   GedcomEditor: () => <div aria-label="GEDCOM editor" />,
@@ -52,22 +52,25 @@ const checked: DocumentReport = {
   ],
 };
 
-const open = (path: string) =>
-  ({
-    type: "file-opened",
-    path,
-    kind: fileKindOf(path),
-    text: fileKindOf(path) === "image" ? null : "0 HEAD\n",
-  }) as const;
+/** A path to open, or an action to dispatch once the file before it is open. */
+type Step = string | WorkspaceAction;
 
-const workspaceWith = async (...actions: WorkspaceAction[]) => {
-  const app = await testApp(
-    { type: "workspace-opened", name: "Webb Family", writable: true },
-    ...actions,
-  );
+const workspaceWith = async (...steps: Step[]) => {
+  const app = await testApp({
+    type: "workspace-opened",
+    name: "Webb Family",
+    writable: true,
+  });
+  for (const step of steps) {
+    if (typeof step === "string") {
+      opened(app.ctx, step);
+    } else {
+      app.ctx.workspace.dispatch(step);
+    }
+  }
   return render(
     <InApp app={app}>
-      <EditorWorkspace theme="light" onFollowLink={vi.fn()} />
+      <EditorWorkspace />
     </InApp>,
   );
 };
@@ -76,7 +79,7 @@ const bar = () => screen.getByRole("contentinfo").textContent ?? "";
 
 describe("what the window says about the tab in front", () => {
   it("counts a GEDCOM document's findings and states its version", async () => {
-    await workspaceWith(open("tree.ged"), {
+    await workspaceWith("tree.ged", {
       type: "reported",
       path: "tree.ged",
       report: checked,
@@ -90,9 +93,9 @@ describe("what the window says about the tab in front", () => {
   // The bar read the version and the count of the file the reader had left.
   it("counts nothing and states nothing of a file it does not check", async () => {
     await workspaceWith(
-      open("tree.ged"),
+      "tree.ged",
       { type: "reported", path: "tree.ged", report: checked },
-      open("media/portrait.jpg"),
+      "media/portrait.jpg",
       {
         type: "reported",
         path: "media/portrait.jpg",
@@ -115,7 +118,7 @@ describe("what the window says about the tab in front", () => {
   });
 
   it("says nothing of a document until it has been checked", async () => {
-    await workspaceWith(open("tree.ged"));
+    await workspaceWith("tree.ged");
 
     expect(screen.getByRole("button", { name: "0 problems" })).toBeTruthy();
     expect(bar()).toBe("read locally — nothing is uploaded");

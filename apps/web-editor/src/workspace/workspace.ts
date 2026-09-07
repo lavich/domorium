@@ -1,13 +1,13 @@
-import { isGedcomFileName } from "../editor/documentSession";
-import type { DocumentReport } from "../editor/types";
-
-export type FileKind = "gedcom" | "markdown" | "image" | "unsupported";
+import type { DocumentReport, SurfaceId } from "../editor/types";
 
 export interface OpenFile {
   /** Path from the root of the workspace: the identity of a tab. */
   path: string;
   name: string;
-  kind: FileKind;
+  /** The surface showing it, which is also the `kind` of its report. */
+  kind: SurfaceId;
+  /** Whether that surface lets the document be changed and saved. */
+  editable: boolean;
   /**
    * What the editor was created with, not what it holds now — the same bargain
    * the single-document session made, for the same reason: asking the editor for
@@ -34,7 +34,14 @@ export interface Workspace {
 
 export type WorkspaceAction =
   | { type: "workspace-opened"; name: string; writable: boolean }
-  | { type: "file-opened"; path: string; kind: FileKind; text: string | null }
+  | {
+      type: "file-opened";
+      path: string;
+      kind: SurfaceId;
+      editable: boolean;
+      text: string | null;
+    }
+  | { type: "file-unsupported"; path: string }
   | { type: "file-activated"; path: string }
   | { type: "file-closed"; path: string }
   | { type: "edited"; path: string }
@@ -65,13 +72,13 @@ export function workspaceReducer(
         nextEditorKey: state.nextEditorKey,
       };
 
+    case "file-unsupported":
+      return {
+        ...state,
+        notice: `${nameOf(action.path)} is not a kind this editor can show`,
+      };
+
     case "file-opened": {
-      if (action.kind === "unsupported") {
-        return {
-          ...state,
-          notice: `${nameOf(action.path)} is not a kind this editor can show`,
-        };
-      }
       const already = state.files.find((file) => file.path === action.path);
       if (already) {
         return { ...state, activePath: already.path, notice: null };
@@ -87,6 +94,7 @@ export function workspaceReducer(
             path: action.path,
             name: nameOf(action.path),
             kind: action.kind,
+            editable: action.editable,
             initialText: action.text,
             modified: false,
             report: null,
@@ -120,9 +128,7 @@ export function workspaceReducer(
     // what keeps "unsaved work" a question only a GEDCOM tab can answer.
     case "edited":
       return mapFile(state, action.path, (file) =>
-        file.kind !== "gedcom" || file.modified
-          ? file
-          : { ...file, modified: true },
+        !file.editable || file.modified ? file : { ...file, modified: true },
       );
 
     // The editor holds one document at a time, so the text of a tab being left has
@@ -130,7 +136,7 @@ export function workspaceReducer(
     // and the edits are gone without a word.
     case "text-kept":
       return mapFile(state, action.path, (file) =>
-        file.kind === "gedcom" && file.initialText !== action.text
+        file.editable && file.initialText !== action.text
           ? { ...file, initialText: action.text }
           : file,
       );
@@ -166,25 +172,6 @@ export function isOpen(state: Workspace, path: string): boolean {
 
 export function unsavedFiles(state: Workspace): OpenFile[] {
   return state.files.filter((file) => file.modified);
-}
-
-/**
- * Which view a file calls for. The extension is all there is to go by before the
- * file is read, and reading a folder's every file to sniff its bytes would cost
- * the reader a folder walk they did not ask for.
- */
-export function fileKindOf(path: string): FileKind {
-  const name = nameOf(path).toLowerCase();
-  if (isGedcomFileName(name)) {
-    return "gedcom";
-  }
-  if (/\.(md|markdown)$/.test(name)) {
-    return "markdown";
-  }
-  if (/\.(png|jpe?g|gif|webp|avif|bmp|svg)$/.test(name)) {
-    return "image";
-  }
-  return "unsupported";
 }
 
 export function nameOf(path: string): string {

@@ -6,6 +6,8 @@ import {
   useState,
 } from "react";
 
+import type { DocumentLink } from "@domorium/codemirror";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,7 +15,7 @@ import { EditorWorkspace } from "@/components/EditorWorkspace";
 import { ConfirmDialog, type Confirmation } from "@/components/ConfirmDialog";
 import { ReplaceDocumentDialog } from "@/components/ReplaceDocumentDialog";
 import { SiteHeader } from "@/components/SiteHeader";
-import { ThemeProvider, useTheme } from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { createAppContext } from "@/cordis/app";
 import { CordisProvider, useCordis, useWorkspace } from "@/cordis/react";
 import { downloadGedcom, readGedcomFile } from "@/editor/fileActions";
@@ -32,7 +34,6 @@ import { save, saveAvailability } from "@/workspace/save";
 import { createSingleFileGateway } from "@/workspace/singleFileGateway";
 import {
   activeFile,
-  fileKindOf,
   isOpen,
   unsavedFiles,
   type OpenFile,
@@ -57,7 +58,6 @@ export function App() {
 
 function AppContent() {
   const ctx = useCordis();
-  const { resolvedTheme } = useTheme();
   const workspace = useWorkspace();
   const root = useRef<FileSystemDirectoryHandle | null>(null);
   const [demoText, setDemoText] = useState("");
@@ -70,6 +70,29 @@ function AppContent() {
   const file = activeFile(workspace);
   const modified = unsavedFiles(workspace).length > 0;
 
+  /**
+   * Opens a file on whichever surface claims it, and says so when none does. The
+   * text is read here only for a surface that asked for it: a photograph read as
+   * a string would come back corrupted.
+   */
+  const openOn = useCallback(
+    async (path: string, read: (path: string) => Promise<string>) => {
+      const surface = ctx.surfaces.claiming(path);
+      if (!surface) {
+        ctx.workspace.dispatch({ type: "file-unsupported", path });
+        return;
+      }
+      ctx.workspace.dispatch({
+        type: "file-opened",
+        path,
+        kind: surface.id,
+        editable: surface.editable ?? false,
+        text: surface.reads === "text" ? await read(path) : null,
+      });
+    },
+    [ctx],
+  );
+
   /** The demo, a single chosen file and a granted folder differ in the gateway only. */
   const openWorkspace = useCallback(
     async (next: FileGateway, path: string) => {
@@ -79,14 +102,9 @@ function AppContent() {
         name: next.name,
         writable: next.writable,
       });
-      ctx.workspace.dispatch({
-        type: "file-opened",
-        path,
-        kind: fileKindOf(path),
-        text: fileKindOf(path) === "image" ? null : await next.readText(path),
-      });
+      await openOn(path, (inner) => next.readText(inner));
     },
-    [ctx],
+    [ctx, openOn],
   );
 
   useEffect(() => {
@@ -180,9 +198,9 @@ function AppContent() {
     }
   };
 
-  /** Reads the document from the editor now: it owns it, and a copy per keystroke costs. */
+  /** Reads the document from the surface now: it owns it, and a copy per keystroke costs. */
   const textOf = (open: OpenFile | null) =>
-    ctx.editor.getText() ?? open?.initialText ?? "";
+    ctx.surfaces.text() ?? open?.initialText ?? "";
 
   const files = () => ctx.get("files", false) ?? null;
 
@@ -252,12 +270,7 @@ function AppContent() {
     const inside = root.current ? await pathWithin(root.current, chosen) : null;
     if (inside && files()) {
       ctx.workspace.dispatch({ type: "saved", path: file.path });
-      ctx.workspace.dispatch({
-        type: "file-opened",
-        path: inside,
-        kind: fileKindOf(inside),
-        text,
-      });
+      await openOn(inside, async () => text);
       ctx.emit("files/changed");
       return;
     }
@@ -356,10 +369,10 @@ function AppContent() {
     }
   };
 
-  /** The editor is one document at a time: the tab being left has to leave its text. */
+  /** A surface holds one document at a time: the tab being left has to leave its text. */
   const keepEditorText = () => {
-    const text = ctx.editor.getText();
-    if (file?.kind === "gedcom" && text !== undefined) {
+    const text = ctx.surfaces.text();
+    if (file?.editable && text !== undefined) {
       ctx.workspace.dispatch({ type: "text-kept", path: file.path, text });
     }
   };
@@ -370,24 +383,34 @@ function AppContent() {
       return;
     }
     keepEditorText();
-    const kind = fileKindOf(path);
-    if (isOpen(workspace, path) || kind === "unsupported") {
-      ctx.workspace.dispatch({ type: "file-opened", path, kind, text: null });
+    // An open file is brought forward rather than reread.
+    if (isOpen(workspace, path)) {
+      ctx.workspace.dispatch({ type: "file-activated", path });
       return;
     }
     try {
-      ctx.workspace.dispatch({
-        type: "file-opened",
-        path,
-        kind,
-        text: kind === "image" ? null : await current.readText(path),
-      });
+      await openOn(path, (inner) => current.readText(inner));
     } catch (cause) {
       ctx.workspace.dispatch({
         type: "notice",
         message:
           cause instanceof Error ? cause.message : "The file could not be read",
       });
+    }
+  };
+
+  /** Where a link in the document leads: another file here, or off the page. */
+  const openLink = (link: DocumentLink) => {
+    const followed = followLink(link, {
+      path: file?.path ?? "",
+      hasWorkspace: files()?.folder === true,
+    });
+    if (followed.kind === "web") {
+      window.open(followed.url, "_blank", "noopener,noreferrer");
+    } else if (followed.kind === "file") {
+      void chooseFile(followed.path);
+    } else {
+      ctx.workspace.dispatch({ type: "notice", message: followed.message });
     }
   };
 
@@ -409,6 +432,7 @@ function AppContent() {
     chooseFile,
     keepEditorText,
     closeTab,
+    openLink,
   });
   latest.current = {
     openFile,
@@ -416,6 +440,7 @@ function AppContent() {
     chooseFile,
     keepEditorText,
     closeTab,
+    openLink,
   };
 
   useEffect(() => {
@@ -436,6 +461,9 @@ function AppContent() {
       }),
       ctx.commands.register("workspace.closeTab", (path) =>
         latest.current.closeTab(path),
+      ),
+      ctx.commands.register("workspace.followLink", (link) =>
+        latest.current.openLink(link),
       ),
     ];
     return () => {
@@ -505,25 +533,7 @@ function AppContent() {
               aria-label="Loading GEDCOM example"
             />
           ) : (
-            <EditorWorkspace
-              theme={resolvedTheme}
-              onFollowLink={(link) => {
-                const followed = followLink(link, {
-                  path: file?.path ?? "",
-                  hasWorkspace: files()?.folder === true,
-                });
-                if (followed.kind === "web") {
-                  window.open(followed.url, "_blank", "noopener,noreferrer");
-                } else if (followed.kind === "file") {
-                  void chooseFile(followed.path);
-                } else {
-                  ctx.workspace.dispatch({
-                    type: "notice",
-                    message: followed.message,
-                  });
-                }
-              }}
-            />
+            <EditorWorkspace />
           )}
         </div>
       </div>

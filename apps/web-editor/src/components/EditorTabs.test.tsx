@@ -7,7 +7,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { EditorTabs } from "./EditorTabs";
 import {
   emptyWorkspace,
-  fileKindOf,
   workspaceReducer,
   type Workspace,
 } from "@/workspace/workspace";
@@ -24,8 +23,9 @@ const workspaceWith = (paths: string[], edited: string[] = []): Workspace => {
     state = workspaceReducer(state, {
       type: "file-opened",
       path,
-      kind: fileKindOf(path),
-      text: fileKindOf(path) === "image" ? null : "content",
+      kind: /\.(md|markdown)$/.test(path) ? "markdown" : "gedcom",
+      editable: !/\.(md|markdown)$/.test(path),
+      text: "content",
     });
   }
   for (const path of edited) {

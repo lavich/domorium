@@ -24,7 +24,7 @@ describe("the explorer, as a plugin", () => {
     const app = await testApp();
     render(
       <InApp app={app}>
-        <EditorWorkspace theme="light" onFollowLink={() => {}} />
+        <EditorWorkspace />
       </InApp>,
     );
 
@@ -50,7 +50,7 @@ describe("the explorer, as a plugin", () => {
     const gateway = createMemoryGateway({ "tree.ged": "0 HEAD\n" });
     render(
       <InApp app={app}>
-        <EditorWorkspace theme="light" onFollowLink={() => {}} />
+        <EditorWorkspace />
       </InApp>,
     );
     await act(async () => {
@@ -70,7 +70,7 @@ describe("the explorer, as a plugin", () => {
     const app = await testApp();
     render(
       <InApp app={app}>
-        <EditorWorkspace theme="light" onFollowLink={() => {}} />
+        <EditorWorkspace />
       </InApp>,
     );
     expect(screen.getByRole("button", { name: "Files" })).toBeTruthy();

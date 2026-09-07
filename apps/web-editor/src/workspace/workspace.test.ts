@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { DocumentReport } from "../editor/types";
+import type { DocumentReport, SurfaceId } from "../editor/types";
 import {
   activeFile,
   emptyWorkspace,
-  fileKindOf,
   isOpen,
   unsavedFiles,
   workspaceReducer,
@@ -18,19 +17,19 @@ const after = (actions: WorkspaceAction[], from: Workspace = emptyWorkspace) =>
 const granted = (): Workspace =>
   after([{ type: "workspace-opened", name: "Webb Family", writable: true }]);
 
-const opened = (path: string, text: string | null = "0 HEAD\n") =>
-  ({ type: "file-opened", path, kind: fileKindOf(path), text }) as const;
+/** Stands in for what the surface registry answers about a path. */
+const shownBy = (path: string): { kind: SurfaceId; editable: boolean } => {
+  if (/\.(md|markdown)$/i.test(path)) {
+    return { kind: "markdown", editable: false };
+  }
+  if (/\.(png|jpe?g)$/i.test(path)) {
+    return { kind: "image", editable: false };
+  }
+  return { kind: "gedcom", editable: true };
+};
 
-describe("which view a file calls for", () => {
-  it("reads it from the name, which is all there is before the file is read", () => {
-    expect(fileKindOf("tree.ged")).toBe("gedcom");
-    expect(fileKindOf("media/TREE.GEDCOM")).toBe("gedcom");
-    expect(fileKindOf("notes.md")).toBe("markdown");
-    expect(fileKindOf("a/b/portrait.JPG")).toBe("image");
-    expect(fileKindOf("receipt.pdf")).toBe("unsupported");
-    expect(fileKindOf("LICENSE")).toBe("unsupported");
-  });
-});
+const opened = (path: string, text: string | null = "0 HEAD\n") =>
+  ({ type: "file-opened", path, ...shownBy(path), text }) as const;
 
 describe("a workspace of open files", () => {
   it("names itself and starts with nothing open", () => {
@@ -70,7 +69,10 @@ describe("a workspace of open files", () => {
   });
 
   it("refuses a kind it has no view for, and opens no tab", () => {
-    const state = after([opened("receipt.pdf", null)], granted());
+    const state = after(
+      [{ type: "file-unsupported", path: "receipt.pdf" }],
+      granted(),
+    );
 
     expect(state.files).toEqual([]);
     expect(state.notice).toBe("receipt.pdf is not a kind this editor can show");
@@ -126,6 +128,28 @@ describe("what counts as unsaved", () => {
 
     const saved = workspaceReducer(edited, { type: "saved", path: "tree.ged" });
     expect(unsavedFiles(saved)).toEqual([]);
+  });
+
+  // The reducer must not know by name which surface is the editable one, or a
+  // second editable surface silently loses every edit made in it.
+  it("marks an edited file of any surface that calls itself editable", () => {
+    const state = after(
+      [
+        {
+          type: "file-opened",
+          path: "notes.md",
+          kind: "markdown",
+          editable: true,
+          text: "# Note",
+        },
+        { type: "edited", path: "notes.md" },
+        { type: "text-kept", path: "notes.md", text: "# Note\ntyped" },
+      ],
+      granted(),
+    );
+
+    expect(unsavedFiles(state).map((file) => file.path)).toEqual(["notes.md"]);
+    expect(state.files[0].initialText).toBe("# Note\ntyped");
   });
 
   // A preview has nothing to save, so it must never claim to.

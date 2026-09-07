@@ -10,6 +10,7 @@ const document = (over: Partial<OpenFile> = {}): OpenFile => ({
   path: "tree.ged",
   name: "tree.ged",
   kind: "gedcom",
+  editable: true,
   initialText: "0 HEAD\n0 TRLR\n",
   modified: true,
   report: null,

@@ -1,5 +1,7 @@
 import { Service, type Context } from "cordis";
 
+import type { DocumentLink } from "@domorium/codemirror";
+
 /** A plugin that adds a command declares it here, the way a service is declared. */
 export interface Commands {
   "workspace.openFile"(): void;
@@ -7,6 +9,7 @@ export interface Commands {
   "workspace.chooseFile"(path: string): void;
   "workspace.activateTab"(path: string): void;
   "workspace.closeTab"(path: string): void;
+  "workspace.followLink"(link: DocumentLink): void;
 }
 
 type Handler = (...args: never[]) => void;

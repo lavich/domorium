@@ -3,7 +3,8 @@ import { FileTextIcon, ImageIcon, XIcon } from "lucide-react";
 import { GedcomFileIcon } from "./GedcomFileIcon";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import type { FileKind, OpenFile } from "@/workspace/workspace";
+import type { SurfaceId } from "@/editor/types";
+import type { OpenFile } from "@/workspace/workspace";
 
 export interface EditorTabsProps {
   files: OpenFile[];
@@ -84,7 +85,7 @@ export function EditorTabs({
   );
 }
 
-function KindIcon({ kind }: { kind: FileKind }) {
+function KindIcon({ kind }: { kind: SurfaceId }) {
   if (kind === "gedcom") {
     return <GedcomFileIcon className="size-3.5 text-primary" />;
   }
