@@ -81,7 +81,12 @@ export function workspaceReducer(
     case "file-opened": {
       const already = state.files.find((file) => file.path === action.path);
       if (already) {
-        return { ...state, activePath: already.path, notice: null };
+        const reread = mapFile(state, action.path, (file) =>
+          file.modified || file.initialText === action.text
+            ? file
+            : { ...file, initialText: action.text },
+        );
+        return { ...reread, activePath: already.path, notice: null };
       }
       return {
         ...state,

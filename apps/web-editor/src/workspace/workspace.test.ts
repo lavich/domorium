@@ -68,6 +68,25 @@ describe("a workspace of open files", () => {
     );
   });
 
+  it("shows what a reread found, and keeps what an edited tab holds", () => {
+    const reread = after(
+      [opened("tree.ged"), opened("tree.ged", "0 HEAD\n1 CHAR UTF-8\n")],
+      granted(),
+    );
+    const edited = after(
+      [
+        opened("tree.ged"),
+        { type: "edited", path: "tree.ged" },
+        opened("tree.ged", "0 HEAD\n1 CHAR UTF-8\n"),
+      ],
+      granted(),
+    );
+
+    expect(reread.files[0].initialText).toBe("0 HEAD\n1 CHAR UTF-8\n");
+    expect(edited.files[0].initialText).toBe("0 HEAD\n");
+    expect(edited.files[0].modified).toBe(true);
+  });
+
   it("refuses a kind it has no view for, and opens no tab", () => {
     const state = after(
       [{ type: "file-unsupported", path: "receipt.pdf" }],
