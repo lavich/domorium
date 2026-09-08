@@ -1,4 +1,4 @@
-import type { FileGateway } from "./fileGateway";
+import type { FileOperations } from "./fileGateway";
 import { NotWritableError } from "./fileGateway";
 import type { OpenFile } from "./workspace";
 
@@ -26,9 +26,9 @@ export function decodedFaithfully(text: string): boolean {
 export async function save(
   file: OpenFile,
   text: string,
-  gateway: FileGateway | null,
+  gateway: FileOperations | null,
 ): Promise<SaveOutcome> {
-  if (file.kind !== "gedcom") {
+  if (!file.editable) {
     return {
       kind: "refused",
       message: `${file.name} is a preview, and has nothing to save`,
@@ -72,12 +72,12 @@ export async function save(
  */
 export function saveAvailability(
   file: OpenFile | null,
-  gateway: FileGateway | null,
+  gateway: FileOperations | null,
   saveDialogAvailable = false,
 ): { save: boolean; saveAs: boolean } {
-  const gedcom = file?.kind === "gedcom";
+  const editable = file?.editable === true;
   return {
-    save: gedcom && gateway !== null,
-    saveAs: gedcom && saveDialogAvailable,
+    save: editable && gateway !== null,
+    saveAs: editable && saveDialogAvailable,
   };
 }

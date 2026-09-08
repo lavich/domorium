@@ -4,8 +4,16 @@
  * than a branch through the components, and jsdom, which has none of it, can be
  * given a tree in memory.
  */
-export interface FileGateway {
+export interface FileGateway extends FileOperations {
   readonly name: string;
+}
+
+/**
+ * The operations alone. A service answers with its own key for `name`, so anything
+ * that only reads and writes takes this and cannot be handed a workspace name that
+ * means something else.
+ */
+export interface FileOperations {
   readonly writable: boolean;
   /**
    * Whether the workspace holds more than the file that was opened: where it does

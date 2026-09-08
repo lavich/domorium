@@ -9,6 +9,20 @@ import { ExplorerPanel, type ExplorerPanelProps } from "./ExplorerPanel";
 import { createMemoryGateway } from "@/workspace/memoryGateway";
 import { treeRows } from "@/workspace/tree";
 
+/** Stands in for the surface registry: what would show each file, if anything. */
+const shownBy = (path: string) => {
+  if (/\.(md|markdown)$/.test(path)) {
+    return "markdown" as const;
+  }
+  if (/\.(png|jpe?g)$/.test(path)) {
+    return "image" as const;
+  }
+  if (/\.(ged|gedcom)$/.test(path)) {
+    return "gedcom" as const;
+  }
+  return null;
+};
+
 afterEach(cleanup);
 
 const rowsOf = (expanded: string[] = []) =>
@@ -21,6 +35,7 @@ const rowsOf = (expanded: string[] = []) =>
       '<img src=x onerror="alert(1)">.ged': "0 HEAD\n",
     }),
     new Set(expanded),
+    shownBy,
   );
 
 const panel = (props: Partial<ExplorerPanelProps> = {}) =>

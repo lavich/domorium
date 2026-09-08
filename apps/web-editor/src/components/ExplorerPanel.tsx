@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { GedcomFileIcon } from "./GedcomFileIcon";
 import type { TreeNode } from "@/workspace/tree";
-import type { FileKind } from "@/workspace/workspace";
+import type { SurfaceId } from "@/editor/types";
 
 export interface ExplorerPanelProps {
   /** The workspace's name, or null before one is opened. */
@@ -124,7 +124,7 @@ function Row({
   active: boolean;
   onSelect(): void;
 }) {
-  const openable = row.kind === "directory" || row.kindIfFile !== "unsupported";
+  const openable = row.kind === "directory" || row.kindIfFile !== null;
   return (
     <button
       type="button"
@@ -171,7 +171,7 @@ function RowIcon({ row }: { row: TreeNode }) {
   return <Icon className="size-3.5 shrink-0 text-muted-foreground" />;
 }
 
-function iconFor(kind: FileKind | null) {
+function iconFor(kind: SurfaceId | null) {
   switch (kind) {
     case "markdown":
       return FileTextIcon;

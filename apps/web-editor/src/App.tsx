@@ -2,10 +2,11 @@ import {
   type ChangeEvent,
   useCallback,
   useEffect,
-  useReducer,
   useRef,
   useState,
 } from "react";
+
+import type { DocumentLink } from "@domorium/codemirror";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +15,9 @@ import { EditorWorkspace } from "@/components/EditorWorkspace";
 import { ConfirmDialog, type Confirmation } from "@/components/ConfirmDialog";
 import { ReplaceDocumentDialog } from "@/components/ReplaceDocumentDialog";
 import { SiteHeader } from "@/components/SiteHeader";
-import { ThemeProvider, useTheme } from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { createAppContext, type AppContext } from "@/cordis/app";
+import { CordisProvider, useCordis, useWorkspace } from "@/cordis/react";
 import { downloadGedcom, readGedcomFile } from "@/editor/fileActions";
 import type { FileGateway } from "@/workspace/fileGateway";
 import {
@@ -28,41 +31,35 @@ import {
 import { createMemoryGateway } from "@/workspace/memoryGateway";
 import { followLink } from "@/workspace/followLink";
 import { save, saveAvailability } from "@/workspace/save";
-import { detectWorkspaceSupport } from "@/workspace/support";
-import { toggled, treeRows, type TreeNode } from "@/workspace/tree";
 import { createSingleFileGateway } from "@/workspace/singleFileGateway";
 import {
   activeFile,
-  emptyWorkspace,
-  fileKindOf,
   isOpen,
   unsavedFiles,
-  workspaceReducer,
   type OpenFile,
 } from "@/workspace/workspace";
-import type { GedcomEditorHandle } from "@/editor/types";
 
 type PendingReplacement =
   { type: "file"; fileName: string; text: string } | { type: "demo" } | null;
 
 export function App() {
+  const [app] = useState(createAppContext);
+
   return (
-    <ThemeProvider>
-      <TooltipProvider>
-        <AppContent />
-      </TooltipProvider>
-    </ThemeProvider>
+    <CordisProvider ctx={app.ctx}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <AppContent app={app} />
+        </TooltipProvider>
+      </ThemeProvider>
+    </CordisProvider>
   );
 }
 
-function AppContent() {
-  const { resolvedTheme } = useTheme();
-  const [workspace, dispatch] = useReducer(workspaceReducer, emptyWorkspace);
-  const gateway = useRef<FileGateway | null>(null);
+function AppContent({ app }: { app: AppContext }) {
+  const ctx = useCordis();
+  const workspace = useWorkspace();
   const root = useRef<FileSystemDirectoryHandle | null>(null);
-  const support = useRef(detectWorkspaceSupport()).current;
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
-  const [rows, setRows] = useState<TreeNode[]>([]);
   const [demoText, setDemoText] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -70,29 +67,52 @@ function AppContent() {
     useState<PendingReplacement>(null);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const editorRef = useRef<GedcomEditorHandle>(null);
   const file = activeFile(workspace);
   const modified = unsavedFiles(workspace).length > 0;
 
+  /**
+   * Opens a file on whichever surface claims it, and says so when none does. The
+   * text is read here only for a surface that asked for it: a photograph read as
+   * a string would come back corrupted.
+   */
+  const openOn = useCallback(
+    async (path: string, read: (path: string) => Promise<string>) => {
+      const surface = ctx.surfaces.claiming(path);
+      if (!surface) {
+        ctx.workspace.dispatch({ type: "file-unsupported", path });
+        return;
+      }
+      ctx.workspace.dispatch({
+        type: "file-opened",
+        path,
+        kind: surface.id,
+        editable: surface.editable ?? false,
+        text: surface.reads === "text" ? await read(path) : null,
+      });
+    },
+    [ctx],
+  );
+
   /** The demo, a single chosen file and a granted folder differ in the gateway only. */
-  const openWorkspace = useCallback(async (next: FileGateway, path: string) => {
-    gateway.current = next;
-    dispatch({
-      type: "workspace-opened",
-      name: next.name,
-      writable: next.writable,
-    });
-    dispatch({
-      type: "file-opened",
-      path,
-      kind: fileKindOf(path),
-      text: fileKindOf(path) === "image" ? null : await next.readText(path),
-    });
-  }, []);
+  const openWorkspace = useCallback(
+    async (next: FileGateway, path: string) => {
+      await ctx.gateways.open(next);
+      ctx.workspace.dispatch({
+        type: "workspace-opened",
+        name: next.name,
+        writable: next.writable,
+      });
+      await openOn(path, (inner) => next.readText(inner));
+    },
+    [ctx, openOn],
+  );
 
   useEffect(() => {
     let active = true;
-    fetch(`${import.meta.env.BASE_URL}simpsons70.ged`)
+    // The surfaces are plugged a microtask after the first render, and the
+    // example is opened through the registry: it has to be filled first.
+    app.ready
+      .then(() => fetch(`${import.meta.env.BASE_URL}simpsons70.ged`))
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Example request failed: ${response.status}`);
@@ -123,32 +143,7 @@ function AppContent() {
     return () => {
       active = false;
     };
-  }, [openWorkspace]);
-
-  useEffect(() => {
-    const current = gateway.current;
-    if (!current) {
-      setRows([]);
-      return;
-    }
-    let active = true;
-    treeRows(current, expanded)
-      .then((next) => active && setRows(next))
-      .catch((cause: unknown) =>
-        active
-          ? dispatch({
-              type: "notice",
-              message:
-                cause instanceof Error
-                  ? cause.message
-                  : "The folder could not be read",
-            })
-          : undefined,
-      );
-    return () => {
-      active = false;
-    };
-  }, [expanded, workspace.name]);
+  }, [app, openWorkspace]);
 
   useEffect(() => {
     if (!modified) {
@@ -191,14 +186,14 @@ function AppContent() {
   );
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const chosen = event.target.files?.[0];
     event.target.value = "";
-    if (!file) {
+    if (!chosen) {
       return;
     }
     try {
       setLoadError(null);
-      requestReplacement({ type: "file", ...(await readGedcomFile(file)) });
+      requestReplacement({ type: "file", ...(await readGedcomFile(chosen)) });
     } catch (error) {
       setLoadError(
         error instanceof Error ? error.message : "The file could not be read.",
@@ -206,19 +201,21 @@ function AppContent() {
     }
   };
 
-  /** Reads the document from the editor now: it owns it, and a copy per keystroke costs. */
-  const textOf = (open: typeof file) =>
-    editorRef.current?.getText() ?? open?.initialText ?? "";
+  /** Reads the document from the surface now: it owns it, and a copy per keystroke costs. */
+  const textOf = (open: OpenFile | null) =>
+    ctx.surfaces.text() ?? open?.initialText ?? "";
+
+  const files = () => ctx.get("files", false) ?? null;
 
   const report = (outcome: Awaited<ReturnType<typeof save>>) => {
     if (outcome.kind === "refused") {
-      dispatch({ type: "notice", message: outcome.message });
+      ctx.workspace.dispatch({ type: "notice", message: outcome.message });
       return;
     }
     if (outcome.kind !== "unchanged" && file) {
-      dispatch({ type: "saved", path: file.path });
+      ctx.workspace.dispatch({ type: "saved", path: file.path });
     }
-    dispatch({
+    ctx.workspace.dispatch({
       type: "notice",
       message:
         outcome.kind === "downloaded"
@@ -231,7 +228,7 @@ function AppContent() {
     if (!file) {
       return;
     }
-    report(await save(file, textOf(file), gateway.current));
+    report(await save(file, textOf(file), files()));
   };
 
   /**
@@ -240,7 +237,6 @@ function AppContent() {
    * document in front is still the one it was.
    */
   const saveDocumentAs = async () => {
-    const current = gateway.current;
     if (!file) {
       return;
     }
@@ -253,7 +249,7 @@ function AppContent() {
       if (cause instanceof DOMException && cause.name === "AbortError") {
         return;
       }
-      dispatch({
+      ctx.workspace.dispatch({
         type: "notice",
         message: cause instanceof Error ? cause.message : "Nothing was written",
       });
@@ -263,7 +259,7 @@ function AppContent() {
     try {
       await writeThroughHandle(chosen, text);
     } catch (cause) {
-      dispatch({
+      ctx.workspace.dispatch({
         type: "notice",
         message:
           cause instanceof Error
@@ -275,18 +271,13 @@ function AppContent() {
 
     // Only a granted folder can hold the file the session goes on against.
     const inside = root.current ? await pathWithin(root.current, chosen) : null;
-    if (inside && current) {
-      dispatch({ type: "saved", path: file.path });
-      dispatch({
-        type: "file-opened",
-        path: inside,
-        kind: fileKindOf(inside),
-        text,
-      });
-      setRows(await treeRows(current, expanded));
+    if (inside && files()) {
+      ctx.workspace.dispatch({ type: "saved", path: file.path });
+      await openOn(inside, async () => text);
+      ctx.emit("files/changed");
       return;
     }
-    dispatch({
+    ctx.workspace.dispatch({
       type: "notice",
       message: `${chosen.name} was written outside this folder, so ${file.name} is still unsaved`,
     });
@@ -295,14 +286,14 @@ function AppContent() {
   const openFile = () => fileInputRef.current?.click();
 
   const saveAndClose = async (open: OpenFile, text: string) => {
-    const outcome = await save(open, text, gateway.current);
+    const outcome = await save(open, text, files());
     if (outcome.kind === "refused") {
-      dispatch({ type: "notice", message: outcome.message });
+      ctx.workspace.dispatch({ type: "notice", message: outcome.message });
       return;
     }
-    dispatch({ type: "saved", path: open.path });
-    dispatch({ type: "file-closed", path: open.path });
-    dispatch({
+    ctx.workspace.dispatch({ type: "saved", path: open.path });
+    ctx.workspace.dispatch({ type: "file-closed", path: open.path });
+    ctx.workspace.dispatch({
       type: "notice",
       message:
         outcome.kind === "downloaded"
@@ -318,7 +309,7 @@ function AppContent() {
     }
     if (!open.modified) {
       keepEditorText();
-      dispatch({ type: "file-closed", path });
+      ctx.workspace.dispatch({ type: "file-closed", path });
       return;
     }
     // Read the text now: after the dialog the editor may hold another document.
@@ -331,7 +322,7 @@ function AppContent() {
       confirm: () => void saveAndClose(open, text),
       alternative: {
         action: "Discard",
-        choose: () => dispatch({ type: "file-closed", path }),
+        choose: () => ctx.workspace.dispatch({ type: "file-closed", path }),
       },
     });
   };
@@ -359,22 +350,21 @@ function AppContent() {
   const openFolder = async () => {
     try {
       const handle = await pickFolder();
-      setExpanded(new Set());
       root.current = handle;
-      gateway.current = createFolderGateway(handle);
-      dispatch({
+      const gateway = createFolderGateway(handle);
+      await ctx.gateways.open(gateway);
+      ctx.workspace.dispatch({
         type: "workspace-opened",
         name: handle.name,
         writable: true,
       });
-      setRows(await treeRows(gateway.current, new Set()));
     } catch (cause) {
       // Closing the picker is not an error: nothing should change and nothing
       // should be said.
       if (cause instanceof DOMException && cause.name === "AbortError") {
         return;
       }
-      dispatch({
+      ctx.workspace.dispatch({
         type: "notice",
         message:
           cause instanceof Error ? cause.message : "The folder was not granted",
@@ -382,50 +372,111 @@ function AppContent() {
     }
   };
 
-  /** The editor is one document at a time: the tab being left has to leave its text. */
+  /** A surface holds one document at a time: the tab being left has to leave its text. */
   const keepEditorText = () => {
-    if (file?.kind === "gedcom" && editorRef.current) {
-      dispatch({
-        type: "text-kept",
-        path: file.path,
-        text: editorRef.current.getText(),
-      });
+    const text = ctx.surfaces.text();
+    if (file?.editable && text !== undefined) {
+      ctx.workspace.dispatch({ type: "text-kept", path: file.path, text });
     }
   };
 
   const chooseFile = async (path: string) => {
-    const current = gateway.current;
+    const current = files();
     if (!current) {
       return;
     }
     keepEditorText();
-    const kind = fileKindOf(path);
-    if (isOpen(workspace, path) || kind === "unsupported") {
-      dispatch({ type: "file-opened", path, kind, text: null });
+    // An open file is brought forward rather than reread.
+    if (isOpen(workspace, path)) {
+      ctx.workspace.dispatch({ type: "file-activated", path });
       return;
     }
     try {
-      dispatch({
-        type: "file-opened",
-        path,
-        kind,
-        text: kind === "image" ? null : await current.readText(path),
-      });
+      await openOn(path, (inner) => current.readText(inner));
     } catch (cause) {
-      dispatch({
+      ctx.workspace.dispatch({
         type: "notice",
         message:
           cause instanceof Error ? cause.message : "The file could not be read",
       });
     }
   };
+
+  /** Where a link in the document leads: another file here, or off the page. */
+  const openLink = (link: DocumentLink) => {
+    const followed = followLink(link, {
+      path: file?.path ?? "",
+      hasWorkspace: files()?.folder === true,
+    });
+    if (followed.kind === "web") {
+      window.open(followed.url, "_blank", "noopener,noreferrer");
+    } else if (followed.kind === "file") {
+      void chooseFile(followed.path);
+    } else {
+      ctx.workspace.dispatch({ type: "notice", message: followed.message });
+    }
+  };
+
   const download = () => {
     if (!file) {
       return;
     }
     downloadGedcom(textOf(file), file.name);
-    dispatch({ type: "saved", path: file.path });
+    ctx.workspace.dispatch({ type: "saved", path: file.path });
   };
+
+  /**
+   * A command outlives the render that defined it, so it is registered once and
+   * reaches the current closure through a ref rather than being re-registered.
+   */
+  const latest = useRef({
+    openFile,
+    requestFolder,
+    chooseFile,
+    keepEditorText,
+    closeTab,
+    openLink,
+  });
+  useEffect(() => {
+    latest.current = {
+      openFile,
+      requestFolder,
+      chooseFile,
+      keepEditorText,
+      closeTab,
+      openLink,
+    };
+  });
+
+  useEffect(() => {
+    const registered = [
+      ctx.commands.register("workspace.openFile", () =>
+        latest.current.openFile(),
+      ),
+      ctx.commands.register("workspace.openFolder", () =>
+        latest.current.requestFolder(),
+      ),
+      ctx.commands.register(
+        "workspace.chooseFile",
+        (path) => void latest.current.chooseFile(path),
+      ),
+      ctx.commands.register("workspace.activateTab", (path) => {
+        latest.current.keepEditorText();
+        ctx.workspace.dispatch({ type: "file-activated", path });
+      }),
+      ctx.commands.register("workspace.closeTab", (path) =>
+        latest.current.closeTab(path),
+      ),
+      ctx.commands.register("workspace.followLink", (link) =>
+        latest.current.openLink(link),
+      ),
+    ];
+    return () => {
+      for (const dispose of registered) {
+        void dispose();
+      }
+    };
+  }, [ctx]);
 
   // The File menu names these, so they have to work. Ctrl/Cmd-S also keeps the
   // browser from offering to save the page, which is never what is wanted here.
@@ -461,7 +512,7 @@ function AppContent() {
         onSaveAs={() => void saveDocumentAs()}
         saveAvailability={saveAvailability(
           file,
-          gateway.current,
+          files(),
           savePickerAvailable(),
         )}
       />
@@ -487,48 +538,7 @@ function AppContent() {
               aria-label="Loading GEDCOM example"
             />
           ) : (
-            <EditorWorkspace
-              workspace={workspace}
-              theme={resolvedTheme}
-              editorRef={editorRef}
-              onChange={() =>
-                file ? dispatch({ type: "edited", path: file.path }) : undefined
-              }
-              onReport={(path, report) =>
-                dispatch({ type: "reported", path, report })
-              }
-              onFollowLink={(link) => {
-                const followed = followLink(link, {
-                  path: file?.path ?? "",
-                  hasWorkspace: gateway.current?.folder === true,
-                });
-                if (followed.kind === "web") {
-                  window.open(followed.url, "_blank", "noopener,noreferrer");
-                } else if (followed.kind === "file") {
-                  void chooseFile(followed.path);
-                } else {
-                  dispatch({ type: "notice", message: followed.message });
-                }
-              }}
-              onOpenFile={openFile}
-              onOpenFolder={requestFolder}
-              explorerRows={rows}
-              unavailableReason={support.reason}
-              onToggleDirectory={(path) =>
-                setExpanded((open) => toggled(open, path))
-              }
-              onChooseFile={(path) => void chooseFile(path)}
-              onActivate={(path) => {
-                keepEditorText();
-                dispatch({ type: "file-activated", path });
-              }}
-              onClose={closeTab}
-              readBytes={(path) =>
-                gateway.current
-                  ? gateway.current.readBytes(path)
-                  : Promise.reject(new Error("No workspace is open"))
-              }
-            />
+            <EditorWorkspace />
           )}
         </div>
       </div>

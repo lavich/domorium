@@ -1,81 +1,55 @@
-import { FilesIcon, ListChecksIcon, SearchIcon } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useCordis, useRail, useWorkspace } from "@/cordis/react";
 import { cn } from "@/lib/utils";
 
-export interface ActivityRailProps {
-  explorerOpen: boolean;
-  problemsOpen: boolean;
-  /** Null where the file in front is not one the editor checks. */
-  problemCount: number | null;
-  onToggleExplorer(): void;
-  onToggleProblems(): void;
-  onOpenSearch(): void;
-}
+export function ActivityRail() {
+  const ctx = useCordis();
+  const { items, open } = useRail();
+  // Badges are read from the workspace, so the rail has to follow it as well.
+  useWorkspace();
 
-export function ActivityRail({
-  explorerOpen,
-  problemsOpen,
-  problemCount,
-  onToggleExplorer,
-  onToggleProblems,
-  onOpenSearch,
-}: ActivityRailProps) {
   return (
     <nav
       aria-label="Workspace"
       className="flex w-(--rail-width) shrink-0 flex-col items-center gap-1 border-r bg-muted/30 py-2"
     >
-      <RailButton
-        label="Files"
-        active={explorerOpen}
-        onClick={onToggleExplorer}
-      >
-        <FilesIcon />
-      </RailButton>
-      <RailButton label="Find in file" onClick={onOpenSearch}>
-        <SearchIcon />
-      </RailButton>
-      <RailButton
-        label={problemsLabel(problemCount)}
-        active={problemsOpen}
-        disabled={problemCount === null}
-        onClick={onToggleProblems}
-      >
-        <ListChecksIcon />
-        {problemCount !== null && problemCount > 0 ? (
-          <span
-            aria-hidden
-            className="absolute right-1 top-1 size-1.5 rounded-full bg-destructive"
-          />
-        ) : null}
-      </RailButton>
+      {items.map((item) => {
+        const badge = item.badge?.() ?? null;
+        const Icon = item.icon;
+        return (
+          <RailButton
+            key={item.id}
+            label={item.label(badge)}
+            active={open.has(item.id)}
+            disabled={item.enabled ? !item.enabled() : false}
+            marked={badge !== null && badge > 0}
+            onClick={() => ctx.rail.toggle(item.id)}
+          >
+            <Icon />
+          </RailButton>
+        );
+      })}
     </nav>
   );
-}
-
-function problemsLabel(count: number | null): string {
-  if (count === null) {
-    return "Problems, for a GEDCOM file";
-  }
-  return count === 1 ? "1 problem" : `${count} problems`;
 }
 
 function RailButton({
   label,
   active,
   disabled,
+  marked,
   onClick,
   children,
 }: {
   label: string;
   active?: boolean;
   disabled?: boolean;
+  marked?: boolean;
   onClick(): void;
   children: React.ReactNode;
 }) {
@@ -98,6 +72,12 @@ function RailButton({
         }
       >
         {children}
+        {marked ? (
+          <span
+            aria-hidden
+            className="absolute right-1 top-1 size-1.5 rounded-full bg-destructive"
+          />
+        ) : null}
       </TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
     </Tooltip>

@@ -1,47 +1,17 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { createRef } from "react";
+import { act, cleanup, render, screen } from "@testing-library/react";
+import { Context, type Fiber } from "cordis";
+import { ListChecksIcon } from "lucide-react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DocumentPane } from "./DocumentPane";
-import type {
-  DocumentReport,
-  GedcomEditorHandle,
-  WebDiagnostic,
-  WebEditorStatus,
-} from "@/editor/types";
-import {
-  emptyWorkspace,
-  fileKindOf,
-  workspaceReducer,
-  type Workspace,
-  type WorkspaceAction,
-} from "@/workspace/workspace";
-
-vi.mock("@/editor/GedcomEditor", () => ({
-  GedcomEditor: ({
-    onStatusChange,
-    onDiagnosticsChange,
-  }: {
-    onStatusChange(status: WebEditorStatus): void;
-    onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
-  }) => (
-    <div aria-label="GEDCOM editor">
-      <button
-        onClick={() =>
-          onStatusChange({ line: 4, character: 2, resolution: undefined })
-        }
-      >
-        moved
-      </button>
-      <button onClick={() => onDiagnosticsChange([finding("unknown tag")])}>
-        checked
-      </button>
-    </div>
-  ),
-}));
+import { CordisProvider } from "@/cordis/react";
+import { CommandService } from "@/services/commands";
+import { RailService } from "@/services/rail";
+import { SurfaceService } from "@/services/surfaces";
+import { WorkspaceService } from "@/services/workspace";
+import type { WorkspaceAction } from "@/workspace/workspace";
 
 // The resizable group measures itself on mount, which jsdom cannot do.
 beforeEach(() => {
@@ -60,166 +30,140 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const finding = (message: string): WebDiagnostic => ({
-  severity: "error",
-  code: "VAL001",
-  message,
-  from: 0,
-  to: 4,
-  line: 0,
-  character: 0,
-});
+/**
+ * The pane knows nothing of GEDCOM: a surface that says what it was handed is
+ * enough to see whether the right one was asked, and with which file.
+ */
+const mounts: string[] = [];
+/** Held so a test can take the surface away again. */
+let showingNotes: Fiber;
 
-const found = (message: string): DocumentReport => ({
-  kind: "gedcom",
-  status: { line: 0, character: 0, resolution: undefined },
-  diagnostics: [finding(message)],
-});
+function Recorder({ label }: { label: string }) {
+  mounts.push(label);
+  return <div>showing {label}</div>;
+}
 
-const workspaceOf = (...actions: WorkspaceAction[]): Workspace =>
-  actions.reduce(
-    workspaceReducer,
-    workspaceReducer(emptyWorkspace, {
-      type: "workspace-opened",
-      name: "Webb Family",
-      writable: true,
-    }),
+async function paneWith(...actions: WorkspaceAction[]): Promise<Context> {
+  mounts.length = 0;
+  const ctx = new Context();
+  new WorkspaceService(ctx);
+  new CommandService(ctx);
+  new RailService(ctx);
+  new SurfaceService(ctx);
+
+  showingNotes = ctx.plugin((inner: Context) => {
+    inner.surfaces.register({
+      id: "markdown",
+      claims: (path) => path.endsWith(".md"),
+      reads: "text",
+      render: (file) => <Recorder label={`${file.name}@${file.editorKey}`} />,
+    });
+  });
+  await showingNotes;
+  ctx.commands.register("workspace.activateTab", (path) =>
+    ctx.workspace.dispatch({ type: "file-activated", path }),
   );
+  ctx.commands.register("workspace.closeTab", (path) =>
+    ctx.workspace.dispatch({ type: "file-closed", path }),
+  );
+
+  ctx.workspace.dispatch({
+    type: "workspace-opened",
+    name: "Webb Family",
+    writable: true,
+  });
+  for (const action of actions) {
+    ctx.workspace.dispatch(action);
+  }
+
+  render(
+    <CordisProvider ctx={ctx}>
+      <DocumentPane wideEnoughForPanels />
+    </CordisProvider>,
+  );
+  return ctx;
+}
 
 const open = (path: string) =>
   ({
     type: "file-opened",
     path,
-    kind: fileKindOf(path),
-    text: fileKindOf(path) === "image" ? null : "0 HEAD\n",
+    kind: "markdown",
+    editable: false,
+    text: "# Note",
   }) as const;
 
-const paneWith = (
-  workspace: Workspace,
-  problemsOpen = true,
-  onReport: (path: string, report: DocumentReport) => void = vi.fn(),
-) => (
-  <DocumentPane
-    workspace={workspace}
-    theme="light"
-    editorRef={createRef<GedcomEditorHandle>()}
-    wideEnoughForPanels
-    problemsOpen={problemsOpen}
-    onChange={vi.fn()}
-    onReport={onReport}
-    onFollowLink={vi.fn()}
-    onActivate={vi.fn()}
-    onClose={vi.fn()}
-    readBytes={() => Promise.resolve(new Blob())}
-  />
-);
-
-const problems = () =>
-  screen.queryByRole("complementary", { name: /GEDCOM problems/i });
-
 describe("the pane that holds one document", () => {
-  it("stands the problems panel beside a GEDCOM document, listing its findings", () => {
-    render(
-      paneWith(
-        workspaceOf(open("tree.ged"), {
-          type: "reported",
-          path: "tree.ged",
-          report: found("unknown tag"),
-        }),
-      ),
-    );
+  it("shows the surface that claims the file in front", async () => {
+    await paneWith(open("notes.md"));
 
-    expect(problems()).not.toBeNull();
-    expect(screen.getByText(/unknown tag/)).toBeTruthy();
+    expect(screen.getByText("showing notes.md@0")).toBeTruthy();
   });
 
-  // A picture in front used to be shown beside another file's findings.
-  it("takes the panel away when the tab in front is not a GEDCOM file", () => {
-    render(
-      paneWith(
-        workspaceOf(
-          open("tree.ged"),
-          { type: "reported", path: "tree.ged", report: found("unknown tag") },
-          open("media/portrait.jpg"),
-        ),
-      ),
-    );
+  it("says a file cannot be shown once its surface is gone", async () => {
+    await paneWith(open("notes.md"));
 
-    expect(problems()).toBeNull();
-    expect(screen.queryByText(/unknown tag/)).toBeNull();
+    await act(() => showingNotes.dispose());
+
+    expect(screen.getByText("notes.md cannot be shown")).toBeTruthy();
   });
 
-  it("shows one GEDCOM document's findings and never its neighbour's", () => {
-    const both = workspaceOf(
-      open("tree.ged"),
-      { type: "reported", path: "tree.ged", report: found("unknown tag") },
-      open("other.ged"),
-      { type: "reported", path: "other.ged", report: found("date not read") },
-    );
-    render(paneWith(both));
+  it("says nothing is open before a file is chosen", async () => {
+    await paneWith();
 
-    expect(screen.getByText(/date not read/)).toBeTruthy();
-    expect(screen.queryByText(/unknown tag/)).toBeNull();
+    expect(screen.getByText("Nothing open")).toBeTruthy();
   });
 
-  it("reports nothing for a GEDCOM document that has not been checked yet", () => {
-    render(paneWith(workspaceOf(open("tree.ged"))));
-
-    expect(problems()).not.toBeNull();
-    expect(screen.getByText("Nothing to report")).toBeTruthy();
-  });
-
-  // The cursor moving and the document being checked are two events, and the file
-  // carries one report: the second must not blank what the first said.
-  it("carries where the cursor is and what was found as one report", async () => {
-    const said: { path: string; report: DocumentReport }[] = [];
-    render(
-      paneWith(workspaceOf(open("tree.ged")), true, (path, report) =>
-        said.push({ path, report }),
-      ),
-    );
-    const user = userEvent.setup();
-
-    await user.click(screen.getByText("moved"));
-    await user.click(screen.getByText("checked"));
-
-    expect(said.at(-1)).toEqual({
-      path: "tree.ged",
-      report: {
-        kind: "gedcom",
-        status: { line: 4, character: 2, resolution: undefined },
-        diagnostics: [finding("unknown tag")],
-      },
+  // Two files in a row are the same component in the same place: without a key
+  // the second never mounts, and the surface goes on showing the first.
+  it("mounts a surface of its own for each file", async () => {
+    const ctx = await paneWith(open("first.md"), open("second.md"));
+    await act(async () => {
+      ctx.workspace.dispatch({ type: "file-activated", path: "first.md" });
     });
+
+    expect(mounts).toEqual(["second.md@1", "first.md@0"]);
   });
 
-  // Two notes in a row are the same component in the same place: without a key
-  // the second never reports, and the bar goes on describing the first.
-  it("has each note report for itself", async () => {
-    const said: string[] = [];
-    const notes = workspaceOf(open("first.md"), open("second.md"));
-    const view = render(
-      paneWith({ ...notes, activePath: "first.md" }, true, (path) =>
-        said.push(path),
-      ),
-    );
-    view.rerender(paneWith(notes, true, (path) => said.push(path)));
+  // A reopened file is a new editor on the same path, and it has to be reread.
+  it("remounts a file that was closed and opened again", async () => {
+    const ctx = await paneWith(open("notes.md"));
+    await act(async () => {
+      ctx.workspace.dispatch({ type: "file-closed", path: "notes.md" });
+      ctx.workspace.dispatch(open("notes.md"));
+    });
 
-    expect(said).toEqual(["first.md", "second.md"]);
+    expect(mounts).toEqual(["notes.md@0", "notes.md@1"]);
   });
 
-  it("leaves the panel out when the reader has closed it", () => {
-    render(
-      paneWith(
-        workspaceOf(open("tree.ged"), {
-          type: "reported",
-          path: "tree.ged",
-          report: found("unknown tag"),
-        }),
-        false,
-      ),
-    );
+  it("stands an open rail panel beside the document", async () => {
+    const ctx = await paneWith(open("notes.md"));
+    await act(async () => {
+      ctx.rail.item({
+        id: "problems",
+        icon: ListChecksIcon,
+        slot: "aux",
+        label: () => "Problems",
+        render: () => <aside aria-label="beside">panel</aside>,
+      });
+    });
 
-    expect(problems()).toBeNull();
+    expect(screen.getByLabelText("beside")).toBeTruthy();
+  });
+
+  it("leaves out a panel its own item says is not available", async () => {
+    const ctx = await paneWith(open("notes.md"));
+    await act(async () => {
+      ctx.rail.item({
+        id: "problems",
+        icon: ListChecksIcon,
+        slot: "aux",
+        label: () => "Problems",
+        enabled: () => false,
+        render: () => <aside aria-label="beside">panel</aside>,
+      });
+    });
+
+    expect(screen.queryByLabelText("beside")).toBeNull();
   });
 });
