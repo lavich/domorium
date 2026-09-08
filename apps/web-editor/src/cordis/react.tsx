@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import type { RailState } from "@/services/rail";
+import type { SurfaceService } from "@/services/surfaces";
 import type { Workspace } from "@/workspace/workspace";
 
 const ReactCordisContext = createContext<Context | null>(null);
@@ -60,6 +61,9 @@ function revisions(ctx: Context, name: string) {
         revision += 1;
         notify();
       });
+      // The snapshot is a count, so a service swapped between the render and
+      // this subscription leaves nothing to compare: count it, and React rereads.
+      revision += 1;
       return () => {
         off();
       };
@@ -74,6 +78,16 @@ export function useWorkspace(): Workspace {
     useCallback((notify: () => void) => ctx.workspace.subscribe(notify), [ctx]),
     () => ctx.workspace.snapshot,
   );
+}
+
+/** Subscribed, so a file whose surface was withdrawn stops being shown as one. */
+export function useSurfaces(): SurfaceService {
+  const ctx = useCordis();
+  useSyncExternalStore(
+    useCallback((notify: () => void) => ctx.surfaces.subscribe(notify), [ctx]),
+    () => ctx.surfaces.snapshot,
+  );
+  return ctx.surfaces;
 }
 
 export function useRail(): RailState {

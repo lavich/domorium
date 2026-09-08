@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 
-import { useCordis, useWorkspace } from "@/cordis/react";
+import { useSurfaces, useWorkspace } from "@/cordis/react";
 import { activeFile } from "@/workspace/workspace";
 
 /** What is true of the file in front, and nothing of the one before it. */
 export function StatusBar() {
-  const ctx = useCordis();
+  const surfaces = useSurfaces();
   const file = activeFile(useWorkspace());
   const report = file?.report;
-  const surface = file ? ctx.surfaces.get(file.kind) : undefined;
+  const surface = file ? surfaces.get(file.kind) : undefined;
 
   return (
     <footer className="flex h-(--shell-status-height) shrink-0 items-center justify-between border-t bg-muted/30 px-3 font-mono text-[12px] text-muted-foreground">

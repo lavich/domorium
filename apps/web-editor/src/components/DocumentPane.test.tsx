@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, render, screen } from "@testing-library/react";
-import { Context } from "cordis";
+import { Context, type Fiber } from "cordis";
 import { ListChecksIcon } from "lucide-react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -35,6 +35,8 @@ afterEach(() => {
  * enough to see whether the right one was asked, and with which file.
  */
 const mounts: string[] = [];
+/** Held so a test can take the surface away again. */
+let showingNotes: Fiber;
 
 function Recorder({ label }: { label: string }) {
   mounts.push(label);
@@ -49,12 +51,15 @@ async function paneWith(...actions: WorkspaceAction[]): Promise<Context> {
   new RailService(ctx);
   new SurfaceService(ctx);
 
-  ctx.surfaces.register({
-    id: "markdown",
-    claims: (path) => path.endsWith(".md"),
-    reads: "text",
-    render: (file) => <Recorder label={`${file.name}@${file.editorKey}`} />,
+  showingNotes = ctx.plugin((inner: Context) => {
+    inner.surfaces.register({
+      id: "markdown",
+      claims: (path) => path.endsWith(".md"),
+      reads: "text",
+      render: (file) => <Recorder label={`${file.name}@${file.editorKey}`} />,
+    });
   });
+  await showingNotes;
   ctx.commands.register("workspace.activateTab", (path) =>
     ctx.workspace.dispatch({ type: "file-activated", path }),
   );
@@ -93,6 +98,14 @@ describe("the pane that holds one document", () => {
     await paneWith(open("notes.md"));
 
     expect(screen.getByText("showing notes.md@0")).toBeTruthy();
+  });
+
+  it("says a file cannot be shown once its surface is gone", async () => {
+    await paneWith(open("notes.md"));
+
+    await act(() => showingNotes.dispose());
+
+    expect(screen.getByText("notes.md cannot be shown")).toBeTruthy();
   });
 
   it("says nothing is open before a file is chosen", async () => {

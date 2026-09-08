@@ -37,6 +37,7 @@ export interface DocumentHandle {
 
 export class SurfaceService extends Service {
   private readonly registered = new Map<SurfaceId, DocumentSurface>();
+  private readonly listeners = new Set<() => void>();
   private ordered: readonly DocumentSurface[] = [];
   private mounted: DocumentHandle | null = null;
 
@@ -77,10 +78,25 @@ export class SurfaceService extends Service {
     return this.registered.get(id);
   }
 
+  /** Stable between changes, so it can be read as a snapshot. */
+  get snapshot(): readonly DocumentSurface[] {
+    return this.ordered;
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
   private publish(): void {
     this.ordered = [...this.registered.values()].sort(
       (one, other) => (one.order ?? 0) - (other.order ?? 0),
     );
+    for (const listener of [...this.listeners]) {
+      listener();
+    }
   }
 }
 

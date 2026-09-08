@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/resizable";
 import { EditorTabs } from "./EditorTabs";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
-import { useCordis, useRail, useWorkspace } from "@/cordis/react";
+import { useCordis, useRail, useSurfaces, useWorkspace } from "@/cordis/react";
 import { openIn } from "@/services/rail";
 import { activeFile } from "@/workspace/workspace";
 
@@ -16,6 +16,7 @@ export function DocumentPane({
 }) {
   const ctx = useCordis();
   const workspace = useWorkspace();
+  const surfaces = useSurfaces();
   const rail = useRail();
   const file = activeFile(workspace);
 
@@ -33,10 +34,20 @@ export function DocumentPane({
         </Empty>
       );
     }
-    const showing = ctx.surfaces.get(file.kind);
+    const showing = surfaces.get(file.kind);
+    if (!showing) {
+      return (
+        <Empty className="h-full">
+          <EmptyTitle>{file.name} cannot be shown</EmptyTitle>
+          <EmptyDescription>
+            Nothing is registered to show this kind of file any more.
+          </EmptyDescription>
+        </Empty>
+      );
+    }
     return (
       <div key={`${file.path}:${file.editorKey}`} className="contents">
-        {showing?.render(file)}
+        {showing.render(file)}
       </div>
     );
   };
