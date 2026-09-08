@@ -44,7 +44,12 @@ describe("saving a document", () => {
   it("refuses a preview, which has nothing to save", async () => {
     await expect(
       save(
-        document({ kind: "markdown", name: "notes.md", path: "notes.md" }),
+        document({
+          kind: "markdown",
+          name: "notes.md",
+          path: "notes.md",
+          editable: false,
+        }),
         "# Note",
         folder(),
       ),
@@ -122,14 +127,14 @@ describe("a document the editor did not decode faithfully", () => {
 });
 
 describe("whether saving is offered at all", () => {
-  it("is offered for a GEDCOM document and for nothing else", () => {
+  it("is offered for a document a surface lets be written, and no other", () => {
     expect(saveAvailability(document(), folder(), true)).toEqual({
       save: true,
       saveAs: true,
     });
     expect(
       saveAvailability(
-        document({ kind: "image", name: "portrait.jpg" }),
+        document({ kind: "image", name: "portrait.jpg", editable: false }),
         folder(),
         true,
       ),

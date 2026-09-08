@@ -28,7 +28,7 @@ export async function save(
   text: string,
   gateway: FileOperations | null,
 ): Promise<SaveOutcome> {
-  if (file.kind !== "gedcom") {
+  if (!file.editable) {
     return {
       kind: "refused",
       message: `${file.name} is a preview, and has nothing to save`,
@@ -75,9 +75,9 @@ export function saveAvailability(
   gateway: FileOperations | null,
   saveDialogAvailable = false,
 ): { save: boolean; saveAs: boolean } {
-  const gedcom = file?.kind === "gedcom";
+  const editable = file?.editable === true;
   return {
-    save: gedcom && gateway !== null,
-    saveAs: gedcom && saveDialogAvailable,
+    save: editable && gateway !== null,
+    saveAs: editable && saveDialogAvailable,
   };
 }
