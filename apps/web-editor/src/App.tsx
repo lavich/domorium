@@ -16,7 +16,7 @@ import { ConfirmDialog, type Confirmation } from "@/components/ConfirmDialog";
 import { ReplaceDocumentDialog } from "@/components/ReplaceDocumentDialog";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { createAppContext } from "@/cordis/app";
+import { createAppContext, type AppContext } from "@/cordis/app";
 import { CordisProvider, useCordis, useWorkspace } from "@/cordis/react";
 import { downloadGedcom, readGedcomFile } from "@/editor/fileActions";
 import type { FileGateway } from "@/workspace/fileGateway";
@@ -49,14 +49,14 @@ export function App() {
     <CordisProvider ctx={app.ctx}>
       <ThemeProvider>
         <TooltipProvider>
-          <AppContent />
+          <AppContent app={app} />
         </TooltipProvider>
       </ThemeProvider>
     </CordisProvider>
   );
 }
 
-function AppContent() {
+function AppContent({ app }: { app: AppContext }) {
   const ctx = useCordis();
   const workspace = useWorkspace();
   const root = useRef<FileSystemDirectoryHandle | null>(null);
@@ -109,7 +109,10 @@ function AppContent() {
 
   useEffect(() => {
     let active = true;
-    fetch(`${import.meta.env.BASE_URL}simpsons70.ged`)
+    // The surfaces are plugged a microtask after the first render, and the
+    // example is opened through the registry: it has to be filled first.
+    app.ready
+      .then(() => fetch(`${import.meta.env.BASE_URL}simpsons70.ged`))
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Example request failed: ${response.status}`);
@@ -140,7 +143,7 @@ function AppContent() {
     return () => {
       active = false;
     };
-  }, [openWorkspace]);
+  }, [app, openWorkspace]);
 
   useEffect(() => {
     if (!modified) {
@@ -434,14 +437,16 @@ function AppContent() {
     closeTab,
     openLink,
   });
-  latest.current = {
-    openFile,
-    requestFolder,
-    chooseFile,
-    keepEditorText,
-    closeTab,
-    openLink,
-  };
+  useEffect(() => {
+    latest.current = {
+      openFile,
+      requestFolder,
+      chooseFile,
+      keepEditorText,
+      closeTab,
+      openLink,
+    };
+  });
 
   useEffect(() => {
     const registered = [
