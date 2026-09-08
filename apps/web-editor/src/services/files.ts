@@ -53,16 +53,25 @@ export class FilesService extends Service implements FileOperations {
  */
 export class GatewayService extends Service {
   private mounted: Fiber | undefined;
+  private turn: Promise<void> = Promise.resolve();
 
   constructor(ctx: Context) {
     super(ctx, "gateways");
+  }
+
+  /** Two workspaces asked for at once take their turn rather than collide. */
+  open(gateway: FileGateway): Promise<void> {
+    const mine = this.turn.then(() => this.mount(gateway));
+    // A workspace that failed to open must not close the queue behind it.
+    this.turn = mine.catch(() => undefined);
+    return mine;
   }
 
   /**
    * cordis refuses a second provider of a name, so the old fiber has to be gone
    * before the new one is plugged, not merely asked to go.
    */
-  async open(gateway: FileGateway): Promise<void> {
+  private async mount(gateway: FileGateway): Promise<void> {
     await this.mounted?.dispose();
     this.mounted = this.ctx.plugin(FilesService, gateway);
     await this.mounted;
