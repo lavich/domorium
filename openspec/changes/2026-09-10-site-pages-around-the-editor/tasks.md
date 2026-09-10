@@ -78,6 +78,21 @@
       targets, full-width actions, halved vertical rhythm, and the editor panel
       without its explorer column. Check 390 px, 768 px and desktop in a browser.
 
+## 4e. The editor on the landing page
+
+- [x] 4e.1 Add the widget: the drawn editor in a frame it fills, a link to
+      `/editor/` that an inline script upgrades into an `<iframe>` of
+      `/editor/?embed=1`, and a second link that takes the frame full screen
+      through the Fullscreen API. Give a page its own `scripts`, declared in the
+      route table. Ship with tests run against a real DOM in the page's order —
+      script first, body after — covering the exchange, the single load, both
+      full-screen paths and a page without a widget.
+- [x] 4e.2 Teach the editor the embedded mode: `?embed=1` drops the wordmark, the
+      product links and the theme control and keeps the File menu, with a test in
+      `App.test.tsx`. Keep the status bar to one line on a narrow viewport, which
+      is what the frame is. Write ADR-0015 superseding ADR-0014's claim that the
+      pages ship no client-side JavaScript, and add its row to the index.
+
 ## 5. The social card
 
 - [x] 5.1 Add `public/og.svg` and the `public/og.png` rendered from it at 1200×630,

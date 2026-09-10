@@ -3,7 +3,7 @@ import { BookMarkedIcon, CodeIcon, GlobeIcon, MonitorIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import { EditorPreview } from "./EditorPreview";
+import { EditorWidget } from "./EditorWidget";
 import { INTEGRATIONS } from "./integrations";
 import { PageShell } from "./PageShell";
 import { PATHS, type SitePath } from "./paths";
@@ -88,7 +88,7 @@ export function LandingPage() {
           </div>
         </div>
 
-        <EditorPreview />
+        <EditorWidget />
       </div>
 
       <section id="editors" className="mt-16 scroll-mt-8 sm:mt-24">

@@ -134,6 +134,27 @@ describe("the site's pages", () => {
     }
   });
 
+  it("offers the editor itself on the landing page, not only a drawing", () => {
+    const landing = pageAt(PATHS.home);
+    const markup = renderToStaticMarkup(landing?.body);
+    expect(markup).toContain("data-editor-widget");
+    expect(markup).toContain("data-editor-frame");
+    // The controls are links first, so a reader without scripting still gets
+    // the editor rather than a button that does nothing.
+    expect(markup).toMatch(
+      /<a[^>]*href="\/editor\/"[^>]*data-editor-run|<a[^>]*data-editor-run[^>]*href="\/editor\/"/,
+    );
+    expect(landing?.scripts?.length, "the script that arms it").toBeGreaterThan(
+      0,
+    );
+  });
+
+  it("carries no page script where there is nothing to arm", () => {
+    for (const path of [PATHS.vscode, PATHS.obsidian, PATHS.jetbrains]) {
+      expect(pageAt(path)?.scripts ?? [], path).toHaveLength(0);
+    }
+  });
+
   it("presents each integration on the landing page, not only in the nav", () => {
     const markup = renderToStaticMarkup(pageAt(PATHS.home)?.body);
     for (const integration of INTEGRATIONS) {

@@ -141,6 +141,37 @@ for.
 - **WHEN** a page is rendered with no JavaScript
 - **THEN** no theme control is shown, and the page reads in the system's theme
 
+### Requirement: The landing page runs the editor it shows
+
+The landing page SHALL let a reader run the editor on the page, in the place
+where it is drawn, without loading the application before it is asked for. The
+control SHALL lead to the editor where scripting is unavailable. Once running,
+the page SHALL offer the editor the whole window. An embedded editor SHALL leave
+the wordmark, the product links and the theme control to the page around it, and
+SHALL keep its own File menu.
+
+#### Scenario: A reader tries it on the page
+
+- **WHEN** the reader asks for the editor on the landing page
+- **THEN** the real editor replaces the drawing in place, with the example open,
+  and the page offers to give it the whole window
+
+#### Scenario: The page is read without scripting
+
+- **WHEN** the control is followed with no script running
+- **THEN** the reader arrives at the editor's own page
+
+#### Scenario: Nothing is loaded before it is wanted
+
+- **WHEN** the landing page is opened and the editor is not asked for
+- **THEN** none of the application is fetched
+
+#### Scenario: The editor inside the frame
+
+- **WHEN** the editor runs embedded in the page
+- **THEN** it shows no second wordmark, no second set of product links and no
+  second theme control, and its File menu still opens and saves files
+
 ### Requirement: The platform pages are named as GEDCOM
 
 Per ADR-0007, an integration page SHALL lead with GEDCOM and the platform it

@@ -42,6 +42,12 @@ import {
 type PendingReplacement =
   { type: "file"; fileName: string; text: string } | { type: "demo" } | null;
 
+/** The landing page's widget loads the editor with this, and takes the site's
+ *  chrome on itself. */
+const embedded = () =>
+  typeof window !== "undefined" &&
+  new URLSearchParams(window.location.search).has("embed");
+
 export function App() {
   const [app] = useState(createAppContext);
 
@@ -505,6 +511,7 @@ function AppContent({ app }: { app: AppContext }) {
   return (
     <main className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
       <SiteHeader
+        embedded={embedded()}
         onOpenFile={openFile}
         onDownload={download}
         onReset={() => requestReplacement({ type: "demo" })}

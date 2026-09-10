@@ -176,6 +176,25 @@ of small ones, actions run the full width, the vertical rhythm halves, and the
 editor panel drops its explorer column so the record itself gets the width. The
 `sm` breakpoint restores the desktop composition.
 
+### The editor itself, on the reader's ask
+
+The landing page runs the real editor where the drawing was, in an `<iframe>` of
+`/editor/?embed=1`, once the reader clicks. The drawing stays as the first paint
+and as what a crawler reads, the controls are links to `/editor/` that a script
+in the head upgrades, and a second control takes the frame full screen. The
+reasoning and what it costs are in ADR-0015, which supersedes ADR-0014's claim
+that the pages ship no client-side JavaScript.
+
+Two details are load-bearing. The frame is same-origin, so the editor inside it
+reads the same theme, fetches the same example and is given the browser's file
+pickers — a cross-origin frame would lose all three. And `?embed=1` makes the
+editor drop the wordmark, the product links and the theme control: the page
+around the frame already carries them, and two of each read as a broken page.
+
+The script is caught on the document rather than on the controls, because the
+head runs before the body is parsed — the first version queried the controls and
+found nothing, and the test that missed it had handed the script a parsed body.
+
 ### The social card is a hand-made asset, not a build step
 
 `og:image` must be a raster format, and the site has only `favicon.svg`. One

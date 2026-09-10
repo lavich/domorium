@@ -12,6 +12,7 @@ interface DocumentFields {
   structuredData: object[];
   body: ReactElement;
   stylesheet: string;
+  scripts: string[];
 }
 
 function documentHtml({
@@ -21,6 +22,7 @@ function documentHtml({
   structuredData,
   body,
   stylesheet,
+  scripts,
 }: DocumentFields): string {
   const card = canonical ?? absolute("/");
   return `<!doctype html>${renderToStaticMarkup(
@@ -55,6 +57,9 @@ function documentHtml({
         />
         <link rel="stylesheet" href={stylesheet} />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {scripts.map((script, index) => (
+          <script key={index} dangerouslySetInnerHTML={{ __html: script }} />
+        ))}
         {structuredData.map((entry, index) => (
           <script
             key={index}
@@ -82,6 +87,7 @@ export function renderDocument(
     structuredData: page.structuredData,
     body: page.body,
     stylesheet,
+    scripts: page.scripts ?? [],
   });
 }
 
@@ -93,6 +99,7 @@ export function renderNotFound({ stylesheet }: { stylesheet: string }): string {
     structuredData: [],
     body: notFound.body,
     stylesheet,
+    scripts: [],
   });
 }
 

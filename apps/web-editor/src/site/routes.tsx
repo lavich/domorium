@@ -5,6 +5,7 @@ import { IntegrationPage } from "./IntegrationPage";
 import { LandingPage } from "./LandingPage";
 import { NotFoundPage } from "./NotFoundPage";
 import { absolute, PATHS, SITE_ORIGIN, type SitePath } from "./paths";
+import { widgetScript } from "./widget";
 
 export { absolute, PATHS, SITE_ORIGIN, type SitePath } from "./paths";
 
@@ -15,6 +16,8 @@ export interface SitePage {
   structuredData: object[];
   /** Null where the application shell answers the path: `editor/index.html`. */
   body: ReactElement | null;
+  /** Inline scripts this page needs, beyond the theme every page carries. */
+  scripts?: string[];
 }
 
 const publisher = {
@@ -82,6 +85,7 @@ export const pages: SitePage[] = [
       }),
     ],
     body: <LandingPage />,
+    scripts: [widgetScript],
   },
   {
     path: PATHS.editor,
