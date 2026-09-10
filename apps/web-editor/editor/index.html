@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- The head the route table declares for /editor/; src/site/routes.test.tsx holds the two together. -->
+    <title>GEDCOM editor in the browser — Domorium</title>
+    <meta
+      name="description"
+      content="Open a .ged file in your browser, read every structural problem on the line that caused it, and save it back. Nothing is uploaded and nothing is converted."
+    />
+    <link rel="canonical" href="https://domorium.com/editor/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Domorium" />
+    <meta
+      property="og:title"
+      content="GEDCOM editor in the browser — Domorium"
+    />
+    <meta
+      property="og:description"
+      content="Open a .ged file in your browser, read every structural problem on the line that caused it, and save it back. Nothing is uploaded and nothing is converted."
+    />
+    <meta property="og:url" content="https://domorium.com/editor/" />
+    <meta property="og:image" content="https://domorium.com/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#ffffff"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#0a0a0a"
+    />
+  </head>
+  <body class="app-shell">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

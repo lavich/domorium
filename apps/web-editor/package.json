@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && vite build --ssr src/site/entry-server.tsx --outDir .ssr && node scripts/prerender-site.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },

@@ -150,9 +150,12 @@
   }
 }
 
-html,
-body,
-#root {
+/* The editor fills the viewport and scrolls inside its own panes. The pages
+   around it are prose and scroll as a page does, so the shell asks for this
+   rather than every document getting it. */
+html:has(.app-shell),
+body.app-shell,
+body.app-shell #root {
   height: 100%;
   min-height: 0;
   overflow: hidden;

@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LINKS } from "@/constants/links";
+import { INTEGRATIONS } from "@/site/integrations";
 
 import { type ThemeChoice, useTheme } from "./ThemeProvider";
 
@@ -41,11 +42,11 @@ const modifierKey =
     ? "\u2318"
     : "Ctrl+";
 
-const productLinks = [
-  { label: "VS Code", href: LINKS.vscode },
-  { label: "Obsidian", href: LINKS.obsidian },
-  { label: "JetBrains", href: LINKS.jetbrains },
-] as const;
+// Into the site, not out of it: each page holds the install for its platform.
+const productLinks = INTEGRATIONS.map((integration) => ({
+  label: integration.name,
+  href: integration.path,
+}));
 
 export interface SiteHeaderProps {
   onOpenFile(): void;
@@ -134,11 +135,8 @@ export function SiteHeader({
             key={product.label}
             className={buttonVariants({ variant: "ghost", size: "sm" })}
             href={product.href}
-            target="_blank"
-            rel="noreferrer"
           >
             {product.label}
-            <ExternalLinkIcon data-icon="inline-end" />
           </a>
         ))}
         <a

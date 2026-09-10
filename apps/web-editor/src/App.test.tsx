@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "./App";
 import { LINKS } from "./constants/links";
+import { PATHS } from "./site/paths";
 import type { GedcomEditorHandle } from "./editor/types";
 
 vi.mock("./editor/GedcomEditor", () => ({
@@ -116,20 +117,21 @@ afterEach(() => {
 });
 
 describe("App", () => {
-  it("renders direct product links and a local-first editor", async () => {
+  it("renders links into the site and a local-first editor", async () => {
     render(<App />);
 
+    // The marketplace links live on those pages now; the header leads to them.
     expect(
       (await screen.findByRole("link", { name: /VS Code/i })).getAttribute(
         "href",
       ),
-    ).toBe(LINKS.vscode);
+    ).toBe(PATHS.vscode);
     expect(
       screen.getByRole("link", { name: /Obsidian/i }).getAttribute("href"),
-    ).toBe(LINKS.obsidian);
+    ).toBe(PATHS.obsidian);
     expect(
       screen.getByRole("link", { name: /JetBrains/i }).getAttribute("href"),
-    ).toBe(LINKS.jetbrains);
+    ).toBe(PATHS.jetbrains);
     expect(
       screen.getByRole("link", { name: /GitHub/i }).getAttribute("href"),
     ).toBe(LINKS.github);
