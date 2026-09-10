@@ -2,6 +2,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import shell from "../../editor/index.html?raw";
+import {
+  abilitiesOf,
+  DISTINCT_ABILITIES,
+  PLACES,
+  SHARED_ABILITIES,
+} from "./abilities";
 import { INTEGRATIONS } from "./integrations";
 import { notFound, PATHS, pageAt, pages, SITE_ORIGIN } from "./routes";
 
@@ -159,6 +165,29 @@ describe("the site's pages", () => {
     const markup = renderToStaticMarkup(pageAt(PATHS.home)?.body);
     for (const integration of INTEGRATIONS) {
       expect(markup, integration.heading).toContain(integration.heading);
+    }
+  });
+
+  it("says what every place shares, and a row per difference", () => {
+    const markup = renderToStaticMarkup(pageAt(PATHS.home)?.body);
+    for (const shared of SHARED_ABILITIES) {
+      expect(markup, shared).toContain(shared);
+    }
+    for (const ability of DISTINCT_ABILITIES) {
+      expect(markup, ability.label).toContain(ability.label);
+    }
+    for (const place of PLACES) {
+      expect(markup, place.label).toContain(place.label);
+    }
+  });
+
+  it("chips each integration with what only that place does", () => {
+    for (const integration of INTEGRATIONS) {
+      const markup = renderToStaticMarkup(pageAt(integration.path)?.body);
+      for (const ability of abilitiesOf(integration.path)) {
+        const chip = ability.chip ?? ability.label;
+        expect(markup, `${integration.path} → ${chip}`).toContain(chip);
+      }
     }
   });
 

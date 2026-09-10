@@ -109,6 +109,20 @@
       `@domorium/validator` on npm — and the drawn windows show the example file
       with the validator's own message.
 
+## 4g. What differs between the places
+
+- [x] 4g.1 Read the capabilities out of the code rather than the READMEs — the
+      server's declared capabilities, the CodeMirror bundle's extensions, the VS
+      Code manifest's grammars, the JetBrains plugin's registrations — and the
+      Obsidian plugin's own repository, since it is not in this tree. Put them in
+      `src/site/abilities.ts` as a shared list and a table of differences, with
+      short chip forms, and leave unverified cells unclaimed.
+- [x] 4g.2 Show it on the landing page: the shared list beside a table of only
+      the differences, the table scrolling inside itself on a narrow screen, and
+      the cards' chips derived from the same data. Ship with tests holding the
+      table honest — nothing true everywhere in it, every column non-empty, every
+      named place published — and asserting the pages render both halves.
+
 ## 5. The social card
 
 - [x] 5.1 Add `public/og.svg` and the `public/og.png` rendered from it at 1200×630,

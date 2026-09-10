@@ -14,8 +14,6 @@ export interface Integration {
   /** One line for the landing page's card. */
   note: string;
   features: string[];
-  /** The same abilities, short enough to sit in a row of chips. */
-  chips: string[];
   /** Where the plugin is developed; the Obsidian one has its own repository. */
   repository: string;
   /** What the platform itself asks of the reader, or nothing. */
@@ -30,14 +28,6 @@ export const INTEGRATIONS: Integration[] = [
   {
     path: PATHS.vscode,
     name: "VS Code",
-    chips: [
-      "Autocomplete",
-      "Validation",
-      "Hover",
-      "Go to definition",
-      "XREF rename",
-      "Quick fixes",
-    ],
     repository: LINKS.github,
     note: "A web extension as well, so it runs in vscode.dev with no local runtime.",
     heading: "GEDCOM for Visual Studio Code",
@@ -69,13 +59,6 @@ export const INTEGRATIONS: Integration[] = [
   {
     path: PATHS.obsidian,
     name: "Obsidian",
-    chips: [
-      "Autocomplete",
-      "Validation",
-      "Hover",
-      "Record preview",
-      "Go to definition",
-    ],
     repository: "https://github.com/lavich/domorium-obsidian",
     note: "Desktop and mobile. Vault files are edited in place, never converted to Markdown.",
     heading: "GEDCOM for Obsidian",
@@ -108,14 +91,6 @@ export const INTEGRATIONS: Integration[] = [
   {
     path: PATHS.jetbrains,
     name: "JetBrains",
-    chips: [
-      "Autocomplete",
-      "Validation",
-      "Highlighting",
-      "Hover",
-      "Go to definition",
-      "Folding",
-    ],
     repository: LINKS.github,
     note: "Any IntelliJ-platform IDE. Needs Node.js on PATH.",
     heading: "GEDCOM for JetBrains IDEs",

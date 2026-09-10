@@ -2,6 +2,7 @@ import { ArrowRightIcon, CheckIcon, ExternalLinkIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+import { abilitiesOf } from "./abilities";
 import { INTEGRATIONS, type Integration } from "./integrations";
 import { mockFor } from "./mocks";
 import { PageShell, pill } from "./PageShell";
@@ -51,12 +52,12 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
               </a>
             </div>
             <ul className="mt-8 flex flex-wrap gap-1.5">
-              {integration.chips.map((chip) => (
+              {abilitiesOf(integration.path).map((ability) => (
                 <li
-                  key={chip}
+                  key={ability.label}
                   className="rounded-full border px-2.5 py-0.5 text-[0.7rem] text-muted-foreground"
                 >
-                  {chip}
+                  {ability.chip ?? ability.label}
                 </li>
               ))}
             </ul>

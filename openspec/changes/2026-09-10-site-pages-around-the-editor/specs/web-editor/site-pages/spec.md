@@ -172,6 +172,32 @@ SHALL keep its own File menu.
 - **THEN** it shows no second wordmark, no second set of product links and no
   second theme control, and its File menu still opens and saves files
 
+### Requirement: The pages say what the places do differently
+
+The site SHALL state what is true of every place it publishes, and separately what
+only one of them does. An ability true of every place SHALL NOT appear among the
+differences, and every place SHALL have at least one ability of its own. An
+ability SHALL be claimed for a place only where the code or that plugin's own
+repository states it; anything unverified SHALL be left unclaimed, and the page
+SHALL say that an unmarked cell means that.
+
+#### Scenario: A reader compares the places
+
+- **WHEN** the landing page is read
+- **THEN** it lists what every place shares, and shows a row per difference with a
+  column per place
+
+#### Scenario: A page and the comparison agree
+
+- **WHEN** an integration page names what that place can do
+- **THEN** what it names is what the comparison marks for that place
+
+#### Scenario: Nothing is true of everywhere twice
+
+- **WHEN** an ability holds in every place
+- **THEN** it is stated once, in the shared list, and is absent from the
+  differences
+
 ### Requirement: The platform pages are named as GEDCOM
 
 Per ADR-0007, an integration page SHALL lead with GEDCOM and the platform it

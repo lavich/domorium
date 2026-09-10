@@ -199,6 +199,31 @@ The script is caught on the document rather than on the controls, because the
 head runs before the body is parsed — the first version queried the controls and
 found nothing, and the test that missed it had handed the script a parsed body.
 
+### What the places do differently, said once
+
+The four places do not do the same things, and the pages used to imply they did:
+the cards carried near-identical feature lists copied out of READMEs, and the
+Obsidian plugin was understated — its own repository claims references, an atomic
+rename, a cropped photograph preview, checked `gedcom` blocks in notes and links
+from a note to a record, none of which was on the page.
+
+So the abilities are data now, in `src/site/abilities.ts`: a shared list — true of
+all four, because one language service answers for all of them — and a table of
+only the rows where they part. A row true of everywhere belongs in the list, and a
+test enforces exactly that, along with every column having something of its own:
+an empty column would read as "this one does nothing" when what it does is the
+whole shared core.
+
+The cards' chips are derived from the same table, so a card cannot claim what the
+table denies. Where the honest answer needs words rather than a mark, the cell
+carries the words — "in Markdown", "cropped to the region", "a folder you grant".
+
+An absent mark means _not verified_, not _absent_: the language server offers
+references, rename and document symbols, and whether LSP4IJ surfaces them in a
+JetBrains IDE could not be checked from here, so those cells are empty and the
+table says why underneath. Under-claiming is the rule; the marks are only what
+the code or the plugin's own repository states.
+
 ### The social card is a hand-made asset, not a build step
 
 `og:image` must be a raster format, and the site has only `favicon.svg`. One

@@ -2,6 +2,9 @@ import { ArrowRightIcon, ExternalLinkIcon, PackageIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+import { abilitiesOf } from "./abilities";
+import { Comparison } from "./Comparison";
+
 import { EditorWidget } from "./EditorWidget";
 import { INTEGRATIONS } from "./integrations";
 import { JetBrainsMock, mockFor, ObsidianMock, VsCodeMock } from "./mocks";
@@ -122,12 +125,12 @@ export function LandingPage() {
                   </p>
                   {Mock ? <Mock /> : null}
                   <ul className="flex flex-wrap gap-1.5">
-                    {integration.chips.map((chip) => (
+                    {abilitiesOf(integration.path).map((ability) => (
                       <li
-                        key={chip}
+                        key={ability.label}
                         className="rounded-full border px-2.5 py-0.5 text-[0.7rem] text-muted-foreground"
                       >
-                        {chip}
+                        {ability.chip ?? ability.label}
                       </li>
                     ))}
                   </ul>
@@ -152,6 +155,10 @@ export function LandingPage() {
               );
             })}
           </ul>
+
+          <div className="mt-12 border-t pt-12 sm:mt-14 sm:pt-14">
+            <Comparison />
+          </div>
 
           <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-dashed p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div className="flex gap-4">
