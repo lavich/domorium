@@ -31,8 +31,8 @@ export function EditorPreview() {
         </span>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,7rem)_1fr]">
-        <div className="flex flex-col gap-2 border-r px-3 py-3.5 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,7rem)_1fr]">
+        <div className="hidden flex-col gap-2 border-r px-3 py-3.5 text-xs sm:flex">
           <span className="text-muted-foreground/70">Example</span>
           {files.map((file, index) => (
             <span
@@ -46,7 +46,7 @@ export function EditorPreview() {
           ))}
         </div>
 
-        <div className="overflow-x-auto px-4 py-3.5 font-mono text-[0.78rem] leading-7">
+        <div className="overflow-x-auto px-4 py-3.5 font-mono text-[0.72rem] leading-7 sm:text-[0.78rem]">
           {lines.map((line) => (
             <div key={line.tag + line.level} className="whitespace-nowrap">
               <span className="text-muted-foreground/60">{line.level}</span>{" "}

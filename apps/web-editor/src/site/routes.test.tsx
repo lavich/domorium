@@ -116,6 +116,24 @@ describe("the site's pages", () => {
     }
   });
 
+  // Three integrations, none of them the default: the hero sends a reader to
+  // where all of them are, not to whichever one was named first.
+  it("singles out no integration in the landing page's actions", () => {
+    const markup = renderToStaticMarkup(pageAt(PATHS.home)?.body);
+    // From the headline, so the nav — which links to all four equally — is out.
+    const hero = markup.slice(
+      markup.indexOf("<h1"),
+      markup.indexOf('id="editors"'),
+    );
+    expect(hero).toContain(`href="${PATHS.editor}"`);
+    expect(hero).toContain('href="#editors"');
+    for (const integration of INTEGRATIONS) {
+      expect(hero, integration.path).not.toContain(
+        `href="${integration.path}"`,
+      );
+    }
+  });
+
   it("presents each integration on the landing page, not only in the nav", () => {
     const markup = renderToStaticMarkup(pageAt(PATHS.home)?.body);
     for (const integration of INTEGRATIONS) {

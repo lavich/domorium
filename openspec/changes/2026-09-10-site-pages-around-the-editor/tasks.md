@@ -70,6 +70,14 @@
       the sans. Express it in the app's tokens so both themes hold, and check the
       landing page, an integration page and the editor in a browser, light and dark.
 
+## 4d. Equals, and a phone
+
+- [x] 4d.1 Point the hero's second action at the section listing every place rather
+      than at one integration, and ship the test that keeps it there. Lay the pages
+      out for a narrow screen: a single scrolling navigation row of thumb-height
+      targets, full-width actions, halved vertical rhythm, and the editor panel
+      without its explorer column. Check 390 px, 768 px and desktop in a browser.
+
 ## 5. The social card
 
 - [x] 5.1 Add `public/og.svg` and the `public/og.png` rendered from it at 1200×630,

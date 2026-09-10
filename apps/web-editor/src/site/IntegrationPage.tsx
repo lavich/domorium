@@ -1,10 +1,14 @@
 import { CheckIcon, ExternalLinkIcon } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import { INTEGRATIONS, type Integration } from "./integrations";
 import { PageShell } from "./PageShell";
 import { PATHS } from "./paths";
+
+/** A thumb gets the full width; a pointer gets a button the size of its label. */
+const action = "h-11 w-full justify-center sm:h-9 sm:w-auto";
 
 export function IntegrationPage({ integration }: { integration: Integration }) {
   const siblings = INTEGRATIONS.filter(
@@ -17,33 +21,39 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
         <span className="size-1.5 rounded-full bg-primary" />
         {integration.name}
       </span>
-      <h1 className="mt-6 max-w-[34ch] font-heading text-4xl leading-[1.05] font-semibold tracking-tight text-pretty sm:text-5xl">
+      <h1 className="mt-5 max-w-[34ch] font-heading text-3xl leading-[1.1] font-semibold tracking-tight text-pretty sm:mt-6 sm:text-4xl sm:leading-[1.05] lg:text-5xl">
         {integration.heading}
       </h1>
-      <p className="mt-5 max-w-[52ch] text-base leading-relaxed text-muted-foreground">
+      <p className="mt-5 max-w-[52ch] text-[0.95rem] leading-relaxed text-muted-foreground sm:text-base">
         GEDCOM language support by Domorium. {integration.lede}
       </p>
 
-      <div className="mt-9 flex flex-wrap items-center gap-3">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <a
           href={integration.marketplace.href}
           rel="noreferrer"
-          className={buttonVariants({ variant: "default", size: "lg" })}
+          className={cn(
+            buttonVariants({ variant: "default", size: "lg" }),
+            action,
+          )}
         >
           {integration.marketplace.label}
           <ExternalLinkIcon data-icon="inline-end" />
         </a>
         <a
           href={PATHS.editor}
-          className={buttonVariants({ variant: "secondary", size: "lg" })}
+          className={cn(
+            buttonVariants({ variant: "secondary", size: "lg" }),
+            action,
+          )}
         >
           Try it in the browser first
         </a>
       </div>
 
-      <div className="mt-16 grid items-start gap-12 lg:grid-cols-[1.3fr_1fr] lg:gap-14">
+      <div className="mt-14 grid items-start gap-10 sm:mt-16 sm:gap-12 lg:grid-cols-[1.3fr_1fr] lg:gap-14">
         <section>
-          <h2 className="font-heading text-2xl font-semibold tracking-tight">
+          <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
             What you get in {integration.name}
           </h2>
           <ul className="mt-6 grid gap-3">
@@ -58,7 +68,7 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
           </ul>
         </section>
 
-        <section className="rounded-xl bg-card p-6 ring-1 ring-border">
+        <section className="rounded-xl bg-card p-5 ring-1 ring-border sm:p-6">
           <h2 className="font-heading text-xl font-semibold tracking-tight">
             Install it
           </h2>
@@ -85,15 +95,15 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
         </section>
       </div>
 
-      <section className="mt-20">
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">
+      <section className="mt-14 sm:mt-20">
+        <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
           The same GEDCOM support elsewhere
         </h2>
-        <ul className="mt-7 grid gap-4 sm:grid-cols-3">
+        <ul className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-3 sm:gap-4">
           {siblings.map((sibling) => (
             <li
               key={sibling.path}
-              className="flex flex-col gap-3 rounded-xl bg-card p-5 ring-1 ring-border"
+              className="flex flex-col gap-2.5 rounded-xl bg-card p-4 ring-1 ring-border sm:gap-3 sm:p-5"
             >
               <h3 className="font-heading text-base leading-snug font-semibold">
                 <a href={sibling.path} className="hover:text-primary">
@@ -105,7 +115,7 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
               </p>
             </li>
           ))}
-          <li className="flex flex-col gap-3 rounded-xl border p-5">
+          <li className="flex flex-col gap-2.5 rounded-xl border p-4 sm:gap-3 sm:p-5">
             <h3 className="font-heading text-base leading-snug font-semibold">
               <a href={PATHS.editor} className="hover:text-primary">
                 GEDCOM editor in the browser

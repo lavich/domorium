@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { LINKS } from "@/constants/links";
+import { cn } from "@/lib/utils";
 
 import { INTEGRATIONS } from "./integrations";
 import { PATHS, type SitePath } from "./paths";
@@ -24,7 +25,7 @@ export function PageShell({ current, children }: PageShellProps) {
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">
       <header className="border-b">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-4 sm:px-10">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-10 sm:py-4">
           <a
             href={PATHS.home}
             className="flex items-center gap-2 font-heading text-lg font-bold tracking-tight"
@@ -33,19 +34,24 @@ export function PageShell({ current, children }: PageShellProps) {
             <img src="/favicon.svg" alt="" className="size-6" />
             Domorium
           </a>
+          {/* One row that scrolls rather than a second row of small targets:
+              a thumb needs the height, and the labels are the navigation. */}
           <nav
             aria-label="Domorium tools"
-            className="ml-auto flex flex-wrap items-center gap-1"
+            className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 scrollbar-none sm:mx-0 sm:ml-auto sm:overflow-visible sm:px-0"
           >
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 aria-current={current === link.href ? "page" : undefined}
-                className={buttonVariants({
-                  variant: current === link.href ? "secondary" : "ghost",
-                  size: "sm",
-                })}
+                className={cn(
+                  buttonVariants({
+                    variant: current === link.href ? "secondary" : "ghost",
+                    size: "sm",
+                  }),
+                  "h-11 shrink-0 px-3 sm:h-7 sm:px-2.5",
+                )}
               >
                 {link.label}
               </a>
@@ -57,7 +63,10 @@ export function PageShell({ current, children }: PageShellProps) {
               type="button"
               data-theme-toggle
               aria-label="Change the colour theme"
-              className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                "size-11 shrink-0 sm:size-7",
+              )}
             >
               <SunMoonIcon data-theme-icon="system" />
               <SunIcon data-theme-icon="light" />
@@ -67,19 +76,19 @@ export function PageShell({ current, children }: PageShellProps) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-16 sm:px-10 sm:py-20">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:px-10 sm:py-20">
         {children}
       </main>
 
       <footer className="border-t">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-10 sm:px-10">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-8 sm:px-10 sm:py-10">
           <nav
             aria-label="Domorium"
-            className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
+            className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm"
           >
             <a
               href={PATHS.home}
-              className="text-muted-foreground hover:text-foreground"
+              className="py-1.5 text-muted-foreground hover:text-foreground"
             >
               Home
             </a>
@@ -87,7 +96,7 @@ export function PageShell({ current, children }: PageShellProps) {
               <a
                 key={link.href}
                 href={link.href}
-                className="text-muted-foreground hover:text-foreground"
+                className="py-1.5 text-muted-foreground hover:text-foreground"
               >
                 {link.label}
               </a>
@@ -95,7 +104,7 @@ export function PageShell({ current, children }: PageShellProps) {
             <a
               href={LINKS.github}
               rel="noreferrer"
-              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-1.5 py-1.5 text-muted-foreground hover:text-foreground"
             >
               Source
               <ExternalLinkIcon className="size-3.5" />

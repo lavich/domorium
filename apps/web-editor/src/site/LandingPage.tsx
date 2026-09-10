@@ -1,6 +1,7 @@
 import { BookMarkedIcon, CodeIcon, GlobeIcon, MonitorIcon } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import { EditorPreview } from "./EditorPreview";
 import { INTEGRATIONS } from "./integrations";
@@ -37,39 +38,50 @@ const checks = [
   "Files the browser could not decode, refused rather than written back mangled",
 ];
 
+/** A thumb gets the full width; a pointer gets a button the size of its label. */
+const action = "h-11 w-full justify-center sm:h-9 sm:w-auto";
+
 export function LandingPage() {
   return (
     <PageShell current={PATHS.home}>
-      <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-14">
+      <div className="grid items-start gap-10 sm:gap-12 lg:grid-cols-2 lg:gap-14">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-xs text-primary">
             <span className="size-1.5 rounded-full bg-primary" />
             GEDCOM 5.5.1 and 7.0
           </span>
-          <h1 className="mt-6 font-heading text-4xl leading-[1.05] font-semibold tracking-tight text-pretty sm:text-5xl">
+          <h1 className="mt-5 font-heading text-3xl leading-[1.1] font-semibold tracking-tight text-pretty sm:mt-6 sm:text-4xl sm:leading-[1.05] lg:text-5xl">
             The GEDCOM import didn&apos;t fail. One line did.
           </h1>
-          <p className="mt-6 max-w-[46ch] text-base leading-relaxed text-muted-foreground">
+          <p className="mt-5 max-w-[46ch] text-[0.95rem] leading-relaxed text-muted-foreground sm:mt-6 sm:text-base">
             Domorium parses your <span className="font-mono">.ged</span> file,
             validates it against the specification, and puts every diagnostic on
             the line that caused it — in the browser and in the editor you
             already use.
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <a
               href={PATHS.editor}
-              className={buttonVariants({ variant: "default", size: "lg" })}
+              className={cn(
+                buttonVariants({ variant: "default", size: "lg" }),
+                action,
+              )}
             >
               Open the editor
             </a>
+            {/* Three integrations, none of them the default: this leads to all
+                of them rather than to whichever was named first. */}
             <a
-              href={PATHS.vscode}
-              className={buttonVariants({ variant: "secondary", size: "lg" })}
+              href="#editors"
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "lg" }),
+                action,
+              )}
             >
-              Get the extension
+              Get it for your editor
             </a>
           </div>
-          <div className="mt-8 flex flex-wrap gap-x-7 gap-y-2 text-sm text-muted-foreground">
+          <div className="mt-7 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground sm:mt-8 sm:text-sm">
             <span>Nothing is uploaded</span>
             <span>No account</span>
             <span>MIT licensed</span>
@@ -79,21 +91,21 @@ export function LandingPage() {
         <EditorPreview />
       </div>
 
-      <section className="mt-24">
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">
+      <section id="editors" className="mt-16 scroll-mt-8 sm:mt-24">
+        <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
           One language service, four places to meet it
         </h2>
         <p className="mt-3 max-w-[68ch] text-sm leading-relaxed text-muted-foreground">
           The language intelligence exists once and each editor is a thin
           adapter over it, so a diagnostic reads the same wherever you meet it.
         </p>
-        <ul className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
           {places.map((place) => {
             const Icon = icons[place.path];
             return (
               <li
                 key={place.path}
-                className="flex flex-col gap-3 rounded-xl bg-card p-5 ring-1 ring-border"
+                className="flex flex-col gap-2.5 rounded-xl bg-card p-4 ring-1 ring-border sm:gap-3 sm:p-5"
               >
                 <Icon className="size-5 text-primary" />
                 <h3 className="font-heading text-base leading-snug font-semibold">
@@ -110,11 +122,11 @@ export function LandingPage() {
         </ul>
       </section>
 
-      <section className="mt-20 rounded-xl bg-card p-7 ring-1 ring-border sm:p-9">
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">
+      <section className="mt-14 rounded-xl bg-card p-5 ring-1 ring-border sm:mt-20 sm:p-9">
+        <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
           What it checks
         </h2>
-        <ul className="mt-6 grid gap-x-10 gap-y-3 sm:grid-cols-2">
+        <ul className="mt-5 grid gap-x-10 gap-y-3 sm:mt-6 sm:grid-cols-2">
           {checks.map((check) => (
             <li
               key={check}
@@ -124,16 +136,16 @@ export function LandingPage() {
             </li>
           ))}
         </ul>
-        <p className="mt-7 max-w-[68ch] border-t pt-6 text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-6 max-w-[68ch] border-t pt-5 text-sm leading-relaxed text-muted-foreground sm:mt-7 sm:pt-6">
           The GEDCOM 7 schema is generated from the FamilySearch release rather
           than transcribed by hand. GEDCOM 5.5.1 is published only as prose, so
           that one schema is maintained by hand.
         </p>
       </section>
 
-      <section className="mt-20 flex flex-wrap items-center justify-between gap-6 rounded-xl border p-7 sm:p-9">
+      <section className="mt-14 flex flex-col gap-5 rounded-xl border p-5 sm:mt-20 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-6 sm:p-9">
         <div>
-          <h2 className="font-heading text-xl font-semibold tracking-tight">
+          <h2 className="font-heading text-lg font-semibold tracking-tight sm:text-xl">
             Open the file you already have
           </h2>
           <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-muted-foreground">
@@ -143,7 +155,10 @@ export function LandingPage() {
         </div>
         <a
           href={PATHS.editor}
-          className={buttonVariants({ variant: "default", size: "lg" })}
+          className={cn(
+            buttonVariants({ variant: "default", size: "lg" }),
+            action,
+          )}
         >
           Open the editor
         </a>

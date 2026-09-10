@@ -163,6 +163,19 @@ editor they front. That is why the second action is `secondary` rather than
 `outline` — the outline variant's border all but vanishes on the light ground,
 and a call to action may not depend on the reader's theme.
 
+### No integration is the default, and a phone is not a narrow desktop
+
+The three integrations are equals, so the hero's second action leads to the
+section that lists all four places rather than to whichever one happened to be
+first in the table — the test in `routes.test.tsx` holds that, since the
+temptation to point it at one is permanent.
+
+The pages are laid out for a phone rather than merely surviving on one: the
+navigation is one scrolling row of thumb-height targets rather than a second row
+of small ones, actions run the full width, the vertical rhythm halves, and the
+editor panel drops its explorer column so the record itself gets the width. The
+`sm` breakpoint restores the desktop composition.
+
 ### The social card is a hand-made asset, not a build step
 
 `og:image` must be a raster format, and the site has only `favicon.svg`. One
