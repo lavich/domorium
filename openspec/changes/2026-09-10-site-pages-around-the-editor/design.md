@@ -142,6 +142,27 @@ config answers a page path in dev by loading `src/site/entry-server.tsx` through
 `ssrLoadModule` and rendering it, so the route table is the source of the pages in
 both modes and the difference is only where the stylesheet comes from.
 
+### The pages' visual language, and the heading face
+
+Three directions were drawn and compared before any of this was built: an
+archival one on paper with a serif, a data-first one whose hero was a GEDCOM
+record, and a dark product page leading with the editor's own panes. The third
+was chosen.
+
+So the pages open with the editor drawn as a panel — window strip, explorer, the
+record, the diagnostic under it — beside the claim and the two actions, and carry
+it through in panels, a pill for the version badge, and cards for the four places
+the language service is met. `--font-heading` becomes Space Grotesk across the
+domain and Roboto Slab is dropped, which changes the editor's header too: one
+voice on the domain rather than a seam at `/editor/`. Body text follows the
+heading into a sans, which is what the pairing asks for.
+
+The language is expressed in the app's own tokens rather than the direction's
+literal hex values, so the pages read in either theme and cannot drift from the
+editor they front. That is why the second action is `secondary` rather than
+`outline` — the outline variant's border all but vanishes on the light ground,
+and a call to action may not depend on the reader's theme.
+
 ### The social card is a hand-made asset, not a build step
 
 `og:image` must be a raster format, and the site has only `favicon.svg`. One

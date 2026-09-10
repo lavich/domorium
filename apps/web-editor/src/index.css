@@ -2,14 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@import "@fontsource-variable/roboto-slab";
+@import "@fontsource-variable/space-grotesk";
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-serif);
+  --font-heading: "Space Grotesk Variable", system-ui, sans-serif;
   --font-sans: "Inter Variable", sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
   /* The shell's fixed bands, from the Studio Utility design system. */
@@ -57,7 +57,6 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --font-serif: "Roboto Slab Variable", serif;
 }
 
 :root {
@@ -167,7 +166,7 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-serif;
+    @apply font-sans;
   }
 }
 

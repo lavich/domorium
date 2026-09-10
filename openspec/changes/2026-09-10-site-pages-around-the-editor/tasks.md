@@ -61,6 +61,15 @@
       click, labelling the button once the body is parsed, ignoring a click
       elsewhere, and staying silent where storage is refused.
 
+## 4c. The chosen visual direction
+
+- [x] 4c.1 Build the chosen direction into the pages: the editor drawn as a panel
+      (`src/site/EditorPreview.tsx`) beside the claim, panels and cards for the rest,
+      a pill for the version badge, and Space Grotesk as `--font-heading` across the
+      domain with Roboto Slab removed from the dependencies and the base face moved to
+      the sans. Express it in the app's tokens so both themes hold, and check the
+      landing page, an integration page and the editor in a browser, light and dark.
+
 ## 5. The social card
 
 - [x] 5.1 Add `public/og.svg` and the `public/og.png` rendered from it at 1200×630,

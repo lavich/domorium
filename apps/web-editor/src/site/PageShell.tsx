@@ -1,10 +1,4 @@
-import {
-  CodeIcon,
-  ExternalLinkIcon,
-  MoonIcon,
-  SunIcon,
-  SunMoonIcon,
-} from "lucide-react";
+import { ExternalLinkIcon, MoonIcon, SunIcon, SunMoonIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -30,10 +24,10 @@ export function PageShell({ current, children }: PageShellProps) {
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">
       <header className="border-b">
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-4 sm:px-10">
           <a
             href={PATHS.home}
-            className="flex items-center gap-2 font-heading text-base font-semibold"
+            className="flex items-center gap-2 font-heading text-lg font-bold tracking-tight"
             aria-current={current === PATHS.home ? "page" : undefined}
           >
             <img src="/favicon.svg" alt="" className="size-6" />
@@ -72,23 +66,28 @@ export function PageShell({ current, children }: PageShellProps) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-14">
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-16 sm:px-10 sm:py-20">
         {children}
       </main>
+
       <footer className="border-t">
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-8">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-10 sm:px-10">
           <nav
             aria-label="Domorium"
-            className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
+            className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
           >
-            <a href={PATHS.home} className="hover:text-primary">
+            <a
+              href={PATHS.home}
+              className="text-muted-foreground hover:text-foreground"
+            >
               Home
             </a>
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="hover:text-primary"
+                className="text-muted-foreground hover:text-foreground"
               >
                 {link.label}
               </a>
@@ -96,14 +95,13 @@ export function PageShell({ current, children }: PageShellProps) {
             <a
               href={LINKS.github}
               rel="noreferrer"
-              className="flex items-center gap-1 hover:text-primary"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
             >
-              <CodeIcon className="size-3.5" />
               Source
-              <ExternalLinkIcon className="size-3" />
+              <ExternalLinkIcon className="size-3.5" />
             </a>
           </nav>
-          <p className="max-w-[68ch] text-xs leading-relaxed text-muted-foreground">
+          <p className="max-w-[76ch] text-xs leading-relaxed text-muted-foreground">
             MIT licensed. Domorium is an independent project and is not
             affiliated with or endorsed by FamilySearch or Intellectual Reserve,
             Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH® are trademarks of
