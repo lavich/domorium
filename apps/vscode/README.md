@@ -50,7 +50,7 @@ Install [GEDCOM from the Visual Studio Marketplace](https://marketplace.visualst
 code --install-extension domorium.gedcom
 ```
 
-You can also [try the GEDCOM web editor by Domorium](https://domorium.com/).
+You can also [try the GEDCOM web editor by Domorium](https://domorium.com/editor/).
 
 ## Contributing
 

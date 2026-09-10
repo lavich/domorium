@@ -10,7 +10,7 @@ format, and nothing is uploaded anywhere.
 [![CI](https://github.com/lavich/domorium/actions/workflows/ci.yml/badge.svg)](https://github.com/lavich/domorium/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**[Open in your browser](https://domorium.com/)** · [Obsidian](https://community.obsidian.md/plugins/domorium) · [VS Code](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom) · [JetBrains](https://plugins.jetbrains.com/plugin/index?xmlId=domorium.gedcom)
+**[Open in your browser](https://domorium.com/editor/)** · [Obsidian](https://community.obsidian.md/plugins/domorium) · [VS Code](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom) · [JetBrains](https://plugins.jetbrains.com/plugin/index?xmlId=domorium.gedcom)
 
 ![GEDCOM autocomplete, validation, hover, and navigation](apps/vscode/images/gedcom-demo.gif)
 
@@ -45,7 +45,7 @@ line that caused it, while you type, in the editor you already use.
 
 | Host                                                                               | Notes                                                                     |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [Browser](https://domorium.com/)                                                   | No install, no upload — the editor runs on your machine                   |
+| [Browser](https://domorium.com/editor/)                                            | No install, no upload — the editor runs on your machine                   |
 | [Obsidian](https://community.obsidian.md/plugins/domorium)                         | Desktop and mobile; edits vault files without converting them to Markdown |
 | [VS Code](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom)     | Web extension — works in vscode.dev with no local runtime                 |
 | [JetBrains IDEs](https://plugins.jetbrains.com/plugin/index?xmlId=domorium.gedcom) | Any IntelliJ-platform IDE; requires Node.js on `PATH`                     |
