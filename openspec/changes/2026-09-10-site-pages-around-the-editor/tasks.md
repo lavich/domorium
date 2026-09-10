@@ -49,6 +49,18 @@
       the new destinations — the assertion that a marketplace URL is rendered moves to
       the page tests of task 2.2.
 
+## 4b. The theme on every page
+
+- [x] 4b.1 Move the storage key and the pre-paint script into `src/theme.ts`, add
+      `nextTheme` and the click handling to it, and have `ThemeProvider` import the
+      key so one place holds it. Render a single cycling button in the pages'
+      header, hidden by CSS until the script has set `data-theme-choice`, with one
+      icon per choice. Ship with tests: `nextTheme` cycling and reading an unknown
+      value as the first choice, and the script itself run against a real DOM —
+      applying a stored choice, following the system, cycling and remembering on a
+      click, labelling the button once the body is parsed, ignoring a click
+      elsewhere, and staying silent where storage is refused.
+
 ## 5. The social card
 
 - [x] 5.1 Add `public/og.svg` and the `public/og.png` rendered from it at 1200×630,

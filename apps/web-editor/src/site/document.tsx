@@ -1,14 +1,9 @@
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { absolute, notFound, SITE_ORIGIN, type SitePage } from "./routes";
+import { themeScript } from "@/theme";
 
-/**
- * The class is on `<html>` before the first paint, so a reader who chose dark in
- * the editor does not meet a white flash on the way back to it. It reads the key
- * `ThemeProvider` writes, and stays silent where storage is refused.
- */
-const themeScript = `try{var t=localStorage.getItem("domorium-theme");if(t==="dark"||((t===null||t==="system")&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`;
+import { absolute, notFound, SITE_ORIGIN, type SitePage } from "./routes";
 
 interface DocumentFields {
   title: string;

@@ -110,6 +110,37 @@ list exactly the published pages — no more, and none missing.
 - **THEN** the response is the site's own not-found page, which links to the
   landing page and the editor
 
+### Requirement: The theme can be changed from any page
+
+Every page SHALL offer a control that changes the colour theme between the same
+choices the editor offers, and the choice SHALL be remembered and honoured across
+the editor and the pages alike. The resolved theme SHALL be applied before the
+page is first painted. Where scripting is unavailable the control SHALL NOT be
+shown, and the page SHALL still be readable in the theme the reader's system asks
+for.
+
+#### Scenario: A reader changes the theme on a page
+
+- **WHEN** the theme control on any page is used
+- **THEN** the page changes theme at once, the choice is remembered, and the
+  control says which choice it will make next
+
+#### Scenario: The choice carries into the editor
+
+- **WHEN** a reader chooses dark on a page and then opens the editor
+- **THEN** the editor is dark, and the same holds in the other direction
+
+#### Scenario: Nothing was ever chosen
+
+- **WHEN** a page is opened by a reader who has made no choice
+- **THEN** the theme is the one their system asks for, and no flash of the other
+  theme is shown before it
+
+#### Scenario: Scripting is unavailable
+
+- **WHEN** a page is rendered with no JavaScript
+- **THEN** no theme control is shown, and the page reads in the system's theme
+
 ### Requirement: The platform pages are named as GEDCOM
 
 Per ADR-0007, an integration page SHALL lead with GEDCOM and the platform it

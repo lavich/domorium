@@ -131,6 +131,27 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* The theme button is the pages' only JavaScript. Until the script in the head
+   has run there is no choice to show and nothing for a click to do, so the
+   button is not there; then one icon per choice is. */
+[data-theme-toggle] {
+  display: none;
+}
+
+:root[data-theme-choice] [data-theme-toggle] {
+  display: inline-flex;
+}
+
+[data-theme-icon] {
+  display: none;
+}
+
+:root[data-theme-choice="system"] [data-theme-icon="system"],
+:root[data-theme-choice="light"] [data-theme-icon="light"],
+:root[data-theme-choice="dark"] [data-theme-icon="dark"] {
+  display: block;
+}
+
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {

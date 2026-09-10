@@ -157,6 +157,16 @@ describe("the site's pages", () => {
     expect(markup).toContain("Settings → Community plugins → Browse");
   });
 
+  it("offers the theme on every page, not only in the editor", () => {
+    for (const page of [...pages, notFound].filter(
+      (candidate) => candidate.body,
+    )) {
+      expect(renderToStaticMarkup(page.body), page.title).toContain(
+        "data-theme-toggle",
+      );
+    }
+  });
+
   it("states the independence from FamilySearch on every page", () => {
     for (const page of pages.filter((candidate) => candidate.body)) {
       expect(renderToStaticMarkup(page.body), page.path).toContain(

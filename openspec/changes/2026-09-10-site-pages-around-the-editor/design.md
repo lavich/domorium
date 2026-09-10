@@ -101,9 +101,19 @@ to drift. The unused editor rules it carries are a smaller cost than two stylesh
 that disagree about what `--primary` means.
 
 Theme follows from the same `domorium-theme` key `ThemeProvider` writes, read by a
-small inline script in `<head>` that sets the `dark` class before first paint. The
-static pages offer no theme control; the choice is made in the editor and honoured
-everywhere.
+small inline script in `<head>` that sets the `dark` class before first paint. That
+script is also the pages' only JavaScript, and it arms one button in the header
+that walks the three choices the editor's menu offers — system, light, dark — so
+the theme can be changed from wherever the reader is rather than only in the
+editor. The key lives in `src/theme.ts` now, imported by both, because two copies
+of it would drift into two themes.
+
+The button is a single cycling control rather than a menu: a menu on a static page
+means focus management and keyboard handling in hand-written script, which is more
+to get wrong than the choice is worth. CSS hides the button until the script has
+set `data-theme-choice` on the root, so a reader without JavaScript is never shown
+a control that could do nothing, and one icon per choice is revealed by the same
+attribute.
 
 ### Heads, drafted
 

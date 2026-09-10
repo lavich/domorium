@@ -1,4 +1,10 @@
-import { CodeIcon, ExternalLinkIcon } from "lucide-react";
+import {
+  CodeIcon,
+  ExternalLinkIcon,
+  MoonIcon,
+  SunIcon,
+  SunMoonIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -50,6 +56,19 @@ export function PageShell({ current, children }: PageShellProps) {
                 {link.label}
               </a>
             ))}
+            {/* Armed and revealed by the theme script; the head runs it before
+                the first paint, and a page without it never shows a button
+                that could do nothing. */}
+            <button
+              type="button"
+              data-theme-toggle
+              aria-label="Change the colour theme"
+              className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+            >
+              <SunMoonIcon data-theme-icon="system" />
+              <SunIcon data-theme-icon="light" />
+              <MoonIcon data-theme-icon="dark" />
+            </button>
           </nav>
         </div>
       </header>
