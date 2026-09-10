@@ -123,10 +123,10 @@ describe("the site's pages", () => {
     // From the headline, so the nav — which links to all four equally — is out.
     const hero = markup.slice(
       markup.indexOf("<h1"),
-      markup.indexOf('id="editors"'),
+      markup.indexOf('id="extensions"'),
     );
     expect(hero).toContain(`href="${PATHS.editor}"`);
-    expect(hero).toContain('href="#editors"');
+    expect(hero).toContain('href="#extensions"');
     for (const integration of INTEGRATIONS) {
       expect(hero, integration.path).not.toContain(
         `href="${integration.path}"`,

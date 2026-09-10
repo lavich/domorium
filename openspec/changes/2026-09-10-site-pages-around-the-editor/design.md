@@ -142,26 +142,30 @@ config answers a page path in dev by loading `src/site/entry-server.tsx` through
 `ssrLoadModule` and rendering it, so the route table is the source of the pages in
 both modes and the difference is only where the stylesheet comes from.
 
-### The pages' visual language, and the heading face
+### The pages' visual language
 
-Three directions were drawn and compared before any of this was built: an
-archival one on paper with a serif, a data-first one whose hero was a GEDCOM
-record, and a dark product page leading with the editor's own panes. The third
-was chosen.
+Three directions were drawn and compared, and the dark product page won — then a
+Stitch mockup arrived that the reader preferred, and that is what is built. The
+earlier direction is not in the code; the canvas keeps it as history.
 
-So the pages open with the editor drawn as a panel — window strip, explorer, the
-record, the diagnostic under it — beside the claim and the two actions, and carry
-it through in panels, a pill for the version badge, and cards for the four places
-the language service is met. `--font-heading` becomes Space Grotesk across the
-domain and Roboto Slab is dropped, which changes the editor's header too: one
-voice on the domain rather than a seam at `/editor/`. Body text follows the
-heading into a sans, which is what the pairing asks for.
+The system is the mockup's: warm paper `#f7f6f2` under charcoal `#1a1c1a`, a
+forest green `#263428` on every pill-shaped action, white cards inside soft
+`#e5e3dc` borders, Inter for everything and JetBrains Mono for anything that is
+GEDCOM. `--font-heading` therefore resolves to the sans, and no display face
+ships at all.
 
-The language is expressed in the app's own tokens rather than the direction's
-literal hex values, so the pages read in either theme and cannot drift from the
-editor they front. That is why the second action is `secondary` rather than
-`outline` — the outline variant's border all but vanishes on the light ground,
-and a call to action may not depend on the reader's theme.
+Two decisions keep it from spreading where it should not:
+
+The palette is **scoped to the pages**, declared on the shell's `.site` class and
+on `html:has(.site)` for the ground behind it, so the editor keeps the Studio
+Utility tokens it was built on. One stylesheet, two palettes, no drift — and the
+frame where the landing page runs the editor is the one place they meet, which
+the mockup also draws as its own window.
+
+The drawn windows of **other** editors are dark whatever the reader chose, fixed
+by `.editor-mock`: they stand for someone else's application, not for this page.
+The dark theme's ground is a shade deeper than their surface so a drawn window
+still reads as a window rather than as a hole.
 
 ### No integration is the default, and a phone is not a narrow desktop
 

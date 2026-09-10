@@ -1,131 +1,165 @@
-import { CheckIcon, ExternalLinkIcon } from "lucide-react";
+import { ArrowRightIcon, CheckIcon, ExternalLinkIcon } from "lucide-react";
 
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { INTEGRATIONS, type Integration } from "./integrations";
-import { PageShell } from "./PageShell";
+import { mockFor } from "./mocks";
+import { PageShell, pill } from "./PageShell";
 import { PATHS } from "./paths";
 
-/** A thumb gets the full width; a pointer gets a button the size of its label. */
-const action = "h-11 w-full justify-center sm:h-9 sm:w-auto";
-
 export function IntegrationPage({ integration }: { integration: Integration }) {
+  const Mock = mockFor(integration.path);
   const siblings = INTEGRATIONS.filter(
     (other) => other.path !== integration.path,
   );
 
   return (
     <PageShell current={integration.path}>
-      <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-xs text-primary">
-        <span className="size-1.5 rounded-full bg-primary" />
-        {integration.name}
-      </span>
-      <h1 className="mt-5 max-w-[34ch] font-heading text-3xl leading-[1.1] font-semibold tracking-tight text-pretty sm:mt-6 sm:text-4xl sm:leading-[1.05] lg:text-5xl">
-        {integration.heading}
-      </h1>
-      <p className="mt-5 max-w-[52ch] text-[0.95rem] leading-relaxed text-muted-foreground sm:text-base">
-        GEDCOM language support by Domorium. {integration.lede}
-      </p>
+      <section className="border-b">
+        <div className="mx-auto grid w-full max-w-6xl gap-12 px-4 py-14 sm:px-8 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:items-center">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 font-mono text-[0.7rem] text-accent-foreground">
+              <span className="size-1.5 rounded-full bg-current" />
+              {integration.name}
+            </span>
+            <h1 className="mt-6 max-w-[24ch] text-[2.1rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl">
+              {integration.heading}
+            </h1>
+            <p className="mt-6 max-w-[54ch] leading-relaxed text-muted-foreground">
+              GEDCOM language support by Domorium. {integration.lede}
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <a
+                href={integration.marketplace.href}
+                rel="noreferrer"
+                className={cn(
+                  pill,
+                  "h-11 w-full bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto",
+                )}
+              >
+                {integration.marketplace.label}
+                <ExternalLinkIcon className="size-3.5" />
+              </a>
+              <a
+                href={PATHS.editor}
+                className={cn(
+                  pill,
+                  "h-11 w-full border bg-card hover:bg-muted sm:w-auto",
+                )}
+              >
+                Try it in the browser
+              </a>
+            </div>
+            <ul className="mt-8 flex flex-wrap gap-1.5">
+              {integration.chips.map((chip) => (
+                <li
+                  key={chip}
+                  className="rounded-full border px-2.5 py-0.5 text-[0.7rem] text-muted-foreground"
+                >
+                  {chip}
+                </li>
+              ))}
+            </ul>
+          </div>
+          {Mock ? <Mock /> : null}
+        </div>
+      </section>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <a
-          href={integration.marketplace.href}
-          rel="noreferrer"
-          className={cn(
-            buttonVariants({ variant: "default", size: "lg" }),
-            action,
-          )}
-        >
-          {integration.marketplace.label}
-          <ExternalLinkIcon data-icon="inline-end" />
-        </a>
-        <a
-          href={PATHS.editor}
-          className={cn(
-            buttonVariants({ variant: "secondary", size: "lg" }),
-            action,
-          )}
-        >
-          Try it in the browser first
-        </a>
-      </div>
+      <section className="border-b">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:px-8 sm:py-20 lg:grid-cols-[1.3fr_1fr] lg:items-start lg:gap-14">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              What you get in {integration.name}
+            </h2>
+            <ul className="mt-7 grid gap-3">
+              {integration.features.map((feature) => (
+                <li key={feature} className="flex gap-3">
+                  <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <span className="text-sm leading-relaxed text-muted-foreground">
+                    {feature}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-      <div className="mt-14 grid items-start gap-10 sm:mt-16 sm:gap-12 lg:grid-cols-[1.3fr_1fr] lg:gap-14">
-        <section>
-          <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
-            What you get in {integration.name}
+          <div className="rounded-2xl border bg-card p-5 sm:p-6">
+            <h2 className="text-lg font-semibold tracking-tight">Install it</h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              {integration.install.lead}
+            </p>
+            {integration.install.command ? (
+              <pre className="mt-4 overflow-x-auto rounded-xl border bg-background px-4 py-3 font-mono text-[0.78rem]">
+                <code>{integration.install.command}</code>
+              </pre>
+            ) : null}
+            {integration.install.steps ? (
+              <ol className="mt-4 grid list-decimal gap-2 pl-5 text-sm leading-relaxed text-muted-foreground">
+                {integration.install.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            ) : null}
+            {integration.requirement ? (
+              <p className="mt-5 border-t pt-4 text-sm leading-relaxed text-muted-foreground">
+                {integration.requirement}
+              </p>
+            ) : null}
+            <a
+              href={integration.repository}
+              rel="noreferrer"
+              className="mt-5 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              Source and issue tracker
+              <ExternalLinkIcon className="size-3.5" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto w-full max-w-6xl">
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            The same GEDCOM support elsewhere
           </h2>
-          <ul className="mt-6 grid gap-3">
-            {integration.features.map((feature) => (
-              <li key={feature} className="flex gap-3">
-                <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary" />
-                <span className="text-sm leading-relaxed text-muted-foreground">
-                  {feature}
-                </span>
+          <ul className="mt-8 grid gap-5 sm:grid-cols-3">
+            {siblings.map((sibling) => (
+              <li
+                key={sibling.path}
+                className="flex flex-col gap-3 rounded-2xl border bg-card p-5"
+              >
+                <h3 className="text-base font-semibold tracking-tight">
+                  {sibling.heading}
+                </h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {sibling.note}
+                </p>
+                <a
+                  href={sibling.path}
+                  className="mt-auto flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  {sibling.name}
+                  <ArrowRightIcon className="size-3.5" />
+                </a>
               </li>
             ))}
-          </ul>
-        </section>
-
-        <section className="rounded-xl bg-card p-5 ring-1 ring-border sm:p-6">
-          <h2 className="font-heading text-xl font-semibold tracking-tight">
-            Install it
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            {integration.install.lead}
-          </p>
-          {integration.install.command ? (
-            <pre className="mt-4 overflow-x-auto rounded-lg border px-4 py-3 font-mono text-[0.78rem]">
-              <code>{integration.install.command}</code>
-            </pre>
-          ) : null}
-          {integration.install.steps ? (
-            <ol className="mt-4 grid list-decimal gap-2 pl-5 text-sm leading-relaxed text-muted-foreground">
-              {integration.install.steps.map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ol>
-          ) : null}
-          {integration.requirement ? (
-            <p className="mt-5 border-t pt-4 text-sm leading-relaxed text-muted-foreground">
-              {integration.requirement}
-            </p>
-          ) : null}
-        </section>
-      </div>
-
-      <section className="mt-14 sm:mt-20">
-        <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
-          The same GEDCOM support elsewhere
-        </h2>
-        <ul className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-3 sm:gap-4">
-          {siblings.map((sibling) => (
-            <li
-              key={sibling.path}
-              className="flex flex-col gap-2.5 rounded-xl bg-card p-4 ring-1 ring-border sm:gap-3 sm:p-5"
-            >
-              <h3 className="font-heading text-base leading-snug font-semibold">
-                <a href={sibling.path} className="hover:text-primary">
-                  {sibling.heading}
-                </a>
+            <li className="flex flex-col gap-3 rounded-2xl border border-dashed p-5">
+              <h3 className="text-base font-semibold tracking-tight">
+                GEDCOM editor in the browser
               </h3>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                {sibling.note}
+                Nothing to install, and nothing leaves your machine.
               </p>
-            </li>
-          ))}
-          <li className="flex flex-col gap-2.5 rounded-xl border p-4 sm:gap-3 sm:p-5">
-            <h3 className="font-heading text-base leading-snug font-semibold">
-              <a href={PATHS.editor} className="hover:text-primary">
-                GEDCOM editor in the browser
+              <a
+                href={PATHS.editor}
+                className="mt-auto flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Editor
+                <ArrowRightIcon className="size-3.5" />
               </a>
-            </h3>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Nothing to install, and nothing leaves your machine.
-            </p>
-          </li>
-        </ul>
+            </li>
+          </ul>
+        </div>
       </section>
     </PageShell>
   );

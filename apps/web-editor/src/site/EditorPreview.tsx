@@ -6,8 +6,15 @@ import { CircleAlertIcon } from "lucide-react";
  * validator actually emits for it.
  */
 const lines = [
+  { level: "0", tag: "HEAD" },
+  { level: "1", tag: "GEDC" },
+  { level: "2", tag: "VERS", value: "7.0" },
+  { level: "1", tag: "SOUR", value: "GRAMPS" },
+  { level: "1", tag: "DATE", value: "9 MAR 2007" },
   { level: "0", xref: "@I1@", tag: "INDI" },
   { level: "1", tag: "NAME", value: "Abraham /Simpson/" },
+  { level: "2", tag: "GIVN", value: "Abraham" },
+  { level: "2", tag: "SURN", value: "Simpson" },
   { level: "1", tag: "SEX", value: "M" },
   { level: "1", tag: "BIRT" },
   { level: "2", tag: "DATE", value: "24 MAY 1899" },

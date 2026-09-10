@@ -93,6 +93,22 @@
       is what the frame is. Write ADR-0015 superseding ADR-0014's claim that the
       pages ship no client-side JavaScript, and add its row to the index.
 
+## 4f. The Stitch design
+
+- [x] 4f.1 Rebuild the pages in the mockup the reader chose: paper and charcoal
+      with a forest-green pill for every action, a hero whose collage is three
+      drawn editor windows, a card per extension carrying its own window and a row
+      of ability chips, the live widget under "A reference implementation", and a
+      dark closing banner. Scope the palette to `.site` so the editor keeps its
+      own, fix the drawn windows dark through `.editor-mock`, and drop the display
+      face so `--font-heading` is the sans.
+- [x] 4f.2 Keep the copy true where the mockup invented: no Neovim, Sublime Text
+      or Visual Studio integrations, no "Beta" on a released plugin, no Obsidian
+      notes with backlinks, no invented diagnostics or record counts. The fourth
+      card offers what does exist instead — `@domorium/codemirror` and
+      `@domorium/validator` on npm — and the drawn windows show the example file
+      with the validator's own message.
+
 ## 5. The social card
 
 - [x] 5.1 Add `public/og.svg` and the `public/og.png` rendered from it at 1200×630,

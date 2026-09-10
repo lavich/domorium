@@ -1,7 +1,6 @@
 import { ExternalLinkIcon, MoonIcon, SunIcon, SunMoonIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { buttonVariants } from "@/components/ui/button";
 import { LINKS } from "@/constants/links";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +15,10 @@ const navLinks = [
   })),
 ];
 
+/** The pill the whole design hangs its actions on. */
+export const pill =
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors";
+
 export interface PageShellProps {
   current: SitePath;
   children: ReactNode;
@@ -23,22 +26,24 @@ export interface PageShellProps {
 
 export function PageShell({ current, children }: PageShellProps) {
   return (
-    <div className="flex min-h-svh flex-col bg-background text-foreground">
-      <header className="border-b">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-10 sm:py-4">
+    <div className="site flex min-h-svh flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-50 border-b bg-background/85 backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-8 sm:px-8 sm:py-3">
           <a
             href={PATHS.home}
-            className="flex items-center gap-2 font-heading text-lg font-bold tracking-tight"
+            className="flex shrink-0 items-center gap-2.5"
             aria-current={current === PATHS.home ? "page" : undefined}
           >
-            <img src="/favicon.svg" alt="" className="size-6" />
-            Domorium
+            <span className="flex size-7 items-center justify-center rounded-md border border-foreground/80">
+              <img src="/favicon.svg" alt="" className="size-4" />
+            </span>
+            <span className="text-lg font-semibold tracking-tight">
+              Domorium
+            </span>
           </a>
-          {/* One row that scrolls rather than a second row of small targets:
-              a thumb needs the height, and the labels are the navigation. */}
           <nav
             aria-label="Domorium tools"
-            className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 scrollbar-none sm:mx-0 sm:ml-auto sm:overflow-visible sm:px-0"
+            className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 text-xs font-medium scrollbar-none sm:mx-0 sm:gap-6 sm:overflow-visible sm:px-0"
           >
             {navLinks.map((link) => (
               <a
@@ -46,16 +51,25 @@ export function PageShell({ current, children }: PageShellProps) {
                 href={link.href}
                 aria-current={current === link.href ? "page" : undefined}
                 className={cn(
-                  buttonVariants({
-                    variant: current === link.href ? "secondary" : "ghost",
-                    size: "sm",
-                  }),
-                  "h-11 shrink-0 px-3 sm:h-7 sm:px-2.5",
+                  "flex h-11 shrink-0 items-center px-2 transition-colors sm:h-auto sm:px-0",
+                  current === link.href
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {link.label}
               </a>
             ))}
+          </nav>
+          <div className="hidden items-center gap-3 sm:ml-auto sm:flex">
+            <a
+              href={LINKS.github}
+              rel="noreferrer"
+              aria-label="The project on GitHub"
+              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+            >
+              <ExternalLinkIcon className="size-4" />
+            </a>
             {/* Armed and revealed by the theme script; the head runs it before
                 the first paint, and a page without it never shows a button
                 that could do nothing. */}
@@ -63,58 +77,78 @@ export function PageShell({ current, children }: PageShellProps) {
               type="button"
               data-theme-toggle
               aria-label="Change the colour theme"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "icon-sm" }),
-                "size-11 shrink-0 sm:size-7",
-              )}
+              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
             >
-              <SunMoonIcon data-theme-icon="system" />
-              <SunIcon data-theme-icon="light" />
-              <MoonIcon data-theme-icon="dark" />
+              <SunMoonIcon className="size-4" data-theme-icon="system" />
+              <SunIcon className="size-4" data-theme-icon="light" />
+              <MoonIcon className="size-4" data-theme-icon="dark" />
             </button>
-          </nav>
+            <a
+              href={PATHS.editor}
+              className={cn(pill, "h-8 bg-primary text-primary-foreground")}
+            >
+              Open the editor
+            </a>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:px-10 sm:py-20">
-        {children}
-      </main>
+      <main className="flex-1">{children}</main>
 
       <footer className="border-t">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-8 sm:px-10 sm:py-10">
-          <nav
-            aria-label="Domorium"
-            className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm"
-          >
-            <a
-              href={PATHS.home}
-              className="py-1.5 text-muted-foreground hover:text-foreground"
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10 sm:px-8">
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            <span className="text-sm font-semibold tracking-tight">
+              Domorium
+            </span>
+            <nav
+              aria-label="Domorium"
+              className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm"
             >
-              Home
-            </a>
-            {navLinks.map((link) => (
               <a
-                key={link.href}
-                href={link.href}
-                className="py-1.5 text-muted-foreground hover:text-foreground"
+                href={PATHS.home}
+                className="py-1 text-muted-foreground hover:text-foreground"
               >
-                {link.label}
+                Home
               </a>
-            ))}
-            <a
-              href={LINKS.github}
-              rel="noreferrer"
-              className="flex items-center gap-1.5 py-1.5 text-muted-foreground hover:text-foreground"
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="py-1 text-muted-foreground hover:text-foreground"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <a
+                href={LINKS.github}
+                rel="noreferrer"
+                className="flex items-center gap-1.5 py-1 text-muted-foreground hover:text-foreground"
+              >
+                GitHub
+                <ExternalLinkIcon className="size-3.5" />
+              </a>
+            </nav>
+            {/* The theme is reachable from the footer too: on a phone the
+                header keeps only the wordmark and the navigation. */}
+            <button
+              type="button"
+              data-theme-toggle
+              data-theme-compact
+              aria-label="Change the colour theme"
+              className="ml-auto h-9 items-center gap-1.5 rounded-full px-3 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
             >
-              Source
-              <ExternalLinkIcon className="size-3.5" />
-            </a>
-          </nav>
+              <SunMoonIcon className="size-4" data-theme-icon="system" />
+              <SunIcon className="size-4" data-theme-icon="light" />
+              <MoonIcon className="size-4" data-theme-icon="dark" />
+              Theme
+            </button>
+          </div>
           <p className="max-w-[76ch] text-xs leading-relaxed text-muted-foreground">
-            MIT licensed. Domorium is an independent project and is not
-            affiliated with or endorsed by FamilySearch or Intellectual Reserve,
-            Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH® are trademarks of
-            Intellectual Reserve, Inc.
+            MIT licensed, and open source. Domorium is an independent project
+            and is not affiliated with or endorsed by FamilySearch or
+            Intellectual Reserve, Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH®
+            are trademarks of Intellectual Reserve, Inc.
           </p>
         </div>
       </footer>

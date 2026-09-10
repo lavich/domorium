@@ -2,14 +2,13 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@import "@fontsource-variable/space-grotesk";
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: "Space Grotesk Variable", system-ui, sans-serif;
+  --font-heading: var(--font-sans);
   --font-sans: "Inter Variable", sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
   /* The shell's fixed bands, from the Studio Utility design system. */
@@ -141,6 +140,16 @@
   display: inline-flex;
 }
 
+/* These rules sit outside Tailwind's layers and so beat its utilities, which is
+   why the copy the footer keeps for narrow screens says so here rather than
+   wearing `sm:hidden`. */
+@media (width >= 40rem) {
+  /* At least as specific as the rule above it: a media query adds none. */
+  :root[data-theme-choice] [data-theme-toggle][data-theme-compact] {
+    display: none;
+  }
+}
+
 [data-theme-icon] {
   display: none;
 }
@@ -149,6 +158,68 @@
 :root[data-theme-choice="light"] [data-theme-icon="light"],
 :root[data-theme-choice="dark"] [data-theme-icon="dark"] {
   display: block;
+}
+
+/* The pages have a palette of their own — warm paper, charcoal, forest green —
+   and the editor keeps the Studio Utility tokens it was built on. They meet at
+   the frame the landing page runs the editor in, where the editor is dark by
+   design either way. */
+html:has(.site),
+.site {
+  --background: #f7f6f2;
+  --foreground: #1a1c1a;
+  --card: #ffffff;
+  --card-foreground: #1a1c1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1c1a;
+  --primary: #263428;
+  --primary-foreground: #ffffff;
+  --secondary: #ecebe6;
+  --secondary-foreground: #1a1c1a;
+  --muted: #ecebe6;
+  --muted-foreground: #595c58;
+  --accent: #e9efe9;
+  --accent-foreground: #2d5233;
+  --border: #e5e3dc;
+  --input: #e5e3dc;
+  --ring: #263428;
+}
+
+html.dark:has(.site),
+.dark .site {
+  /* A shade deeper than the mockups' own surface, so a drawn window still
+     reads as a window rather than as a hole in the page. */
+  --background: #101213;
+  --foreground: #f2f1ec;
+  --card: #1a1d1f;
+  --card-foreground: #f2f1ec;
+  --popover: #1a1d1f;
+  --popover-foreground: #f2f1ec;
+  /* The same hue as the forest, lifted until it carries on near-black. */
+  --primary: oklch(0.82 0.08 148);
+  --primary-foreground: #151718;
+  --secondary: #22262a;
+  --secondary-foreground: #f2f1ec;
+  --muted: #22262a;
+  --muted-foreground: #a3a8a2;
+  --accent: #22312a;
+  --accent-foreground: oklch(0.86 0.07 148);
+  --border: #2a2f34;
+  --input: #2a2f34;
+  --ring: oklch(0.82 0.08 148);
+}
+
+/* The mockups of other editors are dark whatever the reader chose: they stand
+   for someone else's window, not for this page. */
+.editor-mock {
+  --mock-surface: #151718;
+  --mock-panel: #1d2124;
+  --mock-line: #2d3238;
+  --mock-text: #d8dee4;
+  --mock-dim: #8b949e;
+  --mock-tag: #79c0ff;
+  --mock-xref: #d29922;
+  --mock-value: #7ee787;
 }
 
 @utility scrollbar-none {
