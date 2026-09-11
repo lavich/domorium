@@ -10,8 +10,18 @@ import {
 } from "./abilities";
 import { INTEGRATIONS } from "./integrations";
 import { notFound, PATHS, pageAt, pages, SITE_ORIGIN } from "./routes";
+import { cardOf, EDITOR_POSTER, shotsOf } from "./shots";
 
 const declared = Object.values(PATHS) as string[];
+
+// An apostrophe in alt text reaches the markup as `&#x27;`.
+const readable = (markup: string) =>
+  markup
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
 
 // Anchors only: React emits a preload `<link>` of its own for every image.
 const internalLinks = (markup: string) =>
@@ -223,6 +233,47 @@ describe("the site's pages", () => {
     const markup = renderToStaticMarkup(pageAt(PATHS.obsidian)?.body);
     expect(markup).toContain("<ol");
     expect(markup).toContain("Settings → Community plugins → Browse");
+  });
+
+  it("shows each place at work, with every frame in the HTML", () => {
+    for (const integration of INTEGRATIONS) {
+      const markup = readable(
+        renderToStaticMarkup(pageAt(integration.path)?.body),
+      );
+      for (const shot of shotsOf(integration.path)) {
+        expect(markup, `${integration.path} ${shot.name}`).toContain(
+          shot.caption,
+        );
+        expect(markup, `${integration.path} ${shot.name}`).toContain(shot.alt);
+        expect(markup, `${integration.path} ${shot.name}`).toContain(
+          `/shots/${shot.name}.webp`,
+        );
+      }
+    }
+  });
+
+  it("shows the landing page photographs rather than drawings of them", () => {
+    const markup = readable(renderToStaticMarkup(pageAt(PATHS.home)?.body));
+    for (const integration of INTEGRATIONS) {
+      const [first] = shotsOf(integration.path);
+      const card = cardOf(integration.path);
+      expect(markup, `${integration.path} window`).toContain(
+        `/shots/${first?.name}.webp`,
+      );
+      expect(markup, `${integration.path} card`).toContain(
+        `/shots/${card?.name}.webp`,
+      );
+    }
+    expect(markup).toContain(`/shots/${EDITOR_POSTER.name}.webp`);
+    expect(markup).toContain(EDITOR_POSTER.alt);
+  });
+
+  it("offers a still to a reader who has asked for stillness", () => {
+    for (const integration of INTEGRATIONS) {
+      const markup = renderToStaticMarkup(pageAt(integration.path)?.body);
+      expect(markup, integration.path).toContain("motion-reduce:hidden");
+      expect(markup, integration.path).toContain("motion-reduce:block");
+    }
   });
 
   it("offers the theme on every page, not only in the editor", () => {

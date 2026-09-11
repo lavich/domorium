@@ -249,3 +249,66 @@ again by opening it and capturing it at 1200×630.
 - **A dead internal link is now possible.** Four HTML files that no test opens could
   point at each other wrongly. The route table makes the paths constants, and the
   tests assert that every internal link a page renders is a path the table declares.
+
+### Screenshots of each place, and one of them moves
+
+The drawn windows say what a place does; they cannot say that it works. Three of
+them share one chrome and differ by a label, so a reader comparing the pages
+learns that the project draws a rectangle, not that the plugin is real. The
+platform pages therefore show photographs now: three per place, in a carousel
+where the drawing stood.
+
+The series is **each place's own**, not one series shot three times. Parallel
+frames would let a reader compare, but they would also flatten the thing worth
+seeing — Obsidian previewing a record inside a note has no counterpart in an IDE,
+and a shared script would have shot around it. The comparison table already does
+the comparing, honestly and in words; the pictures are here to be convincing
+about one place at a time. What each may claim is still bounded by
+`abilities.ts`: a frame is shot only for a row that place is marked for.
+
+The first frame of each series moves. `<video autoplay muted loop playsinline>`
+rather than an animated GIF: the same eight seconds are 300–600 KB of h.264 and
+several megabytes of GIF, and the GIF is the worse picture. Beside it in the
+markup is an `<img>` of the poster frame, and `prefers-reduced-motion: reduce`
+swaps them — a reader who asked for stillness is shown the still, and the
+swapping is a media query rather than a script.
+
+The carousel is CSS. A radio per frame, a track that slides by a fraction of
+itself when one is checked, one `<figure>` per frame with its caption under it,
+and a label per radio for the dots. Every frame is in the HTML whichever is on
+screen, so a crawler reads three captions and three `alt` texts per page rather
+than one picture it cannot see. This keeps the pages' two scripts at two: a
+carousel with state would be a third, and ADR-0015 is already the one exception
+this change is willing to hold.
+
+_What was tried first:_ a scroll-snapping row with an anchor per frame. It is
+less markup and it swipes on a phone, but `<a href="#frame-2">` is a fragment
+navigation, and the browser must then bring that frame to the top of the
+viewport — so every click on a dot dragged the page down by the height of
+whatever sat above the carousel. Nothing in CSS cancels that; the radios avoid
+it by never navigating. What they cost is the swipe, and what they add is a dot
+that shows which frame is on screen and arrow keys that already work.
+
+The landing page is photographed too, and the drawings are gone from the
+repository. Its collage keeps its composition — three windows, the wide one
+readable and the two beside it standing for applications rather than for
+documents — and its cards, 300 px wide, show a **crop** of one frame instead of
+a whole window, since a window at that size is a picture of nothing. The crop is
+chosen for the part that carries the claim: a completion list, a photograph
+cropped to a region, a file folded to its records.
+
+The widget that runs the editor is photographed as well. What stood there was a
+drawing of this project's own editor; what stands there now is a picture of it
+with the file it opens and the one diagnostic that file earns, taken through the
+same `/editor/?embed=1` the frame loads. ADR-0015 is unaffected: the script
+still replaces the placeholder with the running editor, and only the placeholder
+changed.
+
+The frames are dark whatever the reader chose, like the drawings beside them and
+for the same reason — they are someone else's application. The recipe that makes
+them reproducible is written beside them, in
+`apps/web-editor/scripts/shots/README.md`: fixed window size, the application's
+own dark theme, an editor font large enough to survive the scale the page shows
+it at, and the example file the site already serves — except in Obsidian, which
+is photographed in the plugin's own demo vault, since its notes, its media and
+its cropped photograph are the thing being shown.

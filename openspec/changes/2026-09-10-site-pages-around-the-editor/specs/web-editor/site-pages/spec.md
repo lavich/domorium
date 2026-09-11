@@ -215,3 +215,47 @@ of FamilySearch, with the notices the specification-derived material requires.
 
 - **WHEN** any published page is read
 - **THEN** the notice that Domorium is independent of FamilySearch is on it
+
+### Requirement: A platform page shows that place at work
+
+An integration page SHALL show photographs of its own plugin running: frames
+captured from that application, not drawings of it, and only of abilities that
+place is marked for. Each frame SHALL carry a caption and alt text describing
+what it shows. The frames SHALL be legible without a script having run, and a
+reader who has asked for reduced motion SHALL be shown a still in place of
+anything that moves.
+
+#### Scenario: The frames are in the HTML
+
+- **WHEN** `/obsidian/` is fetched and no JavaScript executes
+- **THEN** the response holds every frame of the page's series, each with its
+  caption and its alt text
+
+#### Scenario: A frame claims no more than the comparison does
+
+- **WHEN** a frame is shown for a place
+- **THEN** the ability it demonstrates is one the comparison marks for that place
+
+#### Scenario: Stillness is honoured
+
+- **WHEN** the reader's system asks for reduced motion
+- **THEN** the moving frame is not shown and its poster is shown instead
+
+### Requirement: The site shows the software, not drawings of it
+
+Where a page pictures a place, the picture SHALL be a photograph of that
+software running. The landing page SHALL picture each place and the browser
+editor this way, cropping a frame where it draws one small rather than shrinking
+a whole window past reading. No page SHALL ship a drawn imitation of an
+application's interface.
+
+#### Scenario: The landing page pictures each place
+
+- **WHEN** `/` is fetched and no JavaScript executes
+- **THEN** it holds a photograph of each published place and of the browser
+  editor, each with alt text describing what it shows
+
+#### Scenario: A frame changed without the page moving
+
+- **WHEN** a reader picks another frame of a page's series
+- **THEN** the frame on screen changes and the page does not scroll

@@ -7,7 +7,7 @@ import { Comparison } from "./Comparison";
 
 import { EditorWidget } from "./EditorWidget";
 import { INTEGRATIONS } from "./integrations";
-import { JetBrainsMock, mockFor, ObsidianMock, VsCodeMock } from "./mocks";
+import { PlaceDetail, PlaceWindow } from "./Photographs";
 import { PageShell, pill } from "./PageShell";
 import { PATHS } from "./paths";
 
@@ -79,10 +79,10 @@ export function LandingPage() {
               tower over the sentence they illustrate. */}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <VsCodeMock />
+              <PlaceWindow path={PATHS.vscode} />
             </div>
-            <ObsidianMock />
-            <JetBrainsMock />
+            <PlaceWindow path={PATHS.obsidian} />
+            <PlaceWindow path={PATHS.jetbrains} />
           </div>
         </div>
       </section>
@@ -104,7 +104,6 @@ export function LandingPage() {
 
           <ul className="mt-10 grid gap-5 lg:grid-cols-3">
             {INTEGRATIONS.map((integration) => {
-              const Mock = mockFor(integration.path);
               return (
                 <li
                   key={integration.path}
@@ -123,7 +122,7 @@ export function LandingPage() {
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {integration.note}
                   </p>
-                  {Mock ? <Mock /> : null}
+                  <PlaceDetail path={integration.path} />
                   <ul className="flex flex-wrap gap-1.5">
                     {abilitiesOf(integration.path).map((ability) => (
                       <li

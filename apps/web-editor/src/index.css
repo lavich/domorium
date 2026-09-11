@@ -222,6 +222,43 @@ html.dark:has(.site),
   --mock-value: #7ee787;
 }
 
+/* Radios rather than an anchor per frame: a fragment navigation drags the page
+   up to the frame it just changed. The track is as wide as the window and its
+   frames overflow it, so one step is the window's whole width. */
+.shots-track {
+  transform: translateX(calc(var(--frame, 0) * -100%));
+  transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.shots-pick:nth-of-type(2):checked ~ .shots-window .shots-track {
+  --frame: 1;
+}
+
+.shots-pick:nth-of-type(3):checked ~ .shots-window .shots-track {
+  --frame: 2;
+}
+
+/* The radios are off-screen, so state and focus are drawn on their labels. */
+.shots-pick:nth-of-type(1):checked ~ .shots-dots li:nth-child(1) label,
+.shots-pick:nth-of-type(2):checked ~ .shots-dots li:nth-child(2) label,
+.shots-pick:nth-of-type(3):checked ~ .shots-dots li:nth-child(3) label {
+  border-color: var(--foreground);
+  color: var(--foreground);
+}
+
+.shots-pick:nth-of-type(1):focus-visible ~ .shots-dots li:nth-child(1) label,
+.shots-pick:nth-of-type(2):focus-visible ~ .shots-dots li:nth-child(2) label,
+.shots-pick:nth-of-type(3):focus-visible ~ .shots-dots li:nth-child(3) label {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shots-track {
+    transition: none;
+  }
+}
+
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {

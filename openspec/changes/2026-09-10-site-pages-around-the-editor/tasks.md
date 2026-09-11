@@ -123,6 +123,67 @@
       table honest — nothing true everywhere in it, every column non-empty, every
       named place published — and asserting the pages render both halves.
 
+## 4h. Photographs of each place
+
+- [x] 4h.1 Fix the recipe before shooting anything, and write it beside the shots
+      so a frame can be made again: the window at 1000x640 points, the
+      application's own dark theme, a font size large enough that the code still
+      reads when the page shows the frame at a little over half size, and
+      `simpsons70.ged` — the example the site already serves — as the file on
+      screen. Capture by window id rather than by screen rectangle, so no
+      neighbouring window can wander into frame. Written to
+      `apps/web-editor/scripts/shots/README.md`. **Obsidian is the exception: it
+      is photographed in the plugin's own demo vault, whose notes, media and
+      cropped photograph are the thing being shown.**
+- [x] 4h.2 Shoot three frames per place, each one a row `abilities.ts` marks for
+      it. VS Code: completion into a record and the warning it clears, the
+      unresolved `@F0009@` with the validator's own message and its quick fix,
+      GEDCOM highlighted inside a Markdown `gedcom` block. Obsidian: the record a
+      cross-reference names, previewed from a note and then followed into the
+      file; the photograph cropped to the rectangle the record asks for; the tree
+      open in the plugin's editor inside the vault. WebStorm, since no IntelliJ
+      IDEA is installed and the page is about JetBrains IDEs as a family: go to
+      definition from a person to the family that names them, every line that
+      names one record, and the whole file folded to its records.
+- [x] 4h.3 Record the first frame of each series, encode `mp4` and `webm` from it
+      and a `webp` poster of a moment that says what the clip is about, and keep
+      every still as `webp` at twice the size the page draws it. Every asset is
+      1280x820; a platform page carries about 660 KB of them.
+- [x] 4h.4 Declare them in `src/site/shots.ts` next to `abilities.ts` — path,
+      caption, alt text as prose, intrinsic size — and render them through
+      `src/site/Photographs.tsx`, a `scroll-snap` carousel of `<figure>`s with
+      anchor dots, a reachable scroller and the reduced-motion swap. It takes the
+      place of the drawn window in the platform page's hero. The component is
+      not `Shots.tsx`: a case-insensitive filesystem resolves `./shots` to it
+      rather than to the data beside it, and the component comes back undefined.
+- [x] 4h.5 Ship with tests: every published place has its three frames, every
+      file a frame names exists in `public/` and nothing there goes unused, alt
+      text is present and is not a copy of the caption, and the platform page
+      renders every caption, every alt text and the reduced-motion pair.
+- [ ] 4h.6 Follow up on what the shooting verified: **Find Usages does surface
+      the language server's references in a JetBrains IDE** — five results for one
+      cross-reference, one definition and four references. `abilities.ts` leaves
+      that cell empty as unverified, and the page says an unmarked cell means
+      exactly that. The row can now be claimed for JetBrains, and rename should
+      be checked the same way before it is.
+
+- [x] 4h.7 Take the drawings off the landing page too, and delete them: the
+      hero's collage shows the three windows photographed, each card shows a
+      crop of one frame — a whole window at 300 pixels is a picture of nothing —
+      and the widget that runs the editor stands on a photograph of the editor
+      rather than a drawing of it, taken through the same `/editor/?embed=1` the
+      frame loads. `mocks.tsx` and `EditorPreview.tsx` are gone; `.editor-mock`
+      stays, since it is what makes a photographed window dark whatever the
+      reader chose.
+- [x] 4h.8 Drive the carousel with a radio per frame rather than an anchor per
+      frame. An anchor is a fragment navigation, so every click on a dot dragged
+      the page down to put that frame at the top of the viewport; a radio never
+      navigates, and it brings an active dot and arrow keys with it.
+- [x] 4h.9 Reshoot the JetBrains series: the first three frames came out light.
+      Forcing `ExperimentalDark` in `laf.xml` does not hold — Settings Sync puts
+      the account's theme back at startup — and reading the frames by eye missed
+      it. The recipe now says to sample a pixel and check.
+
 ## 5. The social card
 
 - [x] 5.1 Add `public/og.svg` and the `public/og.png` rendered from it at 1200×630,

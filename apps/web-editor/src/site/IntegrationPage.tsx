@@ -4,12 +4,11 @@ import { cn } from "@/lib/utils";
 
 import { abilitiesOf } from "./abilities";
 import { INTEGRATIONS, type Integration } from "./integrations";
-import { mockFor } from "./mocks";
 import { PageShell, pill } from "./PageShell";
+import { Photographs } from "./Photographs";
 import { PATHS } from "./paths";
 
 export function IntegrationPage({ integration }: { integration: Integration }) {
-  const Mock = mockFor(integration.path);
   const siblings = INTEGRATIONS.filter(
     (other) => other.path !== integration.path,
   );
@@ -62,7 +61,7 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
               ))}
             </ul>
           </div>
-          {Mock ? <Mock /> : null}
+          <Photographs path={integration.path} name={integration.name} />
         </div>
       </section>
 
