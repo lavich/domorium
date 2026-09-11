@@ -59,6 +59,9 @@
 }
 
 :root {
+  /* The search panel's fields and the editor's scrollbars are the browser's own
+     to paint, and it paints them for the scheme it is told. */
+  color-scheme: light;
   --background: #f7f6f2;
   --foreground: #1a1c1a;
   --card: #ffffff;
@@ -94,6 +97,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   /* A shade deeper than the mockups' own surface, so a drawn window still
      reads as a window rather than as a hole in the page. */
   --background: #101213;
@@ -254,6 +258,24 @@ body {
   background: var(--muted);
   color: var(--muted-foreground);
   border-color: var(--border);
+}
+
+/* The search panel is built from the shell's own controls; what is left to say
+   is the band they stand on, and that the panel adds no padding of its own. */
+.cm-editor .cm-panels {
+  background: var(--background);
+  color: var(--foreground);
+  /* CodeMirror lifts the band to 300, which is over every overlay the shell
+     has: the panel's own tooltips would open behind it. */
+  z-index: 10;
+}
+
+.cm-editor .cm-panels-top {
+  border-bottom: 1px solid var(--border);
+}
+
+.cm-editor .cm-panel.cm-search {
+  padding: 0;
 }
 
 .gedcom-record-preview {

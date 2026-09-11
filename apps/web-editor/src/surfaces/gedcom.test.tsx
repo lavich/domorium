@@ -38,7 +38,7 @@ vi.mock("@/editor/GedcomEditor", () => ({
       destroy: () => {},
       focusDiagnostic: () => {},
       setTheme: () => {},
-      openSearch: () => searched.push(initialText),
+      toggleSearch: () => searched.push(initialText),
     }));
     return (
       <div aria-label="GEDCOM editor">

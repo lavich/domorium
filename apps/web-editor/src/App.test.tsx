@@ -41,7 +41,7 @@ vi.mock("./editor/GedcomEditor", () => ({
       destroy: vi.fn(),
       focusDiagnostic: vi.fn(),
       setTheme: vi.fn(),
-      openSearch: vi.fn(),
+      toggleSearch: vi.fn(),
     }));
     return (
       <>

@@ -58,5 +58,5 @@ export interface GedcomEditorHandle {
   destroy(): void;
   focusDiagnostic(diagnostic: WebDiagnostic): void;
   setTheme(theme: WebTheme): void;
-  openSearch(): void;
+  toggleSearch(): void;
 }
