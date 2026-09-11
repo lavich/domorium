@@ -5,6 +5,7 @@ import { LINKS } from "@/constants/links";
 import { cn } from "@/lib/utils";
 
 import { INTEGRATIONS } from "./integrations";
+import { PlaceMark } from "./Marks";
 import { PATHS, type SitePath } from "./paths";
 
 const navLinks = [
@@ -57,6 +58,9 @@ export function PageShell({ current, children }: PageShellProps) {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
+                {link.href === PATHS.editor ? null : (
+                  <PlaceMark place={link.href} className="mr-1.5 size-3.5" />
+                )}
                 {link.label}
               </a>
             ))}
@@ -148,7 +152,9 @@ export function PageShell({ current, children }: PageShellProps) {
             MIT licensed, and open source. Domorium is an independent project
             and is not affiliated with or endorsed by FamilySearch or
             Intellectual Reserve, Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH®
-            are trademarks of Intellectual Reserve, Inc.
+            are trademarks of Intellectual Reserve, Inc. Visual Studio Code,
+            Obsidian and the JetBrains marks belong to their owners and name
+            here only the applications these plugins run in.
           </p>
         </div>
       </footer>

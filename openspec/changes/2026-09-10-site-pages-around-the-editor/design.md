@@ -250,6 +250,30 @@ again by opening it and capturing it at 1200×630.
   point at each other wrongly. The route table makes the paths constants, and the
   tests assert that every internal link a page renders is a path the table declares.
 
+### The applications' own marks
+
+A reader looking for their editor finds it by its shape before they read its
+name, so each place is named by its mark as well as its word: in the navigation,
+on the landing page's cards, in the platform page's pill and on the cards that
+point at its siblings, the browser editor's among them wearing this project's
+own mark. The comparison's columns stay words alone — the table is read across
+rows, and a row of marks above them is one more thing between the reader and the
+answer.
+
+They are monochrome. A brand colour would have to answer to both themes, and
+JetBrains' own is black, which the dark one would swallow; the shape is what
+carries the recognition. Ours is the exception, drawn in its own colour, because
+it is the one mark this project may colour as it likes.
+
+The marks belong to their owners. The Obsidian and JetBrains outlines come from
+Simple Icons under CC0-1.0 and the Visual Studio Code outline from Devicon under
+MIT, and those licences cover the drawing rather than the mark — Simple Icons no
+longer carries the Visual Studio Code icon at all, which is the sharpest
+available reminder that a permissive icon set does not make a trademark
+permissive. The footer says what the marks are doing here: naming the
+applications these plugins run in, next to the sentence that already says this
+project is nobody's but its own.
+
 ### One table, and six rows out of it
 
 The comparison was a shared list beside a table of differences, which asked the

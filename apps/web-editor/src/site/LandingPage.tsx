@@ -7,6 +7,7 @@ import { Comparison } from "./Comparison";
 
 import { EditorWidget } from "./EditorWidget";
 import { INTEGRATIONS } from "./integrations";
+import { PlaceMark } from "./Marks";
 import { PlaceDetail, PlaceWindow } from "./Photographs";
 import { PageShell, pill } from "./PageShell";
 import { PATHS } from "./paths";
@@ -111,7 +112,14 @@ export function LandingPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="text-lg font-semibold tracking-tight">
-                      <a href={integration.path} className="hover:text-primary">
+                      <a
+                        href={integration.path}
+                        className="flex items-center gap-2 hover:text-primary"
+                      >
+                        <PlaceMark
+                          place={integration.path}
+                          className="size-5"
+                        />
                         {integration.name}
                       </a>
                     </h3>

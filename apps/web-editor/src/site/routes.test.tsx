@@ -252,6 +252,17 @@ describe("the site's pages", () => {
     }
   });
 
+  it("names every place by its own mark", () => {
+    const landing = renderToStaticMarkup(pageAt(PATHS.home)?.body);
+    for (const integration of INTEGRATIONS) {
+      expect(landing, integration.name).toContain(
+        `data-mark="${integration.path}"`,
+      );
+    }
+    const platform = renderToStaticMarkup(pageAt(PATHS.vscode)?.body);
+    expect(platform).toContain(`data-mark="${PATHS.editor}"`);
+  });
+
   it("shows the landing page photographs rather than drawings of them", () => {
     const markup = readable(renderToStaticMarkup(pageAt(PATHS.home)?.body));
     for (const integration of INTEGRATIONS) {

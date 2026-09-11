@@ -196,6 +196,18 @@
       then owns no row, so its chips go with them; the rule that every place
       owns a row is replaced by one that no column is empty of everything.
 
+## 4j. The applications' own marks
+
+- [x] 4j.1 Name each place by its mark as well as its word — navigation, landing
+      cards, the platform page's pill and its sibling cards, this project's own
+      mark among them on the card for the browser editor. Monochrome, since a
+      brand colour must answer to both themes and JetBrains' is black. Not over
+      the comparison's columns: that table is read across its rows.
+- [x] 4j.2 Take the outlines from Simple Icons (CC0-1.0) and, for Visual Studio
+      Code, from Devicon (MIT), which those licences cover rather than the marks.
+      Say in the footer that the marks belong to their owners and name only the
+      applications these plugins run in.
+
 ## 5. The social card
 
 - [x] 5.1 Add `public/og.svg` and the `public/og.png` rendered from it at 1200×630,

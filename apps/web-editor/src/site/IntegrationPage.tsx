@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { abilitiesOf } from "./abilities";
 import { INTEGRATIONS, type Integration } from "./integrations";
+import { PlaceMark } from "./Marks";
 import { PageShell, pill } from "./PageShell";
 import { Photographs } from "./Photographs";
 import { PATHS } from "./paths";
@@ -19,7 +20,7 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
         <div className="mx-auto grid w-full max-w-6xl gap-12 px-4 py-14 sm:px-8 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 font-mono text-[0.7rem] text-accent-foreground">
-              <span className="size-1.5 rounded-full bg-current" />
+              <PlaceMark place={integration.path} className="size-3.5" />
               {integration.name}
             </span>
             <h1 className="mt-6 max-w-[24ch] text-[2.1rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl">
@@ -128,7 +129,8 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
                 key={sibling.path}
                 className="flex flex-col gap-3 rounded-2xl border bg-card p-5"
               >
-                <h3 className="text-base font-semibold tracking-tight">
+                <h3 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+                  <PlaceMark place={sibling.path} />
                   {sibling.heading}
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
@@ -144,7 +146,8 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
               </li>
             ))}
             <li className="flex flex-col gap-3 rounded-2xl border border-dashed p-5">
-              <h3 className="text-base font-semibold tracking-tight">
+              <h3 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+                <PlaceMark place={PATHS.editor} />
                 GEDCOM editor in the browser
               </h3>
               <p className="text-sm leading-relaxed text-muted-foreground">
