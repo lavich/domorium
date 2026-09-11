@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 
-import { PageShell, pill } from "./PageShell";
+import { pill } from "./Chrome";
+import { PageShell } from "./PageShell";
 import { PATHS } from "./paths";
 
 export function NotFoundPage() {

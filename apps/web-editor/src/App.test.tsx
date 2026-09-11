@@ -136,6 +136,7 @@ describe("App", () => {
     expect(
       screen.getByRole("link", { name: /GitHub/i }).getAttribute("href"),
     ).toBe(LINKS.github);
+    expect(screen.getByRole("button", { name: /theme/i })).not.toBeNull();
     expect(screen.getByLabelText("GEDCOM editor")).not.toBeNull();
     expect(
       screen.getByRole("heading", {
@@ -158,9 +159,7 @@ describe("App", () => {
     expect(await screen.findByRole("button", { name: "File" })).not.toBeNull();
     expect(screen.queryByRole("link", { name: /VS Code/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /GitHub/i })).toBeNull();
-    expect(
-      screen.queryByRole("button", { name: /colour theme|color theme/i }),
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: /theme/i })).toBeNull();
     expect(
       screen.queryByRole("heading", {
         name: /open, validate and edit GEDCOM locally/i,

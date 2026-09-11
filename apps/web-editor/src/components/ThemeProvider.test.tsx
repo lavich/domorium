@@ -1,47 +1,45 @@
 // @vitest-environment jsdom
 
-import { act, render } from "@testing-library/react";
-import { useEffect } from "react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it } from "vitest";
 
 import { ThemeProvider, useTheme } from "./ThemeProvider";
 
-beforeEach(() => {
-  localStorage.clear();
-  document.documentElement.classList.remove("dark");
-});
+beforeEach(() => document.documentElement.classList.remove("dark"));
+afterEach(cleanup);
 
-it("restores and applies the saved dark theme", () => {
-  localStorage.setItem("domorium-theme", "dark");
-  vi.stubGlobal("matchMedia", vi.fn());
+function Shown() {
+  const { resolvedTheme } = useTheme();
+  return <span data-testid="theme">{resolvedTheme}</span>;
+}
+
+const shown = () => screen.getByTestId("theme").textContent;
+
+it("reads the theme the head script applied before the first paint", () => {
+  document.documentElement.classList.add("dark");
 
   render(
     <ThemeProvider>
-      <span>child</span>
+      <Shown />
     </ThemeProvider>,
   );
 
-  expect(document.documentElement.classList.contains("dark")).toBe(true);
+  expect(shown()).toBe("dark");
 });
 
-it("switches to light and persists the choice", () => {
-  localStorage.setItem("domorium-theme", "dark");
-  vi.stubGlobal("matchMedia", vi.fn());
+// The button that changes it is the pages' own, driven by the script in the
+// head; nothing tells React, so it watches the class instead.
+it("follows the class when something outside React changes it", async () => {
+  render(
+    <ThemeProvider>
+      <Shown />
+    </ThemeProvider>,
+  );
+  expect(shown()).toBe("light");
 
-  function SwitchTheme() {
-    const { setTheme } = useTheme();
-    useEffect(() => setTheme("light"), [setTheme]);
-    return null;
-  }
+  document.documentElement.classList.add("dark");
+  await waitFor(() => expect(shown()).toBe("dark"));
 
-  act(() => {
-    render(
-      <ThemeProvider>
-        <SwitchTheme />
-      </ThemeProvider>,
-    );
-  });
-
-  expect(document.documentElement.classList.contains("dark")).toBe(false);
-  expect(localStorage.getItem("domorium-theme")).toBe("light");
+  document.documentElement.classList.remove("dark");
+  await waitFor(() => expect(shown()).toBe("light"));
 });

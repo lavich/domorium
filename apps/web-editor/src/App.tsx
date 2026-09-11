@@ -14,7 +14,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { EditorWorkspace } from "@/components/EditorWorkspace";
 import { ConfirmDialog, type Confirmation } from "@/components/ConfirmDialog";
 import { ReplaceDocumentDialog } from "@/components/ReplaceDocumentDialog";
-import { SiteHeader } from "@/components/SiteHeader";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { createAppContext, type AppContext } from "@/cordis/app";
 import { CordisProvider, useCordis, useWorkspace } from "@/cordis/react";
@@ -25,12 +24,13 @@ import {
   pathWithin,
   pickFolder,
   pickSaveFile,
-  savePickerAvailable,
   writeThroughHandle,
 } from "@/workspace/folderGateway";
 import { createMemoryGateway } from "@/workspace/memoryGateway";
 import { followLink } from "@/workspace/followLink";
-import { save, saveAvailability } from "@/workspace/save";
+import { SiteHeader } from "@/site/Chrome";
+import { PATHS } from "@/site/paths";
+import { save } from "@/workspace/save";
 import { createSingleFileGateway } from "@/workspace/singleFileGateway";
 import {
   activeFile,
@@ -291,6 +291,8 @@ function AppContent({ app }: { app: AppContext }) {
 
   const openFile = () => fileInputRef.current?.click();
 
+  const resetToExample = () => requestReplacement({ type: "demo" });
+
   const saveAndClose = async (open: OpenFile, text: string) => {
     const outcome = await save(open, text, files());
     if (outcome.kind === "refused") {
@@ -442,6 +444,10 @@ function AppContent({ app }: { app: AppContext }) {
     keepEditorText,
     closeTab,
     openLink,
+    saveDocument,
+    saveDocumentAs,
+    download,
+    resetToExample,
   });
   useEffect(() => {
     latest.current = {
@@ -451,6 +457,10 @@ function AppContent({ app }: { app: AppContext }) {
       keepEditorText,
       closeTab,
       openLink,
+      saveDocument,
+      saveDocumentAs,
+      download,
+      resetToExample,
     };
   });
 
@@ -475,6 +485,20 @@ function AppContent({ app }: { app: AppContext }) {
       ),
       ctx.commands.register("workspace.followLink", (link) =>
         latest.current.openLink(link),
+      ),
+      ctx.commands.register(
+        "workspace.save",
+        () => void latest.current.saveDocument(),
+      ),
+      ctx.commands.register(
+        "workspace.saveAs",
+        () => void latest.current.saveDocumentAs(),
+      ),
+      ctx.commands.register("workspace.download", () =>
+        latest.current.download(),
+      ),
+      ctx.commands.register("workspace.reset", () =>
+        latest.current.resetToExample(),
       ),
     ];
     return () => {
@@ -509,60 +533,57 @@ function AppContent({ app }: { app: AppContext }) {
   });
 
   return (
-    <main className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
-      <SiteHeader
-        embedded={embedded()}
-        onOpenFile={openFile}
-        onDownload={download}
-        onReset={() => requestReplacement({ type: "demo" })}
-        onSave={() => void saveDocument()}
-        onSaveAs={() => void saveDocumentAs()}
-        saveAvailability={saveAvailability(
-          file,
-          files(),
-          savePickerAvailable(),
-        )}
-      />
-      <input
-        ref={fileInputRef}
-        className="sr-only"
-        type="file"
-        accept=".ged,.gedcom"
-        aria-label="Open GEDCOM file"
-        onChange={handleFile}
-      />
-      <div className="flex min-h-0 w-full flex-1 overflow-hidden">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {loadError ? (
-            <Alert variant="destructive">
-              <AlertTitle>Unable to open GEDCOM</AlertTitle>
-              <AlertDescription>{loadError}</AlertDescription>
-            </Alert>
-          ) : null}
-          {loading ? (
-            <Skeleton
-              className="min-h-0 flex-1"
-              aria-label="Loading GEDCOM example"
-            />
-          ) : (
-            <EditorWorkspace />
-          )}
-        </div>
+    <div className="flex h-svh flex-col bg-background text-foreground">
+      {embedded() ? null : (
+        <>
+          <SiteHeader current={PATHS.editor} />
+          <h1 className="sr-only">Open, validate and edit GEDCOM locally</h1>
+        </>
+      )}
+      <div className="flex min-h-0 flex-1 justify-center">
+        <main className="flex h-full w-full max-w-6xl flex-col overflow-hidden border-x">
+          <input
+            ref={fileInputRef}
+            className="sr-only"
+            type="file"
+            accept=".ged,.gedcom"
+            aria-label="Open GEDCOM file"
+            onChange={handleFile}
+          />
+          <div className="flex min-h-0 w-full flex-1 overflow-hidden">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              {loadError ? (
+                <Alert variant="destructive">
+                  <AlertTitle>Unable to open GEDCOM</AlertTitle>
+                  <AlertDescription>{loadError}</AlertDescription>
+                </Alert>
+              ) : null}
+              {loading ? (
+                <Skeleton
+                  className="min-h-0 flex-1"
+                  aria-label="Loading GEDCOM example"
+                />
+              ) : (
+                <EditorWorkspace />
+              )}
+            </div>
+          </div>
+          <ConfirmDialog
+            confirmation={confirmation}
+            onCancel={() => setConfirmation(null)}
+          />
+          <ReplaceDocumentDialog
+            open={pendingReplacement !== null}
+            onCancel={() => setPendingReplacement(null)}
+            onConfirm={() => {
+              if (pendingReplacement) {
+                applyReplacement(pendingReplacement);
+              }
+              setPendingReplacement(null);
+            }}
+          />
+        </main>
       </div>
-      <ConfirmDialog
-        confirmation={confirmation}
-        onCancel={() => setConfirmation(null)}
-      />
-      <ReplaceDocumentDialog
-        open={pendingReplacement !== null}
-        onCancel={() => setPendingReplacement(null)}
-        onConfirm={() => {
-          if (pendingReplacement) {
-            applyReplacement(pendingReplacement);
-          }
-          setPendingReplacement(null);
-        }}
-      />
-    </main>
+    </div>
   );
 }

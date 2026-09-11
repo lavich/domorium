@@ -9,7 +9,8 @@ import { EditorWidget } from "./EditorWidget";
 import { INTEGRATIONS } from "./integrations";
 import { PlaceMark } from "./Marks";
 import { PlaceDetail, PlaceWindow } from "./Photographs";
-import { PageShell, pill } from "./PageShell";
+import { pill } from "./Chrome";
+import { PageShell } from "./PageShell";
 import { PATHS } from "./paths";
 
 const facts = ["Open source", "Cross-platform", "Nothing is uploaded"];

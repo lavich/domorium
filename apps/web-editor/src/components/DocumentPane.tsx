@@ -4,6 +4,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { EditorTabs } from "./EditorTabs";
+import { FileMenu } from "./FileMenu";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { useCordis, useRail, useSurfaces, useWorkspace } from "@/cordis/react";
 import { openIn } from "@/services/rail";
@@ -62,6 +63,7 @@ export function DocumentPane({
       <EditorTabs
         files={workspace.files}
         activePath={workspace.activePath}
+        leading={<FileMenu />}
         onActivate={(path) =>
           ctx.commands.execute("workspace.activateTab", path)
         }
