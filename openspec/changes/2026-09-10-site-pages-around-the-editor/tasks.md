@@ -184,6 +184,18 @@
       the account's theme back at startup — and reading the frames by eye missed
       it. The recipe now says to sample a pixel and check.
 
+## 4i. One table
+
+- [x] 4i.1 Join the shared list and the differences into one table: the shared
+      rows first with a mark in every column, then a labelled break and the rows
+      where the places part. Keep the two lists apart in the data, since _true
+      everywhere_ and _true of one place_ are different claims.
+- [x] 4i.2 Drop the six rows that were packaging rather than ability — the
+      browser's grouped problems panel, the three JetBrains platform facts,
+      "Desktop and mobile" and "No Node.js needed on your machine". JetBrains
+      then owns no row, so its chips go with them; the rule that every place
+      owns a row is replaced by one that no column is empty of everything.
+
 ## 5. The social card
 
 - [x] 5.1 Add `public/og.svg` and the `public/og.png` rendered from it at 1200×630,

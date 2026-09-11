@@ -8,11 +8,7 @@ export const PLACES: { path: SitePath; label: string }[] = [
   { path: PATHS.editor, label: "Browser" },
 ];
 
-/**
- * True of every place, because one language service answers for all of them.
- * Anything here is deliberately absent from the table below: a row of four
- * marks tells a reader nothing.
- */
+/** True of every place, because one language service answers for all of them. */
 export const SHARED_ABILITIES = [
   "Autocomplete that knows which tags are legal at this level, in this structure",
   "Validation against the GEDCOM 5.5.1 and 7.0 specifications, as you type",
@@ -95,39 +91,6 @@ export const DISTINCT_ABILITIES: Ability[] = [
     where: {
       [PATHS.obsidian]: "your vault",
       [PATHS.editor]: "a folder you grant",
-    },
-  },
-  {
-    label: "A problems panel that folds repeats of one finding and counts them",
-    chip: "Grouped problems",
-    where: { [PATHS.editor]: true },
-  },
-  {
-    label: "Any IntelliJ-platform IDE",
-    chip: "Any IntelliJ IDE",
-    where: { [PATHS.jetbrains]: true },
-  },
-  {
-    label: "The language server bundled with the plugin, running locally",
-    chip: "Bundled server",
-    where: { [PATHS.jetbrains]: true },
-  },
-  {
-    label: "Typo inspection kept off tags and identifiers",
-    chip: "No typo noise",
-    where: { [PATHS.jetbrains]: true },
-  },
-  {
-    label: "Desktop and mobile",
-    where: { [PATHS.obsidian]: true },
-  },
-  {
-    label: "No Node.js needed on your machine",
-    chip: "No Node.js",
-    where: {
-      [PATHS.vscode]: "a web extension too",
-      [PATHS.obsidian]: true,
-      [PATHS.editor]: true,
     },
   },
 ];

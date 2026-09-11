@@ -250,6 +250,29 @@ again by opening it and capturing it at 1200×630.
   point at each other wrongly. The route table makes the paths constants, and the
   tests assert that every internal link a page renders is a path the table declares.
 
+### One table, and six rows out of it
+
+The comparison was a shared list beside a table of differences, which asked the
+reader to join two halves themselves — and left the table's own columns without
+the thing that makes them look capable. It is one table now: the shared rows
+first, marked in every column, then a labelled break and the rows where the
+places part. The two halves are still two lists in the code, because the
+difference between _true everywhere_ and _true of one place_ is the honest
+shape of the answer; only the rendering joins them.
+
+Six rows left the table with that change: the browser's grouped problems panel,
+the three JetBrains platform facts, "Desktop and mobile" and "No Node.js needed
+on your machine". They were packaging rather than ability, and the pages that
+care about them say them in their own words — the JetBrains card's note is
+already "Any IntelliJ-platform IDE. Needs Node.js on PATH."
+
+The cost is that JetBrains now has nothing of its own in the table, and the
+chips on its page and its card — which are derived from that half — are gone
+with it. The old rule that every place must own a row went with them, because
+what it protected against was a column of dashes reading as "this one does
+nothing", and a column of eight shared marks does not read that way. What the
+test holds now is that no column is empty of everything.
+
 ### Screenshots of each place, and one of them moves
 
 The drawn windows say what a place does; they cannot say that it works. Three of

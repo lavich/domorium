@@ -19,8 +19,8 @@ describe("the abilities the places differ by", () => {
     }
   });
 
-  // A row true of every place is not a difference; it belongs in the list above
-  // the table, where the reason for it is stated once.
+  // A row true of every place is not a difference; it belongs among the shared
+  // rows, where the reason for it is stated once.
   it("keeps what is true everywhere out of the table", () => {
     for (const ability of DISTINCT_ABILITIES) {
       expect(Object.keys(ability.where).length, ability.label).toBeLessThan(
@@ -43,11 +43,10 @@ describe("the abilities the places differ by", () => {
     }
   });
 
-  // An empty column would read as "this one does nothing", when what it does is
-  // the shared core above the table.
-  it("gives every place a row of its own", () => {
+  it("marks every place somewhere in the table", () => {
     for (const place of PLACES) {
-      expect(abilitiesOf(place.path), place.label).not.toHaveLength(0);
+      const marks = SHARED_ABILITIES.length + abilitiesOf(place.path).length;
+      expect(marks, place.label).toBeGreaterThan(0);
     }
   });
 
