@@ -9,8 +9,9 @@ import {
 } from "react";
 
 import type { WebTheme } from "@/editor/types";
+import { THEME_KEY, type ThemeChoice } from "@/theme";
 
-export type ThemeChoice = WebTheme | "system";
+export type { ThemeChoice };
 
 interface ThemeContextValue {
   theme: ThemeChoice;
@@ -19,7 +20,6 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-const storageKey = "domorium-theme";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeChoice>(readStoredTheme);
@@ -42,7 +42,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [resolvedTheme]);
 
   const setTheme = useCallback((value: ThemeChoice) => {
-    localStorage.setItem(storageKey, value);
+    localStorage.setItem(THEME_KEY, value);
     setThemeState(value);
   }, []);
 
@@ -65,7 +65,7 @@ export function useTheme(): ThemeContextValue {
 }
 
 function readStoredTheme(): ThemeChoice {
-  const value = localStorage.getItem(storageKey);
+  const value = localStorage.getItem(THEME_KEY);
   return value === "light" || value === "dark" || value === "system"
     ? value
     : "system";

@@ -1,9 +1,9 @@
 # Domorium — GEDCOM Web Editor
 
-The [Domorium homepage](https://domorium.com/) combines direct links to the
-VS Code, Obsidian, and JetBrains integrations with a working browser editor for
-`.ged` and `.gedcom` files. Files are read, parsed, validated, edited, and
-downloaded entirely in the browser; their contents are never uploaded.
+This app builds both [domorium.com](https://domorium.com/) and the editor at
+[/editor/](https://domorium.com/editor/) — a browser editor for `.ged` and
+`.gedcom` files. Files are read, parsed, validated, edited, and downloaded
+entirely in the browser; their contents are never uploaded.
 
 The interface is built with React, Tailwind CSS, and official shadcn components.
 It includes a preloaded example, local file opening, diagnostics navigation,
@@ -50,6 +50,28 @@ It is also the reference host for [`@domorium/codemirror`](../../packages/codemi
 — whatever a CodeMirror host needs from the shared packages should be visible in
 this app's small amount of code.
 
+## The pages around the editor
+
+`/` is a landing page and `/vscode/`, `/obsidian/` and `/jetbrains/` are a page
+per integration. They are React components rendered to HTML at build time and
+ship no JavaScript to the browser; the editor itself stays a single-page app at
+`/editor/`, served from the one hand-written `editor/index.html`.
+
+One place declares a page: `src/site/routes.tsx` — its path, title, description,
+structured data and body. The same table is the source of `sitemap.xml`, so a
+page cannot be published without appearing in it, and `src/site/paths.ts` holds
+the paths every internal link is built from. Marketplace addresses stay in
+`src/constants/links.ts` and are read by the integration pages.
+
+Adding a page means adding a row to that table. `npm run build` then writes it,
+and the dev server renders it from the same table, so `/` is not a 404 in
+development.
+
+`public/og.png` is the social card every page points at, rendered from
+`scripts/og-card.svg` — which embeds its heading face, so it renders the same
+with nothing installed. Open it in a browser and capture it at 1200×630 to make
+the PNG again; no build step reads either file.
+
 ## Development
 
 ```bash
@@ -69,11 +91,17 @@ npm run build:libs                 # from the repository root
 | Command             | Description                         |
 | ------------------- | ----------------------------------- |
 | `npm run dev`       | Vite dev server                     |
-| `npm run build`     | Type-check, then production bundle  |
+| `npm run build`     | Type-check, bundle, then prerender  |
 | `npm run preview`   | Serve the production bundle locally |
 | `npm run typecheck` | Type-check without emitting         |
 
 ## Deployment
+
+`npm run build` runs three steps: Vite builds the editor's shell, a second Vite
+build compiles `src/site/entry-server.tsx` into `.ssr/`, and
+`scripts/prerender-site.mjs` writes the pages, `sitemap.xml`, `robots.txt` and
+`404.html` into `dist`. It locates the compiled stylesheet through the build
+manifest, so every page links the one the editor links.
 
 Merging to `main` deploys the site to GitHub Pages at `domorium.com` when
 web-related paths change; there is no release tag. The repository's Pages custom

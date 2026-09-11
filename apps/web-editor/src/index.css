@@ -2,14 +2,13 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@import "@fontsource-variable/roboto-slab";
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-serif);
+  --font-heading: var(--font-sans);
   --font-sans: "Inter Variable", sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
   /* The shell's fixed bands, from the Studio Utility design system. */
@@ -57,7 +56,6 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --font-serif: "Roboto Slab Variable", serif;
 }
 
 :root {
@@ -131,6 +129,136 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* The theme button is the pages' only JavaScript. Until the script in the head
+   has run there is no choice to show and nothing for a click to do, so the
+   button is not there; then one icon per choice is. */
+[data-theme-toggle] {
+  display: none;
+}
+
+:root[data-theme-choice] [data-theme-toggle] {
+  display: inline-flex;
+}
+
+/* These rules sit outside Tailwind's layers and so beat its utilities, which is
+   why the copy the footer keeps for narrow screens says so here rather than
+   wearing `sm:hidden`. */
+@media (width >= 40rem) {
+  /* At least as specific as the rule above it: a media query adds none. */
+  :root[data-theme-choice] [data-theme-toggle][data-theme-compact] {
+    display: none;
+  }
+}
+
+[data-theme-icon] {
+  display: none;
+}
+
+:root[data-theme-choice="system"] [data-theme-icon="system"],
+:root[data-theme-choice="light"] [data-theme-icon="light"],
+:root[data-theme-choice="dark"] [data-theme-icon="dark"] {
+  display: block;
+}
+
+/* The pages have a palette of their own — warm paper, charcoal, forest green —
+   and the editor keeps the Studio Utility tokens it was built on. They meet at
+   the frame the landing page runs the editor in, where the editor is dark by
+   design either way. */
+html:has(.site),
+.site {
+  --background: #f7f6f2;
+  --foreground: #1a1c1a;
+  --card: #ffffff;
+  --card-foreground: #1a1c1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1c1a;
+  --primary: #263428;
+  --primary-foreground: #ffffff;
+  --secondary: #ecebe6;
+  --secondary-foreground: #1a1c1a;
+  --muted: #ecebe6;
+  --muted-foreground: #595c58;
+  --accent: #e9efe9;
+  --accent-foreground: #2d5233;
+  --border: #e5e3dc;
+  --input: #e5e3dc;
+  --ring: #263428;
+}
+
+html.dark:has(.site),
+.dark .site {
+  /* A shade deeper than the mockups' own surface, so a drawn window still
+     reads as a window rather than as a hole in the page. */
+  --background: #101213;
+  --foreground: #f2f1ec;
+  --card: #1a1d1f;
+  --card-foreground: #f2f1ec;
+  --popover: #1a1d1f;
+  --popover-foreground: #f2f1ec;
+  /* The same hue as the forest, lifted until it carries on near-black. */
+  --primary: oklch(0.82 0.08 148);
+  --primary-foreground: #151718;
+  --secondary: #22262a;
+  --secondary-foreground: #f2f1ec;
+  --muted: #22262a;
+  --muted-foreground: #a3a8a2;
+  --accent: #22312a;
+  --accent-foreground: oklch(0.86 0.07 148);
+  --border: #2a2f34;
+  --input: #2a2f34;
+  --ring: oklch(0.82 0.08 148);
+}
+
+/* The mockups of other editors are dark whatever the reader chose: they stand
+   for someone else's window, not for this page. */
+.editor-mock {
+  --mock-surface: #151718;
+  --mock-panel: #1d2124;
+  --mock-line: #2d3238;
+  --mock-text: #d8dee4;
+  --mock-dim: #8b949e;
+  --mock-tag: #79c0ff;
+  --mock-xref: #d29922;
+  --mock-value: #7ee787;
+}
+
+/* Radios rather than an anchor per frame: a fragment navigation drags the page
+   up to the frame it just changed. The track is as wide as the window and its
+   frames overflow it, so one step is the window's whole width. */
+.shots-track {
+  transform: translateX(calc(var(--frame, 0) * -100%));
+  transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.shots-pick:nth-of-type(2):checked ~ .shots-window .shots-track {
+  --frame: 1;
+}
+
+.shots-pick:nth-of-type(3):checked ~ .shots-window .shots-track {
+  --frame: 2;
+}
+
+/* The radios are off-screen, so state and focus are drawn on their labels. */
+.shots-pick:nth-of-type(1):checked ~ .shots-dots li:nth-child(1) label,
+.shots-pick:nth-of-type(2):checked ~ .shots-dots li:nth-child(2) label,
+.shots-pick:nth-of-type(3):checked ~ .shots-dots li:nth-child(3) label {
+  border-color: var(--foreground);
+  color: var(--foreground);
+}
+
+.shots-pick:nth-of-type(1):focus-visible ~ .shots-dots li:nth-child(1) label,
+.shots-pick:nth-of-type(2):focus-visible ~ .shots-dots li:nth-child(2) label,
+.shots-pick:nth-of-type(3):focus-visible ~ .shots-dots li:nth-child(3) label {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shots-track {
+    transition: none;
+  }
+}
+
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -146,13 +274,16 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-serif;
+    @apply font-sans;
   }
 }
 
-html,
-body,
-#root {
+/* The editor fills the viewport and scrolls inside its own panes. The pages
+   around it are prose and scroll as a page does, so the shell asks for this
+   rather than every document getting it. */
+html:has(.app-shell),
+body.app-shell,
+body.app-shell #root {
   height: 100%;
   min-height: 0;
   overflow: hidden;

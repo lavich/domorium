@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "./App";
 import { LINKS } from "./constants/links";
+import { PATHS } from "./site/paths";
 import type { GedcomEditorHandle } from "./editor/types";
 
 vi.mock("./editor/GedcomEditor", () => ({
@@ -113,23 +114,25 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  window.history.replaceState({}, "", "/");
 });
 
 describe("App", () => {
-  it("renders direct product links and a local-first editor", async () => {
+  it("renders links into the site and a local-first editor", async () => {
     render(<App />);
 
+    // The marketplace links live on those pages now; the header leads to them.
     expect(
       (await screen.findByRole("link", { name: /VS Code/i })).getAttribute(
         "href",
       ),
-    ).toBe(LINKS.vscode);
+    ).toBe(PATHS.vscode);
     expect(
       screen.getByRole("link", { name: /Obsidian/i }).getAttribute("href"),
-    ).toBe(LINKS.obsidian);
+    ).toBe(PATHS.obsidian);
     expect(
       screen.getByRole("link", { name: /JetBrains/i }).getAttribute("href"),
-    ).toBe(LINKS.jetbrains);
+    ).toBe(PATHS.jetbrains);
     expect(
       screen.getByRole("link", { name: /GitHub/i }).getAttribute("href"),
     ).toBe(LINKS.github);
@@ -142,6 +145,26 @@ describe("App", () => {
     expect(screen.getByRole("tab", { name: /example\.ged/i })).not.toBeNull();
     expect(
       screen.queryByRole("complementary", { name: /GEDCOM problems/i }),
+    ).toBeNull();
+  });
+
+  // Embedded in the landing page's widget, the page around the frame already
+  // carries the wordmark, the links and the theme: a second set of them inside
+  // the frame reads as a broken page.
+  it("leaves the site's own chrome to the page around an embedded editor", async () => {
+    window.history.replaceState({}, "", `${PATHS.editor}?embed=1`);
+    render(<App />);
+
+    expect(await screen.findByRole("button", { name: "File" })).not.toBeNull();
+    expect(screen.queryByRole("link", { name: /VS Code/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /GitHub/i })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /colour theme|color theme/i }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("heading", {
+        name: /open, validate and edit GEDCOM locally/i,
+      }),
     ).toBeNull();
   });
 

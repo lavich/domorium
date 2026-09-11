@@ -11,11 +11,15 @@ export function StatusBar() {
   const surface = file ? surfaces.get(file.kind) : undefined;
 
   return (
-    <footer className="flex h-(--shell-status-height) shrink-0 items-center justify-between border-t bg-muted/30 px-3 font-mono text-[12px] text-muted-foreground">
-      <div className="flex items-center gap-3">
+    <footer className="flex h-(--shell-status-height) shrink-0 items-center justify-between gap-3 overflow-hidden border-t bg-muted/30 px-3 font-mono text-[12px] whitespace-nowrap text-muted-foreground">
+      <div className="flex min-w-0 items-center gap-3 overflow-hidden">
         {report ? joined(surface?.facts?.(report) ?? []) : null}
       </div>
-      <span>read locally — nothing is uploaded</span>
+      {/* The band is one line tall, so on a narrow viewport — the widget's
+          frame, or a phone — the facts about the document keep the room. */}
+      <span className="hidden shrink-0 sm:inline">
+        read locally — nothing is uploaded
+      </span>
     </footer>
   );
 }

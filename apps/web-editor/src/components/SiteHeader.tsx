@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LINKS } from "@/constants/links";
+import { INTEGRATIONS } from "@/site/integrations";
 
 import { type ThemeChoice, useTheme } from "./ThemeProvider";
 
@@ -41,13 +42,18 @@ const modifierKey =
     ? "\u2318"
     : "Ctrl+";
 
-const productLinks = [
-  { label: "VS Code", href: LINKS.vscode },
-  { label: "Obsidian", href: LINKS.obsidian },
-  { label: "JetBrains", href: LINKS.jetbrains },
-] as const;
+// Into the site, not out of it: each page holds the install for its platform.
+const productLinks = INTEGRATIONS.map((integration) => ({
+  label: integration.name,
+  href: integration.path,
+}));
 
 export interface SiteHeaderProps {
+  /**
+   * Inside the landing page's widget the page around the frame carries the
+   * wordmark, the links and the theme, so the header keeps only the File menu.
+   */
+  embedded?: boolean;
   onOpenFile(): void;
   onDownload(): void;
   onReset(): void;
@@ -58,6 +64,7 @@ export interface SiteHeaderProps {
 }
 
 export function SiteHeader({
+  embedded = false,
   onOpenFile,
   onDownload,
   onReset,
@@ -70,13 +77,15 @@ export function SiteHeader({
   return (
     <header className="grid shrink-0 items-center gap-2 border-b px-4 py-3 md:grid-cols-[1fr_auto_1fr] lg:px-6">
       <div className="flex items-center gap-1 justify-self-start">
-        <a
-          href="/"
-          className="flex items-center gap-2 font-heading font-semibold"
-        >
-          <img src="/favicon.svg" alt="" className="size-7" />
-          <span>Domorium</span>
-        </a>
+        {embedded ? null : (
+          <a
+            href="/"
+            className="flex items-center gap-2 font-heading font-semibold"
+          >
+            <img src="/favicon.svg" alt="" className="size-7" />
+            <span>Domorium</span>
+          </a>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
             File
@@ -122,65 +131,66 @@ export function SiteHeader({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <h1 className="text-center font-heading text-sm font-semibold sm:text-base">
-        Open, validate and edit GEDCOM locally
-      </h1>
-      <nav
-        aria-label="Domorium products and project links"
-        className="flex flex-wrap items-center justify-center gap-1 md:justify-self-end"
-      >
-        {productLinks.map((product) => (
+      {embedded ? null : (
+        <h1 className="text-center font-heading text-sm font-semibold sm:text-base">
+          Open, validate and edit GEDCOM locally
+        </h1>
+      )}
+      {embedded ? null : (
+        <nav
+          aria-label="Domorium products and project links"
+          className="flex flex-wrap items-center justify-center gap-1 md:justify-self-end"
+        >
+          {productLinks.map((product) => (
+            <a
+              key={product.label}
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+              href={product.href}
+            >
+              {product.label}
+            </a>
+          ))}
           <a
-            key={product.label}
             className={buttonVariants({ variant: "ghost", size: "sm" })}
-            href={product.href}
+            href={LINKS.github}
             target="_blank"
             rel="noreferrer"
           >
-            {product.label}
+            <CodeIcon data-icon="inline-start" />
+            GitHub
             <ExternalLinkIcon data-icon="inline-end" />
           </a>
-        ))}
-        <a
-          className={buttonVariants({ variant: "ghost", size: "sm" })}
-          href={LINKS.github}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <CodeIcon data-icon="inline-start" />
-          GitHub
-          <ExternalLinkIcon data-icon="inline-end" />
-        </a>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Choose color theme"
-              />
-            }
-          >
-            <SunMoonIcon />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              {themeItems.map((item) => (
-                <DropdownMenuItem
-                  key={item.value}
-                  onClick={() => setTheme(item.value)}
-                >
-                  <item.icon />
-                  {item.label}
-                  {theme === item.value ? (
-                    <CheckIcon className="ml-auto" />
-                  ) : null}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </nav>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Choose color theme"
+                />
+              }
+            >
+              <SunMoonIcon />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuGroup>
+                {themeItems.map((item) => (
+                  <DropdownMenuItem
+                    key={item.value}
+                    onClick={() => setTheme(item.value)}
+                  >
+                    <item.icon />
+                    {item.label}
+                    {theme === item.value ? (
+                      <CheckIcon className="ml-auto" />
+                    ) : null}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </nav>
+      )}
     </header>
   );
 }

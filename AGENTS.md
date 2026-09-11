@@ -69,6 +69,20 @@ Violating one means the change is at the wrong layer. Move the code instead.
   type, the symbol itself. A comment repeating a guard is not a second guard,
   and it goes stale while the guard does not.
 
+## The site's photographs
+
+The pages under `apps/web-editor/src/site` show photographs of the plugins
+running, taken from the applications themselves and committed to
+`apps/web-editor/public/shots`. They go stale when an interface changes.
+[The runbook](apps/web-editor/scripts/shots/README.md) holds the tools and the
+order to use them in — take a frame with it rather than inventing a capture, so
+a new frame sits beside the old ones without a seam.
+
+- A frame may only show an ability `src/site/abilities.ts` marks for that place.
+  A picture cannot claim what the comparison denies.
+- Read a frame's pixels before believing its theme. Two applications here will
+  quietly ignore a theme set from a config file.
+
 ## Releases
 
 - **Never create or push a release tag without explicit approval**, however green

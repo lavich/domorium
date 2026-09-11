@@ -12,6 +12,7 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      "**/.ssr/**",
       "**/dist-stdio/**",
       "**/out/**",
       "**/build/**",
