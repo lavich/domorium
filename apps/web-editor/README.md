@@ -54,8 +54,16 @@ this app's small amount of code.
 
 `/` is a landing page and `/vscode/`, `/obsidian/` and `/jetbrains/` are a page
 per integration. They are React components rendered to HTML at build time and
-ship no JavaScript to the browser; the editor itself stays a single-page app at
-`/editor/`, served from the one hand-written `editor/index.html`.
+ship no framework runtime; the editor itself stays a single-page app at
+`/editor/`, served from `editor/index.html` — a hand-written file whose head is
+completed by `src/site/shellHead.ts` with the theme script and the structured
+data the route table declares for it.
+
+The pages and the editor wear one header: `src/site/Chrome.tsx` holds it, and
+`/editor/` renders the component the pages render. The editor's File menu stands
+at the left of the tab row instead, where it is reachable whatever panel is open
+and however narrow the window is; `?embed=1` takes the header off altogether for
+the frame the landing page runs the editor in.
 
 One place declares a page: `src/site/routes.tsx` — its path, title, description,
 structured data and body. The same table is the source of `sitemap.xml`, so a
