@@ -2,6 +2,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import shell from "../../editor/index.html?raw";
+import { THEME_KEY, themeScript } from "../theme";
+import { renderDocument } from "./document";
 import {
   abilitiesOf,
   DISTINCT_ABILITIES,
@@ -10,6 +12,7 @@ import {
 } from "./abilities";
 import { INTEGRATIONS } from "./integrations";
 import { notFound, PATHS, pageAt, pages, SITE_ORIGIN } from "./routes";
+import { injectShellHead } from "./shellHead";
 import { cardOf, EDITOR_POSTER, shotsOf } from "./shots";
 
 const declared = Object.values(PATHS) as string[];
@@ -90,6 +93,22 @@ describe("the site's pages", () => {
   // The fixed, unscrollable layout is the editor's; a page of prose has to scroll.
   it("marks the shell as the application's own layout", () => {
     expect(shell).toContain('<body class="app-shell">');
+  });
+
+  it("gives the shell the theme and the structured data the table declares", () => {
+    const head = injectShellHead(shell);
+    expect(head).toContain(THEME_KEY);
+    expect(head).toContain(themeScript);
+    for (const entry of pageAt(PATHS.editor)?.structuredData ?? []) {
+      expect(head).toContain(JSON.stringify(entry));
+    }
+  });
+
+  it("adds nothing to a page the table renders: it carries both already", () => {
+    for (const page of pages.filter((candidate) => candidate.body)) {
+      const html = renderDocument(page, { stylesheet: "/assets/site.css" });
+      expect(injectShellHead(html), page.path).toBe(html);
+    }
   });
 
   it("renders every page body it declares", () => {
