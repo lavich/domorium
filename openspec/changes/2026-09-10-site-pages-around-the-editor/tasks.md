@@ -160,12 +160,12 @@
       file a frame names exists in `public/` and nothing there goes unused, alt
       text is present and is not a copy of the caption, and the platform page
       renders every caption, every alt text and the reduced-motion pair.
-- [ ] 4h.6 Follow up on what the shooting verified: **Find Usages does surface
-      the language server's references in a JetBrains IDE** — five results for one
-      cross-reference, one definition and four references. `abilities.ts` leaves
-      that cell empty as unverified, and the page says an unmarked cell means
-      exactly that. The row can now be claimed for JetBrains, and rename should
-      be checked the same way before it is.
+- [x] 4h.6 Claim for JetBrains what the shooting verified: Find Usages surfaces
+      the language server's references — five results for one cross-reference,
+      one definition and four references — so the row is marked "in Find Usages"
+      rather than with a mark, since the read and write highlights the same row
+      names were not checked. Rename stays unclaimed until it is tried the same
+      way.
 
 - [x] 4h.7 Take the drawings off the landing page too, and delete them: the
       hero's collage shows the three windows photographed, each card shows a

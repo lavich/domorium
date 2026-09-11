@@ -36,7 +36,11 @@ export const DISTINCT_ABILITIES: Ability[] = [
   {
     label: "Find all references, with read and write highlights",
     chip: "Find references",
-    where: { [PATHS.vscode]: true, [PATHS.obsidian]: true },
+    where: {
+      [PATHS.vscode]: true,
+      [PATHS.obsidian]: true,
+      [PATHS.jetbrains]: "in Find Usages",
+    },
   },
   {
     label: "Safe cross-reference rename, as one undoable edit",
