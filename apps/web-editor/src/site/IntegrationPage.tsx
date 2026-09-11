@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 import { abilitiesOf } from "./abilities";
 import { INTEGRATIONS, type Integration } from "./integrations";
 import { PlaceMark } from "./Marks";
-import { PageShell, pill } from "./PageShell";
+import { pill } from "./Chrome";
+import { PageShell } from "./PageShell";
 import { Photographs } from "./Photographs";
 import { PATHS } from "./paths";
 

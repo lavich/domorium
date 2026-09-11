@@ -4,7 +4,13 @@ import { INTEGRATIONS } from "./integrations";
 import { IntegrationPage } from "./IntegrationPage";
 import { LandingPage } from "./LandingPage";
 import { NotFoundPage } from "./NotFoundPage";
-import { absolute, PATHS, SITE_ORIGIN, type SitePath } from "./paths";
+import { absolute, PATHS, type SitePath } from "./paths";
+import {
+  breadcrumb,
+  EDITOR_SOFTWARE,
+  EDITOR_STRUCTURED_DATA,
+  software,
+} from "./schema";
 import { widgetScript } from "./widget";
 
 export { absolute, PATHS, SITE_ORIGIN, type SitePath } from "./paths";
@@ -19,47 +25,6 @@ export interface SitePage {
   /** Inline scripts this page needs, beyond the theme every page carries. */
   scripts?: string[];
 }
-
-const publisher = {
-  "@type": "Organization",
-  name: "Domorium",
-  url: SITE_ORIGIN,
-};
-
-const software = ({
-  path,
-  ...fields
-}: {
-  name: string;
-  description: string;
-  path: SitePath;
-  operatingSystem: string;
-  softwareRequirements?: string;
-}) => ({
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  applicationCategory: "DeveloperApplication",
-  applicationSubCategory: "Genealogy",
-  isAccessibleForFree: true,
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-  publisher,
-  url: absolute(path),
-  ...fields,
-});
-
-const breadcrumb = (name: string, path: SitePath) => ({
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    {
-      "@type": "ListItem",
-      position: 1,
-      name: "Domorium",
-      item: absolute(PATHS.home),
-    },
-    { "@type": "ListItem", position: 2, name, item: absolute(path) },
-  ],
-});
 
 export const pages: SitePage[] = [
   {
@@ -76,13 +41,7 @@ export const pages: SitePage[] = [
         description:
           "Editor tooling for GEDCOM: validation, autocomplete and navigation for .ged files.",
       },
-      software({
-        name: "Domorium GEDCOM Editor",
-        description:
-          "A browser editor for .ged files that parses and validates them on your own machine.",
-        path: PATHS.editor,
-        operatingSystem: "Web",
-      }),
+      EDITOR_SOFTWARE,
     ],
     body: <LandingPage />,
     scripts: [widgetScript],
@@ -92,16 +51,7 @@ export const pages: SitePage[] = [
     title: "GEDCOM editor in the browser — Domorium",
     description:
       "Open a .ged file in your browser, read every structural problem on the line that caused it, and save it back. Nothing is uploaded and nothing is converted.",
-    structuredData: [
-      software({
-        name: "Domorium GEDCOM Editor",
-        description:
-          "A browser editor for .ged files that parses and validates them on your own machine.",
-        path: PATHS.editor,
-        operatingSystem: "Web",
-      }),
-      breadcrumb("GEDCOM editor", PATHS.editor),
-    ],
+    structuredData: EDITOR_STRUCTURED_DATA,
     body: null,
   },
   ...INTEGRATIONS.map((integration) => ({

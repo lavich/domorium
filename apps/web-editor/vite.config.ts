@@ -4,6 +4,15 @@ import { defineConfig, type Plugin } from "vite";
 import { fileURLToPath } from "node:url";
 
 import { PATHS } from "./src/site/paths";
+import { injectShellHead } from "./src/site/shellHead";
+
+/** Completes the editor's hand-written head. */
+function shellHead(): Plugin {
+  return {
+    name: "domorium:shell-head",
+    transformIndexHtml: injectShellHead,
+  };
+}
 
 /**
  * `vite build` writes only the editor's shell; the pages around it are rendered
@@ -43,7 +52,7 @@ function sitePages(): Plugin {
 
 export default defineConfig({
   base: "/",
-  plugins: [react(), tailwindcss(), sitePages()],
+  plugins: [react(), tailwindcss(), sitePages(), shellHead()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

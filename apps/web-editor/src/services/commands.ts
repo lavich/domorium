@@ -7,6 +7,10 @@ export interface Commands {
   "workspace.openFile"(): void;
   "workspace.openFolder"(): void;
   "workspace.chooseFile"(path: string): void;
+  "workspace.save"(): void;
+  "workspace.saveAs"(): void;
+  "workspace.download"(): void;
+  "workspace.reset"(): void;
   "workspace.activateTab"(path: string): void;
   "workspace.closeTab"(path: string): void;
   "workspace.followLink"(link: DocumentLink): void;
