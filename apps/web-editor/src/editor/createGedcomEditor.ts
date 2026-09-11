@@ -1,9 +1,11 @@
 import { keymap } from "@codemirror/view";
 import {
+  closeSearchPanel,
   highlightSelectionMatches,
   openSearchPanel,
   search,
   searchKeymap,
+  searchPanelOpen,
 } from "@codemirror/search";
 import {
   defaultHighlightStyle,
@@ -31,6 +33,7 @@ import {
 } from "@domorium/codemirror";
 
 import { recordPreviewTooltip, setRecordPreview } from "./recordPreviewTooltip";
+import { searchPanel } from "./searchPanel";
 import type {
   GedcomEditorHandle,
   WebDiagnostic,
@@ -158,7 +161,7 @@ export function createGedcomEditor(
           view.dispatch({ effects: setRecordPreview.of(preview) }),
         hide: (view) => view.dispatch({ effects: setRecordPreview.of(null) }),
       }),
-      search({ top: true }),
+      search({ top: true, createPanel: searchPanel }),
       highlightSelectionMatches(),
       keymap.of(searchKeymap),
       EditorView.updateListener.of((update) => {
@@ -201,11 +204,16 @@ export function createGedcomEditor(
         effects: theme.reconfigure(editorTheme(value)),
       });
     },
-    openSearch: () => {
-      if (editor) {
-        openSearchPanel(editor);
-        editor.focus();
+    toggleSearch: () => {
+      if (!editor) {
+        return;
       }
+      if (searchPanelOpen(editor.state)) {
+        closeSearchPanel(editor);
+        editor.focus();
+        return;
+      }
+      openSearchPanel(editor);
     },
   };
 }

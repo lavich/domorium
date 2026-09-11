@@ -48,8 +48,8 @@ class GedcomModel {
     return this.handle !== null;
   }
 
-  openSearch(): void {
-    this.handle?.openSearch();
+  toggleSearch(): void {
+    this.handle?.toggleSearch();
   }
 
   focusDiagnostic(diagnostic: WebDiagnostic): void {
@@ -140,7 +140,7 @@ export const gedcomSurface = {
       icon: SearchIcon,
       label: () => "Find in file",
       enabled: () => model.attached,
-      activate: () => model.openSearch(),
+      activate: () => model.toggleSearch(),
     });
   },
 };

@@ -166,6 +166,65 @@ describe("createGedcomEditor", () => {
 
   // Download reads the text when it needs it, which is the reason the app can
   // stop being handed a copy on every keystroke.
+  // Opened from the rail, the button holds the focus and the document still has
+  // the caret, so a search that does not take it turns the next keystroke into
+  // an edit to the file.
+  it("puts the caret in the search field when search is opened", async () => {
+    const parent = editor({});
+
+    handle?.toggleSearch();
+
+    await vi.waitFor(() => {
+      const field = parent.querySelector("[main-field]");
+      expect(field).not.toBeNull();
+      expect(document.activeElement).toBe(field);
+    });
+  });
+
+  it("closes the panel when the same control is pressed again", async () => {
+    const parent = editor({});
+
+    handle?.toggleSearch();
+    await vi.waitFor(() =>
+      expect(parent.querySelector(".cm-search")).not.toBeNull(),
+    );
+    handle?.toggleSearch();
+
+    expect(parent.querySelector(".cm-search")).toBeNull();
+  });
+
+  it("offers no case, regexp or whole-word control", async () => {
+    const parent = editor({});
+
+    handle?.toggleSearch();
+
+    await vi.waitFor(() =>
+      expect(parent.querySelector("[main-field]")).not.toBeNull(),
+    );
+    expect(parent.querySelectorAll("input[type=checkbox]")).toHaveLength(0);
+  });
+
+  it("names every control it draws, for a pointer and for a reader", async () => {
+    const parent = editor({});
+
+    handle?.toggleSearch();
+
+    await vi.waitFor(() =>
+      expect(parent.querySelector("[main-field]")).not.toBeNull(),
+    );
+    const named = [...parent.querySelectorAll(".cm-search button")].map(
+      (button) => button.getAttribute("aria-label"),
+    );
+    expect(named).toEqual([
+      "Previous match",
+      "Next match",
+      "Select every match",
+      "Replace this match",
+      "Replace every match",
+      "Close the search",
+    ]);
+  });
+
   it("hands out the current text on request", () => {
     const parent = editor({});
     const view = EditorView.findFromDOM(parent)!;

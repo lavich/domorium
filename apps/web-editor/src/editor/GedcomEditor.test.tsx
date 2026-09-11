@@ -15,7 +15,7 @@ const firstHandle: GedcomEditorHandle = {
   destroy: vi.fn(),
   focusDiagnostic: vi.fn(),
   setTheme: vi.fn(),
-  openSearch: vi.fn(),
+  toggleSearch: vi.fn(),
 };
 
 const secondHandle: GedcomEditorHandle = {
@@ -23,7 +23,7 @@ const secondHandle: GedcomEditorHandle = {
   destroy: vi.fn(),
   focusDiagnostic: vi.fn(),
   setTheme: vi.fn(),
-  openSearch: vi.fn(),
+  toggleSearch: vi.fn(),
 };
 
 beforeEach(() => {

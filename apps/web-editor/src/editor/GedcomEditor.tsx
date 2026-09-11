@@ -78,7 +78,7 @@ export const GedcomEditor = forwardRef<GedcomEditorHandle, GedcomEditorProps>(
         focusDiagnostic: (diagnostic) =>
           handleRef.current?.focusDiagnostic(diagnostic),
         setTheme: (value) => handleRef.current?.setTheme(value),
-        openSearch: () => handleRef.current?.openSearch(),
+        toggleSearch: () => handleRef.current?.toggleSearch(),
       }),
       [],
     );
