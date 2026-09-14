@@ -1,7 +1,7 @@
 package domorium.jetbrains
 
-import com.intellij.execution.configurations.PathEnvironmentVariableUtil
 import com.intellij.openapi.util.SystemInfo
+import com.intellij.util.EnvironmentUtil
 import java.io.File
 
 internal const val MISSING_NODE_MESSAGE =
@@ -13,5 +13,15 @@ internal object NodeRuntime {
     private val NAMES: List<String> =
         if (SystemInfo.isWindows) listOf("node.exe", "node.cmd", "node") else listOf("node")
 
-    fun locate(find: (String) -> File? = { PathEnvironmentVariableUtil.findInPath(it) }): File? = NAMES.firstNotNullOfOrNull(find)
+    fun locate(find: (String) -> File? = { findOnPath(it, EnvironmentUtil.getValue("PATH")) }): File? = NAMES.firstNotNullOfOrNull(find)
+
+    fun findOnPath(
+        name: String,
+        path: String?,
+    ): File? =
+        path
+            ?.splitToSequence(File.pathSeparatorChar)
+            ?.filter { it.isNotBlank() }
+            ?.map { File(it, name) }
+            ?.firstOrNull { it.isFile && it.canExecute() }
 }
