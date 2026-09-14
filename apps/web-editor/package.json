@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@base-ui/react": "^1.7.0",
+    "@base-ui/react": "^1.8.0",
     "@codemirror/autocomplete": "^6.18.7",
     "@codemirror/commands": "^6.9.2",
     "@codemirror/language": "^6.12.0",
