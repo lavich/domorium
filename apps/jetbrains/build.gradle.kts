@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -109,6 +111,18 @@ tasks.named("processResources") {
 tasks.test {
     dependsOn(copyLspStdioBundle)
     useJUnitPlatform()
+
+    // ThreadLeakTracker names the leaked thread and dumps its stack in the
+    // assertion message, and Gradle prints only the first line of it. That
+    // left every CI failure reading `java.lang.AssertionError at
+    // ThreadLeakTracker.java:200` against a test that starts no threads —
+    // the tracker checks at teardown and blames whichever test ran nearby —
+    // so the leak has been rerun past since #362 rather than diagnosed.
+    testLogging {
+        exceptionFormat = TestExceptionFormat.FULL
+        showStackTraces = true
+        events(TestLogEvent.FAILED)
+    }
 }
 
 tasks.withType<KotlinCompile> {

@@ -170,6 +170,15 @@ jobs:
           LEFTHOOK: 0
       - run: ./gradlew spotlessCheck test buildPlugin verifyPlugin
         working-directory: apps/jetbrains
+      # The console carries the assertion; the HTML report carries the
+      # standard output and the thread dump around it.
+      - name: Keep the test report when the build fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jetbrains-test-report
+          path: apps/jetbrains/build/reports/tests/test/
+          retention-days: 7
       # The IntelliJ Platform plugin unpacks a whole IDE here, which grew the
       # cache entry to 4.9 GB. Restoring it has cost between 1m35s and a
       # 10-minute stall that timed out and was thrown away, against the 24
