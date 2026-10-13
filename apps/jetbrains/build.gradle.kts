@@ -4,9 +4,9 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.4.20"
+    id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("org.jetbrains.intellij.platform") version "2.19.0"
-    id("com.diffplug.spotless") version "8.10.3"
+    id("com.diffplug.spotless") version "8.10.4"
 }
 
 group = "domorium"
