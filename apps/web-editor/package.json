@@ -27,7 +27,7 @@
     "clsx": "^2.1.1",
     "cordis": "^4.0.0-rc.10",
     "lucide-react": "^1.54.0",
-    "react": "^19.2.8",
+    "react": "^19.3.1",
     "react-dom": "^19.3.0",
     "react-resizable-panels": "^4.14.3",
     "shadcn": "^4.21.4",
