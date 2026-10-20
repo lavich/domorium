@@ -5,10 +5,11 @@ import com.intellij.spellchecker.tokenizer.LanguageSpellchecking
 import com.intellij.spellchecker.tokenizer.SpellcheckingStrategy
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.redhat.devtools.lsp4ij.LanguageServersRegistry
+import com.redhat.devtools.lsp4ij.LanguageServiceAccessor
 
 class GedcomRuntimeIntegrationTest : BasePlatformTestCase() {
     fun testGedcomPlainTextPsiSelectsGedcomIntegrations() {
-        val psiFile = myFixture.configureByText(GedcomFileType, "0 HEAD\n1 SOUR GEDCOM\n0 TRLR\n")
+        val psiFile = myFixture.addFileToProject("tree.ged", "0 HEAD\n1 SOUR GEDCOM\n0 TRLR\n")
 
         assertSame(GedcomFileType, psiFile.virtualFile.fileType)
         assertSame(GedcomFileType, psiFile.fileType)
@@ -22,5 +23,6 @@ class GedcomRuntimeIntegrationTest : BasePlatformTestCase() {
         assertSame(SpellcheckingStrategy.EMPTY_TOKENIZER, strategy.getTokenizer(psiFile))
 
         assertTrue(LanguageServersRegistry.getInstance().isFileSupported(psiFile))
+        assertEmpty(LanguageServiceAccessor.getInstance(project).startedServers)
     }
 }
