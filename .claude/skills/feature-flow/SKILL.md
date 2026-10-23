@@ -9,6 +9,13 @@ description: Use when the user asks for a new capability or a substantial change
 hold the project rules this flow relies on — layers, invariants, the check gate,
 commits, comments, documentation. Read them first; this skill only orders the work.
 
+Every edit, commit and push in this flow happens in an Orca worktree — the plan,
+the implementation, fixes after review. The main checkout stays on `main` and only
+pulls. To continue a branch that already exists on the remote:
+`orca worktree create --name <name> --no-parent --setup run --base-branch origin/<branch> --json`,
+then push with `git push origin HEAD:<branch>` — Orca names the local branch
+differently.
+
 Report to the user briefly, in their language. Decisions that change what a user of
 an editor host sees — diagnostics, quick fixes, hover, the site — are the user's.
 
