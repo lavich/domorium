@@ -113,11 +113,9 @@ tasks.test {
     useJUnitPlatform()
 
     // ThreadLeakTracker names the leaked thread and dumps its stack in the
-    // assertion message, and Gradle prints only the first line of it. That
-    // left every CI failure reading `java.lang.AssertionError at
-    // ThreadLeakTracker.java:200` against a test that starts no threads —
-    // the tracker checks at teardown and blames whichever test ran nearby —
-    // so the leak has been rerun past since #362 rather than diagnosed.
+    // assertion message, and Gradle prints only the first line of it. The
+    // tracker also blames whichever test ran nearby, so the thread name is
+    // the only pointer to the culprit.
     testLogging {
         exceptionFormat = TestExceptionFormat.FULL
         showStackTraces = true
