@@ -2,6 +2,13 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## 1.7.2
+
+- **The language client is version 11.** It fixes failures when the GEDCOM
+  server starts or stops, races when its connection closes, and the cleanup
+  when the server process exits before it connects. No protocol message
+  changed.
+
 ## 1.7.1
 
 - **A 5.5.1 date names its calendar where the specification puts it.** The escape

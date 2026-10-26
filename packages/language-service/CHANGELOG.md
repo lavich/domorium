@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
-## Unreleased
+## 2.2.0
 
 - **`readDate(payload)` reads a date the way the diagnostics do.** The parse
   behind "Value for DATE should be a valid date value" reached no consumer, so
