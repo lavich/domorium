@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 2.1.0
 
 - **`readDate(payload)` answers what a date says, not only whether it is
   valid.** A consumer wanting the year of a birth had to parse the payload
