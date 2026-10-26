@@ -1,9 +1,11 @@
 import { LINKS } from "@/constants/links";
 
 import { PATHS, type SitePath } from "./paths";
+import type { Product } from "./versions";
 
 export interface Integration {
   path: SitePath;
+  product: Product;
   /** The nav's label, and the anchor text a sibling page uses. */
   name: string;
   /** Per ADR-0007 a platform page leads with GEDCOM and the platform. */
@@ -27,6 +29,7 @@ export interface Integration {
 export const INTEGRATIONS: Integration[] = [
   {
     path: PATHS.vscode,
+    product: "vscode",
     name: "VS Code",
     repository: LINKS.github,
     note: "A web extension as well, so it runs in vscode.dev with no local runtime.",
@@ -58,6 +61,7 @@ export const INTEGRATIONS: Integration[] = [
   },
   {
     path: PATHS.obsidian,
+    product: "obsidian",
     name: "Obsidian",
     repository: "https://github.com/lavich/domorium-obsidian",
     note: "Desktop and mobile. Vault files are edited in place, never converted to Markdown.",
@@ -90,6 +94,7 @@ export const INTEGRATIONS: Integration[] = [
   },
   {
     path: PATHS.jetbrains,
+    product: "jetbrains",
     name: "JetBrains",
     repository: LINKS.github,
     note: "Any IntelliJ-platform IDE. Needs Node.js on PATH.",

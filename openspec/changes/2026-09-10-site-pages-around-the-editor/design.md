@@ -272,7 +272,8 @@ longer carries the Visual Studio Code icon at all, which is the sharpest
 available reminder that a permissive icon set does not make a trademark
 permissive. The footer says what the marks are doing here: naming the
 applications these plugins run in, next to the sentence that already says this
-project is nobody's but its own.
+project is nobody's but its own. GitHub's mark, added later on the links to the
+repository, names only where the source is kept.
 
 ### One table, and six rows out of it
 
@@ -326,7 +327,8 @@ and a label per radio for the dots. Every frame is in the HTML whichever is on
 screen, so a crawler reads three captions and three `alt` texts per page rather
 than one picture it cannot see. This keeps the pages' two scripts at two: a
 carousel with state would be a third, and ADR-0015 is already the one exception
-this change is willing to hold.
+this change is willing to hold. (A third came later, for the products' versions,
+on the terms of ADR-0017.)
 
 _What was tried first:_ a scroll-snapping row with an anchor per frame. It is
 less markup and it swipes on a phone, but `<a href="#frame-2">` is a fragment

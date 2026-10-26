@@ -1,9 +1,10 @@
-import { ExternalLinkIcon, MoonIcon, SunIcon, SunMoonIcon } from "lucide-react";
+import { MoonIcon, SunIcon, SunMoonIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { LINKS } from "@/constants/links";
 
 import { NAV_LINKS, SiteHeader } from "./Chrome";
+import { GitHubMark } from "./Marks";
 import { PATHS, type SitePath } from "./paths";
 
 export interface PageShellProps {
@@ -48,8 +49,8 @@ export function PageShell({ current, children }: PageShellProps) {
                 rel="noreferrer"
                 className="flex items-center gap-1.5 py-1 text-muted-foreground hover:text-foreground"
               >
+                <GitHubMark className="size-3.5 shrink-0" />
                 GitHub
-                <ExternalLinkIcon className="size-3.5" />
               </a>
             </nav>
             {/* The theme is reachable from the footer too: on a phone the
@@ -73,7 +74,8 @@ export function PageShell({ current, children }: PageShellProps) {
             Intellectual Reserve, Inc. FAMILYSEARCH GEDCOM™ and FAMILYSEARCH®
             are trademarks of Intellectual Reserve, Inc. Visual Studio Code,
             Obsidian and the JetBrains marks belong to their owners and name
-            here only the applications these plugins run in.
+            here only the applications these plugins run in; GitHub's mark names
+            only where the source is kept.
           </p>
         </div>
       </footer>

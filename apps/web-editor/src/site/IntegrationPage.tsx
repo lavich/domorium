@@ -9,6 +9,7 @@ import { pill } from "./Chrome";
 import { PageShell } from "./PageShell";
 import { Photographs } from "./Photographs";
 import { PATHS } from "./paths";
+import { VersionSlot } from "./versions";
 
 export function IntegrationPage({ integration }: { integration: Integration }) {
   const siblings = INTEGRATIONS.filter(
@@ -23,6 +24,7 @@ export function IntegrationPage({ integration }: { integration: Integration }) {
             <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 font-mono text-[0.7rem] text-accent-foreground">
               <PlaceMark place={integration.path} className="size-3.5" />
               {integration.name}
+              <VersionSlot product={integration.product} />
             </span>
             <h1 className="mt-6 max-w-[24ch] text-[2.1rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl">
               {integration.heading}

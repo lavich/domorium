@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import shell from "../../editor/index.html?raw";
 import { THEME_KEY, themeScript } from "../theme";
-import { renderDocument } from "./document";
+import { renderDocument, renderNotFound } from "./document";
 import {
   abilitiesOf,
   DISTINCT_ABILITIES,
@@ -14,6 +14,7 @@ import { INTEGRATIONS } from "./integrations";
 import { notFound, PATHS, pageAt, pages, SITE_ORIGIN } from "./routes";
 import { injectShellHead } from "./shellHead";
 import { cardOf, EDITOR_POSTER, shotsOf } from "./shots";
+import { versionsScript } from "./versions";
 
 const declared = Object.values(PATHS) as string[];
 
@@ -184,10 +185,34 @@ describe("the site's pages", () => {
     );
   });
 
-  it("carries no page script where there is nothing to arm", () => {
-    for (const path of [PATHS.vscode, PATHS.obsidian, PATHS.jetbrains]) {
-      expect(pageAt(path)?.scripts ?? [], path).toHaveLength(0);
+  it("carries the versions script exactly where a page has a version to show", () => {
+    for (const page of pages) {
+      const markup = page.body ? renderToStaticMarkup(page.body) : "";
+      expect(page.scripts ?? [], page.path).toEqual(
+        markup.includes("data-version=")
+          ? expect.arrayContaining([versionsScript])
+          : expect.not.arrayContaining([versionsScript]),
+      );
     }
+    expect(pageAt(PATHS.editor)?.scripts ?? []).toEqual([]);
+    expect(renderNotFound({ stylesheet: "/site.css" })).not.toContain(
+      "data-version",
+    );
+  });
+
+  it("gives each product a hidden version slot, and no text without the script", () => {
+    const landing = renderToStaticMarkup(pageAt(PATHS.home)?.body);
+    for (const integration of INTEGRATIONS) {
+      expect(landing, integration.name).toContain(
+        `data-version="${integration.product}" hidden=""`,
+      );
+      expect(
+        renderToStaticMarkup(pageAt(integration.path)?.body),
+        integration.name,
+      ).toContain(`data-version="${integration.product}" hidden=""`);
+    }
+    expect(landing).toContain('data-version="codemirror" hidden=""');
+    expect(landing).not.toMatch(/data-version="[^"]+"[^>]*>[^<]/);
   });
 
   it("presents each integration on the landing page, not only in the nav", () => {
@@ -280,6 +305,22 @@ describe("the site's pages", () => {
     }
     const platform = renderToStaticMarkup(pageAt(PATHS.vscode)?.body);
     expect(platform).toContain(`data-mark="${PATHS.editor}"`);
+  });
+
+  it("links to the project on GitHub by GitHub's mark, in the header and the footer", () => {
+    for (const page of pages.filter((candidate) => candidate.body)) {
+      const links = [
+        ...renderDocument(page, { stylesheet: "/site.css" }).matchAll(
+          /<a [^>]*href="https:\/\/github\.com\/lavich\/domorium"[^>]*>.*?<\/a>/gs,
+        ),
+      ]
+        .map(([link]) => link)
+        .filter((link) => link.includes("GitHub"));
+      expect(links, page.path).toHaveLength(2);
+      for (const link of links) {
+        expect(link, page.path).toContain('data-mark="github"');
+      }
+    }
   });
 
   it("shows the landing page photographs rather than drawings of them", () => {

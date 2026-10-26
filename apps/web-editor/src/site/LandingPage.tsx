@@ -12,6 +12,7 @@ import { PlaceDetail, PlaceWindow } from "./Photographs";
 import { pill } from "./Chrome";
 import { PageShell } from "./PageShell";
 import { PATHS } from "./paths";
+import { VersionSlot } from "./versions";
 
 const facts = ["Open source", "Cross-platform", "Nothing is uploaded"];
 
@@ -126,6 +127,7 @@ export function LandingPage() {
                     </h3>
                     <span className="rounded-full bg-accent px-2.5 py-0.5 font-mono text-[0.65rem] text-accent-foreground">
                       released
+                      <VersionSlot product={integration.product} />
                     </span>
                   </div>
                   <p className="text-sm leading-relaxed text-muted-foreground">
@@ -192,7 +194,10 @@ export function LandingPage() {
                 "h-10 shrink-0 border bg-card hover:bg-muted",
               )}
             >
-              On npm
+              <span>
+                On npm
+                <VersionSlot product="codemirror" className="font-mono" />
+              </span>
               <ExternalLinkIcon className="size-3.5" />
             </a>
           </div>
