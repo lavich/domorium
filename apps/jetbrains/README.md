@@ -13,7 +13,18 @@ with confidence using structure-aware suggestions and diagnostics as you type.
 - Hover information for GEDCOM tags
 - Go to definition for cross-references
 - Code folding for records and nested structures
+- Media links that follow a file renamed or moved in the IDE
 - Support for `.ged` and `.gedcom` files
+
+## Renaming a media file
+
+Rename or move a photograph in the IDE, and every open GEDCOM document that names
+it by a relative path is rewritten. A GEDCOM 7 document cannot name a file above
+its own folder, so a move there leaves it unchanged and a warning names it.
+
+Not followed: GEDCOM files that are not open, with no warning about them (#457),
+renaming a folder, renaming outside the IDE, and absolute paths such as
+`C:\photos\a.jpg` or `file:///…`.
 
 ## Requirements
 

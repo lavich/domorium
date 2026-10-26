@@ -46,7 +46,8 @@ the server connects.
 ## Renaming a media file
 
 Rename or move a photograph in the Explorer, and every open GEDCOM document that
-names it by a relative path is rewritten as part of the rename. A GEDCOM 7
+names it by a relative path is rewritten as part of the rename, and undo in the
+Explorer reverts both. A GEDCOM 7
 document cannot name a file above its own folder, so a move there leaves it
 unchanged and a warning names it. GEDCOM files that are not open are not
 rewritten: if a line of one of them ends in the file's name, a warning names them.
