@@ -11,6 +11,7 @@ import {
   EDITOR_STRUCTURED_DATA,
   software,
 } from "./schema";
+import { versionsScript } from "./versions";
 import { widgetScript } from "./widget";
 
 export { absolute, PATHS, SITE_ORIGIN, type SitePath } from "./paths";
@@ -44,7 +45,7 @@ export const pages: SitePage[] = [
       EDITOR_SOFTWARE,
     ],
     body: <LandingPage />,
-    scripts: [widgetScript],
+    scripts: [widgetScript, versionsScript],
   },
   {
     path: PATHS.editor,
@@ -69,6 +70,7 @@ export const pages: SitePage[] = [
       breadcrumb(integration.heading, integration.path),
     ],
     body: <IntegrationPage integration={integration} />,
+    scripts: [versionsScript],
   })),
 ];
 
