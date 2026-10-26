@@ -4,6 +4,13 @@ All notable changes to `@domorium/language-service` are documented here.
 
 ## Unreleased
 
+- **`readDate(payload)` reads a date the way the diagnostics do.** The parse
+  behind "Value for DATE should be a valid date value" reached no consumer, so
+  each re-read the payload of a `DATE` symbol on its own and could place
+  `1401 BCE` in AD 1401 or a Hebrew year in the Gregorian calendar. The service
+  now answers with a `GedcomDateValue` — modifier, the date or two ends of a
+  range, each with its calendar and epoch — or `null` where the date is not
+  valid (#378).
 - **A `FORM` of `constructor` no longer answers with something that is not a
   media kind.** The tables `getMediaAt` consults to decide whether a file is an
   `image`, `audio`, `video`, a `document` or `unknown` were indexed by text the

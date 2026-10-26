@@ -82,6 +82,41 @@ Ranges rather than text: the caller already holds the document, and slicing it i
 cheaper than a second copy of the same bytes. `maxLines` is what the host has room
 for, and `truncated` says whether the record outran it.
 
+## The date a payload names
+
+`readDate` reads a date payload with the grammar the diagnostics apply, in the
+document's own dialect, so a caller that wants a year need not parse the text
+again.
+
+```typescript
+const service = new GedcomLanguageService("0 HEAD\n1 GEDC\n2 VERS 7.0\n0 TRLR");
+
+const date = service.readDate("ABT HEBREW 5761");
+// date?.modifier — "ABT"; also CAL, EST, BEF, AFT, BET, FROM, TO, and 5.5.1's INT
+// date?.dates   — [{ calendar: "HEBREW", year: 5761 }]
+// date?.text    — "ABT HEBREW 5761"
+
+service.readDate("FROM JULIAN 1670 TO 1800")?.dates;
+// [{ calendar: "JULIAN", year: 1670 }, { calendar: "GREGORIAN", year: 1800 }]
+
+service.readDate("12 AUG 1401 BCE")?.dates;
+// [{ calendar: "GREGORIAN", day: 12, month: "AUG", year: 1401, epoch: "BCE" }]
+```
+
+A year is counted in its own calendar and epoch, and is never converted. Each
+end of a range or period names its own calendar, as both specifications bind a
+calendar to the date after it. A 5.5.1 document answers with the GEDCOM 7
+spelling of a calendar, `BCE` for every spelling of its epoch, the later year of
+a dual year as `dualYear`, and the text of a phrase as `phrase`.
+
+The payload is read as a date value, whichever field it came from. It answers
+`null` wherever `getDiagnostics()` would reject it as one — `32 FEB 2020` among
+them — for an empty payload, for a 5.5.1 date in a calendar its schema gives no
+months, and for a document that is not checked against a specification: one
+whose header names no version, an unsupported version, or a Personal Ancestral
+File. A field that takes only an exact date or a period may still be rejected
+where `readDate` reads its payload.
+
 ## The media a line refers to
 
 `getMediaAt` answers, for one position, the file that line refers to — the

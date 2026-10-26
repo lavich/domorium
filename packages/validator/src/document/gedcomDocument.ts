@@ -23,6 +23,10 @@ import {
   type GedcomCompletion,
 } from "../completion/completion";
 import type { Position } from "../types/position";
+import type { GedcomDateValue } from "../types/date";
+import { readDateValueV7 } from "../validator/date-v7";
+import { readDateValue551 } from "../validator/date-551";
+import { impossibleDays } from "../validator/calendarDays";
 
 export interface CreateDocumentOptions {
   /** Text that is part of a document rather than one of its own. */
@@ -50,6 +54,7 @@ export class GedcomDocument {
   private pointers = new Map<string, ASTNode[]>();
   private errors: GedcomError[] = [];
   private scheme: GedcomScheme | undefined;
+  private validatedAs: GedcomDialect | undefined;
   private resolution: VersionResolution | undefined;
   private requiresSchmaDeclaration = false;
   private extensions: ExtensionContext = emptyExtensions();
@@ -123,6 +128,7 @@ export class GedcomDocument {
     this.nodes = nodes;
     this.pointers = pointers;
     this.scheme = undefined;
+    this.validatedAs = undefined;
     this.requiresSchmaDeclaration = false;
     this.extensions = emptyExtensions();
     this.validateLevels(this.errors, nodes);
@@ -194,11 +200,13 @@ export class GedcomDocument {
     nodes: ASTNode[],
     choice: {
       scheme: GedcomScheme;
+      dialect: GedcomDialect;
       requiresSchmaDeclaration: boolean;
     },
     options: CreateDocumentOptions,
   ): void {
     this.scheme = choice.scheme;
+    this.validatedAs = choice.dialect;
     this.requiresSchmaDeclaration = choice.requiresSchmaDeclaration;
     const { context, errors } = collectExtensions(
       nodes,
@@ -311,6 +319,26 @@ export class GedcomDocument {
       position,
       lineText,
     });
+  }
+
+  /**
+   * Null wherever the document's own diagnostics would not call the payload a
+   * valid date value, and for one with nothing to read: an empty payload, a
+   * 5.5.1 date in a calendar the schema gives no months, or a document not
+   * checked against any dialect.
+   */
+  readDate(value: string): GedcomDateValue | null {
+    const text = value.trim();
+    if (
+      !this.scheme ||
+      !this.validatedAs ||
+      impossibleDays(this.scheme, text).length > 0
+    ) {
+      return null;
+    }
+    return this.validatedAs === "7.0"
+      ? readDateValueV7(text, this.scheme, this.extensions)
+      : readDateValue551(this.scheme, text);
   }
 
   getErrors(): GedcomError[] {

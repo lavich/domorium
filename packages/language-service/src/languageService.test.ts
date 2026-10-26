@@ -79,6 +79,29 @@ describe("GedcomLanguageService", () => {
     );
   });
 
+  it("reads a date the way it validates one, so 1401 BCE is not AD 1401", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "0 @I1@ INDI",
+        "1 BIRT",
+        "2 DATE 1401 BCE",
+        "0 TRLR",
+        "",
+      ].join("\n"),
+    );
+    const [, person] = service.getDocumentSymbols();
+    const payload = person?.children[0]?.children[0]?.detail ?? "";
+
+    expect(service.getDiagnostics()).toEqual([]);
+    expect(service.readDate(payload)).toStrictEqual({
+      dates: [{ calendar: "GREGORIAN", year: 1401, epoch: "BCE" }],
+      text: "1401 BCE",
+    });
+  });
+
   it("hands out the current document, not the one it opened with", () => {
     const service = new GedcomLanguageService(GEDCOM);
     const before = service.getDocument();

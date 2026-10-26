@@ -1,6 +1,7 @@
 import {
   GedcomDocument,
   type CreateDocumentOptions,
+  type GedcomDateValue,
   type VersionResolution,
 } from "@domorium/validator";
 
@@ -94,6 +95,10 @@ export class GedcomLanguageService {
 
   getVersionResolution(): VersionResolution | undefined {
     return this.document.getVersionResolution();
+  }
+
+  readDate(payload: string): GedcomDateValue | null {
+    return this.document.readDate(payload);
   }
 
   getCompletionItems(position: Position): CompletionItem[] {
