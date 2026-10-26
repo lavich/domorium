@@ -1,10 +1,10 @@
-import { ExternalLinkIcon, MoonIcon, SunIcon, SunMoonIcon } from "lucide-react";
+import { MoonIcon, SunIcon, SunMoonIcon } from "lucide-react";
 
 import { LINKS } from "@/constants/links";
 import { cn } from "@/lib/utils";
 
 import { INTEGRATIONS } from "./integrations";
-import { PlaceMark } from "./Marks";
+import { GitHubMark, PlaceMark } from "./Marks";
 import { PATHS, type SitePath } from "./paths";
 
 export const NAV_LINKS = [
@@ -78,7 +78,7 @@ export function ProjectLink() {
       aria-label="The project on GitHub"
       className={chromeAction}
     >
-      <ExternalLinkIcon className="size-4" />
+      <GitHubMark className="size-4 shrink-0" />
     </a>
   );
 }

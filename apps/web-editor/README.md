@@ -59,6 +59,11 @@ ship no framework runtime; the editor itself stays a single-page app at
 completed by `src/site/shellHead.ts` with the theme script and the structured
 data the route table declares for it.
 
+The landing and integration pages also carry a small inline script that asks
+shields.io (`img.shields.io`) for the current version of each product and shows
+it beside the product; without an answer the page reads as its HTML does.
+ADR-0017 sets the terms for any page script that asks a third party.
+
 The pages and the editor wear one header: `src/site/Chrome.tsx` holds it, and
 `/editor/` renders the component the pages render. The editor's File menu stands
 at the left of the tab row instead, where it is reachable whatever panel is open
