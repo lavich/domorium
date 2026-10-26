@@ -9,6 +9,7 @@ export {
   decodeFileTarget,
   encodeFileTarget,
 } from "./libs/links/retargetFileLinks";
+export { mentionsFile } from "./libs/links/mentionsFile";
 export { ReferenceIndex } from "./libs/references/referenceIndex";
 export {
   legend as semanticTokenLegend,

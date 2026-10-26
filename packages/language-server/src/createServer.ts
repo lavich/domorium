@@ -20,7 +20,10 @@ import type {
   DocumentLinkParams,
   CodeAction,
   CodeActionParams,
+  RenameFilesParams,
+  TextDocumentEdit,
   WorkspaceEdit,
+  WorkspaceFolder,
 } from "vscode-languageserver";
 import {
   CodeActionKind,
@@ -28,6 +31,7 @@ import {
   DiagnosticSeverity,
   ErrorCodes,
   MarkupKind,
+  MessageType,
   ResponseError,
   SemanticTokensBuilder,
   TextDocumentSyncKind,
@@ -41,9 +45,12 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 import {
   GedcomLanguageService,
+  decodeFileTarget,
   semanticTokenLegend,
   type MediaReference,
 } from "@domorium/language-service";
+
+import { pathFromDocument } from "./pathFromDocument";
 
 /** As much as the CodeMirror hosts show by default, so the two agree. */
 const HOVER_MAX_LINES = 24;
@@ -51,10 +58,21 @@ const HOVER_MAX_LINES = 24;
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
   const cache = new Map<string, GedcomLanguageService>();
+  let workspaceFolders: WorkspaceFolder[] = [];
 
-  connection.onInitialize(() => {
+  connection.onInitialize((params) => {
+    workspaceFolders =
+      params.workspaceFolders ??
+      (params.rootUri ? [{ uri: params.rootUri, name: "" }] : []);
     return {
       capabilities: {
+        workspace: {
+          fileOperations: {
+            willRename: {
+              filters: [{ pattern: { glob: "**/*", matches: "file" } }],
+            },
+          },
+        },
         textDocumentSync: TextDocumentSyncKind.Incremental,
         inlayHintProvider: true,
         foldingRangeProvider: true,
@@ -173,6 +191,72 @@ export const createServer = (connection: Connection) => {
       ],
     };
   });
+
+  connection.workspace.onWillRenameFiles(
+    (params: RenameFilesParams): WorkspaceEdit | null => {
+      const renamedTo = new Map(
+        params.files.map(({ oldUri, newUri }) => [oldUri, newUri]),
+      );
+      const changes: TextDocumentEdit[] = [];
+      const stranded: string[] = [];
+      for (const document of documents.all()) {
+        const service =
+          cache.get(document.uri) ??
+          new GedcomLanguageService(document.getText(), document.version);
+        const documentAfter = renamedTo.get(document.uri) ?? document.uri;
+        const named = namesLinked(service);
+        const edits = [];
+        for (const { oldUri, newUri } of params.files) {
+          const from = pathFromDocument(document.uri, oldUri);
+          if (from === undefined || !named.has(lastSegment(from))) {
+            continue;
+          }
+          const to = pathFromDocument(documentAfter, newUri);
+          if (from === to) {
+            continue;
+          }
+          const result =
+            to === undefined
+              ? service.moveFileLinks(from, from)
+              : service.moveFileLinks(from, to);
+          if (result.ok && result.edit.edits.length === 0) {
+            continue;
+          }
+          if (!result.ok || to === undefined) {
+            stranded.push(
+              `${displayPath(document.uri)} (${displayPath(oldUri)})`,
+            );
+            edits.length = 0;
+            break;
+          }
+          edits.push(...result.edit.edits);
+        }
+        if (edits.length > 0) {
+          changes.push({
+            textDocument: { uri: document.uri, version: document.version },
+            edits,
+          });
+        }
+      }
+      if (stranded.length > 0) {
+        void connection.sendNotification("window/showMessage", {
+          type: MessageType.Warning,
+          message: `These GEDCOM documents cannot name the renamed file in its new place and were left unchanged: ${stranded.join(", ")}.`,
+        });
+      }
+      return changes.length > 0 ? { documentChanges: changes } : null;
+    },
+  );
+
+  function displayPath(uri: string): string {
+    for (const folder of workspaceFolders) {
+      const path = pathFromDocument(`${folder.uri.replace(/\/$/u, "")}/_`, uri);
+      if (path !== undefined && path !== ".." && !path.startsWith("../")) {
+        return path;
+      }
+    }
+    return uri;
+  }
 
   connection.onDocumentLinks((params: DocumentLinkParams): DocumentLink[] => {
     const service = cache.get(params.textDocument.uri);
@@ -350,9 +434,27 @@ export const createServer = (connection: Connection) => {
     await connection.sendDiagnostics({ uri: change.document.uri, diagnostics });
   });
 
+  documents.onDidClose(({ document }) => {
+    cache.delete(document.uri);
+  });
+
   documents.listen(connection);
   connection.listen();
 };
+
+function namesLinked(service: GedcomLanguageService): Set<string> {
+  const dialect = service.getDocument().getDialect();
+  return new Set(
+    service
+      .getDocumentLinks()
+      .filter((link) => link.kind === "file-relative")
+      .map((link) => lastSegment(decodeFileTarget(link.targetText, dialect))),
+  );
+}
+
+function lastSegment(path: string): string {
+  return path.split(/[/\\]/u).at(-1) ?? "";
+}
 
 /** A NOTE carries arbitrary text, so a record can hold a fence of its own. */
 function fenced(record: string): string {

@@ -202,5 +202,10 @@ break or other control character, or spaces at either end. A document that does 
 never a refusal. A move to where the file already is changes nothing, which lets
 a host count the payloads a refused move left behind.
 
+A host that cannot open a document can still ask whether it may name a file:
+`mentionsFile(text, path)` answers whether a line of the text ends in the file's
+name, as written or percent-escaped. It is a search, not a parse, so it can count a
+note that ends in the name, and it misses a path split across `CONC` lines.
+
 `retargetFileLinks` is deprecated: it answers the same edit but writes a target
 the dialect cannot carry instead of refusing it.

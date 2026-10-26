@@ -26,7 +26,8 @@
   },
   "activationEvents": [
     "onLanguage:gedcom",
-    "workspaceContains:**/*.ged"
+    "workspaceContains:**/*.ged",
+    "workspaceContains:**/*.gedcom"
   ],
   "capabilities": {
     "untrustedWorkspaces": {

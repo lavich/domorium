@@ -17,6 +17,7 @@ with confidence using structure-aware suggestions and diagnostics as you type.
 - Find all XREF references with read/write highlights
 - Safe, atomic XREF rename
 - Clickable web and local-file links
+- Media links that follow a file renamed or moved in the editor
 - Quick fixes for broken references and invalid levels
 - Code folding for records and nested structures
 - Support for `.ged` and `.gedcom` files
@@ -41,6 +42,21 @@ above, where no language server can reach. The language server then refines the
 same colours with what it knows that a grammar cannot — which XREF declares a
 record and which refers to one. The two agree, so nothing changes appearance when
 the server connects.
+
+## Renaming a media file
+
+Rename or move a photograph in the Explorer, and every open GEDCOM document that
+names it by a relative path is rewritten as part of the rename. A GEDCOM 7
+document cannot name a file above its own folder, so a move there leaves it
+unchanged and a warning names it. GEDCOM files that are not open are not
+rewritten: if a line of one of them ends in the file's name, a warning names them.
+That is a search by name, not a reading of the file, so it can name a file whose
+note ends in the name, and it misses a path split across `CONC` lines, a name in
+other letter case, and anything under `node_modules`.
+
+Not followed: renaming a folder, renaming outside the editor (git, a terminal,
+another program), absolute paths such as `C:\photos\a.jpg` or `file:///…`, and a
+workspace whose GEDCOM files have a mixed-case extension such as `.Ged`.
 
 ## Installation
 
