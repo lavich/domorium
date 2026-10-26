@@ -11,6 +11,9 @@ All notable changes to `@domorium/language-service` are documented here.
   `WorkspaceEditResult | EditRefusal`, as `rename()` does, and refuses with the
   new code `unwritable-file-target` wherever the payload it would write would
   not read back as a link to the new place (#188).
+- **`mentionsFile(text, path)` says whether a GEDCOM text may name a file**,
+  without parsing it: whether a line ends in the file's name, as written or
+  percent-escaped. A host warns with it about documents it has not opened (#260).
 - `retargetFileLinks` is deprecated in favor of `moveFileLinks`, and answers as
   before.
 - `EditRefusalCode` gains `unwritable-file-target`. Code that switches over it

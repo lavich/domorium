@@ -72,10 +72,22 @@ class LspTestClient {
     ReturnType<typeof setTimeout>
   >();
   private readonly messageBuffer = new LspMessageBuffer();
+  readonly notifications: { method: string; params: unknown }[] = [];
 
   constructor(private readonly child: ReturnType<typeof spawn>) {
     child.stdout!.on("data", (data: Buffer) => {
       for (const message of this.messageBuffer.push(data)) {
+        if (
+          typeof message === "object" &&
+          message !== null &&
+          "method" in message &&
+          !("id" in message)
+        ) {
+          this.notifications.push(
+            message as { method: string; params: unknown },
+          );
+          continue;
+        }
         if (
           typeof message !== "object" ||
           message === null ||
@@ -564,4 +576,166 @@ describe("stdio entry point", () => {
       child.kill();
     }
   }, 15000);
+
+  it("rewrites the open documents that name a renamed file, and says which cannot follow", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const gedcom = (vers: string, payload: string) =>
+      `0 HEAD\n1 GEDC\n2 VERS ${vers}\n0 @O1@ OBJE\n1 FILE ${payload}\n0 TRLR`;
+    const open = (uri: string, text: string, version = 1) =>
+      client.notify("textDocument/didOpen", {
+        textDocument: { uri, languageId: "gedcom", version, text },
+      });
+    const rename = (id: number, files: [string, string][]) =>
+      client.request(id, "workspace/willRenameFiles", {
+        files: files.map(([oldUri, newUri]) => ({ oldUri, newUri })),
+      });
+    const warnings = () =>
+      client.notifications.filter(
+        ({ method, params }) =>
+          method === "window/showMessage" &&
+          (params as { type: number }).type === 2,
+      );
+
+    try {
+      await expect(
+        client.request(1, "initialize", {
+          processId: null,
+          rootUri: null,
+          capabilities: {},
+          workspaceFolders: [{ uri: "file:///w", name: "w" }],
+        }),
+      ).resolves.toMatchObject({
+        result: {
+          capabilities: {
+            workspace: {
+              fileOperations: {
+                willRename: {
+                  filters: [{ pattern: { glob: "**/*", matches: "file" } }],
+                },
+              },
+            },
+          },
+        },
+      });
+      client.notify("initialized", {});
+
+      open("file:///w/one/tree.ged", gedcom("7.0", "media/marie.jpg"), 4);
+      await expect(
+        rename(2, [
+          [
+            "file:///w/one/media/marie.jpg",
+            "file:///w/one/media/marie%20curie.jpg",
+          ],
+        ]),
+      ).resolves.toMatchObject({
+        result: {
+          documentChanges: [
+            {
+              textDocument: { uri: "file:///w/one/tree.ged", version: 4 },
+              edits: [{ newText: "media/marie%20curie.jpg" }],
+            },
+          ],
+        },
+      });
+
+      open("file:///w/two/family/tree.ged", gedcom("7.0", "media/a.jpg"));
+      open("file:///w/two/other.ged", gedcom("7.0", "family/media/a.jpg"));
+      const both = (await rename(3, [
+        [
+          "file:///w/two/family/media/a.jpg",
+          "file:///w/two/family/media/b.jpg",
+        ],
+      ])) as {
+        result: {
+          documentChanges: {
+            textDocument: { uri: string };
+            edits: { newText: string }[];
+          }[];
+        };
+      };
+      expect(
+        Object.fromEntries(
+          both.result.documentChanges.map(({ textDocument, edits }) => [
+            textDocument.uri,
+            edits.map(({ newText }) => newText),
+          ]),
+        ),
+      ).toEqual({
+        "file:///w/two/family/tree.ged": ["media/b.jpg"],
+        "file:///w/two/other.ged": ["family/media/b.jpg"],
+      });
+
+      open("file:///w/three/tree.ged", gedcom("7.0", "marie.jpg"));
+      await expect(
+        rename(4, [
+          ["file:///w/three/tree.ged", "file:///w/three/archive/tree.ged"],
+          ["file:///w/three/marie.jpg", "file:///w/three/archive/marie.jpg"],
+        ]),
+      ).resolves.toMatchObject({ result: null });
+
+      await expect(
+        rename(5, [["file:///w/absent.jpg", "file:///w/present.jpg"]]),
+      ).resolves.toMatchObject({ result: null });
+
+      open("file:///w/four/tree.ged", gedcom("7.0", "gone.jpg"));
+      client.notify("textDocument/didChange", {
+        textDocument: { uri: "file:///w/four/tree.ged", version: 2 },
+        contentChanges: [{ text: gedcom("7.0", "gone.jpg") }],
+      });
+      client.notify("textDocument/didClose", {
+        textDocument: { uri: "file:///w/four/tree.ged" },
+      });
+      await expect(
+        rename(6, [["file:///w/four/gone.jpg", "file:///w/four/here.jpg"]]),
+      ).resolves.toMatchObject({ result: null });
+      expect(warnings()).toEqual([]);
+
+      open("file:///w/five/family/tree.ged", gedcom("7.0", "media/marie.jpg"));
+      open("file:///w/five/family/old.ged", gedcom("5.5.1", "media/marie.jpg"));
+      await expect(
+        rename(7, [
+          [
+            "file:///w/five/family/media/marie.jpg",
+            "file:///w/five/photos/marie.jpg",
+          ],
+        ]),
+      ).resolves.toMatchObject({
+        result: {
+          documentChanges: [
+            {
+              textDocument: { uri: "file:///w/five/family/old.ged" },
+              edits: [{ newText: "../photos/marie.jpg" }],
+            },
+          ],
+        },
+      });
+      expect(warnings()).toHaveLength(1);
+      const [warning] = warnings();
+      const message = (warning?.params as { message: string }).message;
+      expect(message).toContain("five/family/tree.ged");
+      expect(message).not.toContain("old.ged");
+
+      open(
+        "file:///w/six/tree.ged",
+        `${gedcom("7.0", "media/a.jpg").replace("0 TRLR", "1 FILE media/b.jpg\n0 TRLR")}`,
+      );
+      await expect(
+        rename(8, [
+          ["file:///w/six/media/a.jpg", "file:///w/photos/a.jpg"],
+          ["file:///w/six/media/b.jpg", "file:///w/six/media/c.jpg"],
+        ]),
+      ).resolves.toMatchObject({ result: null });
+      expect(warnings()).toHaveLength(2);
+
+      open("file:///c%3A/seven/tree.ged", gedcom("5.5.1", "media/a.jpg"));
+      await expect(
+        rename(9, [["file:///c%3A/seven/media/a.jpg", "file:///d%3A/a.jpg"]]),
+      ).resolves.toMatchObject({ result: null });
+      expect(warnings()).toHaveLength(3);
+    } finally {
+      child.kill();
+    }
+  });
 });
