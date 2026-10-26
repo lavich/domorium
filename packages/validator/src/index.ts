@@ -12,3 +12,4 @@ export type {
   GedcomDialect,
   VersionResolution,
 } from "./validator/versionRegistry";
+export type { DateModifier, GedcomDate, GedcomDateValue } from "./types/date";

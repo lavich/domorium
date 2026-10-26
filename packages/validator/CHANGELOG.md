@@ -2,6 +2,18 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **`readDate(payload)` answers what a date says, not only whether it is
+  valid.** A consumer wanting the year of a birth had to parse the payload
+  again, and a regular expression that finds `1401` in `1401 BCE` or a year in
+  `ABT HEBREW 5761` hands on a wrong year as a fact. The document now returns
+  the parse its diagnostics apply: the modifier, each date with its calendar,
+  day, month, year and epoch, a 5.5.1 phrase and dual year, and the text. It
+  reads in the document's dialect, resolves a `SCHMA` alias of a month or a
+  calendar, and answers `null` for whatever the diagnostics reject as a date
+  value, including a day its month does not have (#378).
+
 ## 2.0.1
 
 - **A 5.5.1 date names its calendar where the specification puts it.** 5.5.1

@@ -210,6 +210,7 @@ the same instance so the two can be chained.
 | `getPointerTargetTag(node)`          | The record tag a pointer line must name: `FAMC` answers `FAM`.                                                                                                 |
 | `isRecordDeclaration(node)`          | Whether the node declares a record other lines can point at.                                                                                                   |
 | `getCompletions(position, lineText)` | What may be written at a position — `{ label, kind: "tag" \| "enum" \| "pointer", detail? }`.                                                                  |
+| `readDate(payload)`                  | What a date payload says, read in the document's dialect — or `null` where the diagnostics would reject it as a date value. See `GedcomDateValue`.             |
 
 ## Scripts
 
