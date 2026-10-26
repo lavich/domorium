@@ -1,6 +1,7 @@
 import { GedcomDocument } from "@domorium/validator";
 import { describe, expect, it } from "vitest";
 
+import { GedcomLanguageService } from "../../languageService";
 import { documentLinks } from "./documentLinks";
 import {
   decodeFileTarget,
@@ -166,5 +167,136 @@ describe("retargeting the files a document points at", () => {
     });
 
     expect(edit.edits).toEqual([]);
+  });
+});
+
+describe("moving a file, or saying why it cannot be written", () => {
+  const gedcom = (vers: string, payloads: string[]) =>
+    `0 HEAD\n1 GEDC\n2 VERS ${vers}\n0 @O1@ OBJE\n${payloads.map((p) => `1 FILE ${p}`).join("\n")}\n0 TRLR`;
+  const move = (text: string, from: string, to: string) =>
+    new GedcomLanguageService(text).moveFileLinks(from, to);
+  const applied = (text: string, from: string, to: string) => {
+    const result = move(text, from, to);
+    if (!result.ok) {
+      return result;
+    }
+    const lines = text.split("\n");
+    for (const { range, newText } of result.edit.edits) {
+      const line = lines[range.start.line] ?? "";
+      lines[range.start.line] =
+        line.slice(0, range.start.character) +
+        newText +
+        line.slice(range.end.character);
+    }
+    return lines.join("\n");
+  };
+
+  it("rewrites every payload naming the file, carrying the version", () => {
+    const service = new GedcomLanguageService(
+      gedcom("7.0", ["media/my%20photo.jpg", "media/my%20photo.jpg"]),
+      3,
+    );
+    const result = service.moveFileLinks(
+      "media/my photo.jpg",
+      "media/our photo.jpg",
+    );
+
+    expect(result.ok && result.edit.version).toBe(3);
+    expect(result.ok && result.edit.edits.map((e) => e.newText)).toEqual([
+      "media/our%20photo.jpg",
+      "media/our%20photo.jpg",
+    ]);
+  });
+
+  it("finds a 5.5.1 path written with backslashes and may move it upwards", () => {
+    expect(
+      applied(
+        gedcom("5.5.1", ["media\\photo.jpg"]),
+        "media/photo.jpg",
+        "../photos/photo.jpg",
+      ),
+    ).toBe(gedcom("5.5.1", ["../photos/photo.jpg"]));
+  });
+
+  it("answers an empty edit, not a refusal, when nothing names the file", () => {
+    const result = move(
+      gedcom("7.0", ["media/marie.jpg"]),
+      "media/absent.jpg",
+      "../photos/absent.jpg",
+    );
+
+    expect(result.ok && result.edit.edits).toEqual([]);
+  });
+
+  it("answers an empty edit in a document of no supported version", () => {
+    const text = gedcom("4.0", ["media/marie.jpg"]);
+
+    expect(move(text, "media/marie.jpg", "photos/marie.jpg")).toMatchObject({
+      ok: true,
+      edit: { edits: [] },
+    });
+    expect(move(text, "media/marie.jpg", "media/marie.jpg")).toMatchObject({
+      ok: true,
+      edit: { edits: [] },
+    });
+  });
+
+  it("answers a move to the same place with one edit per payload, changing nothing", () => {
+    const text = gedcom("7.0", ["%2E%2E/x.jpg", "  %2E%2E/x.jpg  "]);
+    const result = move(text, "../x.jpg", "./../x.jpg");
+
+    expect(result.ok && result.edit.edits).toHaveLength(2);
+    expect(applied(text, "../x.jpg", "./../x.jpg")).toBe(text);
+  });
+
+  it.each([
+    ["7.0", "../photos/marie.jpg"],
+    ["7.0", "/photos/marie.jpg"],
+    ["7.0", ""],
+    ["7.0", "media/\uD800.jpg"],
+    ["5.5.1", "C:/photos/marie.jpg"],
+    ["5.5.1", "photos:marie.jpg"],
+    ["5.5.1", "@x@.jpg"],
+    ["5.5.1", "media/a\nb.jpg"],
+    ["5.5.1", "media/a\u0000b.jpg"],
+    ["5.5.1", "media/\uD800.jpg"],
+    ["5.5.1", " marie.jpg"],
+  ] as const)("refuses a %s move to %j", (vers, to) => {
+    const result = move(
+      gedcom(vers, ["media/marie.jpg"]),
+      "media/marie.jpg",
+      to,
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      code: "unwritable-file-target",
+      message: expect.stringContaining(JSON.stringify(to)),
+    });
+  });
+
+  it.each([
+    ["7.0", "media/a#b?c.jpg", "media/a%23b%3Fc.jpg"],
+    ["7.0", "C:/x.jpg", "C%3A/x.jpg"],
+    ["5.5.1", "@x.jpg", "@x.jpg"],
+  ] as const)("writes a %s move to %j as %j", (vers, to, payload) => {
+    expect(
+      applied(gedcom(vers, ["media/marie.jpg"]), "media/marie.jpg", to),
+    ).toBe(gedcom(vers, [payload]));
+  });
+
+  it("refuses through the service while the deprecated answer still writes it", () => {
+    const service = new GedcomLanguageService(
+      gedcom("7.0", ["media/marie.jpg"]),
+    );
+
+    expect(
+      service.moveFileLinks("media/marie.jpg", "../photos/marie.jpg"),
+    ).toMatchObject({ ok: false, code: "unwritable-file-target" });
+    expect(
+      service
+        .retargetFileLinks("media/marie.jpg", "../photos/marie.jpg")
+        .edits.map((e) => e.newText),
+    ).toEqual(["../photos/marie.jpg"]);
   });
 });

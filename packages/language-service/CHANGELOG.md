@@ -2,6 +2,20 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## Unreleased
+
+- **`moveFileLinks(from, to)` refuses a move it cannot write.** Moving a
+  photograph above the folder of a GEDCOM 7 document gave `retargetFileLinks`
+  the target `../photos/marie.jpg`, which it wrote although this package does
+  not read a payload with a `..` segment as a link. The new method answers
+  `WorkspaceEditResult | EditRefusal`, as `rename()` does, and refuses with the
+  new code `unwritable-file-target` wherever the payload it would write would
+  not read back as a link to the new place (#188).
+- `retargetFileLinks` is deprecated in favor of `moveFileLinks`, and answers as
+  before.
+- `EditRefusalCode` gains `unwritable-file-target`. Code that switches over it
+  exhaustively needs a case for it.
+
 ## 2.2.0
 
 - **`readDate(payload)` reads a date the way the diagnostics do.** The parse
