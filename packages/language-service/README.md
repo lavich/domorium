@@ -26,8 +26,8 @@ const diagnostics = service.getDiagnostics();
 ```
 
 The service also provides completion, hover, definitions, folding ranges,
-document symbols, semantic tokens, indentation hints, and the edits that retarget
-a file a document points at. `getDocument()` returns the parse behind all of it.
+document symbols, semantic tokens, indentation hints, and the edits that follow
+a file a document points at when it moves. `getDocument()` returns the parse behind all of it.
 
 ## The quick fixes for a pointer that names nothing
 
@@ -170,3 +170,37 @@ The answer describes and does not fetch: reading the file, resolving it against 
 workspace, reaching the network, and measuring the image stay with the caller. A
 rectangle is carried as written even where it names an extent larger than its
 image, because the extent of an image is not knowable from the document.
+
+## Moving a file a document points at
+
+`moveFileLinks(from, to)` answers, for a file that was moved or renamed, the edit
+that points every `FILE` payload naming it at its new place — or a refusal where
+the document's dialect cannot write that place. Both paths are plain, relative to
+the document, and spelled the way a file system spells them.
+
+```typescript
+const tree = new GedcomLanguageService(
+  "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @O1@ OBJE\n1 FILE media/marie.jpg\n0 TRLR",
+);
+
+tree.moveFileLinks("media/marie.jpg", "media/marie curie.jpg");
+// { ok: true, edit: { version, edits: [{ range, newText: "media/marie%20curie.jpg" }] } }
+
+tree.moveFileLinks("media/marie.jpg", "../photos/marie.jpg");
+// { ok: false, code: "unwritable-file-target", message }
+
+tree.moveFileLinks("media/marie.jpg", "media/marie.jpg");
+// { ok: true, edit } — one edit per payload naming the file, each left as written
+```
+
+A move is written only where this package would read the result back as a link
+to the new place. In GEDCOM 7 that refuses a path that leaves the document's
+folder, one that starts at `/`, and an empty one. In 5.5.1 it refuses a path this
+package reads as absolute or as an address — a drive, a leading `/`, anything
+before a `:` — and one the line could not carry: a pointer such as `@x@`, a line
+break or other control character, or spaces at either end. A document that does not name the file answers an empty edit,
+never a refusal. A move to where the file already is changes nothing, which lets
+a host count the payloads a refused move left behind.
+
+`retargetFileLinks` is deprecated: it answers the same edit but writes a target
+the dialect cannot carry instead of refusing it.

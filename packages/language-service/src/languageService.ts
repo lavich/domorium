@@ -12,7 +12,10 @@ import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
 import { documentLinks } from "./libs/links/documentLinks";
-import { retargetFileLinks } from "./libs/links/retargetFileLinks";
+import {
+  moveFileLinks,
+  retargetFileLinks,
+} from "./libs/links/retargetFileLinks";
 import { mediaAt } from "./libs/media/mediaAt";
 import { ReferenceIndex } from "./libs/references/referenceIndex";
 import {
@@ -205,15 +208,30 @@ export class GedcomLanguageService {
     return documentLinks(this.document.getNodes(), this.document.getDialect());
   }
 
-  /** from and to are plain paths, relative to the document. */
+  /**
+   * from and to are plain paths, relative to the document.
+   *
+   * @deprecated Use `moveFileLinks`, which refuses a target the dialect cannot
+   * carry, such as `../` in GEDCOM 7, where this writes it.
+   */
   retargetFileLinks(from: string, to: string): WorkspaceEdit {
-    return retargetFileLinks({
+    return retargetFileLinks(this.fileMove(from, to));
+  }
+
+  /** from and to are plain paths, relative to the document. */
+  moveFileLinks(from: string, to: string): WorkspaceEditResult | EditRefusal {
+    return moveFileLinks(this.fileMove(from, to));
+  }
+
+  private fileMove(from: string, to: string) {
+    return {
       links: this.getDocumentLinks(),
       dialect: this.document.getDialect(),
+      text: this.text,
       from,
       to,
       version: this.version,
-    });
+    };
   }
 
   getCodeActions(

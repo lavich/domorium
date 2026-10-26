@@ -65,7 +65,8 @@ export type EditRefusalCode =
   | "identifier-collision"
   | "stale-document"
   | "ambiguous-fix"
-  | "unsupported-fix";
+  | "unsupported-fix"
+  | "unwritable-file-target";
 
 export interface EditRefusal {
   ok: false;
