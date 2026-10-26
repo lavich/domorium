@@ -49,4 +49,9 @@ export {
   type WorkspaceEdit,
   type WorkspaceEditResult,
 } from "./types";
-export type { VersionResolution } from "@domorium/validator";
+export type {
+  DateModifier,
+  GedcomDate,
+  GedcomDateValue,
+  VersionResolution,
+} from "@domorium/validator";
