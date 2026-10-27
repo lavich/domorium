@@ -98,17 +98,23 @@ Updated in the same change as the code it describes.
 - Public API changed → that package's `README.md` and its usage example. Nothing
   checks examples mechanically; read it and confirm every name still exists.
 - Layers or dependency direction changed → [docs/architecture.md](docs/architecture.md).
-- A decision expensive to reverse → an ADR from [the template](docs/adr/template.md)
-  and its row in [the index](docs/adr/README.md). Records are immutable; supersede.
+- An architecture decision — a package boundary, dependency direction, a protocol or
+  file format, release topology, a toolchain commitment, how the project is worked
+  on → an ADR from [the template](docs/adr/template.md) and its row in
+  [the index](docs/adr/README.md). Records are immutable; supersede.
+- A behaviour decision, however expensive to reverse → the capability's OpenSpec
+  spec, with the reasoning in the change's `design.md`; no ADR
+  ([ADR-0018](docs/adr/0018-adrs-for-architecture-specs-for-behaviour.md)).
 - A version changed → its changelog by hand: `CHANGELOG.md`, or `<change-notes>` in
   the JetBrains `plugin.xml`.
 - A [TODO.md](TODO.md) item completed → mark it there.
   [docs/roadmap.md](docs/roadmap.md) holds directions, not commitments.
-- Plans, designs and notes are temporary and not committed; durable decisions become
-  ADRs. Assistant session memory is not project documentation. `openspec/changes/` is
-  the exception: a change's proposal, design and tasks are committed with the work it
-  describes and moved under `openspec/changes/archive/` by `openspec archive` once it
-  lands. A decision expensive to reverse still becomes an ADR.
+- Plans, designs and notes are temporary and not committed; durable architecture
+  decisions become ADRs. Assistant session memory is not project documentation.
+  `openspec/changes/` is the exception: a change's proposal, design and tasks are
+  committed with the work it describes and moved under `openspec/changes/archive/`
+  by `openspec archive` once it lands. An architecture decision in a change still
+  becomes an ADR.
 
 `npm run check:docs` covers the mechanical half — formatting, links, a README per
 package, a changelog entry per release unit, a complete ADR index — but cannot judge

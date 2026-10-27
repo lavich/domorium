@@ -38,7 +38,8 @@ an editor host sees — diagnostics, quick fixes, hover, the site — are the us
 - If the change depends on another open change, say so and give the archive order
   in the first line of `tasks.md`. A MODIFIED requirement restates the full text as
   it stands after the change that archives first.
-- A decision expensive to reverse also gets an ADR from `docs/adr/template.md`.
+- An architecture decision also gets an ADR from `docs/adr/template.md`; a
+  behaviour decision stays in the spec and `design.md` (ADR-0018).
 - `openspec validate <name> --strict` and
   `npx prettier --check openspec/changes/<name>` pass.
 - Worktree status: `orca worktree set --worktree path:<path> --comment "…" --json`.

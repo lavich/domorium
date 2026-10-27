@@ -90,8 +90,10 @@ in [AGENTS.md](AGENTS.md#documentation) — they apply to human contributors
 identically — and the reasoning is in
 [ADR 0002](docs/adr/0002-documentation-in-repository.md). In short: a changed
 public API means an updated package README, a changed boundary means an updated
-architecture document, and a decision that would be expensive to reverse means a
-new ADR plus its row in [the index](docs/adr/README.md).
+architecture document, and an architecture decision means a new ADR plus its row
+in [the index](docs/adr/README.md). A decision about behaviour lives in its
+OpenSpec spec instead
+([ADR 0018](docs/adr/0018-adrs-for-architecture-specs-for-behaviour.md)).
 
 ## Releases
 

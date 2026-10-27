@@ -10,37 +10,39 @@ never reuse a number. The table below is part of the record: `npm run check:docs
 fails if a file in this directory is missing from it, or if two records share a
 number.
 
-| ADR                                                      | Title                                                               | Status                                                                                                                      |
-| -------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| [0001](0001-record-architecture-decisions.md)            | Record architecture decisions                                       | Accepted                                                                                                                    |
-| [0002](0002-documentation-in-repository.md)              | Documentation lives in the repository                               | Accepted                                                                                                                    |
-| [0003](0003-independent-package-publishing.md)           | Publish shared packages independently via OIDC                      | Accepted                                                                                                                    |
-| [0004](0004-standard-semantic-token-vocabulary.md)       | Use the standard LSP semantic token vocabulary                      | Accepted                                                                                                                    |
-| [0005](0005-obsidian-plugin-separate-repository.md)      | Keep the Obsidian plugin in its own repository                      | Accepted                                                                                                                    |
-| [0006](0006-domorium-product-identity.md)                | Use Domorium as the product identity                                | Accepted                                                                                                                    |
-| [0007](0007-present-editor-products-as-gedcom.md)        | Present editor products as GEDCOM                                   | Accepted                                                                                                                    |
-| [0008](0008-extension-tag-validation.md)                 | Accept extension tags and leave their subtrees unvalidated          | Accepted                                                                                                                    |
-| [0009](0009-gedcom-version-resolution.md)                | Resolve the GEDCOM version by longest match                         | Accepted                                                                                                                    |
-| [0010](0010-two-form-structures-in-5-5-1.md)             | Model a 5.5.1 structure written two ways as one structure           | Accepted                                                                                                                    |
-| [0011](0011-fetch-corpora-rather-than-vendoring-them.md) | Fetch test corpora rather than vendoring them                       | Superseded by [0013](0013-cache-the-fetched-corpora-in-ci.md)                                                               |
-| [0012](0012-calendar-vocabulary-in-the-schema.md)        | Keep calendar vocabulary in the schema, arithmetic in code          | Accepted                                                                                                                    |
-| [0013](0013-cache-the-fetched-corpora-in-ci.md)          | Cache the fetched corpora in CI and refresh them weekly             | Accepted                                                                                                                    |
-| [0014](0014-a-site-around-the-editor.md)                 | Serve a site around the editor, with the editor at /editor/         | Superseded in part by [0015](0015-run-the-editor-inside-the-landing-page.md) and [0016](0016-one-look-across-the-domain.md) |
-| [0015](0015-run-the-editor-inside-the-landing-page.md)   | Run the editor inside the landing page, when the reader asks        | Accepted                                                                                                                    |
-| [0016](0016-one-look-across-the-domain.md)               | Wear one palette and one header across the domain                   | Accepted                                                                                                                    |
-| [0017](0017-page-scripts-may-ask-a-third-party.md)       | Let a page script ask a third party for public data, on fixed terms | Accepted                                                                                                                    |
+| ADR                                                       | Title                                                               | Status                                                                                                                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| [0001](0001-record-architecture-decisions.md)             | Record architecture decisions                                       | Superseded in part by [0018](0018-adrs-for-architecture-specs-for-behaviour.md)                                             |
+| [0002](0002-documentation-in-repository.md)               | Documentation lives in the repository                               | Superseded in part by [0018](0018-adrs-for-architecture-specs-for-behaviour.md)                                             |
+| [0003](0003-independent-package-publishing.md)            | Publish shared packages independently via OIDC                      | Accepted                                                                                                                    |
+| [0004](0004-standard-semantic-token-vocabulary.md)        | Use the standard LSP semantic token vocabulary                      | Accepted                                                                                                                    |
+| [0005](0005-obsidian-plugin-separate-repository.md)       | Keep the Obsidian plugin in its own repository                      | Accepted                                                                                                                    |
+| [0006](0006-domorium-product-identity.md)                 | Use Domorium as the product identity                                | Accepted                                                                                                                    |
+| [0007](0007-present-editor-products-as-gedcom.md)         | Present editor products as GEDCOM                                   | Accepted                                                                                                                    |
+| [0008](0008-extension-tag-validation.md)                  | Accept extension tags and leave their subtrees unvalidated          | Accepted                                                                                                                    |
+| [0009](0009-gedcom-version-resolution.md)                 | Resolve the GEDCOM version by longest match                         | Accepted                                                                                                                    |
+| [0010](0010-two-form-structures-in-5-5-1.md)              | Model a 5.5.1 structure written two ways as one structure           | Accepted                                                                                                                    |
+| [0011](0011-fetch-corpora-rather-than-vendoring-them.md)  | Fetch test corpora rather than vendoring them                       | Superseded by [0013](0013-cache-the-fetched-corpora-in-ci.md)                                                               |
+| [0012](0012-calendar-vocabulary-in-the-schema.md)         | Keep calendar vocabulary in the schema, arithmetic in code          | Accepted                                                                                                                    |
+| [0013](0013-cache-the-fetched-corpora-in-ci.md)           | Cache the fetched corpora in CI and refresh them weekly             | Accepted                                                                                                                    |
+| [0014](0014-a-site-around-the-editor.md)                  | Serve a site around the editor, with the editor at /editor/         | Superseded in part by [0015](0015-run-the-editor-inside-the-landing-page.md) and [0016](0016-one-look-across-the-domain.md) |
+| [0015](0015-run-the-editor-inside-the-landing-page.md)    | Run the editor inside the landing page, when the reader asks        | Accepted                                                                                                                    |
+| [0016](0016-one-look-across-the-domain.md)                | Wear one palette and one header across the domain                   | Accepted                                                                                                                    |
+| [0017](0017-page-scripts-may-ask-a-third-party.md)        | Let a page script ask a third party for public data, on fixed terms | Accepted                                                                                                                    |
+| [0018](0018-adrs-for-architecture-specs-for-behaviour.md) | Keep ADRs for architecture; a behaviour contract lives in its spec  | Accepted                                                                                                                    |
 
 ## What belongs in an ADR
 
-A decision belongs here when reversing it later would be expensive: package
-boundaries, protocol and format choices, release topology, toolchain
-commitments, and anything a future contributor would otherwise have to
-reconstruct from commit history.
+A decision belongs here when it shapes the project rather than what one part of
+it does: package boundaries and dependency direction, protocol and format
+choices, release topology, toolchain commitments, and how the project is worked
+on. A decision about behaviour — what an API answers, what a diagnostic reports
+— lives in its OpenSpec spec and the change's design, however expensive it is to
+reverse ([0018](0018-adrs-for-architecture-specs-for-behaviour.md)).
 
 Routine implementation choices do not belong here. Roadmap items live in
 [TODO.md](../../TODO.md), and longer-range directions in
 [roadmap.md](../roadmap.md). A change's plan — why it is worth doing, how it is
-built, and what it takes — lives in `openspec/changes/`; a decision there stops
-mattering once the change lands, while a record here binds what is written after
-it. Any decision from a plan that outlives its task is recorded here before the
-change is merged.
+built, and what it takes — lives in `openspec/changes/`, and stays in its
+archive once the change lands. An architecture decision from a plan is recorded
+here before the change is merged.
