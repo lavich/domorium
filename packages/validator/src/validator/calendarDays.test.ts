@@ -6,9 +6,12 @@ import { GedcomScheme, GedcomTag } from "../schemes/schema-types";
 import {
   daysInMonth,
   impossibleDays,
+  impossibleYears,
   isLeapYear,
   LENGTHS,
 } from "./calendarDays";
+import { readDateValue551 } from "./date-551";
+import { readDateValueV7 } from "./date-v7";
 
 const days = (value: string) =>
   impossibleDays(g7validation, value).map(
@@ -161,6 +164,38 @@ describe("a day the calendar does not have", () => {
       month: "FEB",
       length: 28,
     });
+  });
+});
+
+describe("a year the calendar does not number", () => {
+  const years = (value: string) =>
+    impossibleYears(readDateValueV7(value, g7validation)?.dates ?? []).map(
+      (found) => `${found.year} ${found.calendar}`,
+    );
+  const years551 = (value: string) =>
+    impossibleYears(readDateValue551(g551validation, value)?.dates ?? []).map(
+      (found) => `${found.year} ${found.calendar}`,
+    );
+
+  it("finds year 0 on either side of the era", () => {
+    expect(years("0")).toEqual(["0 GREGORIAN"]);
+    expect(years("0 BCE")).toEqual(["0 GREGORIAN"]);
+    expect(years("1 JAN 0000")).toEqual(["0 GREGORIAN"]);
+  });
+
+  it("finds it at the end of a range it is written at", () => {
+    expect(years("BET JULIAN 0 AND 10")).toEqual(["0 JULIAN"]);
+  });
+
+  it("finds it however 5.5.1 spells the epoch or the dual year", () => {
+    expect(years551("0BC")).toEqual(["0 GREGORIAN"]);
+    expect(years551("0/01 B.C.")).toEqual(["0 GREGORIAN"]);
+    expect(years551("@#DJULIAN@ 1 JAN 0")).toEqual(["0 JULIAN"]);
+  });
+
+  it.each(["HEBREW 0", "_CAL 0", "1 BCE", "0 _EP"])("leaves %s", (value) => {
+    expect(readDateValueV7(value, g7validation)).not.toBeNull();
+    expect(years(value)).toEqual([]);
   });
 });
 

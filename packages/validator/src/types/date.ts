@@ -8,7 +8,10 @@ export interface GedcomDate {
   month?: string;
   /** Counted in `calendar` and `epoch`: a Hebrew year is not a Gregorian one. */
   year: number;
-  /** The year after `year`, where 5.5.1 writes both as `1750/51`. */
+  /**
+   * The year after `year`, where 5.5.1 writes both as `1750/51`. Never before
+   * the common era: the Old Style / New Style overlap it records is after it.
+   */
   dualYear?: number;
   /** `BCE` however 5.5.1 spells it, or an extension tag. */
   epoch?: string;

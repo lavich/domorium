@@ -12,6 +12,10 @@ function documentIn(version: string, ...header: string[]): GedcomDocument {
 
 const g7 = documentIn("7.0");
 const g551 = documentIn("5.5.1");
+const unversioned = new GedcomDocument().createDocument("0 HEAD\n0 TRLR");
+const paf = new GedcomDocument().createDocument(
+  "0 HEAD\n1 SYST PAF\n2 VERS 5.0\n1 GEDC\n2 VERS 5.5.1\n0 TRLR",
+);
 
 function dateDiagnostics(version: string, payload: string) {
   return new GedcomDocument()
@@ -186,18 +190,118 @@ describe("reading a GEDCOM 5.5.1 date", () => {
   });
 });
 
-describe("which rules a document reads its dates by", () => {
-  it("reads none where the header names no version", () => {
-    const undetermined = new GedcomDocument().createDocument("0 HEAD\n0 TRLR");
-    expect(undetermined.readDate("2000")).toBeNull();
+describe("a year the calendar does not number", () => {
+  it("declines year 0 in GEDCOM 7", () => {
+    expect(g7.readDate("0")).toBeNull();
+    expect(g7.readDate("0 BCE")).toBeNull();
   });
 
-  it("reads none in a version it does not check", () => {
-    expect(documentIn("4.0").readDate("2000")).toBeNull();
-    const paf = new GedcomDocument().createDocument(
-      "0 HEAD\n1 SYST PAF\n2 VERS 5.0\n1 GEDC\n2 VERS 5.5.1\n0 TRLR",
+  it("declines year 0 in GEDCOM 5.5.1, however the epoch is spelled", () => {
+    expect(g551.readDate("0")).toBeNull();
+    expect(g551.readDate("0BC")).toBeNull();
+    expect(g551.readDate("@#DJULIAN@ 1 JAN 0")).toBeNull();
+  });
+
+  it("reads year 0 in a calendar no specification says lacks one", () => {
+    const declared = documentIn(
+      "7.0",
+      "1 SCHMA",
+      "2 TAG _CAL https://example.com/calendar",
     );
-    expect(paf.readDate("2000")).toBeNull();
+    expect(declared.readDate("_CAL 0")?.dates).toStrictEqual([
+      { calendar: "_CAL", year: 0 },
+    ]);
+  });
+});
+
+describe("the two dialects, where both read a date", () => {
+  it.each([
+    "7 NOV 1867",
+    "ABT 1850",
+    "BET 1850 AND 1860",
+    "FROM 1850 TO 1860",
+    "1401 BCE",
+  ])("read %s alike", (payload) => {
+    expect(g551.readDate(payload)).not.toBeNull();
+    expect(g551.readDate(payload)).toStrictEqual(g7.readDate(payload));
+  });
+
+  it("read a Hebrew year alike, each in its own spelling", () => {
+    expect(g7.readDate("HEBREW 5761")).not.toBeNull();
+    expect(g551.readDate("@#DHEBREW@ 5761")?.dates).toStrictEqual(
+      g7.readDate("HEBREW 5761")?.dates,
+    );
+  });
+});
+
+describe("which rules a document reads its dates by", () => {
+  it("reads by either dialect where the header names no version", () => {
+    expect(unversioned.readDate("7 NOV 1867")?.dates).toStrictEqual([
+      { calendar: "GREGORIAN", day: 7, month: "NOV", year: 1867 },
+    ]);
+  });
+
+  it("reads by either dialect in a Personal Ancestral File", () => {
+    expect(paf.readDate("ABT 1850")).toStrictEqual({
+      modifier: "ABT",
+      dates: [{ calendar: "GREGORIAN", year: 1850 }],
+      text: "ABT 1850",
+    });
+  });
+
+  it("reads by either dialect in a version it does not check", () => {
+    const read = documentIn("8.0").readDate("BET 1850 AND 1860");
+    expect(read?.modifier).toBe("BET");
+    expect(read?.dates.map((date) => date.year)).toEqual([1850, 1860]);
+  });
+
+  it("reads what only GEDCOM 5.5.1 writes, where no dialect is checked", () => {
+    expect(
+      unversioned.readDate("@#DJULIAN@ 12 FEB 1750/51")?.dates,
+    ).toStrictEqual([
+      {
+        calendar: "JULIAN",
+        day: 12,
+        month: "FEB",
+        year: 1750,
+        dualYear: 1751,
+      },
+    ]);
+  });
+
+  it("reads what only GEDCOM 7 writes, where no dialect is checked", () => {
+    expect(unversioned.readDate("FROM JULIAN 1670 TO 1800")).toStrictEqual({
+      modifier: "FROM",
+      dates: [
+        { calendar: "JULIAN", year: 1670 },
+        { calendar: "GREGORIAN", year: 1800 },
+      ],
+      text: "FROM JULIAN 1670 TO 1800",
+    });
+  });
+
+  it("declines, where no dialect is checked, what neither dialect reads", () => {
+    expect(unversioned.readDate("sometime in spring")).toBeNull();
+    expect(unversioned.readDate("31 FEB 1900")).toBeNull();
+    expect(unversioned.readDate("0 BCE")).toBeNull();
+    expect(unversioned.readDate("JULIAN 31 FEB 1900")).toBeNull();
+    expect(unversioned.readDate("JULIAN 0")).toBeNull();
+  });
+
+  it("reports nothing about a date where no dialect is checked", () => {
+    const codes = (header: string) =>
+      new GedcomDocument()
+        .createDocument(`${header}0 @I1@ INDI\n1 BIRT\n2 DATE 31 FEB 0\n0 TRLR`)
+        .getErrors()
+        .map((error) => error.code);
+
+    expect(codes("0 HEAD\n")).toEqual([GedcomErrorCode.UndeterminedVersion]);
+    expect(codes("0 HEAD\n1 SYST PAF\n1 GEDC\n2 VERS 5.5\n")).toEqual([
+      GedcomErrorCode.PersonalAncestralFile,
+    ]);
+    expect(codes("0 HEAD\n1 GEDC\n2 VERS 8.0\n")).toEqual([
+      GedcomErrorCode.UnsupportedVersion,
+    ]);
   });
 
   it("reads a substituted version by the schema it is checked against", () => {
@@ -206,7 +310,7 @@ describe("which rules a document reads its dates by", () => {
     );
   });
 
-  it("reads a fragment by the dialect it is given", () => {
+  it("reads a fragment by the dialect it is given, and by no other", () => {
     const fragment = new GedcomDocument().createDocument("0 @I1@ INDI", {
       fragment: true,
       dialect: "5.5.1",
@@ -214,12 +318,25 @@ describe("which rules a document reads its dates by", () => {
     expect(fragment.readDate("@#DJULIAN@ 1700")?.dates[0]?.calendar).toBe(
       "JULIAN",
     );
+    const g7fragment = new GedcomDocument().createDocument("0 @I1@ INDI", {
+      fragment: true,
+      dialect: "7.0",
+    });
+    expect(g7fragment.readDate("@#DJULIAN@ 1750")).toBeNull();
   });
 
   it("forgets the dialect of a text it has replaced", () => {
+    const document = documentIn("5.5.1");
+    document.createDocument("0 HEAD\n1 GEDC\n2 VERS 7.0\n0 TRLR");
+    expect(document.readDate("@#DJULIAN@ 1700")).toBeNull();
+  });
+
+  it("forgets the dialect of a text replaced by one with no version", () => {
     const document = documentIn("7.0");
     document.createDocument("0 HEAD\n0 TRLR");
-    expect(document.readDate("2000")).toBeNull();
+    expect(document.readDate("@#DJULIAN@ 1700")?.dates[0]?.calendar).toBe(
+      "JULIAN",
+    );
   });
 });
 
@@ -252,6 +369,11 @@ describe("agreement with the diagnostics", () => {
     "1  JAN 2000",
     "1\tJAN\t2000",
     "FROM @#DJULIAN@ 1670 TO @#DHEBREW@ 5500",
+    "0",
+    "0 BCE",
+    "0BC",
+    "BET JULIAN 0 AND 10",
+    "30 FEB 0",
   ];
 
   for (const version of ["7.0", "5.5.1"]) {
@@ -261,6 +383,7 @@ describe("agreement with the diagnostics", () => {
         [
           GedcomErrorCode.IncorrectValue,
           GedcomErrorCode.ImpossibleDay,
+          GedcomErrorCode.ImpossibleYear,
         ].includes(error.code),
       );
       expect(document.readDate(p) === null).toBe(rejected);

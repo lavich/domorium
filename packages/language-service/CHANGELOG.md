@@ -18,6 +18,11 @@ All notable changes to `@domorium/language-service` are documented here.
   before.
 - `EditRefusalCode` gains `unwritable-file-target`. Code that switches over it
   exhaustively needs a case for it.
+- **`readDate` reads a date in a document checked against no dialect** — no
+  version in the header, a Personal Ancestral File, or an unsupported version —
+  by GEDCOM 5.5.1 and then GEDCOM 7, where it answered `null` for every date. A
+  year 0 in the Gregorian or Julian calendar now reads as `null`, and is
+  reported as `VAL016` (#453).
 
 ## 2.2.0
 

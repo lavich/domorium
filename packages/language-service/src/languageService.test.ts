@@ -102,6 +102,28 @@ describe("GedcomLanguageService", () => {
     });
   });
 
+  it("reads a year in a file whose header names no version (#453)", () => {
+    const service = new GedcomLanguageService(
+      "0 HEAD\n0 @I1@ INDI\n1 BIRT\n2 DATE 7 NOV 1867\n0 TRLR\n",
+    );
+
+    expect(service.getVersionResolution()?.kind).toBe("undetermined");
+    expect(service.readDate("7 NOV 1867")?.dates).toStrictEqual([
+      { calendar: "GREGORIAN", day: 7, month: "NOV", year: 1867 },
+    ]);
+  });
+
+  it("reads a year in a Personal Ancestral File", () => {
+    const service = new GedcomLanguageService(
+      "0 HEAD\n1 SYST PAF\n1 GEDC\n2 VERS 5.5\n0 TRLR\n",
+    );
+
+    expect(service.getVersionResolution()?.kind).toBe("paf");
+    expect(service.readDate("ABT 1850")?.dates).toStrictEqual([
+      { calendar: "GREGORIAN", year: 1850 },
+    ]);
+  });
+
   it("hands out the current document, not the one it opened with", () => {
     const service = new GedcomLanguageService(GEDCOM);
     const before = service.getDocument();

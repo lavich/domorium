@@ -9,17 +9,20 @@ import {
   resolveTag,
   undocumentedTag,
 } from "./extensions";
-import { impossibleDays } from "./calendarDays";
+import { impossibleDays, impossibleYears } from "./calendarDays";
 import {
   isValidDateExact,
   isValidDatePeriod,
   isValidDateValue,
+  readDateValueV7,
 } from "./date-v7";
 import {
   isValidDateExact551,
   isValidDatePeriod551,
   isValidDateValue551,
+  readDateValue551,
 } from "./date-551";
+import type { GedcomDateValue } from "../types/date";
 
 type FieldType =
   | "boolean"
@@ -120,18 +123,28 @@ function valueError(
   };
 }
 
-function impossibleDayErrors(
+function impossibleDateErrors(
   scheme: GedcomScheme,
   node: ASTNode,
   value: string,
+  read: GedcomDateValue | null,
 ): GedcomError[] {
-  return impossibleDays(scheme, value).map(({ day, month, length }) =>
-    valueError(
-      node,
-      `names ${day} ${month}, and ${month} has ${length} days`,
-      GedcomErrorCode.ImpossibleDay,
+  return [
+    ...impossibleDays(scheme, value).map(({ day, month, length }) =>
+      valueError(
+        node,
+        `names ${day} ${month}, and ${month} has ${length} days`,
+        GedcomErrorCode.ImpossibleDay,
+      ),
     ),
-  );
+    ...impossibleYears(read?.dates ?? []).map(({ year, calendar }) =>
+      valueError(
+        node,
+        `names year ${year}, and ${calendar} has no year ${year}`,
+        GedcomErrorCode.ImpossibleYear,
+      ),
+    ),
+  ];
 }
 
 // Hour may be 1 or 2 digits (both "8:38" and "08:38" are valid) per both
@@ -262,8 +275,16 @@ interface ValueRule {
     extensions: ExtensionContext,
   ) => boolean;
   message: string;
-  /** A date the grammar accepts may still name a day its month does not have. */
-  calendarDays?: true;
+  /**
+   * A date the grammar accepts may still name a day or a year its calendar
+   * does not have. Its dialect's date-value reader, as a period and an exact
+   * date are both date values.
+   */
+  read?: (
+    value: string,
+    scheme: GedcomScheme,
+    extensions: ExtensionContext,
+  ) => GedcomDateValue | null;
 }
 
 // The readings that are a predicate and a sentence. What is left in `collect`
@@ -318,32 +339,32 @@ const VALUE_RULES: Partial<Record<Exclude<FieldType, null>, ValueRule>> = {
   date: {
     test: (value, scheme) => isValidDateValue551(scheme, value),
     message: `should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "FROM 1900 TO 1910", "@#DJULIAN@ 3 MAR 1721", "(unknown)")`,
-    calendarDays: true,
+    read: (value, scheme) => readDateValue551(scheme, value),
   },
   "date-v7": {
     test: isValidDateValue,
     message: `should be a valid date value (e.g. "12 JAN 2000", "ABT 1950", "BET 1900 AND 1910", "JULIAN 3 MAR 1721", "1000 BCE")`,
-    calendarDays: true,
+    read: readDateValueV7,
   },
   "date-period": {
     test: (value, scheme) => isValidDatePeriod551(scheme, value),
     message: `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
-    calendarDays: true,
+    read: (value, scheme) => readDateValue551(scheme, value),
   },
   "date-period-v7": {
     test: isValidDatePeriod,
     message: `should be a valid date period (e.g. "FROM 1900 TO 1910", "TO 1920")`,
-    calendarDays: true,
+    read: readDateValueV7,
   },
   "date-exact": {
     test: (value, scheme) => isValidDateExact551(scheme, value),
     message: `should be an exact date in day month year order (e.g. "1 APR 1911")`,
-    calendarDays: true,
+    read: (value, scheme) => readDateValue551(scheme, value),
   },
   "date-exact-v7": {
     test: isValidDateExact,
     message: `should be an exact date in day month year order (e.g. "1 APR 1911")`,
-    calendarDays: true,
+    read: readDateValueV7,
   },
 };
 
@@ -566,8 +587,15 @@ export class RuleNode {
     if (rule) {
       if (!value || !rule.test(value, this.scheme, this.extensions)) {
         errors.push(valueError(node, rule.message));
-      } else if (rule.calendarDays) {
-        errors.push(...impossibleDayErrors(this.scheme, node, value));
+      } else if (rule.read) {
+        errors.push(
+          ...impossibleDateErrors(
+            this.scheme,
+            node,
+            value,
+            rule.read(value, this.scheme, this.extensions),
+          ),
+        );
       }
       return;
     }

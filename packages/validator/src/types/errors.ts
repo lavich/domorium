@@ -35,6 +35,11 @@ export enum GedcomErrorCode {
   ImpossibleDay = "VAL014",
   /** A header naming HEAD.SYST before HEAD.GEDC: the file is PAF. */
   PersonalAncestralFile = "VAL015",
+  /**
+   * A Gregorian or Julian date naming year 0. The rule is GEDCOM 7's; 5.5.1 is
+   * silent and held to it, as its calendars are the same ones.
+   */
+  ImpossibleYear = "VAL016",
   /** A pointer whose xref names no record of the required type. */
   UnresolvedXref = "unresolved-xref",
   /** A line whose level cannot follow the line above it. */

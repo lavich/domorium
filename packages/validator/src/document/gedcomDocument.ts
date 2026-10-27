@@ -26,7 +26,7 @@ import type { Position } from "../types/position";
 import type { GedcomDateValue } from "../types/date";
 import { readDateValueV7 } from "../validator/date-v7";
 import { readDateValue551 } from "../validator/date-551";
-import { impossibleDays } from "../validator/calendarDays";
+import { impossibleDays, impossibleYears } from "../validator/calendarDays";
 
 export interface CreateDocumentOptions {
   /** Text that is part of a document rather than one of its own. */
@@ -48,6 +48,18 @@ const BOUNDED_BY_FRAGMENT = new Set<string>([
   GedcomErrorCode.UnresolvedXref,
   GedcomErrorCode.UndocumentedTag,
 ]);
+
+function possibleDate(
+  scheme: GedcomScheme,
+  text: string,
+  read: GedcomDateValue | null,
+): GedcomDateValue | null {
+  return read &&
+    impossibleDays(scheme, text).length === 0 &&
+    impossibleYears(read.dates).length === 0
+    ? read
+    : null;
+}
 
 export class GedcomDocument {
   private nodes: ASTNode[] = [];
@@ -323,22 +335,28 @@ export class GedcomDocument {
 
   /**
    * Null wherever the document's own diagnostics would not call the payload a
-   * valid date value, and for one with nothing to read: an empty payload, a
-   * 5.5.1 date in a calendar the schema gives no months, or a document not
-   * checked against any dialect.
+   * valid date value, and for one with nothing to read: an empty payload, or a
+   * 5.5.1 date in a calendar the schema gives no months. A document checked
+   * against no dialect reads by 5.5.1, then by 7.0 without its SCHMA, and is
+   * null only where neither reads a possible date.
    */
   readDate(value: string): GedcomDateValue | null {
     const text = value.trim();
-    if (
-      !this.scheme ||
-      !this.validatedAs ||
-      impossibleDays(this.scheme, text).length > 0
-    ) {
-      return null;
+    if (this.scheme && this.validatedAs) {
+      return possibleDate(
+        this.scheme,
+        text,
+        this.validatedAs === "7.0"
+          ? readDateValueV7(text, this.scheme, this.extensions)
+          : readDateValue551(this.scheme, text),
+      );
     }
-    return this.validatedAs === "7.0"
-      ? readDateValueV7(text, this.scheme, this.extensions)
-      : readDateValue551(this.scheme, text);
+    const g551 = schemaForDialect("5.5.1").scheme;
+    const g7 = schemaForDialect("7.0").scheme;
+    return (
+      possibleDate(g551, text, readDateValue551(g551, text)) ??
+      possibleDate(g7, text, readDateValueV7(text, g7))
+    );
   }
 
   getErrors(): GedcomError[] {

@@ -20,7 +20,7 @@ const checks = [
   "Structure, cardinality and payload types, against the GEDCOM 5.5.1 and 7.0 specifications",
   "Cross-references that name no record, with a quick fix that points them at one that exists",
   "Levels that cannot follow the line above them",
-  "Dates naming a day their calendar does not have, such as 31 FEB",
+  "Dates naming a day or year their calendar does not have, such as 31 FEB or year 0",
 ];
 
 function Eyebrow({ children }: { children: string }) {
