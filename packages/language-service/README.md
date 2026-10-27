@@ -107,15 +107,34 @@ A year is counted in its own calendar and epoch, and is never converted. Each
 end of a range or period names its own calendar, as both specifications bind a
 calendar to the date after it. A 5.5.1 document answers with the GEDCOM 7
 spelling of a calendar, `BCE` for every spelling of its epoch, the later year of
-a dual year as `dualYear`, and the text of a phrase as `phrase`.
+a dual year as `dualYear` — never before the common era, where the overlap a
+dual year records does not fall — and the text of a phrase as `phrase`.
 
 The payload is read as a date value, whichever field it came from. It answers
-`null` wherever `getDiagnostics()` would reject it as one — `32 FEB 2020` among
-them — for an empty payload, for a 5.5.1 date in a calendar its schema gives no
-months, and for a document that is not checked against a specification: one
-whose header names no version, an unsupported version, or a Personal Ancestral
-File. A field that takes only an exact date or a period may still be rejected
-where `readDate` reads its payload.
+`null` wherever `getDiagnostics()` would reject it as one — `32 FEB 2020` and
+year 0 in the Gregorian or Julian calendar among them — for an empty payload,
+and for a 5.5.1 date in a calendar its schema gives no months. A field that
+takes only an exact date or a period may still be rejected where `readDate`
+reads its payload.
+
+A document that is not checked against a specification — its header names no
+version, an unsupported version, or a Personal Ancestral File — still has its
+dates read. They are read by the GEDCOM 5.5.1 grammar and, where that reads
+nothing, by the GEDCOM 7 one, and come back in the same shape whichever read
+them. The GEDCOM 7 reading has no `SCHMA` to go by: it takes any extension tag
+as a calendar, month or epoch, and resolves no alias. `null` there means neither
+dialect reads a possible date; whether the document is checked is
+`getVersionResolution()`'s to say.
+
+```typescript
+const untitled = new GedcomLanguageService("0 HEAD\n0 TRLR");
+
+untitled.readDate("@#DJULIAN@ 12 FEB 1750/51")?.dates;
+// [{ calendar: "JULIAN", day: 12, month: "FEB", year: 1750, dualYear: 1751 }]
+
+untitled.readDate("FROM JULIAN 1670 TO 1800")?.dates;
+// [{ calendar: "JULIAN", year: 1670 }, { calendar: "GREGORIAN", year: 1800 }]
+```
 
 ## The media a line refers to
 

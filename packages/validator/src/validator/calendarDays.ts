@@ -7,9 +7,13 @@
  * states: how long a month is, and which years February gets a 29th in.
  * GREGORIAN and JULIAN share the twelve month tags and their lengths and differ
  * only in that rule, which is why one table serves both.
+ *
+ * The year neither calendar numbers, 0, is judged on what a grammar read
+ * instead, as only the grammar knows which token is the year.
  */
 
 import { GedcomScheme } from "../schemes/schema-types";
+import type { GedcomDate } from "../types/date";
 import { calendarNamed, dateTokens, DEFAULT_CALENDAR } from "./calendars";
 import { isEpoch } from "./epoch";
 
@@ -48,6 +52,11 @@ const SEPARATORS = new Set([
   "INT",
   "TO",
 ]);
+
+export interface ImpossibleYear {
+  year: number;
+  calendar: string;
+}
 
 export interface ImpossibleDay {
   day: number;
@@ -125,4 +134,22 @@ export function impossibleDays(
   }
 
   return found;
+}
+
+/**
+ * Judged on what a grammar read rather than on tokens: only the grammar knows
+ * that `0BC` is a year and an epoch, or that `_CAL 0` is not Gregorian.
+ */
+export function impossibleYears(dates: GedcomDate[]): ImpossibleYear[] {
+  return (
+    dates
+      // An extension epoch numbers its years its own way.
+      .filter(
+        ({ calendar, year, epoch }) =>
+          year === 0 &&
+          CHECKED_CALENDARS.has(calendar) &&
+          (epoch === undefined || epoch === "BCE"),
+      )
+      .map(({ year, calendar }) => ({ year, calendar }))
+  );
 }

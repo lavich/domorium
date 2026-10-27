@@ -2,6 +2,22 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **`readDate` reads a date in a document checked against no dialect.** A file
+  whose header names no version, a Personal Ancestral File, or a version no
+  schema describes answered `null` for every date, so a consumer showing years
+  showed none for them. Such a document now reads a payload by the GEDCOM 5.5.1
+  grammar and, where that reads nothing, by the GEDCOM 7 one without `SCHMA`,
+  and answers `null` only where neither reads a possible date. Its diagnostics
+  are unchanged (#453).
+- **Year 0 in the Gregorian or Julian calendar is reported** with the new code
+  `VAL016` (`ImpossibleYear`), in both dialects, and `readDate` answers `null`
+  for it. GEDCOM 7 states that neither calendar has a year 0; 5.5.1 is held to
+  the same rule. The year is judged as the grammar reads it, so `0BC` counts and
+  an extension calendar does not (#453).
+- `GedcomDate.dualYear` documents that a date before the common era has none.
+
 ## 2.1.0
 
 - **`readDate(payload)` answers what a date says, not only whether it is
