@@ -37,7 +37,7 @@ rules:
     - Name the layers the change touches and confirm the dependency direction still points down.
     - Say which editor hosts are affected, or state explicitly that none are.
   design:
-    - A decision expensive to reverse needs an ADR from docs/adr/template.md and a row in the index, not just a design note.
+    - An architecture decision (package boundary, dependency direction, protocol or file format, release topology, toolchain commitment, project process) needs an ADR from docs/adr/template.md and a row in the index. A behaviour decision does not, however expensive to reverse; the spec holds the contract, and the design says so in one line (ADR-0018).
     - Prefer moving behavior down into a shared package over adding it to an app.
   tasks:
     - New behavior ships with tests in the same task, not a task of its own at the end.

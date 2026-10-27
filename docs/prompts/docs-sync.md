@@ -36,14 +36,15 @@ Check each of the following and report what you find before changing anything:
    at the wrong layer, not that the invariant is wrong. Report it rather than
    quietly relaxing the document.
 
-4. **Decisions.** Does the diff embody a choice that would be expensive to reverse —
-   a boundary, a format, a protocol, a release mechanism, a dependency commitment?
-   If yes, it needs an ADR in `docs/adr/`, written from the template. If it
+4. **Decisions.** Does the diff embody an architecture decision — a boundary, a
+   format, a protocol, a release mechanism, a dependency commitment?
+   If yes, it needs an ADR in `docs/adr/`, written from the template. A behaviour
+   decision belongs in its OpenSpec spec and change design instead (ADR-0018). If it
    contradicts an existing ADR, that record is superseded by a new one; existing
    records are never edited.
 
 5. **Temporary planning.** Did brainstorming or an implementation plan produce
-   reasoning that outlives the task? Record durable decisions in an ADR,
+   reasoning that outlives the task? Record durable architecture decisions in an ADR,
    structural facts in `docs/architecture.md`, and user-visible changes in the
    relevant `CHANGELOG.md`. Do not commit the temporary planning document itself.
 
