@@ -2,6 +2,17 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## Unreleased
+
+- **An xref is one word.** VS Code split words at `@`, so double-clicking
+  `@I1@` selected `I1` and word movement stopped at each at-sign. The extension
+  now ships a language configuration whose word pattern takes `@I1@` whole, and
+  defaults `editor.wordSeparators` for GEDCOM to VS Code's set without `@`. An
+  at-sign therefore no longer ends a word anywhere: double-clicking
+  `john@example.com` in a payload selects `john@example`, and `DJULIAN` in
+  `@#DJULIAN@` selects with its closing `@`. A `[gedcom]` setting of your own
+  restores the separator (#159).
+
 ## 1.7.2
 
 - **The language client is version 11.** It fixes failures when the GEDCOM

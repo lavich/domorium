@@ -145,3 +145,97 @@ describe("the documents the client attaches to", () => {
     expect(GEDCOM_DOCUMENTS).toEqual([{ language: "gedcom" }]);
   });
 });
+
+/*
+ * VS Code has two notions of a word. The language configuration's wordPattern
+ * decides word-based suggestions and the text a completion without a range of
+ * its own replaces; editor.wordSeparators decides double-click and word
+ * movement. Both split at `@` by default, which breaks an xref in two.
+ */
+describe("what a word is in a GEDCOM document", () => {
+  const extensionRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const [language] = contributed.contributes.languages;
+  const configuration: {
+    wordPattern: string;
+    comments: { lineComment?: string; blockComment?: string[] };
+    [key: string]: unknown;
+  } = JSON.parse(
+    readFileSync(join(extensionRoot, language.configuration), "utf8"),
+  );
+
+  // VS Code's own defaults (DEFAULT_WORD_REGEXP and the default
+  // editor.wordSeparators), which GEDCOM's differ from only at `@`.
+  const VSCODE_WORD_PATTERN =
+    /(-?\d*\.\d\w*)|([^`~!@#$%^&*()\-=+[{\]}\\|;:'",.<>/?\s]+)/g;
+  const VSCODE_WORD_SEPARATORS = "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?";
+
+  const words = (line: string, pattern = configuration.wordPattern) =>
+    [...line.matchAll(new RegExp(pattern, "g"))].map((match) => match[0]);
+
+  // The end of a word belongs to it, as in VS Code's getWordAtPosition.
+  const wordAt = (
+    line: string,
+    position: number,
+    pattern: string | RegExp = configuration.wordPattern,
+  ) =>
+    [...line.matchAll(new RegExp(pattern, "g"))].find(
+      (match) =>
+        match.index <= position && match.index + match[0].length >= position,
+    )?.[0];
+
+  it("is read from a file the package keeps", () => {
+    expect(existsSync(join(extensionRoot, language.configuration))).toBe(true);
+    const kept = readFileSync(join(extensionRoot, ".vscodeignore"), "utf8")
+      .split("\n")
+      .flatMap((line) => (line.startsWith("!") ? [line.slice(1)] : []));
+    expect(kept).toContain(language.configuration.replace(/^\.\//, ""));
+  });
+
+  it("takes an xref whole, from its first at-sign to its last", () => {
+    const line = "1 HUSB @I1@";
+    for (let position = 7; position <= line.length; position += 1) {
+      expect(wordAt(line, position)).toBe("@I1@");
+    }
+    expect(wordAt("0 @F12@ FAM", 4)).toBe("@F12@");
+  });
+
+  it("is VS Code's default with the xref tried first", () => {
+    expect(wordAt("1 HUSB @I1@", 9, VSCODE_WORD_PATTERN)).toBe("I1");
+    expect(configuration.wordPattern).toBe(
+      `(@[A-Za-z0-9_]+@)|${VSCODE_WORD_PATTERN.source}`,
+    );
+  });
+
+  it("splits everything else as VS Code does", () => {
+    expect(wordAt("1 _UID 1234", 4)).toBe("_UID");
+    expect(words("1 NAME John /Doe/")).toEqual(["1", "NAME", "John", "Doe"]);
+    expect(words("1 EMAIL john@example.com")).toEqual([
+      "1",
+      "EMAIL",
+      "john",
+      "example",
+      "com",
+    ]);
+  });
+
+  it("lets an at-sign join a word for selection and movement", () => {
+    const separators =
+      contributed.contributes.configurationDefaults["[gedcom]"][
+        "editor.wordSeparators"
+      ];
+    expect(separators).toBe(VSCODE_WORD_SEPARATORS.replace("@", ""));
+  });
+
+  it("declares no comment syntax, as GEDCOM has none", () => {
+    expect(configuration.comments).toEqual({});
+  });
+
+  // VS Code turns `brackets` into auto-closing pairs when none are given, so a
+  // harmless-looking key would start inserting `@`.
+  it("inserts nothing on the user's behalf", () => {
+    expect(Object.keys(configuration).sort()).toEqual([
+      "comments",
+      "wordPattern",
+    ]);
+  });
+});
