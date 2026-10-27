@@ -17,8 +17,7 @@ const WhiteSpace = createToken({
 
 // Exactly one space delimits a tag from its value; the rest belong to the
 // value. Hence one character, and a mode without this rule to move into —
-// staying would match again and eat the indentation. Popping as well as
-// pushing keeps the mode stack from growing a frame per line.
+// staying would match again and eat the indentation.
 const Delimiter = createToken({
   name: "Delimiter",
   pattern: /[ \t]/,
@@ -27,13 +26,24 @@ const Delimiter = createToken({
   push_mode: "afterDelimiter",
 });
 
+// Two-character forms first, so CR-LF is one terminator. See #251.
+const NEWLINE = /\r\n|\n\r|\r|\n/;
+
 const Newline = createToken({
   name: "Newline",
-  // Two-character forms first, so CR-LF is one terminator. See #251.
-  pattern: /\r\n|\n\r|\r|\n/,
+  pattern: NEWLINE,
   group: Lexer.SKIPPED,
   line_breaks: true,
-  push_mode: "main",
+});
+
+// Every mode but main is one frame above it, so ending a line in one is one
+// pop. Pushing main here instead would add a frame per line (#80).
+const LineEnd = createToken({
+  name: "LineEnd",
+  pattern: NEWLINE,
+  group: Lexer.SKIPPED,
+  line_breaks: true,
+  pop_mode: true,
 });
 
 // A UTF-8 byte order mark, which the specification permits and most real files
@@ -105,12 +115,27 @@ export const gedcomLexerDefinition: IMultiModeLexerDefinition = {
     ],
     // A record-defining pointer line (e.g. "0 @I1@ INDI") is followed by
     // TAG, and then optionally by an Xref/Value just like the no-pointer
-    // case below (e.g. "0 @N1@ SNOTE <shared note text>" in GEDCOM 7) — so
-    // TAG here pushes into the same "hasNotPointer" mode rather than
-    // popping straight back, or a trailing value would be mis-tokenized.
-    hasPointer: [Newline, WhiteSpace, { ...Tag, PUSH_MODE: "hasNotPointer" }],
-    hasNotPointer: [Newline, Delimiter, Xref, Value],
-    afterDelimiter: [Newline, Xref, Value],
+    // case below (e.g. "0 @N1@ SNOTE <shared note text>" in GEDCOM 7).
+    // What follows an Xref or a Value on that line is read in hasPointer, not
+    // main, so the pointer line keeps value modes of its own to return there.
+    hasPointer: [
+      LineEnd,
+      WhiteSpace,
+      { ...Tag, POP_MODE: true, PUSH_MODE: "pointerNoValue" },
+    ],
+    hasNotPointer: [LineEnd, Delimiter, Xref, Value],
+    afterDelimiter: [LineEnd, Xref, Value],
+    pointerNoValue: [
+      LineEnd,
+      { ...Delimiter, PUSH_MODE: "pointerAfterDelimiter" },
+      { ...Xref, PUSH_MODE: "hasPointer" },
+      { ...Value, PUSH_MODE: "hasPointer" },
+    ],
+    pointerAfterDelimiter: [
+      LineEnd,
+      { ...Xref, PUSH_MODE: "hasPointer" },
+      { ...Value, PUSH_MODE: "hasPointer" },
+    ],
   },
 };
 
@@ -135,8 +160,10 @@ export class ConfigurableLexer extends Lexer {
     this.zeroBased = config?.zeroBased ?? false;
   }
 
-  override tokenize(text: string, initialMode?: string): ILexingResult {
-    const result = super.tokenize(text, initialMode);
+  // No initial mode: every mode but main ends a line with a pop, which would
+  // leave the lexer with no mode at all.
+  override tokenize(text: string): ILexingResult {
+    const result = super.tokenize(text);
 
     if (this.zeroBased) {
       result.tokens.forEach((t) => {
