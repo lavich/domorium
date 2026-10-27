@@ -4,6 +4,11 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **The lexer's mode stack no longer grows with the document.** Each line left
+  one or two frames behind until the lex ended — 3.56 million on a 50 MB export,
+  an estimated tens of megabytes at peak. Every line now returns the lexer to
+  where it began, so the stack is at most two deep. The tokens are unchanged
+  (#80).
 - **`readDate` reads a date in a document checked against no dialect.** A file
   whose header names no version, a Personal Ancestral File, or a version no
   schema describes answered `null` for every date, so a consumer showing years
