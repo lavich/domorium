@@ -1,5 +1,6 @@
+import { createToken, Lexer } from "chevrotain";
 import { describe, it, expect } from "vitest";
-import { ConfigurableLexer } from "./lexer";
+import { ConfigurableLexer, tokens } from "./lexer";
 
 const gedcomLexer = new ConfigurableLexer({ zeroBased: true });
 
@@ -161,5 +162,233 @@ describe("a tag written in mixed case", () => {
     expect(tokens.every((token) => token.tokenType.name !== "Level")).toBe(
       true,
     );
+  });
+});
+
+// Every line shape the mode table distinguishes, malformed ones included.
+const LINE_SHAPES = [
+  "﻿0 HEAD",
+  "1",
+  "1 BIRT",
+  "1 NAME John /Doe/",
+  "1 HUSB @I1@",
+  "1 HUSB @I1@ trailing text",
+  "1 TAG-x",
+  "1 BIRT ",
+  "1 NOTE\t\ttab",
+  "0 @I1@",
+  "0 @I1@ INDI",
+  "0 @I2@ INDI ",
+  "0 @N1@ SNOTE some text",
+  "0 @S1@ SNOTE @VOID@ 1990 note",
+  "0 @F1@ FAM @I1@ @I2@",
+  "",
+  "1 @BAD",
+  " x 1 2",
+  "@I9@ X",
+  "9",
+];
+const TERMINATORS = ["\n", "\r\n", "\r", "\n\r"];
+
+function document(lines: string[], terminator = "\n"): string {
+  return lines.join(terminator);
+}
+
+describe("the mode stack", () => {
+  type HandleModes = (
+    config: { pop?: boolean; push?: string },
+    pop: (token: unknown) => void,
+    push: (mode: string) => void,
+    token: unknown,
+  ) => void;
+
+  function deepest(text: string): { calls: number; depth: number } {
+    const prototype = Lexer.prototype as unknown as {
+      handleModes: HandleModes;
+    };
+    const original = prototype.handleModes;
+    let calls = 0;
+    // The initial mode is pushed without passing through handleModes.
+    let depth = 1;
+    let max = 1;
+    prototype.handleModes = function (config, pop, push, token) {
+      calls += 1;
+      // A pop that leaves nothing is ignored, unless a push makes it a transition.
+      if (config.pop && (depth > 1 || config.push !== undefined)) {
+        depth -= 1;
+      }
+      if (config.push !== undefined) {
+        depth += 1;
+      }
+      max = Math.max(max, depth);
+      original.call(this, config, pop, push, token);
+    };
+    try {
+      gedcomLexer.tokenize(text);
+    } finally {
+      prototype.handleModes = original;
+    }
+    return { calls, depth: max };
+  }
+
+  it.each(
+    TERMINATORS.map((terminator) => [JSON.stringify(terminator), terminator]),
+  )(
+    "stays two deep over every line shape, lines ended by %s",
+    (_name, terminator) => {
+      const lines = Array.from({ length: 50 }, () => LINE_SHAPES).flat();
+      const { calls, depth } = deepest(document(lines, terminator));
+
+      expect(calls).toBeGreaterThan(0);
+      expect(depth).toBe(2);
+    },
+  );
+});
+
+/*
+ * The unbounded mode table, the reference the bounded one must lex every input
+ * to the same tokens as. It catches a transition that returns a line to the
+ * wrong mode. It shares the token definitions, so it compares mode tables only.
+ */
+const before = (() => {
+  const Newline = createToken({
+    name: "Newline",
+    pattern: /\r\n|\n\r|\r|\n/,
+    group: Lexer.SKIPPED,
+    line_breaks: true,
+    push_mode: "main",
+  });
+  const WhiteSpace = createToken({
+    name: "WhiteSpace",
+    pattern: /[ \t]+/,
+    group: Lexer.SKIPPED,
+  });
+  const Delimiter = createToken({
+    name: "Delimiter",
+    pattern: /[ \t]/,
+    group: Lexer.SKIPPED,
+    pop_mode: true,
+    push_mode: "afterDelimiter",
+  });
+  const ByteOrderMark = createToken({
+    name: "ByteOrderMark",
+    pattern: (text: string, startOffset: number) =>
+      startOffset === 0 && text.charCodeAt(0) === 0xfeff ? ["﻿"] : null,
+    start_chars_hint: ["﻿"],
+    line_breaks: false,
+    group: Lexer.SKIPPED,
+  });
+  return new Lexer(
+    {
+      defaultMode: "main",
+      modes: {
+        main: [
+          ByteOrderMark,
+          Newline,
+          WhiteSpace,
+          tokens.Level,
+          tokens.Pointer,
+          { ...tokens.Tag, PUSH_MODE: "hasNotPointer" },
+        ],
+        hasPointer: [
+          Newline,
+          WhiteSpace,
+          { ...tokens.Tag, PUSH_MODE: "hasNotPointer" },
+        ],
+        hasNotPointer: [Newline, Delimiter, tokens.Xref, tokens.Value],
+        afterDelimiter: [Newline, tokens.Xref, tokens.Value],
+      },
+    },
+    { positionTracking: "full" },
+  );
+})();
+
+describe("the bounded mode table", () => {
+  const lexer = new ConfigurableLexer({ positionTracking: "full" });
+  const shape = (text: string) => {
+    const { tokens: lexed, errors } = lexer.tokenize(text);
+    const reference = before.tokenize(text);
+    return {
+      actual: {
+        tokens: lexed.map((t) => [
+          t.tokenType.name,
+          t.image,
+          t.startOffset,
+          t.startLine,
+          t.startColumn,
+        ]),
+        errors: errors.map((e) => [
+          e.offset,
+          e.line,
+          e.column,
+          e.length,
+          e.message,
+        ]),
+      },
+      expected: {
+        tokens: reference.tokens.map((t) => [
+          t.tokenType.name,
+          t.image,
+          t.startOffset,
+          t.startLine,
+          t.startColumn,
+        ]),
+        errors: reference.errors.map((e) => [
+          e.offset,
+          e.line,
+          e.column,
+          e.length,
+          e.message,
+        ]),
+      },
+    };
+  };
+
+  it.each(LINE_SHAPES)("lexes %j as before, after any line", (line) => {
+    for (const previous of LINE_SHAPES) {
+      for (const terminator of TERMINATORS) {
+        const { actual, expected } = shape(
+          document([previous, line, "1 NEXT line"], terminator),
+        );
+        expect(actual).toEqual(expected);
+      }
+    }
+  });
+
+  it("lexes generated documents as before", () => {
+    const pieces = [
+      "0",
+      "12",
+      " ",
+      "  ",
+      "\t",
+      "@I1@",
+      "@X",
+      "@",
+      "TAG",
+      "_UID",
+      "Tag-x",
+      "text",
+      "é",
+      "/Doe/",
+      "\n",
+      "\r\n",
+      "\r",
+      "\n\r",
+    ];
+    let seed = 80;
+    const next = () => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed;
+    };
+    for (let run = 0; run < 3000; run += 1) {
+      const length = 1 + (next() % 24);
+      const text = Array.from(
+        { length },
+        () => pieces[next() % pieces.length],
+      ).join("");
+      const { actual, expected } = shape(text);
+      expect(actual, JSON.stringify(text)).toEqual(expected);
+    }
   });
 });
