@@ -16,6 +16,7 @@ with confidence using structure-aware suggestions and diagnostics as you type.
 - Go to definition for cross-references
 - Find all XREF references with read/write highlights
 - Safe, atomic XREF rename
+- An XREF such as `@I1@` is one word to double-click and word movement
 - Clickable web and local-file links
 - Media links that follow a file renamed or moved in the editor
 - Quick fixes for broken references and invalid levels

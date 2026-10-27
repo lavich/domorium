@@ -50,6 +50,7 @@
           ".ged",
           ".gedcom"
         ],
+        "configuration": "./language-configuration.json",
         "icon": {
           "light": "images/fileIcon.svg",
           "dark": "images/fileIcon.svg"
@@ -90,7 +91,8 @@
     ],
     "configurationDefaults": {
       "[gedcom]": {
-        "editor.semanticHighlighting.enabled": true
+        "editor.semanticHighlighting.enabled": true,
+        "editor.wordSeparators": "`~!#$%^&*()-=+[{]}\\|;:'\",.<>/?"
       }
     }
   },
