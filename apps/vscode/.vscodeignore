@@ -10,5 +10,8 @@
 # Include the grammars, which are read from the package as they are
 !syntaxes/**
 
+# Include the language configuration, which VS Code reads from the package
+!language-configuration.json
+
 # Include the compiled output
 !dist/**
