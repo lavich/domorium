@@ -16,6 +16,10 @@ All notable changes to `@domorium/codemirror` are documented here.
 - `resolveFileTarget` and the type `GedcomDialect` are re-exported from
   `@domorium/language-service`, so a host that depends on this package alone
   resolves a `FILE` payload as the library reads it (#380).
+- The `@codemirror/autocomplete` peer range is `^6.6.1`. Writing past the cursor
+  relies on two fixes there: 6.6.0 made `insertCompletionText` replace the right
+  range when it ends after the cursor, and 6.6.1 hands `apply` positions mapped
+  through the edits made since the query. Obsidian ships 6.20.
 
 ## 2.1.0
 
