@@ -287,6 +287,85 @@ describe("stdio entry point", () => {
     }
   }, 15000);
 
+  async function completeXref(
+    capabilities: object | undefined,
+    line: string,
+    character: number,
+  ): Promise<unknown> {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///xref-completion.ged";
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        ...(capabilities === undefined ? {} : { capabilities }),
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: [
+            "0 HEAD",
+            "1 GEDC",
+            "2 VERS 7.0",
+            "0 @I1@ INDI",
+            "0 @I2@ INDI",
+            "0 @F1@ FAM",
+            line,
+            "0 TRLR",
+          ].join("\n"),
+        },
+      });
+      const response = (await client.request(2, "textDocument/completion", {
+        textDocument: { uri },
+        position: { line: 6, character },
+      })) as { result: { label: string; textEdit: unknown }[] };
+      return response.result.find((item) => item.label === "@I2@")?.textEdit;
+    } finally {
+      child.kill();
+    }
+  }
+
+  it("sends an InsertReplaceEdit to a client that supports one", async () => {
+    const edit = await completeXref(
+      {
+        textDocument: {
+          completion: { completionItem: { insertReplaceSupport: true } },
+        },
+      },
+      "1 HUSB @I",
+      9,
+    );
+
+    expect(edit).toEqual({
+      newText: "@I2@",
+      insert: {
+        start: { line: 6, character: 7 },
+        end: { line: 6, character: 9 },
+      },
+      replace: {
+        start: { line: 6, character: 7 },
+        end: { line: 6, character: 9 },
+      },
+    });
+  }, 15000);
+
+  it("sends a TextEdit over the whole xref to a client that declared no capabilities", async () => {
+    const edit = await completeXref(undefined, "1 HUSB @I1@", 9);
+
+    expect(edit).toEqual({
+      newText: "@I2@",
+      range: {
+        start: { line: 6, character: 7 },
+        end: { line: 6, character: 11 },
+      },
+    });
+  }, 15000);
+
   it("shows the record a pointer names on hover", async () => {
     const bundlePath = await bundleStdio();
     const child = spawn("node", [bundlePath]);

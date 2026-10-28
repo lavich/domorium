@@ -2,6 +2,18 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## Unreleased
+
+- **A completion writes one token.** The editor took the typed text back to the
+  last character outside `[A-Z0-9_@]`, so `2 DATE @#DJU` plus `@#DJULIAN@` gave
+  `@#@#DJULIAN@`, and it never replaced what followed the cursor, so accepting
+  `@I2@` inside `@I1@` left `@I2@1@`. It now matches against what was typed up to
+  the cursor and replaces the whole token the language service names (#468).
+  With several cursors, the others are completed only where their token reads
+  the same as the main one's.
+- It reads `CompletionItem.textEdit`, so the release that ships this raises the
+  `@domorium/language-service` floor to the release that ships that field.
+
 ## 2.1.0
 
 - **A host reading document symbols through this package can name them.**

@@ -1,11 +1,13 @@
+import { CompletionContext } from "@codemirror/autocomplete";
 import { semanticTokenLegend } from "@domorium/language-service";
-import { EditorState } from "@codemirror/state";
-import { keymap } from "@codemirror/view";
+import { EditorState, type TransactionSpec } from "@codemirror/state";
+import { keymap, type EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { describe, expect, it, vi } from "vitest";
 
 import * as extensionsModule from "./extensions";
 import {
+  completionSource,
   documentLinkTag,
   getDiagnosticActions,
   getDocumentLinkSpecs,
@@ -174,5 +176,91 @@ describe("the tag a link is coloured by", () => {
     expect(documentLinkTag("http")).toBe(tags.url);
     expect(documentLinkTag("file-relative")).toBe(tags.link);
     expect(documentLinkTag("file-absolute")).toBe(tags.link);
+  });
+});
+
+describe("completion", () => {
+  const g7 = (line: string) =>
+    [
+      "0 HEAD",
+      "1 GEDC",
+      "2 VERS 7.0",
+      "0 @I1@ INDI",
+      "0 @I2@ INDI",
+      "0 @F1@ FAM",
+      line,
+      "0 TRLR",
+    ].join("\n");
+  const g551 = (line: string) =>
+    [
+      "0 HEAD",
+      "1 GEDC",
+      "2 VERS 5.5.1",
+      "3 FORM LINEAGE-LINKED",
+      "0 @I1@ INDI",
+      "1 BIRT",
+      line,
+      "0 TRLR",
+    ].join("\n");
+
+  /** Opens the list with the cursor at `|` in `line`, as Ctrl-Space would. */
+  function open(line: string, document = g7) {
+    const doc = document(line.replace("|", ""));
+    const pos = document(line).indexOf("|");
+    let state = EditorState.create({ doc, selection: { anchor: pos } });
+    const result = completionSource(
+      new EditorLanguageService(),
+      new CompletionContext(state, pos, true),
+    );
+    if (!result) {
+      throw new Error("no completions");
+    }
+    const view = {
+      get state() {
+        return state;
+      },
+      dispatch(spec: TransactionSpec) {
+        state = state.update(spec).state;
+      },
+    } as unknown as EditorView;
+    const accept = (label: string): string => {
+      const option = result.options.find((item) => item.label === label);
+      if (typeof option?.apply !== "function") {
+        throw new Error(`no apply for ${label}`);
+      }
+      option.apply(view, option, result.from, result.to ?? pos);
+      return state.doc.line(7).text;
+    };
+    return { result, typed: doc.slice(result.from, result.to ?? pos), accept };
+  }
+
+  it("writes @I1@ over an at-sign already typed, not @@I1@", () => {
+    expect(open("1 HUSB @I|").accept("@I1@")).toBe("1 HUSB @I1@");
+  });
+
+  it("writes @I2@ over the whole xref around the cursor, not @I2@1@", () => {
+    expect(open("1 HUSB @I|1@").accept("@I2@")).toBe("1 HUSB @I2@");
+  });
+
+  it("writes @#DJULIAN@ over a typed @#DJU, not @#@#DJULIAN@", () => {
+    expect(open("2 DATE @#DJU|", g551).accept("@#DJULIAN@")).toBe(
+      "2 DATE @#DJULIAN@",
+    );
+  });
+
+  it("writes @#DJULIAN@ over the whole escape around the cursor, not @#DJULIAN@ R@", () => {
+    expect(
+      open("2 DATE @#DFRE|NCH R@ 1 VEND 3", g551).accept("@#DJULIAN@"),
+    ).toBe("2 DATE @#DJULIAN@ 1 VEND 3");
+  });
+
+  it("matches against what was typed, not the text after the cursor", () => {
+    const { result, typed } = open("1 HUSB @I|1@");
+
+    expect(typed).toBe("@I");
+    expect(result.options.map((option) => option.label)).toEqual(
+      expect.arrayContaining(["@I1@", "@I2@"]),
+    );
+    expect(result.validFor).toBeUndefined();
   });
 });

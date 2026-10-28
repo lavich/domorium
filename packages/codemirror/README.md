@@ -6,6 +6,10 @@
 CodeMirror 6 integration for GEDCOM completion, diagnostics, hover, folding,
 semantic highlighting, document links, definitions, references, rename, and
 record preview. The language behavior comes from `@domorium/language-service`.
+A completion is matched against what was typed up to the cursor and, when
+accepted, replaces the whole token the service's `textEdit` names, so an xref
+is written once. With several cursors, the others are completed only where
+their token reads the same as the main one's.
 
 Part of [Domorium](https://github.com/lavich/domorium) — GEDCOM editor tooling for
 the browser, Obsidian, VS Code, and JetBrains IDEs.

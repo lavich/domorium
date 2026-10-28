@@ -2,7 +2,7 @@
 
 ### Requirement: Every completion item states the text it replaces
 
-`getCompletionItems` SHALL give every item a `textEdit` of `newText`, `insert` and `replace`, where `newText` is the item's label. The token under the cursor SHALL be, first, a calendar escape on the cursor's line — `@#D`, capitals and spaces, then `@` — that contains the cursor or ends at it, or one still being typed, from `@#` to the cursor with no closing `@`, which then ends at the closing `@` that follows it across capitals and spaces, if any, and at the cursor otherwise. Failing that, it SHALL be the maximal run, on the cursor's line, of characters that are neither whitespace nor `,`, that contains the cursor or ends or begins at it. `insert` SHALL run from the token's start to the cursor, and `replace` from the token's start to its end. With no such token, both SHALL be empty at the cursor.
+`getCompletionItems` SHALL give every item a `textEdit` of `newText`, `insert` and `replace`, where `newText` is the item's label. The token under the cursor SHALL be, first, a calendar escape on the cursor's line — `@#D`, one or more capitals, optionally one space and one capital, then `@` — that contains the cursor or begins or ends at it; or else one still being typed, from `@#` to the cursor with no closing `@`, which then ends at the closing `@` that follows it in the same form, if any, and at the cursor otherwise. Failing that, it SHALL be the maximal run, on the cursor's line, of characters that are neither whitespace nor `,`, that contains the cursor or ends or begins at it. A cursor past the end of the line SHALL be read as at its end. `insert` SHALL run from the token's start to the cursor, and `replace` from the token's start to its end. With no such token, both SHALL be empty at the cursor.
 
 #### Scenario: An at-sign already typed
 
@@ -23,6 +23,16 @@
 
 - **WHEN** completions are asked between `@#DFRE` and `NCH R@` in `2 DATE @#DFRENCH R@ 1 VEND 3` in a 5.5.1 document
 - **THEN** `insert` covers `@#DFRE` and `replace` covers `@#DFRENCH R@`
+
+#### Scenario: Two calendars on one line
+
+- **WHEN** completions are asked at the end of `@#DJ` in `2 DATE BET @#DJ AND @#DGREGORIAN@ 1800` in a 5.5.1 document
+- **THEN** `insert` and `replace` cover `@#DJ` and nothing after it
+
+#### Scenario: The cursor on an escape's first at-sign
+
+- **WHEN** completions are asked just before `@#DFRENCH R@` in `2 DATE @#DFRENCH R@ 1 VEND 3` in a 5.5.1 document
+- **THEN** `insert` is empty and `replace` covers `@#DFRENCH R@`
 
 #### Scenario: Nothing typed after a space
 

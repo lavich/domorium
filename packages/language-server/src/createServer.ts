@@ -59,11 +59,15 @@ export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
   const cache = new Map<string, GedcomLanguageService>();
   let workspaceFolders: WorkspaceFolder[] = [];
+  let insertReplaceSupport = false;
 
   connection.onInitialize((params) => {
     workspaceFolders =
       params.workspaceFolders ??
       (params.rootUri ? [{ uri: params.rootUri, name: "" }] : []);
+    insertReplaceSupport =
+      params.capabilities?.textDocument?.completion?.completionItem
+        ?.insertReplaceSupport === true;
     return {
       capabilities: {
         workspace: {
@@ -411,7 +415,14 @@ export const createServer = (connection: Connection) => {
     if (!service) {
       return [];
     }
-    return service.getCompletionItems(params.position);
+    return service
+      .getCompletionItems(params.position)
+      .map(({ textEdit, ...item }) => ({
+        ...item,
+        textEdit: insertReplaceSupport
+          ? textEdit
+          : { range: textEdit.replace, newText: textEdit.newText },
+      }));
   });
 
   documents.onDidChangeContent(async (change) => {
