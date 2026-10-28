@@ -14,7 +14,7 @@ The completion source SHALL match options against the text of the service's `ins
 - **WHEN** `@I2@` is accepted between `@I` and `1@` in `1 HUSB @I1@`
 - **THEN** the line reads `1 HUSB @I2@`
 
-#### Scenario: Typing after the list opened
+#### Scenario: Matching ignores the text after the cursor
 
-- **WHEN** the list opens at the end of `1 HUSB @` and `I` is typed before `@I1@` is accepted
-- **THEN** the line reads `1 HUSB @I1@`
+- **WHEN** completions are asked between `@I` and `1@` in `1 HUSB @I1@`, where the document declares `@I1@` and `@I2@`
+- **THEN** both `@I1@` and `@I2@` are offered
