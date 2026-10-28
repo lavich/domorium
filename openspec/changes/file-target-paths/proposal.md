@@ -9,10 +9,10 @@ Turning a `FILE` payload into the file it names is written three times, and the 
 ## What Changes
 
 - `@domorium/language-service` exports three pure functions:
-  - `resolveFileTarget(documentPath, targetText, dialect)`: the root-relative path a relative `FILE` payload names, read by the dialect's rules, or `null` when it climbs above the root or is not relative.
+  - `resolveFileTarget(documentPath, targetText, dialect)`: the root-relative path a relative `FILE` payload names, read by the dialect's rules, or `null` when it is not a relative link to `documentLinks`, climbs above the root, decodes to a separator or a parent, or names the root folder itself.
   - `relativeFilePath(documentPath, path)`: the plain relative path from the document's folder to a root-relative path, the form `moveFileLinks` takes.
   - `drawnCrop(crop, naturalWidth, naturalHeight)`: the `CROP` rectangle clamped to the loaded image, or `null` where the image does not reach it.
-- `@domorium/codemirror` re-exports `resolveFileTarget`, as it re-exports `DocumentSymbolKind`, since the web editor depends on it alone.
+- `@domorium/language-service` type-exports `GedcomDialect`; `@domorium/codemirror` re-exports it and `resolveFileTarget`, as it re-exports `DocumentSymbolKind`, since the web editor depends on it alone.
 - `apps/web-editor` follows a file link through `resolveFileTarget`, with the dialect passed along with the link, so a GEDCOM 7 `%20` opens its file and a 5.5.1 `\` still separates.
 - No breaking change: a minor release of `@domorium/language-service`, made later by a separate release PR.
 

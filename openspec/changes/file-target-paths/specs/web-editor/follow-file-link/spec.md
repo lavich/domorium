@@ -21,5 +21,5 @@ When a `file-relative` link is followed in a granted folder, the web editor SHAL
 
 #### Scenario: Out of the folder
 
-- **WHEN** `1 FILE ../../a.jpg` is followed in a document at `family/tree.ged`
+- **WHEN** `1 FILE ../../a.jpg` is followed in a GEDCOM 5.5.1 document at `family/tree.ged`
 - **THEN** nothing is opened and the notice says the path lies outside the granted folder
