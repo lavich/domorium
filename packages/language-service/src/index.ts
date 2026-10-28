@@ -3,13 +3,19 @@ export { GedcomLanguageService } from "./languageService";
 // past this package for the declaration.
 export type {
   CreateDocumentOptions,
+  GedcomDialect,
   GedcomDocument,
 } from "@domorium/validator";
 export {
   decodeFileTarget,
   encodeFileTarget,
 } from "./libs/links/retargetFileLinks";
+export {
+  relativeFilePath,
+  resolveFileTarget,
+} from "./libs/links/fileTargetPath";
 export { mentionsFile } from "./libs/links/mentionsFile";
+export { drawnCrop } from "./libs/media/drawnCrop";
 export { ReferenceIndex } from "./libs/references/referenceIndex";
 export {
   legend as semanticTokenLegend,

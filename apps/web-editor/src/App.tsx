@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 
-import type { DocumentLink } from "@domorium/codemirror";
+import type { DocumentLink, GedcomDialect } from "@domorium/codemirror";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -411,9 +411,10 @@ function AppContent({ app }: { app: AppContext }) {
   };
 
   /** Where a link in the document leads: another file here, or off the page. */
-  const openLink = (link: DocumentLink) => {
+  const openLink = (link: DocumentLink, dialect: GedcomDialect | undefined) => {
     const followed = followLink(link, {
       path: file?.path ?? "",
+      dialect,
       hasWorkspace: files()?.folder === true,
     });
     if (followed.kind === "web") {
@@ -483,8 +484,8 @@ function AppContent({ app }: { app: AppContext }) {
       ctx.commands.register("workspace.closeTab", (path) =>
         latest.current.closeTab(path),
       ),
-      ctx.commands.register("workspace.followLink", (link) =>
-        latest.current.openLink(link),
+      ctx.commands.register("workspace.followLink", (link, dialect) =>
+        latest.current.openLink(link, dialect),
       ),
       ctx.commands.register(
         "workspace.save",

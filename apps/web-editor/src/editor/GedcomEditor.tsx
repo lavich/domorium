@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
-import type { DocumentLink } from "@domorium/codemirror";
+import type { DocumentLink, GedcomDialect } from "@domorium/codemirror";
 
 import { createGedcomEditor } from "./createGedcomEditor";
 import type {
@@ -17,7 +17,7 @@ export interface GedcomEditorProps {
   onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
   onStatusChange(status: WebEditorStatus): void;
-  onFollowLink(link: DocumentLink): void;
+  onFollowLink(link: DocumentLink, dialect: GedcomDialect | undefined): void;
 }
 
 export const GedcomEditor = forwardRef<GedcomEditorHandle, GedcomEditorProps>(
@@ -57,7 +57,7 @@ export const GedcomEditor = forwardRef<GedcomEditorHandle, GedcomEditorProps>(
         onDiagnosticsChange: (diagnostics) =>
           onDiagnosticsChangeRef.current(diagnostics),
         onStatusChange: (status) => onStatusChangeRef.current(status),
-        onFollowLink: (link) => onFollowLinkRef.current(link),
+        onFollowLink: (link, dialect) => onFollowLinkRef.current(link, dialect),
       });
       handleRef.current = handle;
       return () => {

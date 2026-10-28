@@ -58,10 +58,12 @@ export {
 // DocumentSymbolKind is an enum, so a host comparing a symbol's kind needs the
 // value and not only the type.
 export { DocumentSymbolKind } from "@domorium/language-service";
+export { resolveFileTarget } from "@domorium/language-service";
 export type {
   CreateDocumentOptions,
   DocumentLink,
   DocumentSymbol,
+  GedcomDialect,
   GedcomDocument,
   Range,
   WorkspaceEdit,
