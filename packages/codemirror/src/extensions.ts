@@ -1,5 +1,7 @@
 import {
   autocompletion,
+  insertCompletionText,
+  pickedCompletion,
   type CompletionContext,
   type CompletionResult,
 } from "@codemirror/autocomplete";
@@ -152,7 +154,7 @@ const completionType: Record<number, string> = {
   20: "enum",
 };
 
-function completionSource(
+export function completionSource(
   language: EditorLanguageService,
   context: CompletionContext,
 ): CompletionResult | null {
@@ -172,13 +174,30 @@ function completionSource(
   if (items.length === 0) {
     return null;
   }
+  const { doc } = context.state;
   return {
-    from: before?.from ?? context.pos,
-    options: items.map((item: CompletionItem) => ({
-      label: item.label,
-      detail: item.detail,
-      type: item.kind ? completionType[item.kind] : undefined,
-    })),
+    from: positionToOffset(doc, items[0].textEdit.insert.start),
+    options: items.map((item: CompletionItem) => {
+      // Matching reads only up to the cursor; the rest of the token goes on apply.
+      const tail =
+        positionToOffset(doc, item.textEdit.replace.end) - context.pos;
+      return {
+        label: item.label,
+        detail: item.detail,
+        type: item.kind ? completionType[item.kind] : undefined,
+        apply: (view, completion, from, to) => {
+          view.dispatch({
+            ...insertCompletionText(
+              view.state,
+              item.textEdit.newText,
+              from,
+              to + tail,
+            ),
+            annotations: pickedCompletion.of(completion),
+          });
+        },
+      };
+    }),
   };
 }
 

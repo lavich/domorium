@@ -156,10 +156,18 @@ export enum CompletionItemKind {
   EnumMember = 20,
 }
 
+/** The shape of LSP's `InsertReplaceEdit`, so an adapter passes it on as is. */
+export interface CompletionTextEdit {
+  newText: string;
+  insert: Range;
+  replace: Range;
+}
+
 export interface CompletionItem {
   label: string;
   kind: CompletionItemKind;
   detail?: string;
+  textEdit: CompletionTextEdit;
 }
 
 /**

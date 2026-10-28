@@ -21,6 +21,7 @@ export {
   CompletionItemKind,
   DocumentSymbolKind,
   type CompletionItem,
+  type CompletionTextEdit,
   type Diagnostic,
   type DiagnosticSeverity,
   type DocumentVersion,

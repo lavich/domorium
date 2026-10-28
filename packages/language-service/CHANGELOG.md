@@ -4,6 +4,12 @@ All notable changes to `@domorium/language-service` are documented here.
 
 ## Unreleased
 
+- **Every completion item says what text it replaces.** `CompletionItem` gains
+  `textEdit` — `newText`, `insert` and `replace`, the shape of LSP's
+  `InsertReplaceEdit` — so a host no longer guesses, and every guess split an
+  xref at `@`: accepting `@I1@` after `1 HUSB @I` wrote `@@I1@` in VS Code. A
+  5.5.1 calendar escape is one token, `@#DFRENCH R@` and its space included
+  (#468). Code that builds `CompletionItem` values itself needs the field.
 - **`moveFileLinks(from, to)` refuses a move it cannot write.** Moving a
   photograph above the folder of a GEDCOM 7 document gave `retargetFileLinks`
   the target `../photos/marie.jpg`, which it wrote although this package does

@@ -4,6 +4,11 @@ All notable changes to the GEDCOM extension by Domorium are documented here.
 
 ## Unreleased
 
+- **Completing a pointer writes one xref.** Accepting `@I1@` after typing
+  `1 HUSB @I` wrote `1 HUSB @@I1@`, and a 5.5.1 calendar such as `@#DJULIAN@`
+  doubled its `@#` the same way. The server now says which text each suggestion
+  replaces; in replace mode (Shift+Enter, or `editor.suggest.insertMode`) a
+  suggestion accepted inside `@I1@` replaces all of it (#468).
 - **An xref is one word.** VS Code split words at `@`, so double-clicking
   `@I1@` selected `I1` and word movement stopped at each at-sign. The extension
   now ships a language configuration whose word pattern takes `@I1@` whole, and

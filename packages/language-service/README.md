@@ -29,6 +29,23 @@ The service also provides completion, hover, definitions, folding ranges,
 document symbols, semantic tokens, indentation hints, and the edits that follow
 a file a document points at when it moves. `getDocument()` returns the parse behind all of it.
 
+## The text a completion replaces
+
+Every item from `getCompletionItems` carries a `textEdit` in the shape of LSP's
+`InsertReplaceEdit`: `insert` runs from the start of the token under the cursor
+to the cursor, `replace` to the token's end. A token is a 5.5.1 calendar escape,
+whole, or otherwise a run of characters that are neither whitespace nor `,`. A
+host that writes `newText` over one of them writes one xref, where splitting at
+`@` would leave `@@I1@`.
+
+```typescript
+const service = new GedcomLanguageService(
+  "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n0 @F1@ FAM\n1 HUSB @I\n0 TRLR\n",
+);
+const [item] = service.getCompletionItems({ line: 5, character: 9 });
+// item.textEdit.insert covers "@I"; writing "@I1@" there gives "1 HUSB @I1@".
+```
+
 ## The quick fixes for a pointer that names nothing
 
 `getCodeActions` answers what a reader can do about a diagnostic. For an XREF that
