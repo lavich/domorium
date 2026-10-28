@@ -12,7 +12,8 @@ Turning a `FILE` payload into the file it names is written three times, and the 
   - `resolveFileTarget(documentPath, targetText, dialect)`: the root-relative path a relative `FILE` payload names, read by the dialect's rules, or `null` when it climbs above the root or is not relative.
   - `relativeFilePath(documentPath, path)`: the plain relative path from the document's folder to a root-relative path, the form `moveFileLinks` takes.
   - `drawnCrop(crop, naturalWidth, naturalHeight)`: the `CROP` rectangle clamped to the loaded image, or `null` where the image does not reach it.
-- `apps/web-editor` follows a file link through `resolveFileTarget`, so a GEDCOM 7 `%20` opens its file and a 5.5.1 `\` still separates.
+- `@domorium/codemirror` re-exports `resolveFileTarget`, as it re-exports `DocumentSymbolKind`, since the web editor depends on it alone.
+- `apps/web-editor` follows a file link through `resolveFileTarget`, with the dialect passed along with the link, so a GEDCOM 7 `%20` opens its file and a 5.5.1 `\` still separates.
 - No breaking change: a minor release of `@domorium/language-service`, made later by a separate release PR.
 
 ## Capabilities
@@ -29,6 +30,6 @@ None.
 
 ## Impact
 
-- Layers: `language-service` (new functions over its own types and the validator's `GedcomDialect`), `apps/web-editor` (one call site). Dependencies still point down; nothing new is imported.
-- Editor hosts: the web editor changes here. VS Code and JetBrains do not: the language server resolves a link through `new URL` against the document URI (`packages/language-server/src/createServer.ts:487-502`), which already decodes correctly for 7.0 and refuses `\`; making it use `resolveFileTarget` is a separate change. The Obsidian plugin adopts the functions in its own repository after release.
-- Docs: `packages/language-service` README and CHANGELOG. `apps/web-editor` keeps no changelog; the PR says what changed.
+- Layers: `language-service` (new functions over its own types and the validator's `GedcomDialect`), `codemirror` (one re-export), `apps/web-editor` (the link path). Dependencies still point down, and no package gains a dependency.
+- Editor hosts: the web editor changes here. VS Code and JetBrains do not: the language server resolves a link through `new URL` against the document URI (`packages/language-server/src/createServer.ts:487-502`), which is right for 7.0 and refuses `\`, but misreads a 5.5.1 `%`, `#` or `?` (`a%20b.jpg` opens `a b.jpg`); making it use `resolveFileTarget` is a separate change, and that is its motivation. The Obsidian plugin adopts the functions in its own repository after release.
+- Docs: `packages/language-service` README and CHANGELOG, `packages/codemirror` CHANGELOG. `apps/web-editor` keeps no changelog; the PR says what changed.

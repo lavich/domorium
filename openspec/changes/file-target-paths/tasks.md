@@ -1,18 +1,23 @@
 ## 1. The library
 
-- [ ] 1.1 Add `resolveFileTarget` and `relativeFilePath` in `packages/language-service/src/libs/links/fileTargetPath.ts`, reusing `decodeFileTarget` and the separator rule of `retargetFileLinks.ts`, and export both from `src/index.ts`. Verify with tests written first in `fileTargetPath.test.ts`, one per scenario of `language-service/file-target-path`, plus the plugin's cases from `domorium-obsidian/src/editor/service.test.ts`
+- [ ] 1.1 Add `resolveFileTarget` and `relativeFilePath` in `packages/language-service/src/libs/links/fileTargetPath.ts`, deciding relativity with `fileLinkKind` and decoding per segment as `decodeFileTarget` does, and export both from `src/index.ts`. Verify with tests written first in `fileTargetPath.test.ts`, one per scenario of `language-service/file-target-path`, plus the plugin's cases from `domorium-obsidian/src/editor/service.test.ts`
 - [ ] 1.2 Add `drawnCrop` in `packages/language-service/src/libs/media/drawnCrop.ts` and export it. Verify with tests written first in `drawnCrop.test.ts`, one per scenario of `language-service/media-crop`, plus the plugin's cases from `domorium-obsidian/src/editor/media.test.ts`
 - [ ] 1.3 Rebuild with `npm run build -w packages/language-service`. Verify that `dist/index.d.ts` declares the three functions
 
-## 2. The web editor
+## 2. CodeMirror
 
-- [ ] 2.1 Give `followLink` the document's dialect and resolve a `file-relative` link with `resolveFileTarget`; pass the dialect from `App.tsx`. Verify with tests in `apps/web-editor/src/workspace/followLink.test.ts`, one per scenario of `web-editor/follow-file-link`, keeping the existing ones
+- [ ] 2.1 Re-export `resolveFileTarget` from `packages/codemirror/src/index.ts` beside `DocumentSymbolKind`, and rebuild with `npm run build -w packages/codemirror`. Verify with a test in `packages/codemirror/src/index.test.ts` that the package exposes it, beside the existing export tests
 
-## 3. Documentation
+## 3. The web editor
 
-- [ ] 3.1 `packages/language-service/README.md`: a short section on resolving a payload, spelling a path and clamping a crop, with an example whose names exist. Verify with `npm run check:docs` and by running the example against `dist`
-- [ ] 3.2 `packages/language-service/CHANGELOG.md`: an `## Unreleased` entry naming the three functions and #380. Verify with `npm run check:docs`
+- [ ] 3.1 Pass the dialect with the link: `onFollowLink(link, dialect)` in `createGedcomEditor.ts`, read from the service updated for the click, through `GedcomEditor.tsx`, the `workspace.followLink` command and `cordis/testing.tsx`. Verify with `npm run typecheck` and the existing editor tests
+- [ ] 3.2 Have `followLink` resolve a `file-relative` link with `resolveFileTarget` and map `null` to the two notices. Verify with tests in `apps/web-editor/src/workspace/followLink.test.ts`, one per scenario of `web-editor/follow-file-link`, passing GEDCOM 5.5.1 to the existing "reads a Windows separator" test
 
-## 4. Gate
+## 4. Documentation
 
-- [ ] 4.1 Run `npm run check`; record whether `check:jetbrains` ran or was skipped for lack of a JDK
+- [ ] 4.1 `packages/language-service/README.md`: a short section on resolving a payload, spelling a path and clamping a crop, with an example whose names exist. Verify with `npm run check:docs` and by running the example against `dist`
+- [ ] 4.2 `## Unreleased` entries naming #380: `packages/language-service/CHANGELOG.md` (the three functions) and `packages/codemirror/CHANGELOG.md` (the re-export). Verify with `npm run check:docs`
+
+## 5. Gate
+
+- [ ] 5.1 Run `npm run check`; record whether `check:jetbrains` ran or was skipped for lack of a JDK

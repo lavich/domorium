@@ -19,6 +19,11 @@
 - **WHEN** `{ top: 200, left: 0, width: 10, height: 10 }` is clamped to 100 by 100
 - **THEN** the result is `null`
 
+#### Scenario: A rectangle that starts before the image
+
+- **WHEN** `{ top: -10, left: -20, width: 50, height: 50 }` is clamped to 100 by 100
+- **THEN** the result is `{ top: 0, left: 0, width: 30, height: 40 }`
+
 #### Scenario: An image with no size yet
 
 - **WHEN** any rectangle is clamped to 0 by 100
