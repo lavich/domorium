@@ -202,10 +202,32 @@ no record or to a record that is not multimedia, and where a multimedia record
 carries no file. `HEAD.FILE` names the transmission rather than media, so it
 answers nothing there either.
 
-The answer describes and does not fetch: reading the file, resolving it against a
-workspace, reaching the network, and measuring the image stay with the caller. A
-rectangle is carried as written even where it names an extent larger than its
-image, because the extent of an image is not knowable from the document.
+The answer describes and does not fetch: reading the file, reaching the network,
+and measuring the image stay with the caller. A rectangle is carried as written
+even where it names an extent larger than its image, because the extent of an
+image is not knowable from the document.
+
+Three pure functions do the arithmetic every host would otherwise write again.
+`resolveFileTarget` turns a relative payload into a path from the root the host
+opened, by the dialect's rules: GEDCOM 7 percent-decodes and separates only at
+`/`, 5.5.1 separates at `\` too. `relativeFilePath` spells a path back from the
+document's folder, unescaped: the inverse in 5.5.1, and the form `moveFileLinks`
+takes, which escapes it for GEDCOM 7. `drawnCrop` clamps a rectangle to the image once it is
+loaded, or answers `null` for "draw the whole image".
+
+```typescript
+const dialect = album.getDocument().getDialect(); // "7.0"
+if (media?.kind === "file-relative") {
+  resolveFileTarget("family/tree.ged", media.targetText, dialect);
+  // "family/media/family.jpg"; null for a payload that climbs above the root,
+  // decodes to a separator, or names a folder
+}
+relativeFilePath("family/tree.ged", "shared/photo.jpg"); // "../shared/photo.jpg"
+if (media?.crop) {
+  drawnCrop(media.crop, 150, 400);
+  // { top: 10, left: 20, height: 100, width: 130 }, clamped to the image's width
+}
+```
 
 ## Moving a file a document points at
 

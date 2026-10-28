@@ -234,3 +234,49 @@ describe("createGedcomEditor", () => {
     expect(handle!.getText()).toBe("0 NOTE typed\n" + text);
   });
 });
+
+describe("following a link", () => {
+  const follow = (header: string[], file: string) => {
+    const onFollowLink = vi.fn();
+    const lines = [...header, "0 @O1@ OBJE", `1 FILE ${file}`, "0 TRLR"];
+    const parent = document.createElement("div");
+    document.body.append(parent);
+    handle = createGedcomEditor({
+      parent,
+      initialText: lines.join("\n"),
+      theme: "light",
+      onChange: () => {},
+      onStatusChange: () => {},
+      onDiagnosticsChange: () => {},
+      onFollowLink,
+    });
+    const view = EditorView.findFromDOM(parent)!;
+    // jsdom lays nothing out, so the click lands where the payload is.
+    vi.spyOn(view, "posAtCoords").mockReturnValue(
+      view.state.doc.line(lines.length - 1).to - 1,
+    );
+    view.contentDOM.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, ctrlKey: true, button: 0 }),
+    );
+    return onFollowLink;
+  };
+
+  it("passes the document's own dialect, without which every file link would be unreachable", () => {
+    expect(
+      follow(["0 HEAD", "1 GEDC", "2 VERS 7.0"], "a%20b.jpg"),
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ targetText: "a%20b.jpg" }),
+      "7.0",
+    );
+    handle?.destroy();
+    expect(
+      follow(
+        ["0 HEAD", "1 GEDC", "2 VERS 5.5.1", "3 FORM LINEAGE-LINKED"],
+        "a.jpg",
+      ),
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ targetText: "a.jpg" }),
+      "5.5.1",
+    );
+  });
+});

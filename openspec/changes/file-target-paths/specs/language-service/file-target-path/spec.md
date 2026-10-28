@@ -4,7 +4,7 @@
 
 `resolveFileTarget(documentPath, targetText, dialect)` SHALL return the root-relative path that `targetText`, read as a `FILE` payload of a document at the root-relative `documentPath`, names, or `null`.
 
-It SHALL return `null` unless `fileLinkKind(targetText, dialect)` is `file-relative`, so that the payloads it resolves are exactly those `documentLinks` reports as relative. Otherwise it SHALL split `targetText` into segments — at `/` in GEDCOM 7, at `/` and `\` in any other dialect — and only then, in GEDCOM 7, percent-decode each segment as `decodeFileTarget` does, leaving a segment with a malformed escape as written. Starting from the folder of `documentPath`, empty and `.` segments SHALL be dropped and, outside GEDCOM 7, `..` SHALL remove the preceding segment. It SHALL return `null` when a `..` would climb above the root, when a GEDCOM 7 segment that held a percent escape decodes to `.` or `..` or to a name containing `/` or `\`, and when the result is the root folder itself.
+It SHALL return `null` unless `fileLinkKind(targetText, dialect)` is `file-relative`, so that the payloads it resolves are exactly those `documentLinks` reports as relative. Otherwise it SHALL split `targetText` into segments — at `/` in GEDCOM 7, at `/` and `\` in any other dialect — and only then, in GEDCOM 7, percent-decode each segment as `decodeFileTarget` does, leaving a segment with a malformed escape as written. Starting from the folder of `documentPath`, empty and `.` segments SHALL be dropped and, outside GEDCOM 7, `..` SHALL remove the preceding segment. It SHALL return `null` when a `..` would climb above the root, when a GEDCOM 7 segment that held a percent escape decodes to `.` or `..` or to a name containing `/`, `\` or `:`, and when the last segment is empty, `.` or `..`, so that the payload names a folder. `documentPath` SHALL be canonical: `/`-separated, with no `.`, `..` or empty segment.
 
 #### Scenario: A path beside the document
 
@@ -28,7 +28,7 @@ It SHALL return `null` unless `fileLinkKind(targetText, dialect)` is `file-relat
 
 #### Scenario: An escape that would make a separator or a parent
 
-- **WHEN** `a%2Fb.jpg`, `a%5Cb.jpg` or `%2E%2E/x.jpg` is resolved for `family/tree.ged` in GEDCOM 7
+- **WHEN** `a%2Fb.jpg`, `a%5Cb.jpg`, `%2E%2E/x.jpg` or `C%3A/photo.jpg` is resolved for `family/tree.ged` in GEDCOM 7
 - **THEN** the result is `null`
 
 #### Scenario: A backslash in 5.5.1
@@ -61,10 +61,15 @@ It SHALL return `null` unless `fileLinkKind(targetText, dialect)` is `file-relat
 - **WHEN** `/photos/a.jpg` or `C:\photos\a.jpg` is resolved in GEDCOM 5.5.1
 - **THEN** the result is `null`
 
-#### Scenario: The folder itself
+#### Scenario: A folder
 
-- **WHEN** `./` or `a/..` is resolved for `tree.ged` in GEDCOM 5.5.1
+- **WHEN** `./`, `.`, `a/..`, `photos/` or `photos/.` is resolved for `family/tree.ged` in GEDCOM 5.5.1, or `photos/` in GEDCOM 7
 - **THEN** the result is `null`
+
+#### Scenario: An escape in 5.5.1
+
+- **WHEN** `a%2Fb.jpg` is resolved for `tree.ged` in GEDCOM 5.5.1
+- **THEN** the result is `a%2Fb.jpg`
 
 #### Scenario: No dialect
 

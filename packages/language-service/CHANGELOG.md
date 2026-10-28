@@ -10,6 +10,13 @@ All notable changes to `@domorium/language-service` are documented here.
   xref at `@`: accepting `@I1@` after `1 HUSB @I` wrote `@@I1@` in VS Code. A
   5.5.1 calendar escape is one token, `@#DFRENCH R@` and its space included
   (#468). Code that builds `CompletionItem` values itself needs the field.
+- **`resolveFileTarget`, `relativeFilePath` and `drawnCrop`** — the arithmetic
+  every host wrote for itself, and two of them wrote against the format: a
+  GEDCOM 7 `FILE photos/my%20photo.jpg` was looked for by that name, and a `\`
+  split a GEDCOM 7 name the format says it is part of. `resolveFileTarget` reads
+  a relative payload by the dialect's rules, `relativeFilePath` spells a path
+  back from the document's folder, and `drawnCrop` clamps a `CROP` to the loaded
+  image (#380). `GedcomDialect` is exported as a type, so a caller can name it.
 - **`moveFileLinks(from, to)` refuses a move it cannot write.** Moving a
   photograph above the folder of a GEDCOM 7 document gave `retargetFileLinks`
   the target `../photos/marie.jpg`, which it wrote although this package does

@@ -32,4 +32,8 @@ describe("@domorium/codemirror public API", () => {
     expect("goToDefinition" in packageApi).toBe(true);
     expect("goToNextReference" in packageApi).toBe(true);
   });
+
+  it("exposes the reading of a FILE payload, so a host that depends on this package alone resolves one as the library does", () => {
+    expect("resolveFileTarget" in packageApi).toBe(true);
+  });
 });

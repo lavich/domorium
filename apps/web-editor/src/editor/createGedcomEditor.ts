@@ -21,6 +21,7 @@ import {
   createGedcomExtensions,
   createStandaloneEditorExtensions,
   type DocumentLink,
+  type GedcomDialect,
   EditorLanguageService,
   goToDefinition,
   goToNextReference,
@@ -50,7 +51,7 @@ export interface CreateGedcomEditorOptions {
    * anything else belongs to whoever knows which folder is open, which is not
    * the editor.
    */
-  onFollowLink?(link: DocumentLink): void;
+  onFollowLink?(link: DocumentLink, dialect: GedcomDialect | undefined): void;
   /** An edit happened. Deliberately carries no text — see GedcomEditorHandle.getText. */
   onChange(): void;
   onDiagnosticsChange(diagnostics: WebDiagnostic[]): void;
@@ -132,8 +133,11 @@ export function createGedcomEditor(
               ? applyWorkspaceEdit(editor, edit, language.getVersion())
               : false,
           openDocumentLink: (link) =>
-            options.onFollowLink
-              ? options.onFollowLink(link)
+            options.onFollowLink && editor
+              ? options.onFollowLink(
+                  link,
+                  language.update(editor.state.doc).getDocument().getDialect(),
+                )
               : openWebAddress(link),
         },
       }),

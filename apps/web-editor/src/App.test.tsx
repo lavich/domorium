@@ -23,11 +23,14 @@ vi.mock("./editor/GedcomEditor", () => ({
       initialText: string;
       onChange(): void;
       onDiagnosticsChange(diagnostics: []): void;
-      onFollowLink(link: {
-        kind: string;
-        targetText: string;
-        range: unknown;
-      }): void;
+      onFollowLink(
+        link: {
+          kind: string;
+          targetText: string;
+          range: unknown;
+        },
+        dialect: string,
+      ): void;
     }
   >(function MockGedcomEditor(
     { initialText, onChange, onDiagnosticsChange, onFollowLink },
@@ -58,11 +61,14 @@ vi.mock("./editor/GedcomEditor", () => ({
         <button
           type="button"
           onClick={() =>
-            onFollowLink({
-              kind: "file-relative",
-              targetText: "media/portrait.jpg",
-              range: null,
-            })
+            onFollowLink(
+              {
+                kind: "file-relative",
+                targetText: "media/portrait.jpg",
+                range: null,
+              },
+              "7.0",
+            )
           }
         >
           follow the media link
@@ -70,11 +76,14 @@ vi.mock("./editor/GedcomEditor", () => ({
         <button
           type="button"
           onClick={() =>
-            onFollowLink({
-              kind: "http",
-              targetText: "https://example.org/",
-              range: null,
-            })
+            onFollowLink(
+              {
+                kind: "http",
+                targetText: "https://example.org/",
+                range: null,
+              },
+              "7.0",
+            )
           }
         >
           follow the web link

@@ -19,7 +19,7 @@ Each takes what it needs and nothing else, so a host calls it with values it alr
 
 ### `resolveFileTarget` reads the payload the way `moveFileLinks` writes it
 
-Whether a payload is relative at all is `fileLinkKind`'s answer (`documentLinks.ts:15-26`), not a second rule: in GEDCOM 7 that already excludes `\`, `:`, `?`, `#`, a leading `/` and a literal `..`; in 5.5.1 it excludes `/`, `\\` and a drive. It then splits — at `/`, and outside 7.0 also at `\` (the rule `normalize` applies) — and only then decodes each segment in 7.0, the per-segment decoding of `decodeFileTarget`, so `%2F` cannot become a separator. A GEDCOM 7 segment that held an escape and decodes to `.` or `..` or to a name holding `/` or `\` gives `null` (a literal `.` is dropped like any other dot segment): a name no host can follow without reading it as a path, and the web editor's gateways split at `\` (`fileGateway.ts:71`). A result that is the root folder itself is `null` too, since no host opens a folder from a `FILE` link.
+Whether a payload is relative at all is `fileLinkKind`'s answer (`documentLinks.ts:15-26`), not a second rule: in GEDCOM 7 that already excludes `\`, `:`, `?`, `#`, a leading `/` and a literal `..`; in 5.5.1 it excludes `/`, `\\` and a drive. It then splits — at `/`, and outside 7.0 also at `\` (the rule `normalize` applies) — and only then decodes each segment in 7.0, the per-segment decoding of `decodeFileTarget`, so `%2F` cannot become a separator. A GEDCOM 7 segment that held an escape and decodes to `.` or `..` or to a name holding `/`, `\` or `:` gives `null` (the literal characters `fileLinkKind` already refuses; a decoded `C:` would read as a drive) (a literal `.` is dropped like any other dot segment): a name no host can follow without reading it as a path, and the web editor's gateways split at `\` (`fileGateway.ts:71`). A payload whose last segment is empty, `.` or `..` names a folder and is `null` too, since no host opens a folder from a `FILE` link.
 
 ### `relativeFilePath` returns a plain path
 
@@ -45,3 +45,8 @@ Behaviour decision, not architecture: the contract lives in the specs (ADR-0018)
 - [A 7.0 payload `%5C`] → decodes to `\`, which the gateways would split; refused rather than followed.
 - [`moveFileLinks` matches payloads through `normalize`, which only strips a leading `./`] → `media/../photo.jpg` in 5.5.1 opens `photo.jpg` but is not retargeted when it moves. So is `a//b`, whose empty segment this function drops and `normalize` keeps. Reading and writing still disagree there; that is #188's matcher, outside this change.
 - [Two copies until the plugin adopts the functions] → the plugin's PR deletes its copies; tracked in that repository.
+
+## Implementation
+
+- The editor reads the dialect from `language.update(editor.state.doc)` inside `openDocumentLink`, after the click handler has updated the service for the same document (`packages/codemirror/src/extensions.ts:303-315`). `createGedcomEditor.test.ts` Ctrl-clicks a payload in a 7.0 and a 5.5.1 document, with `posAtCoords` stubbed since jsdom lays nothing out, and expects each document's own dialect.
+- An unreachable payload gets the notice "`<payload>` cannot be reached".

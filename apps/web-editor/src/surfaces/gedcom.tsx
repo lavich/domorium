@@ -172,8 +172,8 @@ function GedcomView({ model, file }: { model: GedcomModel; file: OpenFile }) {
       onStatusChange={(status) =>
         model.say(file.path, file.editorKey, { status })
       }
-      onFollowLink={(link) =>
-        ctx.commands.execute("workspace.followLink", link)
+      onFollowLink={(link, dialect) =>
+        ctx.commands.execute("workspace.followLink", link, dialect)
       }
     />
   );

@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { followLink } from "./followLink";
 
-const inFolder = { path: "tree.ged", hasWorkspace: true };
+const inFolder = {
+  path: "tree.ged",
+  hasWorkspace: true,
+  dialect: "7.0",
+} as const;
 
 describe("following a link out of a document", () => {
   it("resolves a path against the directory of the document that names it", () => {
@@ -19,6 +23,7 @@ describe("following a link out of a document", () => {
         {
           path: "media/people/anna.ged",
           hasWorkspace: true,
+          dialect: "7.0",
         },
       ),
     ).toEqual({ kind: "file", path: "media/people/portrait.jpg" });
@@ -28,7 +33,7 @@ describe("following a link out of a document", () => {
     expect(
       followLink(
         { kind: "file-relative", targetText: "media\\portrait.jpg" },
-        inFolder,
+        { ...inFolder, dialect: "5.5.1" },
       ),
     ).toEqual({ kind: "file", path: "media/portrait.jpg" });
   });
@@ -51,6 +56,7 @@ describe("following a link out of a document", () => {
         {
           path: "tree.ged",
           hasWorkspace: false,
+          dialect: "7.0",
         },
       ),
     ).toEqual({
@@ -63,9 +69,39 @@ describe("following a link out of a document", () => {
     expect(
       followLink(
         { kind: "file-relative", targetText: "../../keys/id_rsa" },
-        { path: "media/tree.ged", hasWorkspace: true },
+        { path: "media/tree.ged", hasWorkspace: true, dialect: "5.5.1" },
       ),
-    ).toMatchObject({ kind: "refused" });
+    ).toEqual({
+      kind: "refused",
+      message: "../../keys/id_rsa lies outside the folder you granted",
+    });
+  });
+
+  it("decodes a GEDCOM 7 escape, so my%20photo.jpg opens the file with a space", () => {
+    expect(
+      followLink(
+        { kind: "file-relative", targetText: "photos/my%20photo.jpg" },
+        inFolder,
+      ),
+    ).toEqual({ kind: "file", path: "photos/my photo.jpg" });
+  });
+
+  it("separates at a 5.5.1 backslash from the document's own folder", () => {
+    expect(
+      followLink(
+        { kind: "file-relative", targetText: "photos\\a.jpg" },
+        { path: "family/tree.ged", hasWorkspace: true, dialect: "5.5.1" },
+      ),
+    ).toEqual({ kind: "file", path: "family/photos/a.jpg" });
+  });
+
+  it("refuses an escaped backslash rather than open it as a folder", () => {
+    expect(
+      followLink({ kind: "file-relative", targetText: "a%5Cb.jpg" }, inFolder),
+    ).toEqual({
+      kind: "refused",
+      message: "a%5Cb.jpg cannot be reached",
+    });
   });
 
   it("refuses an absolute path, which names a place the folder does not hold", () => {

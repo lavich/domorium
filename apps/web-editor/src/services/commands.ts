@@ -1,6 +1,6 @@
 import { Service, type Context } from "cordis";
 
-import type { DocumentLink } from "@domorium/codemirror";
+import type { DocumentLink, GedcomDialect } from "@domorium/codemirror";
 
 /** A plugin that adds a command declares it here, the way a service is declared. */
 export interface Commands {
@@ -13,7 +13,10 @@ export interface Commands {
   "workspace.reset"(): void;
   "workspace.activateTab"(path: string): void;
   "workspace.closeTab"(path: string): void;
-  "workspace.followLink"(link: DocumentLink): void;
+  "workspace.followLink"(
+    link: DocumentLink,
+    dialect: GedcomDialect | undefined,
+  ): void;
 }
 
 type Handler = (...args: never[]) => void;

@@ -13,6 +13,9 @@ All notable changes to `@domorium/codemirror` are documented here.
   the same as the main one's.
 - It reads `CompletionItem.textEdit`, so the release that ships this raises the
   `@domorium/language-service` floor to the release that ships that field.
+- `resolveFileTarget` and the type `GedcomDialect` are re-exported from
+  `@domorium/language-service`, so a host that depends on this package alone
+  resolves a `FILE` payload as the library reads it (#380).
 
 ## 2.1.0
 
