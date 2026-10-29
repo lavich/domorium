@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
-## Unreleased
+## 2.2.0
 
 - **A completion writes one token.** The editor took the typed text back to the
   last character outside `[A-Z0-9_@]`, so `2 DATE @#DJU` plus `@#DJULIAN@` gave
@@ -11,8 +11,8 @@ All notable changes to `@domorium/codemirror` are documented here.
   the cursor and replaces the whole token the language service names (#468).
   With several cursors, the others are completed only where their token reads
   the same as the main one's.
-- It reads `CompletionItem.textEdit`, so the release that ships this raises the
-  `@domorium/language-service` floor to the release that ships that field.
+- It reads `CompletionItem.textEdit`, so it asks for `@domorium/language-service`
+  `^2.3.0`, the release that ships that field.
 - `resolveFileTarget` and the type `GedcomDialect` are re-exported from
   `@domorium/language-service`, so a host that depends on this package alone
   resolves a `FILE` payload as the library reads it (#380).

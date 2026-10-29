@@ -19,6 +19,7 @@
       <li>Clickable web and local-file links</li>
       <li>Quick fixes for broken references and invalid levels</li>
       <li>Code folding for records and nested structures</li>
+      <li>Media links that follow a file renamed or moved in the IDE</li>
       <li>Support for <code>.ged</code> and <code>.gedcom</code> files</li>
     </ul>
 
@@ -31,6 +32,15 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.8.0</h2>
+    <ul>
+      <li><b>A photograph renamed or moved in the IDE is followed by the trees that name it.</b> Every open GEDCOM document that names the file by a relative path is rewritten. A GEDCOM 7 document cannot name a file above its own folder, so a move there leaves it unchanged and a warning names it. Files that are not open, folder renames, renames outside the IDE and absolute paths are not followed</li>
+      <li><b>A completion says which text it replaces.</b> A suggestion carried only its label and the IDE guessed the word it stood for, which GEDCOM splits at every <code>@</code>: an xref, or a 5.5.1 calendar escape such as <code>@#DFRENCH R@</code>, is now replaced whole</li>
+      <li><b>Year 0 in the Gregorian or Julian calendar is reported</b>, in both GEDCOM 7 and 5.5.1, under the new code <code>VAL016</code>. Neither calendar has one, and <code>1 JAN 0</code> and <code>0BC</code> passed without a word</li>
+      <li><b>A large file is read with less memory.</b> Each line left a frame on the lexer&rsquo;s stack until the whole file was read; it now holds at most two</li>
+      <li><b>An error or a UI freeze can be reported to the plugin&rsquo;s authors.</b> The IDE&rsquo;s error dialog sends it through JetBrains Marketplace, with the thread dumps of a freeze, and so does <i>Send error reports to JetBrains automatically</i> where it is on</li>
+    </ul>
+
     <h2>1.7.1</h2>
     <ul>
       <li><b>A GEDCOM 5.5.1 date names its calendar where the specification puts it.</b> The escape sits inside <code>&lt;DATE&gt;</code>, which comes after the modifier, so <code>ABT @#DHEBREW@ TSH 5760</code> and a Julian <code>FROM</code>/<code>TO</code> range were reported as invalid dates, while <code>@#DJULIAN@ FROM 1 JAN 1700 TO 1 JAN 1710</code>, which the grammar does not admit, passed. Each date now carries its own calendar and is read in that calendar&rsquo;s months</li>
@@ -188,6 +198,7 @@
         <spellchecker.support language="TEXT"
                               implementationClass="domorium.jetbrains.GedcomSpellcheckingStrategy"
                               order="first"/>
+        <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
