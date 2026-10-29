@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { build } from "esbuild";
 import { spawn } from "child_process";
 import { mkdtempSync } from "fs";
@@ -817,4 +817,103 @@ describe("stdio entry point", () => {
       child.kill();
     }
   });
+});
+
+describe("range requests", () => {
+  const lines = [
+    "0 HEAD",
+    "1 GEDC",
+    "2 VERS 7.0",
+    "0 @I1@ INDI",
+    "1 NAME John /Doe/",
+    "1 BIRT",
+    "2 DATE 1 JAN 1900",
+    "0 @I2@ INDI",
+    "1 NAME Jane /Doe/",
+    "0 TRLR",
+  ];
+  const uri = "file:///range.ged";
+  const span = (
+    startLine: number,
+    startCharacter: number,
+    endLine: number,
+    endCharacter: number,
+  ) => ({
+    start: { line: startLine, character: startCharacter },
+    end: { line: endLine, character: endCharacter },
+  });
+
+  let bundlePath: string;
+  beforeAll(async () => {
+    bundlePath = await bundleStdio();
+  }, 15000);
+
+  async function withServer<T>(
+    capabilities: object,
+    text: string | null,
+    use: (client: LspTestClient, initialized: unknown) => Promise<T>,
+  ): Promise<T> {
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    try {
+      const initialized = await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities,
+      });
+      client.notify("initialized", {});
+      if (text !== null) {
+        client.notify("textDocument/didOpen", {
+          textDocument: { uri, languageId: "gedcom", version: 1, text },
+        });
+      }
+      return await use(client, initialized);
+    } finally {
+      child.kill();
+    }
+  }
+
+  const hintLines = (
+    range: ReturnType<typeof span>,
+    text: string | null = lines.join("\n"),
+  ) =>
+    withServer({}, text, async (client) => {
+      const response = (await client.request(2, "textDocument/inlayHint", {
+        textDocument: { uri },
+        range,
+      })) as { result: { position: { line: number } }[] };
+      return response.result
+        .map(({ position }) => position.line)
+        .sort((a, b) => a - b);
+    });
+
+  it("answers inlay hints for the one record a range covers", async () => {
+    await expect(hintLines(span(7, 0, 8, 16))).resolves.toEqual([8]);
+  }, 15000);
+
+  it("answers inlay hints for the one record a range covers when lines end in CRLF", async () => {
+    await expect(
+      hintLines(span(7, 0, 8, 16), lines.join("\r\n")),
+    ).resolves.toEqual([8]);
+  }, 15000);
+
+  it("answers the whole record a range falls inside", async () => {
+    await expect(hintLines(span(5, 0, 5, 6))).resolves.toEqual([4, 5, 6]);
+  }, 15000);
+
+  it("answers every inlay hint for a range over the whole document", async () => {
+    await expect(hintLines(span(0, 0, 9, 6))).resolves.toEqual([
+      1, 2, 4, 5, 6, 8,
+    ]);
+  }, 15000);
+
+  it("reads a range ending past the document as ending at its end", async () => {
+    await expect(hintLines(span(0, 0, 999, 0))).resolves.toEqual([
+      1, 2, 4, 5, 6, 8,
+    ]);
+  }, 15000);
+
+  it("answers no inlay hints for a document not yet opened", async () => {
+    await expect(hintLines(span(0, 0, 9, 6), null)).resolves.toEqual([]);
+  }, 15000);
 });

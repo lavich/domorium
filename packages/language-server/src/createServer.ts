@@ -15,6 +15,7 @@ import type {
   DocumentHighlight,
   DocumentHighlightParams,
   PrepareRenameParams,
+  Range,
   RenameParams,
   DocumentLink,
   DocumentLinkParams,
@@ -48,12 +49,18 @@ import {
   decodeFileTarget,
   semanticTokenLegend,
   type MediaReference,
+  type OffsetRange,
 } from "@domorium/language-service";
 
 import { pathFromDocument } from "./pathFromDocument";
 
 /** As much as the CodeMirror hosts show by default, so the two agree. */
 const HOVER_MAX_LINES = 24;
+
+const offsetRange = (document: TextDocument, range: Range): OffsetRange => ({
+  from: document.offsetAt(range.start),
+  to: document.offsetAt(range.end),
+});
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
@@ -102,10 +109,11 @@ export const createServer = (connection: Connection) => {
 
   connection.languages.inlayHint.on((params: InlayHintParams): InlayHint[] => {
     const service = cache.get(params.textDocument.uri);
-    if (!service) {
+    const document = documents.get(params.textDocument.uri);
+    if (!service || !document) {
       return [];
     }
-    return service.getInlayHints();
+    return service.getInlayHints(offsetRange(document, params.range));
   });
 
   connection.onDefinition((params: DefinitionParams): Location[] => {

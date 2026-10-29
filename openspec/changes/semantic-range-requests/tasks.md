@@ -1,6 +1,6 @@
 ## 1. Inlay hints
 
-- [ ] 1.1 In `packages/language-server/src/createServer.ts`, convert an LSP range to an `OffsetRange` through `documents.get(uri).offsetAt`, and have the inlay hint handler pass `params.range` to `getInlayHints`, answering empty when the document or service is missing. Verify with tests in `packages/language-server/src/stdio.test.ts`, written first, one per scenario of "Inlay hints are answered for the requested range" in `language-server/range-requests` (including the CRLF variant, a range of `(0,0)-(999,0)`, and a request before `didOpen` answered `[]`), over the document the spec gives; then `npm run typecheck -w packages/language-server`
+- [x] 1.1 In `packages/language-server/src/createServer.ts`, convert an LSP range to an `OffsetRange` through `documents.get(uri).offsetAt`, and have the inlay hint handler pass `params.range` to `getInlayHints`, answering empty when the document or service is missing. Verify with tests in `packages/language-server/src/stdio.test.ts`, written first, one per scenario of "Inlay hints are answered for the requested range" in `language-server/range-requests` (including the CRLF variant, a range of `(0,0)-(999,0)`, and a request before `didOpen` answered `[]`), over the document the spec gives; then `npm run typecheck -w packages/language-server`
 
 ## 2. Semantic tokens
 
