@@ -199,6 +199,22 @@
                               implementationClass="domorium.jetbrains.GedcomSpellcheckingStrategy"
                               order="first"/>
         <extendWordSelectionHandler implementation="domorium.jetbrains.GedcomXrefSelectioner"/>
+        <editorActionHandler action="EditorNextWord"
+                             implementationClass="domorium.jetbrains.GedcomNextWordHandler"/>
+        <editorActionHandler action="EditorNextWordWithSelection"
+                             implementationClass="domorium.jetbrains.GedcomNextWordWithSelectionHandler"/>
+        <editorActionHandler action="EditorNextWordInDifferentHumpsMode"
+                             implementationClass="domorium.jetbrains.GedcomNextWordInDifferentHumpsModeHandler"/>
+        <editorActionHandler action="EditorNextWordInDifferentHumpsModeWithSelection"
+                             implementationClass="domorium.jetbrains.GedcomNextWordInDifferentHumpsModeWithSelectionHandler"/>
+        <editorActionHandler action="EditorPreviousWord"
+                             implementationClass="domorium.jetbrains.GedcomPreviousWordHandler"/>
+        <editorActionHandler action="EditorPreviousWordWithSelection"
+                             implementationClass="domorium.jetbrains.GedcomPreviousWordWithSelectionHandler"/>
+        <editorActionHandler action="EditorPreviousWordInDifferentHumpsMode"
+                             implementationClass="domorium.jetbrains.GedcomPreviousWordInDifferentHumpsModeHandler"/>
+        <editorActionHandler action="EditorPreviousWordInDifferentHumpsModeWithSelection"
+                             implementationClass="domorium.jetbrains.GedcomPreviousWordInDifferentHumpsModeWithSelectionHandler"/>
         <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
     </extensions>
 

@@ -88,6 +88,47 @@ class GedcomXrefWordTest : BasePlatformTestCase() {
         assertEquals("1 HUSB @<selection>I1</selection>@", run("txt", "1 HUSB @I<caret>1@", ::doubleClick))
     }
 
+    fun testNextWordCrossesAnXref() {
+        assertEquals("1 HUSB @I1@<caret>", run("ged", "1 HUSB <caret>@I1@", "EditorNextWord"))
+        assertEquals("1 HUSB @I1@<caret>", run("ged", "1 HUSB @I<caret>1@", "EditorNextWord"))
+    }
+
+    fun testPreviousWordCrossesAnXref() {
+        assertEquals("1 HUSB <caret>@I1@", run("ged", "1 HUSB @I1@<caret>", "EditorPreviousWord"))
+        assertEquals("1 HUSB <caret>@I1@", run("ged", "1 HUSB @I<caret>1@", "EditorPreviousWord"))
+    }
+
+    fun testNextWordWithSelectionSelectsTheXref() {
+        assertEquals("1 HUSB <selection>@I1@</selection>", run("ged", "1 HUSB <caret>@I1@", "EditorNextWordWithSelection"))
+    }
+
+    fun testMovingFromInsideAnXrefClearsOrExtendsTheSelection() {
+        val marked = "1 HUSB @<selection>I<caret></selection>1@"
+        assertEquals("1 HUSB @I1@<caret>", run("ged", marked, "EditorNextWord"))
+        assertEquals("1 HUSB @<selection>I1@</selection>", run("ged", marked, "EditorNextWordWithSelection"))
+    }
+
+    fun testNextWordInTheOtherHumpsModeCrossesAnXref() {
+        assertEquals("1 HUSB @I1@<caret>", run("ged", "1 HUSB <caret>@I1@", "EditorNextWordInDifferentHumpsMode"))
+    }
+
+    fun testNextWordMovesEachCaretOverItsXref() {
+        assertEquals(
+            "1 HUSB @I1@<caret>\n1 FAMS @F1@<caret>",
+            run("ged", "1 HUSB <caret>@I1@\n1 FAMS <caret>@F1@", "EditorNextWord"),
+        )
+    }
+
+    fun testWordMovementOverAnEmailAddressIsThePlatforms() {
+        val line = "1 EMAIL john@example.com"
+        for (actionId in listOf("EditorNextWord", "EditorPreviousWord")) {
+            for (offset in 0..line.length) {
+                val marked = line.substring(0, offset) + "<caret>" + line.substring(offset)
+                assertEquals("$actionId $marked", run("txt", marked, actionId), run("ged", marked, actionId))
+            }
+        }
+    }
+
     private fun doubleClick(editor: Editor) = editor.caretModel.currentCaret.selectWordAtCaret(false)
 
     private fun run(
