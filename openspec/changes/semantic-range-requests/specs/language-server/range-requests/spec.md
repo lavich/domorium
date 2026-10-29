@@ -62,6 +62,11 @@ In its `initialize` result the server SHALL offer `semanticTokensProvider` with 
 - **WHEN** a client that declared semantic token requests `{ range: true, full: { delta: true } }` initializes, as VS Code does
 - **THEN** the server offers `range: true` and does not offer `full`
 
+#### Scenario: A client that declared range requests as an object
+
+- **WHEN** a client that declared semantic token requests `{ range: {} }` initializes
+- **THEN** the server offers `range: true` and does not offer `full`
+
 #### Scenario: A client that can ask only for the whole document
 
 - **WHEN** a client that declared semantic token requests `{ range: false, full: true }` initializes, as LSP4IJ does

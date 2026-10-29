@@ -955,6 +955,17 @@ describe("range requests", () => {
     });
   }, 15000);
 
+  it("offers semantic tokens by range alone to a client that declared range requests as an object", async () => {
+    await expect(
+      semanticTokensProvider({
+        textDocument: { semanticTokens: { requests: { range: {} } } },
+      }),
+    ).resolves.toEqual({
+      legend: semanticTokenLegend,
+      range: true,
+    });
+  }, 15000);
+
   it("offers semantic tokens in full to a client that can ask only in full", async () => {
     await expect(semanticTokensProvider(lsp4ij)).resolves.toEqual({
       legend: semanticTokenLegend,

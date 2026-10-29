@@ -17,6 +17,7 @@ import type {
   PrepareRenameParams,
   Range,
   SemanticTokens,
+  SemanticTokensRangeParams,
   RenameParams,
   DocumentLink,
   DocumentLinkParams,
@@ -89,7 +90,6 @@ export const createServer = (connection: Connection) => {
   const cache = new Map<string, GedcomLanguageService>();
   let workspaceFolders: WorkspaceFolder[] = [];
   let insertReplaceSupport = false;
-  let semanticTokensByRange = false;
 
   connection.onInitialize((params) => {
     workspaceFolders =
@@ -98,7 +98,7 @@ export const createServer = (connection: Connection) => {
     insertReplaceSupport =
       params.capabilities?.textDocument?.completion?.completionItem
         ?.insertReplaceSupport === true;
-    semanticTokensByRange = Boolean(
+    const semanticTokensByRange = Boolean(
       params.capabilities?.textDocument?.semanticTokens?.requests?.range,
     );
     return {
@@ -427,14 +427,16 @@ export const createServer = (connection: Connection) => {
     return semanticTokens(service);
   });
 
-  connection.languages.semanticTokens.onRange((params) => {
-    const service = cache.get(params.textDocument.uri);
-    const document = documents.get(params.textDocument.uri);
-    if (!service || !document) {
-      return { data: [] };
-    }
-    return semanticTokens(service, offsetRange(document, params.range));
-  });
+  connection.languages.semanticTokens.onRange(
+    (params: SemanticTokensRangeParams) => {
+      const service = cache.get(params.textDocument.uri);
+      const document = documents.get(params.textDocument.uri);
+      if (!service || !document) {
+        return { data: [] };
+      }
+      return semanticTokens(service, offsetRange(document, params.range));
+    },
+  );
 
   connection.onCompletion((params: CompletionParams): CompletionItem[] => {
     const service = cache.get(params.textDocument.uri);

@@ -54,5 +54,5 @@ Behaviour decision, not architecture: the contract lives in `language-server/ran
 - The conversion (`offsetRange`) and the encoding (`semanticTokens`) are module-level functions in `createServer.ts` beside `HOVER_MAX_LINES`, since neither reads the server's state.
 - The range-request tests in `stdio.test.ts` bundle the server once in a `beforeAll` and start a process per scenario, where the older tests bundle per test.
 - The VS Code changelog entry does not say the grammar colours what is off screen: above 20 MB, where the change matters, VS Code does not run the grammar at all.
-- `npm run check` passed with 1491 tests, and `check:jetbrains` ran with a JDK. One earlier run of `check:typescript` alone exited non-zero and was not reproduced in two further runs; its log was not kept.
+- `npm run check` passed with 1492 tests, and `check:jetbrains` ran with a JDK. One earlier run of `check:typescript` alone exited non-zero and was not reproduced in later runs or by the code reviews; its log was not kept.
 - Tasks 3.1 and 3.2 are left to a person: they need VS Code and a JetBrains IDE.
