@@ -1,6 +1,6 @@
 ## Why
 
-The language server builds inlay hints and semantic tokens for the whole document on every request, though `@domorium/language-service` already answers for a range (`getSemanticTokens(range?)` and `getInlayHints(range?)`, `packages/language-service/src/languageService.ts:129,187`). The inlay hint handler drops the `params.range` the request carries (`packages/language-server/src/createServer.ts:103-109`), and semantic tokens are declared `range: false, full: true` (`createServer.ts:94-98`), so no client can ask for less. On a 51 MiB file against a 50-line viewport that is 2,470,220 hints in 801 ms (183.4 MB of JSON) instead of 50 in 0.1 ms, and 6,220,351 tokens in 863 ms instead of 126. Reported as lavich/domorium#150.
+The language server builds inlay hints and semantic tokens for the whole document on every request, though `@domorium/language-service` already answers for a range (`getSemanticTokens(range?)` and `getInlayHints(range?)`, `packages/language-service/src/languageService.ts:129,187`). The inlay hint handler drops the `params.range` the request carries (`packages/language-server/src/createServer.ts:103-109`), and semantic tokens are declared `range: false, full: true` (`createServer.ts:94-98`), so no client can ask for less. On a 25 MB synthetic file, small enough for VS Code to hand to the server, the whole document is 1.31 million hints in 298 ms and 4.87 million tokens in 883 ms, on every request; an 80-line range takes about 0.1 ms. Reported as lavich/domorium#150, which measured a 51 MiB file: 2,470,220 hints in 801 ms (183.4 MB of JSON) and 6,220,351 tokens in 863 ms, against 50 hints and 126 tokens for a 50-line viewport.
 
 ## The requirement, as the user decided it
 
@@ -18,7 +18,7 @@ The language server builds inlay hints and semantic tokens for the whole documen
 
 ### New Capabilities
 
-- `language-server/range-requests`: how much of a document the server builds inlay hints and semantic tokens for, and which semantic token requests it offers to which client.
+- `language-server/range-requests`: how much of a document the server answers inlay hints and semantic tokens for, and which semantic token requests it offers to which client.
 
 ### Modified Capabilities
 
@@ -28,7 +28,7 @@ None. `vscode/textmate-grammar` already requires the grammar and the semantic la
 
 - Layers: `language-server` (adapter) only. It calls into `language-service` through methods that already take an `OffsetRange`; `language-service` and `validator` are unchanged. Dependencies still point down.
 - Editor hosts:
-  - VS Code changes. It declares range requests (`vscode-languageclient` 11), so it gets semantic tokens for the visible lines plus a viewport above and below, re-requested on scroll and edit, and inlay hints for the same span.
+  - VS Code changes. It declares range requests (`vscode-languageclient` 11), so it gets semantic tokens for the visible lines plus a viewport above and below, re-requested on scroll and edit, and inlay hints for that span widened by 30 lines each way.
   - JetBrains is unchanged. LSP4IJ 0.20.1 declares semantic token requests `full` only, sends only `semanticTokens/full`, and asks for inlay hints over the whole document; it gets exactly what it gets today. A known limit, not a regression.
   - The web editor and the Obsidian plugin are unaffected: they call `@domorium/language-service` through `@domorium/codemirror`, which already passes each visible range (`packages/codemirror/src/extensions.ts:521,552`).
 - Docs: an `## Unreleased` entry in `apps/vscode/CHANGELOG.md`, which receives the change through the server. `packages/language-server` keeps no changelog. The JetBrains `<change-notes>` keep no unreleased section, and JetBrains behaviour does not change, so it gets no entry.
