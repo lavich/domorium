@@ -2,7 +2,7 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
-## Unreleased
+## 1.8.1
 
 - **Colour and indentation hints are built for what is on screen.** The
   language server built both for the whole file on every request — on a 25 MB
@@ -10,6 +10,11 @@ All notable changes to the GEDCOM extension by Domorium are documented here.
   alone. It now builds them for the records in view and a screen either side,
   and again as you scroll. Above 20 MB, where VS Code does not run the grammar,
   lines scrolled into view are coloured a moment after they appear (#150).
+- **A month or a calendar written as a `SCHMA` alias is read as the one it
+  stands for when a day is judged.** With `_APRX` declared as `month-APR`,
+  `31 _APRX 2000` passed; with `_JUL` declared as `cal-JULIAN`,
+  `_JUL 29 FEB 1900` was marked although 1900 is a Julian leap year. The first
+  is now marked, naming `31 APR`, and the second is not (#448).
 
 ## 1.8.0
 

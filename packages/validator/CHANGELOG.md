@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 2.2.1
 
 - **A month or a calendar written as a `SCHMA` alias is read as the one it
   stands for when a day is judged.** The date grammar resolved the alias and the
