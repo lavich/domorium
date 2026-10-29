@@ -17,5 +17,5 @@
 
 ## 4. Gate
 
-- [ ] 4.1 Run `npm run check:conformance`. If any recorded diagnostic moves, re-record with `npm run check:conformance -- --update` and read the whole diff; every moved `VAL014` must be a date with an aliased month or calendar. Record the outcome here.
-- [ ] 4.2 Run `npm run check`; record whether `check:jetbrains` ran or was skipped for lack of a JDK.
+- [x] 4.1 Run `npm run check:conformance`. If any recorded diagnostic moves, re-record with `npm run check:conformance -- --update` and read the whole diff; every moved `VAL014` must be a date with an aliased month or calendar. Record the outcome here. Ran: no recorded diagnostic moved (23 official 7.0 files, 8 diagnostics; 14 vendor exports, 14793 diagnostics); nothing re-recorded.
+- [x] 4.2 Run `npm run check`; record whether `check:jetbrains` ran or was skipped for lack of a JDK. Ran: 1518 tests, and `check:jetbrains` ran with JDK 17 and passed.
