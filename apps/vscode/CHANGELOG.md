@@ -2,6 +2,14 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## Unreleased
+
+- **Colour and indentation hints are built for what is on screen.** The
+  language server built both for the whole file on every request — on a 25 MB
+  file, 4.9 million tokens and 1.3 million hints, nearly a second of work each
+  time. It now builds them for the records in view and a screen either side,
+  and again as you scroll (#150).
+
 ## 1.8.0
 
 - **A photograph renamed or moved in the Explorer is followed by the trees that
