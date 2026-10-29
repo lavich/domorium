@@ -215,6 +215,14 @@
                              implementationClass="domorium.jetbrains.GedcomPreviousWordInDifferentHumpsModeHandler"/>
         <editorActionHandler action="EditorPreviousWordInDifferentHumpsModeWithSelection"
                              implementationClass="domorium.jetbrains.GedcomPreviousWordInDifferentHumpsModeWithSelectionHandler"/>
+        <editorActionHandler action="EditorDeleteToWordStart"
+                             implementationClass="domorium.jetbrains.GedcomDeleteToWordStartHandler"/>
+        <editorActionHandler action="EditorDeleteToWordStartInDifferentHumpsMode"
+                             implementationClass="domorium.jetbrains.GedcomDeleteToWordStartInDifferentHumpsModeHandler"/>
+        <editorActionHandler action="EditorDeleteToWordEnd"
+                             implementationClass="domorium.jetbrains.GedcomDeleteToWordEndHandler"/>
+        <editorActionHandler action="EditorDeleteToWordEndInDifferentHumpsMode"
+                             implementationClass="domorium.jetbrains.GedcomDeleteToWordEndInDifferentHumpsModeHandler"/>
         <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
     </extensions>
 

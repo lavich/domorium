@@ -129,6 +129,60 @@ class GedcomXrefWordTest : BasePlatformTestCase() {
         }
     }
 
+    fun testDeleteToWordStartDeletesTheXref() {
+        assertEquals("1 HUSB <caret>", run("ged", "1 HUSB @I1@<caret>", "EditorDeleteToWordStart"))
+    }
+
+    fun testDeleteToWordEndDeletesTheXref() {
+        assertEquals("1 HUSB <caret>", run("ged", "1 HUSB <caret>@I1@", "EditorDeleteToWordEnd"))
+    }
+
+    fun testDeleteToWordStartInsideAnXrefDeletesItsOpeningPart() {
+        assertEquals("1 HUSB <caret>1@", run("ged", "1 HUSB @I<caret>1@", "EditorDeleteToWordStart"))
+    }
+
+    fun testDeletionInTheOtherHumpsModeDeletesTheXref() {
+        assertEquals("1 HUSB <caret>", run("ged", "1 HUSB @I1@<caret>", "EditorDeleteToWordStartInDifferentHumpsMode"))
+        assertEquals("1 HUSB <caret>", run("ged", "1 HUSB <caret>@I1@", "EditorDeleteToWordEndInDifferentHumpsMode"))
+    }
+
+    fun testDeletionWithASelectionDeletesTheSelection() {
+        assertEquals("1 <caret>1@", run("ged", "1 <selection>HUSB @I<caret></selection>1@", "EditorDeleteToWordStart"))
+    }
+
+    fun testWordDeletionInAnEmailAddressIsThePlatforms() {
+        val line = "1 EMAIL john@example.com"
+        for (actionId in listOf("EditorDeleteToWordStart", "EditorDeleteToWordEnd")) {
+            for (offset in 0..line.length) {
+                val marked = line.substring(0, offset) + "<caret>" + line.substring(offset)
+                assertEquals("$actionId $marked", run("txt", marked, actionId), run("ged", marked, actionId))
+            }
+        }
+    }
+
+    fun testEveryWordActionCrossesAnXref() {
+        val forward = "1 HUSB <caret>@I1@"
+        val backward = "1 HUSB @I1@<caret>"
+        val expected =
+            listOf(
+                Triple("EditorNextWord", forward, "1 HUSB @I1@<caret>"),
+                Triple("EditorNextWordWithSelection", forward, "1 HUSB <selection>@I1@</selection>"),
+                Triple("EditorNextWordInDifferentHumpsMode", forward, "1 HUSB @I1@<caret>"),
+                Triple("EditorNextWordInDifferentHumpsModeWithSelection", forward, "1 HUSB <selection>@I1@</selection>"),
+                Triple("EditorPreviousWord", backward, "1 HUSB <caret>@I1@"),
+                Triple("EditorPreviousWordWithSelection", backward, "1 HUSB <selection>@I1@</selection>"),
+                Triple("EditorPreviousWordInDifferentHumpsMode", backward, "1 HUSB <caret>@I1@"),
+                Triple("EditorPreviousWordInDifferentHumpsModeWithSelection", backward, "1 HUSB <selection>@I1@</selection>"),
+                Triple("EditorDeleteToWordStart", backward, "1 HUSB <caret>"),
+                Triple("EditorDeleteToWordStartInDifferentHumpsMode", backward, "1 HUSB <caret>"),
+                Triple("EditorDeleteToWordEnd", forward, "1 HUSB <caret>"),
+                Triple("EditorDeleteToWordEndInDifferentHumpsMode", forward, "1 HUSB <caret>"),
+            )
+        for ((actionId, marked, result) in expected) {
+            assertEquals(actionId, result, run("ged", marked, actionId))
+        }
+    }
+
     private fun doubleClick(editor: Editor) = editor.caretModel.currentCaret.selectWordAtCaret(false)
 
     private fun run(
