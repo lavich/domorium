@@ -2,8 +2,16 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
-## Unreleased
+## 1.8.0
 
+- **A photograph renamed or moved in the Explorer is followed by the trees that
+  name it.** Every open GEDCOM document that names the file by a relative path
+  is rewritten as part of the rename, and undo in the Explorer reverts both. A
+  GEDCOM 7 document cannot name a file above its own folder, so a move there
+  leaves it unchanged and a warning names it. A GEDCOM file that is not open is
+  not rewritten; a warning names it if a line ends in the file's name. Folder
+  renames, renames outside the editor and absolute paths are not followed
+  (#260).
 - **Completing a pointer writes one xref.** Accepting `@I1@` after typing
   `1 HUSB @I` wrote `1 HUSB @@I1@`, and a 5.5.1 calendar such as `@#DJULIAN@`
   doubled its `@#` the same way. The server now says which text each suggestion
@@ -17,6 +25,11 @@ All notable changes to the GEDCOM extension by Domorium are documented here.
   `john@example.com` in a payload selects `john@example`, and `DJULIAN` in
   `@#DJULIAN@` selects with its closing `@`. A `[gedcom]` setting of your own
   restores the separator (#159).
+- **Year 0 in the Gregorian or Julian calendar is reported**, in both GEDCOM 7
+  and 5.5.1, under the new code `VAL016`. Neither calendar has one, and
+  `1 JAN 0` and `0BC` passed without a word (#453).
+- **A large file is read with less memory.** Each line left a frame on the
+  lexer's stack until the whole file was read; it now holds at most two (#80).
 
 ## 1.7.2
 
