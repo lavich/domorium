@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 2.2.0
 
 - **The lexer's mode stack no longer grows with the document.** Each line left
   one or two frames behind until the lex ended — 3.56 million on a 50 MB export,

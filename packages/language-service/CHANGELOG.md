@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
-## Unreleased
+## 2.3.0
 
 - **Every completion item says what text it replaces.** `CompletionItem` gains
   `textEdit` — `newText`, `insert` and `replace`, the shape of LSP's
