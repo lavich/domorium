@@ -2,6 +2,15 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## Unreleased
+
+- **`readDate` reads a month or a calendar written as a `SCHMA` alias as the
+  one it stands for when it judges the day.** In a GEDCOM 7 document declaring
+  `_APRX` as `month-APR` and `_JUL` as `cal-JULIAN`, `31 _APRX 2000` answers
+  `null` rather than 31 April, and `_JUL 29 FEB 1900` answers a Julian date
+  rather than `null`, as the diagnostics now say. The fix is in
+  `@domorium/validator` (#448).
+
 ## 2.3.0
 
 - **Every completion item says what text it replaces.** `CompletionItem` gains

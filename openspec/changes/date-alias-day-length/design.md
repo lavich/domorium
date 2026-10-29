@@ -109,3 +109,16 @@ No ADR: this is a behaviour decision; the contract is the
 
 None. A patch release of `@domorium/validator`, picked up by the next
 `@domorium/language-service` release; both made later by a separate release PR.
+
+## Implementation
+
+- Tasks 1.1 and 2.3 name `npm run test:run -w <package>`, which neither package
+  defines; the root `npm run test:run` and `npx vitest run` inside the package
+  ran instead.
+- Task 2.1's 5.5.1 case (`31 _APRX 2000` with `SCHMA` reads as `null`) is held
+  by the agreement test of task 2.2, which runs every aliased payload against a
+  5.5.1 document writing the same `SCHMA`, rather than by a test of its own.
+- The GEDCOM 7 gate cannot be observed from a 5.5.1 document: its grammar
+  rejects an extension tag as a month first, so the 5.5.1 scenario passes with
+  or without the gate. It is kept as the design states, so that the day check
+  never resolves what the 5.5.1 grammar does not.

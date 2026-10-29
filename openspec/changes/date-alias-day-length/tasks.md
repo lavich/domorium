@@ -13,7 +13,7 @@
 
 ## 3. Documentation
 
-- [ ] 3.1 Add `## Unreleased` entries naming #448 to `packages/validator/CHANGELOG.md` (an aliased month or calendar is read as its standard tag by `VAL014` and `readDate`; both examples) and `packages/language-service/CHANGELOG.md` (`readDate` answers `null` for `31 _APRX 2000` and reads `_JUL 29 FEB 1900`). Re-read "The date a payload names" in `packages/language-service/README.md` and the `readDate` and `VAL014` rows in `packages/validator/README.md`, changing only a sentence the fix makes untrue. Verify with `npm run check:docs`.
+- [x] 3.1 Add `## Unreleased` entries naming #448 to `packages/validator/CHANGELOG.md` (an aliased month or calendar is read as its standard tag by `VAL014` and `readDate`; both examples) and `packages/language-service/CHANGELOG.md` (`readDate` answers `null` for `31 _APRX 2000` and reads `_JUL 29 FEB 1900`). Re-read "The date a payload names" in `packages/language-service/README.md` and the `readDate` and `VAL014` rows in `packages/validator/README.md`, changing only a sentence the fix makes untrue. Verify with `npm run check:docs`.
 
 ## 4. Gate
 
