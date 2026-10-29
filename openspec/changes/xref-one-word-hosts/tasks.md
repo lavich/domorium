@@ -19,4 +19,4 @@ Each task carries its own tests, written first and seen to fail, then the code t
 ## 3. Follow-up and gate
 
 - [ ] 3.1 Open an issue in `lavich/domorium-obsidian` to depend on the `@domorium/codemirror` release that carries this change (composition at `src/editor/composition.ts:114-118`), so Obsidian users get it, with a manual check of double-click and word movement there; verify the issue exists and is linked from the PR.
-- [ ] 3.2 Run `npm run check`; record whether `check:jetbrains` ran with JDK 17 or was skipped for lack of a JDK.
+- [x] 3.2 Run `npm run check`; record whether `check:jetbrains` ran with JDK 17 or was skipped for lack of a JDK. Ran: 1491 Vitest tests and 43 Kotlin tests passed, `check:jetbrains` ran with JDK 17.
