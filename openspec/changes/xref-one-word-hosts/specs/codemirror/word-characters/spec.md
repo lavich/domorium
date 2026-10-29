@@ -1,8 +1,9 @@
 ## Purpose
 
 States which characters the CodeMirror GEDCOM preset counts as part of a word,
-and so what CodeMirror's own double-click, word movement and word deletion take
-as one word in a GEDCOM document, where the language service is not involved.
+and so what CodeMirror's own double-click, word movement, word deletion and
+word search take as one word in a GEDCOM document, where the language service
+is not involved.
 
 ## ADDED Requirements
 
@@ -10,10 +11,10 @@ as one word in a GEDCOM document, where the language service is not involved.
 
 The GEDCOM preset (`createGedcomExtensions`) SHALL declare `@` a word character
 for the document it is installed in, so that an xref is one word to
-CodeMirror's word lookup, double-click, word movement and word deletion. Every
-other character SHALL be categorised as CodeMirror categorises it without the
-preset. The declaration SHALL come with the preset alone, without the
-standalone editor preset, so that every host composing it gets it.
+CodeMirror's word lookup, double-click, word movement, word deletion and word
+search. Every other character SHALL be categorised as CodeMirror categorises it
+without the preset. The declaration SHALL come with the preset alone, without
+the standalone editor preset, so that every host composing it gets it.
 
 #### Scenario: An xref in a pointer payload
 
@@ -43,10 +44,23 @@ standalone editor preset, so that every host composing it gets it.
 #### Scenario: An at-sign that is not part of an xref
 
 - **WHEN** the word at a position inside `john` in `1 EMAIL john@example.com`,
-  and at a position inside `DJULIAN` in `2 DATE @#DJULIAN@ 1 JAN 1700`, is
-  taken
-- **THEN** they are `john@example`, as `.` still separates, and `DJULIAN@`, as
-  `#` still separates
+  inside `DJULIAN` in `2 DATE @#DJULIAN@ 1 JAN 1700`, and inside `I1` in
+  `1 NOTE @@I1@@` is taken
+- **THEN** they are `john@example`, as `.` still separates, `DJULIAN@`, as `#`
+  still separates, and `@@I1@@`, as every at-sign is a word character
+
+#### Scenario: Searching for a word
+
+- **WHEN** `I1` is searched for as a whole word in `1 HUSB @I1@`, and, with the
+  cursor inside the first of two `@I1@` in a document and nothing selected,
+  select-next-occurrence is run twice
+- **THEN** the search finds no match, and the two `@I1@` are selected whole
+
+#### Scenario: Completion under the preset
+
+- **WHEN** `@I1@` is accepted at the end of `1 HUSB @I` in a state built from
+  the GEDCOM preset
+- **THEN** the line reads `1 HUSB @I1@`
 
 #### Scenario: A document without the preset
 
