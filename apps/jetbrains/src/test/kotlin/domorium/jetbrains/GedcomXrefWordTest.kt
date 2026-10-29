@@ -20,102 +20,100 @@ class GedcomXrefWordTest : BasePlatformTestCase() {
             "1 HUSB @I1<caret>@",
             "1 HUSB @I1@<caret>",
         )) {
-            assertEquals(marked, "1 HUSB <selection>@I1@</selection>", run("ged", marked, ::doubleClick))
-            assertEquals(marked, "1 HUSB <selection>@I1@</selection>", run("ged", marked, SELECT_WORD))
+            assertEquals(marked, "1 HUSB <selection>@I1@</selection>", perform("ged", marked, ::doubleClick))
+            assertEquals(marked, "1 HUSB <selection>@I1@</selection>", perform("ged", marked, SELECT_WORD))
         }
     }
 
     fun testDoubleClickTakesARecordXrefWhole() {
-        assertEquals("0 <selection>@F12@</selection> FAM", run("ged", "0 @F<caret>12@ FAM", ::doubleClick))
+        assertEquals("0 <selection>@F12@</selection> FAM", perform("ged", "0 @F<caret>12@ FAM", ::doubleClick))
     }
 
     fun testDoubleClickTakesAVoidPointerWhole() {
-        assertEquals("1 FAMC <selection>@VOID@</selection>", run("ged", "1 FAMC @VO<caret>ID@", ::doubleClick))
+        assertEquals("1 FAMC <selection>@VOID@</selection>", perform("ged", "1 FAMC @VO<caret>ID@", ::doubleClick))
     }
 
     fun testExtendSelectionFromInsideAnXrefTakesItWhole() {
         assertEquals(
             "1 HUSB <selection>@I1@</selection>",
-            run("ged", "1 HUSB @<selection>I<caret></selection>1@", SELECT_WORD),
+            perform("ged", "1 HUSB @<selection>I<caret></selection>1@", SELECT_WORD),
         )
     }
 
     fun testShrinkSelectionFromAnXrefStopsAtNothingInsideIt() {
-        val shrunk =
-            run("ged", "1 HUSB @I<caret>1@") { editor ->
-                EditorTestUtil.executeAction(editor, IdeActions.ACTION_EDITOR_SELECT_WORD_AT_CARET)
-                EditorTestUtil.executeAction(editor, IdeActions.ACTION_EDITOR_UNSELECT_WORD_AT_CARET)
-            }
-        assertFalse(shrunk, shrunk.contains("<selection>"))
+        assertEquals(
+            "1 HUSB @I<caret>1@",
+            perform("ged", "1 HUSB <selection>@I<caret>1@</selection>", IdeActions.ACTION_EDITOR_UNSELECT_WORD_AT_CARET),
+        )
     }
 
     fun testExtendSelectionTakesTheXrefOfEachCaret() {
         assertEquals(
             "1 HUSB <selection>@I1@</selection>\n1 FAMS <selection>@F1@</selection>",
-            run("ged", "1 HUSB @I<caret>1@\n1 FAMS @F<caret>1@", SELECT_WORD),
+            perform("ged", "1 HUSB @I<caret>1@\n1 FAMS @F<caret>1@", SELECT_WORD),
         )
     }
 
     fun testEscapedAtSignsLeaveTheXrefTheyHold() {
-        assertEquals("1 NOTE a@<selection>@b@</selection>@c", run("ged", "1 NOTE a@@<caret>b@@c", ::doubleClick))
-        assertEquals("1 NOTE @<selection>@I1@</selection>@", run("ged", "1 NOTE @@<caret>I1@@", ::doubleClick))
+        assertEquals("1 NOTE a@<selection>@b@</selection>@c", perform("ged", "1 NOTE a@@<caret>b@@c", ::doubleClick))
+        assertEquals("1 NOTE @<selection>@I1@</selection>@", perform("ged", "1 NOTE @@<caret>I1@@", ::doubleClick))
     }
 
     fun testACaretBeforePunctuationIsNotOnTheXref() {
         val line = "1 NOTE (@I1@)"
         assertNull(xrefAt(line, line.indexOf(')')))
         assertEquals(
-            run("txt", "1 NOTE (@I1@<caret>)", ::doubleClick),
-            run("ged", "1 NOTE (@I1@<caret>)", ::doubleClick),
+            perform("txt", "1 NOTE (@I1@<caret>)", ::doubleClick),
+            perform("ged", "1 NOTE (@I1@<caret>)", ::doubleClick),
         )
     }
 
     fun testACalendarEscapeSelectsAsThePlatformSelectsIt() {
         assertEquals(
             "2 DATE @#<selection>DJULIAN</selection>@ 1 JAN 1700",
-            run("ged", "2 DATE @#DJU<caret>LIAN@ 1 JAN 1700", ::doubleClick),
+            perform("ged", "2 DATE @#DJU<caret>LIAN@ 1 JAN 1700", ::doubleClick),
         )
     }
 
     fun testAnEmailAddressSelectsAsThePlatformSelectsIt() {
         assertEquals(
             "1 EMAIL <selection>john</selection>@example.com",
-            run("ged", "1 EMAIL jo<caret>hn@example.com", ::doubleClick),
+            perform("ged", "1 EMAIL jo<caret>hn@example.com", ::doubleClick),
         )
     }
 
     fun testAPlainTextFileSplitsTheXref() {
-        assertEquals("1 HUSB @<selection>I1</selection>@", run("txt", "1 HUSB @I<caret>1@", ::doubleClick))
+        assertEquals("1 HUSB @<selection>I1</selection>@", perform("txt", "1 HUSB @I<caret>1@", ::doubleClick))
     }
 
     fun testNextWordCrossesAnXref() {
-        assertEquals("1 HUSB @I1@<caret>", run("ged", "1 HUSB <caret>@I1@", "EditorNextWord"))
-        assertEquals("1 HUSB @I1@<caret>", run("ged", "1 HUSB @I<caret>1@", "EditorNextWord"))
+        assertEquals("1 HUSB @I1@<caret>", perform("ged", "1 HUSB <caret>@I1@", "EditorNextWord"))
+        assertEquals("1 HUSB @I1@<caret>", perform("ged", "1 HUSB @I<caret>1@", "EditorNextWord"))
     }
 
     fun testPreviousWordCrossesAnXref() {
-        assertEquals("1 HUSB <caret>@I1@", run("ged", "1 HUSB @I1@<caret>", "EditorPreviousWord"))
-        assertEquals("1 HUSB <caret>@I1@", run("ged", "1 HUSB @I<caret>1@", "EditorPreviousWord"))
+        assertEquals("1 HUSB <caret>@I1@", perform("ged", "1 HUSB @I1@<caret>", "EditorPreviousWord"))
+        assertEquals("1 HUSB <caret>@I1@", perform("ged", "1 HUSB @I<caret>1@", "EditorPreviousWord"))
     }
 
     fun testNextWordWithSelectionSelectsTheXref() {
-        assertEquals("1 HUSB <selection>@I1@</selection>", run("ged", "1 HUSB <caret>@I1@", "EditorNextWordWithSelection"))
+        assertEquals("1 HUSB <selection>@I1@</selection>", perform("ged", "1 HUSB <caret>@I1@", "EditorNextWordWithSelection"))
     }
 
     fun testMovingFromInsideAnXrefClearsOrExtendsTheSelection() {
         val marked = "1 HUSB @<selection>I<caret></selection>1@"
-        assertEquals("1 HUSB @I1@<caret>", run("ged", marked, "EditorNextWord"))
-        assertEquals("1 HUSB @<selection>I1@</selection>", run("ged", marked, "EditorNextWordWithSelection"))
+        assertEquals("1 HUSB @I1@<caret>", perform("ged", marked, "EditorNextWord"))
+        assertEquals("1 HUSB @<selection>I1@</selection>", perform("ged", marked, "EditorNextWordWithSelection"))
     }
 
     fun testNextWordInTheOtherHumpsModeCrossesAnXref() {
-        assertEquals("1 HUSB @I1@<caret>", run("ged", "1 HUSB <caret>@I1@", "EditorNextWordInDifferentHumpsMode"))
+        assertEquals("1 HUSB @I1@<caret>", perform("ged", "1 HUSB <caret>@I1@", "EditorNextWordInDifferentHumpsMode"))
     }
 
     fun testNextWordMovesEachCaretOverItsXref() {
         assertEquals(
             "1 HUSB @I1@<caret>\n1 FAMS @F1@<caret>",
-            run("ged", "1 HUSB <caret>@I1@\n1 FAMS <caret>@F1@", "EditorNextWord"),
+            perform("ged", "1 HUSB <caret>@I1@\n1 FAMS <caret>@F1@", "EditorNextWord"),
         )
     }
 
@@ -124,30 +122,30 @@ class GedcomXrefWordTest : BasePlatformTestCase() {
         for (actionId in listOf("EditorNextWord", "EditorPreviousWord")) {
             for (offset in 0..line.length) {
                 val marked = line.substring(0, offset) + "<caret>" + line.substring(offset)
-                assertEquals("$actionId $marked", run("txt", marked, actionId), run("ged", marked, actionId))
+                assertEquals("$actionId $marked", perform("txt", marked, actionId), perform("ged", marked, actionId))
             }
         }
     }
 
     fun testDeleteToWordStartDeletesTheXref() {
-        assertEquals("1 HUSB <caret>", run("ged", "1 HUSB @I1@<caret>", "EditorDeleteToWordStart"))
+        assertEquals("1 HUSB <caret>", perform("ged", "1 HUSB @I1@<caret>", "EditorDeleteToWordStart"))
     }
 
     fun testDeleteToWordEndDeletesTheXref() {
-        assertEquals("1 HUSB <caret>", run("ged", "1 HUSB <caret>@I1@", "EditorDeleteToWordEnd"))
+        assertEquals("1 HUSB <caret>", perform("ged", "1 HUSB <caret>@I1@", "EditorDeleteToWordEnd"))
     }
 
     fun testDeleteToWordStartInsideAnXrefDeletesItsOpeningPart() {
-        assertEquals("1 HUSB <caret>1@", run("ged", "1 HUSB @I<caret>1@", "EditorDeleteToWordStart"))
+        assertEquals("1 HUSB <caret>1@", perform("ged", "1 HUSB @I<caret>1@", "EditorDeleteToWordStart"))
     }
 
     fun testDeletionInTheOtherHumpsModeDeletesTheXref() {
-        assertEquals("1 HUSB <caret>", run("ged", "1 HUSB @I1@<caret>", "EditorDeleteToWordStartInDifferentHumpsMode"))
-        assertEquals("1 HUSB <caret>", run("ged", "1 HUSB <caret>@I1@", "EditorDeleteToWordEndInDifferentHumpsMode"))
+        assertEquals("1 HUSB <caret>", perform("ged", "1 HUSB @I1@<caret>", "EditorDeleteToWordStartInDifferentHumpsMode"))
+        assertEquals("1 HUSB <caret>", perform("ged", "1 HUSB <caret>@I1@", "EditorDeleteToWordEndInDifferentHumpsMode"))
     }
 
     fun testDeletionWithASelectionDeletesTheSelection() {
-        assertEquals("1 <caret>1@", run("ged", "1 <selection>HUSB @I<caret></selection>1@", "EditorDeleteToWordStart"))
+        assertEquals("1 <caret>1@", perform("ged", "1 <selection>HUSB @I<caret></selection>1@", "EditorDeleteToWordStart"))
     }
 
     fun testWordDeletionInAnEmailAddressIsThePlatforms() {
@@ -155,7 +153,7 @@ class GedcomXrefWordTest : BasePlatformTestCase() {
         for (actionId in listOf("EditorDeleteToWordStart", "EditorDeleteToWordEnd")) {
             for (offset in 0..line.length) {
                 val marked = line.substring(0, offset) + "<caret>" + line.substring(offset)
-                assertEquals("$actionId $marked", run("txt", marked, actionId), run("ged", marked, actionId))
+                assertEquals("$actionId $marked", perform("txt", marked, actionId), perform("ged", marked, actionId))
             }
         }
     }
@@ -179,19 +177,19 @@ class GedcomXrefWordTest : BasePlatformTestCase() {
                 Triple("EditorDeleteToWordEndInDifferentHumpsMode", forward, "1 HUSB <caret>"),
             )
         for ((actionId, marked, result) in expected) {
-            assertEquals(actionId, result, run("ged", marked, actionId))
+            assertEquals(actionId, result, perform("ged", marked, actionId))
         }
     }
 
     private fun doubleClick(editor: Editor) = editor.caretModel.currentCaret.selectWordAtCaret(false)
 
-    private fun run(
+    private fun perform(
         extension: String,
         marked: String,
         actionId: String,
-    ): String = run(extension, marked) { EditorTestUtil.executeAction(it, actionId) }
+    ): String = perform(extension, marked) { EditorTestUtil.executeAction(it, actionId) }
 
-    private fun run(
+    private fun perform(
         extension: String,
         marked: String,
         action: (Editor) -> Unit,
