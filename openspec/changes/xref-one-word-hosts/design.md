@@ -262,3 +262,21 @@ The behaviour decision lives in the two specs; it needs no ADR (ADR-0018).
 - [Neither host is exercised inside its real application by the tests] → the
   PR leaves manual checks: the web editor, the sandbox IDE with the server
   running, and Obsidian once it depends on the release.
+
+## Implementation
+
+- An xref before `)` in `1 NOTE (@I1@)`: the plugin offers nothing there, but
+  the platform's `NaturalLanguageTextSelectioner` takes the bracketed text,
+  which is `@I1@`, in a `.txt` file as in a `.ged` one. The scenario says so,
+  and the test checks that the finder answers nothing at `)` and that the
+  selection matches the plain text file's.
+- CodeMirror's tests live in `packages/codemirror/src/wordCharacters.test.ts`.
+  `selectNextOccurrence` adds a range only where
+  `EditorState.allowMultipleSelections` is on, as both hosts' editors have it;
+  the test state turns it on.
+- The JetBrains tests are one class, `GedcomXrefWordTest`. A selection is
+  compared by its range, not by which end the caret is at. The e-mail cases run
+  each action from every position of the line and compare the `.ged` result
+  with the `.txt` one.
+- The feature line went into the plugin's `<description>` in `plugin.xml` as
+  well as its README, as both list the features.
