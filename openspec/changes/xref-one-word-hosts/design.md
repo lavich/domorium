@@ -283,3 +283,4 @@ The behaviour decision lives in the two specs; it needs no ADR (ADR-0018).
   with the `.txt` one.
 - The feature line went into the plugin's `<description>` in `plugin.xml` as
   well as its README, as both list the features.
+- Tasks 1.3 and 2.5 were checked by hand by the user on 2026-10-29: the web editor from this branch, and the JetBrains sandbox IDE on a `.ged` file with the server running beside a `.txt` copy. The user reported both as passing.
