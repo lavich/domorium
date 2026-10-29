@@ -146,8 +146,12 @@ does; `a@@b@@c` therefore yields `@b@`, and `@@I1@@` yields `@I1@`, which the
 spec accepts. The expression is the lexer's, restated: the plugin has no
 TypeScript at run time, and an editor's notion of a word is host text handling,
 as the VS Code word pattern is, not genealogy logic. Every handler below asks
-first whether the editor's file is a GEDCOM file, by the virtual file's file
-type, and leaves anything else to the platform.
+first whether the editor's file is a GEDCOM file and leaves anything else to
+the platform. The action handlers find the file through
+`FileDocumentManager.getInstance().getFile(editor.document)`, not
+`editor.virtualFile`, which is null for an editor made by
+`EditorFactory.createEditor(document, project)`; the selection handler asks the
+PSI element's containing file.
 
 ### JetBrains selection: an `ExtendWordSelectionHandlerBase` that raises the minimum
 
@@ -177,17 +181,32 @@ above. Each class takes the original handler in its constructor, as the bean
 requires; two abstract bases hold the logic, so each registered class only
 names its direction and whether it extends the selection.
 
-- Movement (`EditorActionHandler`, run for each caret): outside a GEDCOM file,
-  call the original. Inside one, if the caret is strictly inside an xref, move
-  it to the xref's edge in the direction of travel; otherwise call the
-  original, and if the caret then stands strictly inside an xref, move it on
-  to that edge. The selection variants keep the selection's anchor and extend
-  to the new offset. The CamelHumps variants share the same base: an xref is
-  never split by humps.
-- Deletion (`EditorWriteActionHandler`, run for each caret): backward with the
-  caret in `(start, end]` of an xref deletes `[start, caret)`; forward with the
-  caret in `[start, end)` deletes `[caret, end)`; otherwise call the original,
-  which keeps `BackspaceToWordStartHandler` and its delegates in the chain.
+- Both bases extend the `ForEachCaret` form (`EditorActionHandler.ForEachCaret`,
+  `EditorWriteActionHandler.ForEachCaret`):
+  `DynamicEditorActionHandler.runForAllCarets` asks only the outermost handler,
+  so the wrapper must say so itself. `isEnabledForCaret` is passed through to
+  the original handler, and the original is called with the same caret.
+- Movement: outside a GEDCOM file, call the original. Inside one, if the caret
+  is strictly inside an xref, move it to the xref's edge in the direction of
+  travel; otherwise call the original, and if the caret then stands strictly
+  inside an xref, move it on to that edge. When the plugin moves the caret
+  itself, the plain variants remove the selection; the extending variants take
+  the caret's lead selection offset before the move and select from it to the
+  new offset. Either way it then scrolls to the caret, as
+  `EditorActionUtil.moveCaretToNextWord` does. The CamelHumps variants share
+  the same base: an xref is never split by humps.
+- Deletion: with a selection, call the original — the platform's
+  `DeleteToWordBoundaryHandler` deletes the selection first
+  (`EditorModificationUtil.deleteSelectedText`). Without one, backward with the
+  caret in `(start, end]` of an xref deletes `[start, caret)`, forward with the
+  caret in `[start, end)` deletes `[caret, end)`, and both first set
+  `CommandProcessor.setCurrentCommandGroupId(EditorActionUtil.DELETE_COMMAND_GROUP)`
+  and call `CopyPasteManager.stopKillRings()`, as the platform handler does, so
+  undo groups alike. Otherwise call the original, which keeps
+  `BackspaceToWordStartHandler` and its delegates in the chain.
+- A mistyped action id fails silently: `DynamicEditorActionHandler` keeps only
+  beans whose `action` names its own id. One parameterised test runs all twelve
+  ids over `1 HUSB @I1@`.
 
 Alternatives considered: re-implementing the platform's caret stops for every
 word — the delegation keeps its caret-stop settings for all text but xrefs; and
@@ -216,7 +235,9 @@ remove the one at `@`, and a lexer would compete with LSP4IJ's semantic tokens.
   `EditorTestUtil.executeAction(editor, id)`, so the whole handler chain is
   exercised. Each test asserts no server started, as
   `GedcomRuntimeIntegrationTest` does. A plain-text control runs the same
-  action on `a.txt`. These tests see a `PsiPlainText` leaf only; the
+  action on `a.txt`. `FileDocumentManager` finds the virtual file of a
+  document from `addFileToProject`, so the handlers see the GEDCOM file type
+  in the test as in the IDE. These tests see a `PsiPlainText` leaf only; the
   semantic-token leaf is covered by the manual check in the sandbox IDE, with
   the server running.
 

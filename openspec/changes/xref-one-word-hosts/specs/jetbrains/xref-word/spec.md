@@ -27,8 +27,8 @@ such as `)`, it SHALL NOT.
 
 - **WHEN** the word is selected with the caret just after the closing `@` in
   `1 NOTE (@I1@)`
-- **THEN** the selection is what the platform selects there in a plain text
-  file with the same line
+- **THEN** the selection is not `@I1@`: the caret is on `)`, and no range of the
+  xref is offered
 
 ### Requirement: Double-click and Extend Selection take an xref whole
 
@@ -80,8 +80,10 @@ without extending the selection, and in either CamelHumps mode — SHALL NOT
 leave the caret strictly inside an xref. From inside an xref it SHALL land on
 the xref's edge in the direction of travel. A stop the platform would make
 strictly inside an xref SHALL move to that xref's edge in the direction of
-travel. Every other stop SHALL be the platform's. Each caret SHALL be handled
-on its own.
+travel. When the plugin moves the caret itself, the plain variants SHALL clear
+the selection, and the extending variants SHALL select from where the
+selection was anchored before the move to the new caret. Every other stop SHALL
+be the platform's. Each caret SHALL be handled on its own.
 
 #### Scenario: Forward over an xref
 
@@ -100,6 +102,14 @@ on its own.
 - **WHEN** the caret stands just before `@I1@` in `1 HUSB @I1@` and moves one
   word forward while extending the selection
 - **THEN** the selection is `@I1@`
+
+#### Scenario: Moving from inside an xref with a selection
+
+- **WHEN** `I` is selected in `@I1@`, with the caret after it, and the caret
+  moves one word forward, once without and once while extending the selection
+- **THEN** without extending, nothing is selected and the caret is just after
+  `@I1@`; extending, the selection runs from just before `I` to just after
+  `@I1@`
 
 #### Scenario: CamelHumps
 
@@ -121,11 +131,12 @@ on its own.
 
 ### Requirement: Deleting by word takes the xref's side of the caret
 
-In a GEDCOM file, deleting one word backward with the caret inside an xref or
+In a GEDCOM file, with no selection, deleting one word backward with the caret
+inside an xref or
 just after its closing `@` SHALL delete from the xref's opening `@` to the
 caret; deleting one word forward with the caret on an xref SHALL delete from
 the caret to the end of the xref. Both SHALL hold in either CamelHumps mode.
-Anywhere else, each SHALL do what the platform does.
+With a selection, or anywhere else, each SHALL do what the platform does.
 
 #### Scenario: Deleting an xref backward
 
@@ -145,12 +156,40 @@ Anywhere else, each SHALL do what the platform does.
   is deleted backward
 - **THEN** the line reads `1 HUSB 1@`
 
+#### Scenario: Deleting in the other CamelHumps mode
+
+- **WHEN** the caret stands at the end of `1 HUSB @I1@` and one word is deleted
+  backward, and, separately, just before `@I1@` and one word is deleted
+  forward, each in the CamelHumps mode other than the editor's setting
+- **THEN** the line reads `1 HUSB ` both times
+
+#### Scenario: Deleting with a selection
+
+- **WHEN** `HUSB @I` is selected in `1 HUSB @I1@`, with the caret after it, and
+  one word is deleted backward
+- **THEN** the selection is deleted and the line reads `1 1@`, as the platform
+  deletes a selection first
+
 #### Scenario: An e-mail address
 
 - **WHEN** one word is deleted backward, and forward, at each position of
   `1 EMAIL john@example.com` in a GEDCOM file
 - **THEN** the line reads as it does after the same deletion in a plain text
   file
+
+### Requirement: Every word movement and word deletion action is covered
+
+The behaviour above SHALL hold for each of the platform's twelve word actions:
+next and previous word, each with and without extending the selection and in
+either CamelHumps mode, and delete to word start and to word end, each in
+either CamelHumps mode.
+
+#### Scenario: Each action over an xref
+
+- **WHEN** each of the twelve actions is run in `1 HUSB @I1@`, forward ones
+  with the caret just before `@I1@` and backward ones at the end of the line
+- **THEN** the movements land on the far edge of `@I1@`, the extending ones
+  with `@I1@` selected, and the deletions leave `1 HUSB `
 
 ### Requirement: Other text and other files are the platform's
 
