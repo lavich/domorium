@@ -19,7 +19,7 @@
       <li>Clickable web and local-file links</li>
       <li>Quick fixes for broken references and invalid levels</li>
       <li>Code folding for records and nested structures</li>
-      <li>An XREF such as <code>@I1@</code> is one word to double-click, Extend Selection, and moving or deleting by word</li>
+      <li>An XREF such as <code>@I1@</code> is one word to double-click, Extend and Shrink Selection, and moving or deleting by word</li>
       <li>Media links that follow a file renamed or moved in the IDE</li>
       <li>Support for <code>.ged</code> and <code>.gedcom</code> files</li>
     </ul>

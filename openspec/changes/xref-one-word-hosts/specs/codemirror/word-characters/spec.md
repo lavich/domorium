@@ -54,7 +54,7 @@ the standalone editor preset, so that every host composing it gets it.
 - **WHEN** `I1` is searched for as a whole word in `1 HUSB @I1@`, and, with the
   cursor inside the first of two `@I1@` in a document and nothing selected,
   select-next-occurrence is run twice
-- **THEN** the search finds no match, and the two `@I1@` are selected whole
+- **THEN** the search finds no match, and each selection is `@I1@` whole
 
 #### Scenario: Completion under the preset
 

@@ -271,9 +271,12 @@ The behaviour decision lives in the two specs; it needs no ADR (ADR-0018).
   and the test checks that the finder answers nothing at `)` and that the
   selection matches the plain text file's.
 - CodeMirror's tests live in `packages/codemirror/src/wordCharacters.test.ts`.
-  `selectNextOccurrence` adds a range only where
-  `EditorState.allowMultipleSelections` is on, as both hosts' editors have it;
-  the test state turns it on.
+  `selectNextOccurrence` adds a second range only where
+  `EditorState.allowMultipleSelections` is on. The test turns it on to see
+  both ranges; neither host does (#292), so there a second Mod-D moves the one
+  selection to the next `@I1@`, still whole. The spec says only that each
+  selection is the whole xref. The test imports `@codemirror/search`, now a
+  development dependency of the package at the web editor's range.
 - The JetBrains tests are one class, `GedcomXrefWordTest`. A selection is
   compared by its range, not by which end the caret is at. The e-mail cases run
   each action from every position of the line and compare the `.ged` result
