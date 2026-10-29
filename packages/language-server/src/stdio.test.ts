@@ -1,9 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { build } from "esbuild";
 import { spawn } from "child_process";
 import { mkdtempSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
+
+import { semanticTokenLegend } from "@domorium/language-service";
 
 // stdio.ts wires createServer() to real process.stdin/stdout and calls
 // connection.listen() at import time, so it can't be safely imported
@@ -817,4 +819,202 @@ describe("stdio entry point", () => {
       child.kill();
     }
   });
+});
+
+describe("range requests", () => {
+  const lines = [
+    "0 HEAD",
+    "1 GEDC",
+    "2 VERS 7.0",
+    "0 @I1@ INDI",
+    "1 NAME John /Doe/",
+    "1 BIRT",
+    "2 DATE 1 JAN 1900",
+    "0 @I2@ INDI",
+    "1 NAME Jane /Doe/",
+    "0 TRLR",
+  ];
+  const uri = "file:///range.ged";
+  const vsCode = {
+    textDocument: {
+      semanticTokens: { requests: { range: true, full: { delta: true } } },
+    },
+  };
+  const lsp4ij = {
+    textDocument: {
+      semanticTokens: { requests: { range: false, full: true } },
+    },
+  };
+  const span = (
+    startLine: number,
+    startCharacter: number,
+    endLine: number,
+    endCharacter: number,
+  ) => ({
+    start: { line: startLine, character: startCharacter },
+    end: { line: endLine, character: endCharacter },
+  });
+
+  let bundlePath: string;
+  beforeAll(async () => {
+    bundlePath = await bundleStdio();
+  }, 15000);
+
+  async function withServer<T>(
+    capabilities: object,
+    text: string | null,
+    use: (client: LspTestClient, initialized: unknown) => Promise<T>,
+  ): Promise<T> {
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    try {
+      const initialized = await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities,
+      });
+      client.notify("initialized", {});
+      if (text !== null) {
+        client.notify("textDocument/didOpen", {
+          textDocument: { uri, languageId: "gedcom", version: 1, text },
+        });
+      }
+      return await use(client, initialized);
+    } finally {
+      child.kill();
+    }
+  }
+
+  const hintLines = (
+    range: ReturnType<typeof span>,
+    text: string | null = lines.join("\n"),
+  ) =>
+    withServer({}, text, async (client) => {
+      const response = (await client.request(2, "textDocument/inlayHint", {
+        textDocument: { uri },
+        range,
+      })) as { result: { position: { line: number } }[] };
+      return response.result
+        .map(({ position }) => position.line)
+        .sort((a, b) => a - b);
+    });
+
+  const tokenLines = (data: number[]) => {
+    const found = new Set<number>();
+    let line = 0;
+    for (let index = 0; index < data.length; index += 5) {
+      line += data[index];
+      found.add(line);
+    }
+    return [...found].sort((a, b) => a - b);
+  };
+
+  const semanticTokensProvider = (capabilities: object) =>
+    withServer(capabilities, null, async (_client, initialized) => {
+      return (
+        initialized as {
+          result: { capabilities: { semanticTokensProvider: unknown } };
+        }
+      ).result.capabilities.semanticTokensProvider;
+    });
+
+  it("answers inlay hints for the one record a range covers", async () => {
+    await expect(hintLines(span(7, 0, 8, 16))).resolves.toEqual([8]);
+  }, 15000);
+
+  it("answers inlay hints for the one record a range covers when lines end in CRLF", async () => {
+    await expect(
+      hintLines(span(7, 0, 8, 16), lines.join("\r\n")),
+    ).resolves.toEqual([8]);
+  }, 15000);
+
+  it("answers the whole record a range falls inside", async () => {
+    await expect(hintLines(span(5, 0, 5, 6))).resolves.toEqual([4, 5, 6]);
+  }, 15000);
+
+  it("answers every inlay hint for a range over the whole document", async () => {
+    await expect(hintLines(span(0, 0, 9, 6))).resolves.toEqual([
+      1, 2, 4, 5, 6, 8,
+    ]);
+  }, 15000);
+
+  it("reads a range ending past the document as ending at its end", async () => {
+    await expect(hintLines(span(0, 0, 999, 0))).resolves.toEqual([
+      1, 2, 4, 5, 6, 8,
+    ]);
+  }, 15000);
+
+  it("answers no inlay hints for a document not yet opened", async () => {
+    await expect(hintLines(span(0, 0, 9, 6), null)).resolves.toEqual([]);
+  }, 15000);
+
+  it("offers semantic tokens by range alone to a client that can ask by range", async () => {
+    await expect(semanticTokensProvider(vsCode)).resolves.toEqual({
+      legend: semanticTokenLegend,
+      range: true,
+    });
+  }, 15000);
+
+  it("offers semantic tokens by range alone to a client that declared range requests as an object", async () => {
+    await expect(
+      semanticTokensProvider({
+        textDocument: { semanticTokens: { requests: { range: {} } } },
+      }),
+    ).resolves.toEqual({
+      legend: semanticTokenLegend,
+      range: true,
+    });
+  }, 15000);
+
+  it("offers semantic tokens in full to a client that can ask only in full", async () => {
+    await expect(semanticTokensProvider(lsp4ij)).resolves.toEqual({
+      legend: semanticTokenLegend,
+      range: false,
+      full: true,
+    });
+  }, 15000);
+
+  it("offers semantic tokens in full to a client that declared nothing", async () => {
+    await expect(semanticTokensProvider({})).resolves.toEqual({
+      legend: semanticTokenLegend,
+      range: false,
+      full: true,
+    });
+  }, 15000);
+
+  it("answers semantic tokens for the one record a range covers", async () => {
+    const response = await withServer(vsCode, lines.join("\n"), (client) =>
+      client.request(2, "textDocument/semanticTokens/range", {
+        textDocument: { uri },
+        range: span(7, 0, 8, 16),
+      }),
+    );
+
+    expect(
+      tokenLines((response as { result: { data: number[] } }).result.data),
+    ).toEqual([7, 8]);
+  }, 15000);
+
+  it("answers a full semantic token request from a client offered only ranges", async () => {
+    const response = await withServer(vsCode, lines.join("\n"), (client) =>
+      client.request(2, "textDocument/semanticTokens/full", {
+        textDocument: { uri },
+      }),
+    );
+
+    expect(
+      tokenLines((response as { result: { data: number[] } }).result.data),
+    ).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  }, 15000);
+
+  it("answers empty semantic tokens by range for a document not yet opened", async () => {
+    const response = await withServer(vsCode, null, (client) =>
+      client.request(2, "textDocument/semanticTokens/range", {
+        textDocument: { uri },
+        range: span(0, 0, 9, 6),
+      }),
+    );
+
+    expect(response).toMatchObject({ result: { data: [] } });
+  }, 15000);
 });

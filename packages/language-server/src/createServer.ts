@@ -15,6 +15,9 @@ import type {
   DocumentHighlight,
   DocumentHighlightParams,
   PrepareRenameParams,
+  Range,
+  SemanticTokens,
+  SemanticTokensRangeParams,
   RenameParams,
   DocumentLink,
   DocumentLinkParams,
@@ -48,12 +51,39 @@ import {
   decodeFileTarget,
   semanticTokenLegend,
   type MediaReference,
+  type OffsetRange,
 } from "@domorium/language-service";
 
 import { pathFromDocument } from "./pathFromDocument";
 
 /** As much as the CodeMirror hosts show by default, so the two agree. */
 const HOVER_MAX_LINES = 24;
+
+const offsetRange = (document: TextDocument, range: Range): OffsetRange => ({
+  from: document.offsetAt(range.start),
+  to: document.offsetAt(range.end),
+});
+
+const semanticTokens = (
+  service: GedcomLanguageService,
+  range?: OffsetRange,
+): SemanticTokens => {
+  const builder = new SemanticTokensBuilder();
+  service
+    .getSemanticTokens(range)
+    .forEach((token) =>
+      builder.push(
+        token.line,
+        token.char,
+        token.length,
+        token.tokenType,
+        token.tokenModifiers,
+      ),
+    );
+  return {
+    data: builder.build().data,
+  };
+};
 
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
@@ -68,6 +98,9 @@ export const createServer = (connection: Connection) => {
     insertReplaceSupport =
       params.capabilities?.textDocument?.completion?.completionItem
         ?.insertReplaceSupport === true;
+    const semanticTokensByRange = Boolean(
+      params.capabilities?.textDocument?.semanticTokens?.requests?.range,
+    );
     return {
       capabilities: {
         workspace: {
@@ -91,21 +124,20 @@ export const createServer = (connection: Connection) => {
         completionProvider: {
           triggerCharacters: [" "],
         },
-        semanticTokensProvider: {
-          legend: semanticTokenLegend,
-          range: false,
-          full: true,
-        },
+        semanticTokensProvider: semanticTokensByRange
+          ? { legend: semanticTokenLegend, range: true }
+          : { legend: semanticTokenLegend, range: false, full: true },
       },
     } satisfies InitializeResult;
   });
 
   connection.languages.inlayHint.on((params: InlayHintParams): InlayHint[] => {
     const service = cache.get(params.textDocument.uri);
-    if (!service) {
+    const document = documents.get(params.textDocument.uri);
+    if (!service || !document) {
       return [];
     }
-    return service.getInlayHints();
+    return service.getInlayHints(offsetRange(document, params.range));
   });
 
   connection.onDefinition((params: DefinitionParams): Location[] => {
@@ -392,23 +424,19 @@ export const createServer = (connection: Connection) => {
     if (!service) {
       return { data: [] };
     }
-
-    const tokens = service.getSemanticTokens();
-
-    const builder = new SemanticTokensBuilder();
-    tokens.forEach((token) =>
-      builder.push(
-        token.line,
-        token.char,
-        token.length,
-        token.tokenType,
-        token.tokenModifiers,
-      ),
-    );
-    return {
-      data: builder.build().data,
-    };
+    return semanticTokens(service);
   });
+
+  connection.languages.semanticTokens.onRange(
+    (params: SemanticTokensRangeParams) => {
+      const service = cache.get(params.textDocument.uri);
+      const document = documents.get(params.textDocument.uri);
+      if (!service || !document) {
+        return { data: [] };
+      }
+      return semanticTokens(service, offsetRange(document, params.range));
+    },
+  );
 
   connection.onCompletion((params: CompletionParams): CompletionItem[] => {
     const service = cache.get(params.textDocument.uri);
