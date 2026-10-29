@@ -104,6 +104,9 @@ describe("a day under an aliased month or calendar", () => {
     expect(dateErrors("7.0", "FROM _JUL 29 FEB 1900 TO 29 FEB 1900")).toEqual([
       "VAL014 error: Value for DATE names 29 FEB, and FEB has 28 days",
     ]);
+  });
+
+  it("binds an aliased calendar to one end of a range only", () => {
     expect(dateErrors("7.0", "BET _JUL 29 FEB 1900 AND 29 FEB 1900")).toEqual([
       "VAL014 error: Value for DATE names 29 FEB, and FEB has 28 days",
     ]);
@@ -117,7 +120,22 @@ describe("a day under an aliased month or calendar", () => {
   });
 
   it("leaves an aliased month whose day exists", () => {
-    expect(dateErrors("7.0", "30 _APRX 2000")).toEqual([]);
+    const errors = new GedcomDocument()
+      .createDocument(
+        [
+          "0 HEAD",
+          "1 GEDC",
+          "2 VERS 7.0",
+          ...SCHMA,
+          "0 @I1@ INDI",
+          "1 BIRT",
+          "2 DATE 30 _APRX 2000",
+          "0 TRLR",
+          "",
+        ].join("\n"),
+      )
+      .getErrors();
+    expect(errors).toEqual([]);
   });
 
   it("leaves an extension tag that is not an alias", () => {

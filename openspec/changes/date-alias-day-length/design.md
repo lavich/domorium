@@ -122,3 +122,10 @@ None. A patch release of `@domorium/validator`, picked up by the next
   rejects an extension tag as a month first, so the 5.5.1 scenario passes with
   or without the gate. It is kept as the design states, so that the day check
   never resolves what the 5.5.1 grammar does not.
+- `readDate` gates on `this.extensions.requireDeclaration`, the flag
+  `rule-node.ts` reads, rather than on `requiresSchmaDeclaration`, so the
+  GEDCOM 7 gate is spelled one way.
+- The language-service changelog entry says the fix is in
+  `@domorium/validator`. The release PR that ships it turns that into "Requires
+  `@domorium/validator` <next> or newer" and raises the language-service
+  dependency range to that version.

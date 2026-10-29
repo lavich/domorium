@@ -195,8 +195,11 @@ describe("a day under an aliased month or calendar", () => {
     expect(aliased("_JUL 31 _APRX 1900")).toEqual(["31 APR"]);
   });
 
-  it("does not carry an aliased calendar past the keyword that ends its date", () => {
+  it("does not carry an aliased calendar past the TO that ends its date", () => {
     expect(aliased("FROM _JUL 29 FEB 1900 TO 29 FEB 1900")).toEqual(["29 FEB"]);
+  });
+
+  it("does not carry an aliased calendar past the AND that ends its date", () => {
     expect(aliased("BET _JUL 29 FEB 1900 AND 29 FEB 1900")).toEqual(["29 FEB"]);
   });
 

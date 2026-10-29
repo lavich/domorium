@@ -314,7 +314,16 @@ describe("which rules a document reads its dates by", () => {
   });
 
   it("resolves no alias where no dialect is checked", () => {
-    expect(unversioned.readDate("31 _APRX 2000")?.dates).toStrictEqual([
+    const declaring = new GedcomDocument().createDocument(
+      [
+        "0 HEAD",
+        "1 SCHMA",
+        "2 TAG _APRX https://gedcom.io/terms/v7/month-APR",
+        "0 TRLR",
+        "",
+      ].join("\n"),
+    );
+    expect(declaring.readDate("31 _APRX 2000")?.dates).toStrictEqual([
       { calendar: "GREGORIAN", day: 31, month: "_APRX", year: 2000 },
     ]);
   });

@@ -20,9 +20,7 @@
       "type": "https://gedcom.io/terms/v7/cal-FRENCH_R"
     },
     "GREGORIAN": {
-      "epochs": [
-        "BCE"
-      ],
+      "epochs": ["BCE"],
       "months": {
         "APR": "https://gedcom.io/terms/v7/month-APR",
         "AUG": "https://gedcom.io/terms/v7/month-AUG",
@@ -59,9 +57,7 @@
       "type": "https://gedcom.io/terms/v7/cal-HEBREW"
     },
     "JULIAN": {
-      "epochs": [
-        "BCE"
-      ],
+      "epochs": ["BCE"],
       "months": {
         "APR": "https://gedcom.io/terms/v7/month-APR",
         "AUG": "https://gedcom.io/terms/v7/month-AUG",

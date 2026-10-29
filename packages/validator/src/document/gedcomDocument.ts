@@ -350,7 +350,9 @@ export class GedcomDocument {
         this.validatedAs === "7.0"
           ? readDateValueV7(text, this.scheme, this.extensions)
           : readDateValue551(this.scheme, text),
-        this.requiresSchmaDeclaration ? this.extensions : emptyExtensions(),
+        this.extensions.requireDeclaration
+          ? this.extensions
+          : emptyExtensions(),
       );
     }
     const g551 = schemaForDialect("5.5.1").scheme;
