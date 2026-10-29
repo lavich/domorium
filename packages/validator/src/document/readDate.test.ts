@@ -17,13 +17,26 @@ const paf = new GedcomDocument().createDocument(
   "0 HEAD\n1 SYST PAF\n2 VERS 5.0\n1 GEDC\n2 VERS 5.5.1\n0 TRLR",
 );
 
-function dateDiagnostics(version: string, payload: string) {
+const ALIASES = [
+  "1 SCHMA",
+  "2 TAG _APRX https://gedcom.io/terms/v7/month-APR",
+  "2 TAG _FEBX https://gedcom.io/terms/v7/month-FEB",
+  "2 TAG _JUL https://gedcom.io/terms/v7/cal-JULIAN",
+  "2 TAG _MON https://example.com/month",
+];
+
+function dateDiagnostics(
+  version: string,
+  payload: string,
+  header: string[] = [],
+) {
   return new GedcomDocument()
     .createDocument(
       [
         "0 HEAD",
         "1 GEDC",
         `2 VERS ${version}`,
+        ...header,
         "0 @I1@ INDI",
         "1 BIRT",
         `2 DATE ${payload}`,
@@ -96,6 +109,18 @@ describe("reading a GEDCOM 7 date", () => {
       "2 TAG _JANV https://gedcom.io/terms/v7/month-JAN",
     );
     expect(aliased.readDate("1 _JANV 2000")?.dates[0]?.month).toBe("JAN");
+  });
+
+  it("declines an aliased month naming a day it does not have", () => {
+    expect(documentIn("7.0", ...ALIASES).readDate("31 _APRX 2000")).toBeNull();
+  });
+
+  it("reads a date in an aliased Julian calendar by the Julian rule", () => {
+    expect(
+      documentIn("7.0", ...ALIASES).readDate("_JUL 29 FEB 1900")?.dates,
+    ).toStrictEqual([
+      { calendar: "JULIAN", day: 29, month: "FEB", year: 1900 },
+    ]);
   });
 
   it("keeps an extension calendar and epoch as written", () => {
@@ -288,6 +313,21 @@ describe("which rules a document reads its dates by", () => {
     expect(unversioned.readDate("JULIAN 0")).toBeNull();
   });
 
+  it("resolves no alias where no dialect is checked", () => {
+    const declaring = new GedcomDocument().createDocument(
+      [
+        "0 HEAD",
+        "1 SCHMA",
+        "2 TAG _APRX https://gedcom.io/terms/v7/month-APR",
+        "0 TRLR",
+        "",
+      ].join("\n"),
+    );
+    expect(declaring.readDate("31 _APRX 2000")?.dates).toStrictEqual([
+      { calendar: "GREGORIAN", day: 31, month: "_APRX", year: 2000 },
+    ]);
+  });
+
   it("reports nothing about a date where no dialect is checked", () => {
     const codes = (header: string) =>
       new GedcomDocument()
@@ -375,6 +415,34 @@ describe("agreement with the diagnostics", () => {
     "BET JULIAN 0 AND 10",
     "30 FEB 0",
   ];
+
+  const aliased = [
+    "31 _APRX 2000",
+    "30 _APRX 2000",
+    "_JUL 29 FEB 1900",
+    "_JUL 29 FEB 1901",
+    "BET _JUL 29 FEB 1900 AND 29 FEB 1900",
+    "_JUL 31 _APRX 1900",
+    "_JUL 29 _FEBX 1900",
+    "31 _MON 1900",
+  ];
+
+  for (const version of ["7.0", "5.5.1"]) {
+    const document = documentIn(version, ...ALIASES);
+    it.each(aliased)(
+      `reads %s in ${version} with SCHMA aliases only where it is valid`,
+      (p) => {
+        const rejected = dateDiagnostics(version, p, ALIASES).some((error) =>
+          [
+            GedcomErrorCode.IncorrectValue,
+            GedcomErrorCode.ImpossibleDay,
+            GedcomErrorCode.ImpossibleYear,
+          ].includes(error.code),
+        );
+        expect(document.readDate(p) === null).toBe(rejected);
+      },
+    );
+  }
 
   for (const version of ["7.0", "5.5.1"]) {
     const document = version === "7.0" ? g7 : g551;

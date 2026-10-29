@@ -12,6 +12,7 @@ import {
 } from "./calendarDays";
 import { readDateValue551 } from "./date-551";
 import { readDateValueV7 } from "./date-v7";
+import { ExtensionContext } from "./extensions";
 
 const days = (value: string) =>
   impossibleDays(g7validation, value).map(
@@ -164,6 +165,46 @@ describe("a day the calendar does not have", () => {
       month: "FEB",
       length: 28,
     });
+  });
+});
+
+describe("a day under an aliased month or calendar", () => {
+  const aliases: ExtensionContext = {
+    tags: new Map(),
+    aliases: new Map([
+      [GedcomTag("_APRX"), GedcomTag("APR")],
+      [GedcomTag("_FEBX"), GedcomTag("FEB")],
+      [GedcomTag("_JUL"), GedcomTag("JULIAN")],
+    ]),
+    requireDeclaration: true,
+  };
+  const aliased = (value: string) =>
+    impossibleDays(g7validation, value, aliases).map(
+      (found) => `${found.day} ${found.month}`,
+    );
+
+  it("judges an aliased month by the month it stands for", () => {
+    expect(aliased("31 _APRX 2000")).toEqual(["31 APR"]);
+    expect(aliased("29 _FEBX 1900")).toEqual(["29 FEB"]);
+    expect(aliased("30 _APRX 2000")).toEqual([]);
+  });
+
+  it("judges a date in an aliased Julian calendar by the Julian rule", () => {
+    expect(aliased("_JUL 29 FEB 1900")).toEqual([]);
+    expect(aliased("_JUL 29 _FEBX 1900")).toEqual([]);
+    expect(aliased("_JUL 31 _APRX 1900")).toEqual(["31 APR"]);
+  });
+
+  it("does not carry an aliased calendar past the TO that ends its date", () => {
+    expect(aliased("FROM _JUL 29 FEB 1900 TO 29 FEB 1900")).toEqual(["29 FEB"]);
+  });
+
+  it("does not carry an aliased calendar past the AND that ends its date", () => {
+    expect(aliased("BET _JUL 29 FEB 1900 AND 29 FEB 1900")).toEqual(["29 FEB"]);
+  });
+
+  it("resolves no alias it is not given", () => {
+    expect(days("31 _APRX 2000")).toEqual([]);
   });
 });
 

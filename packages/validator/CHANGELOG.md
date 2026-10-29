@@ -2,6 +2,18 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **A month or a calendar written as a `SCHMA` alias is read as the one it
+  stands for when a day is judged.** The date grammar resolved the alias and the
+  day-length check did not, so with `_APRX` declared as `month-APR`,
+  `31 _APRX 2000` passed and `readDate` answered it as 31 April; with `_JUL`
+  declared as `cal-JULIAN`, `_JUL 29 FEB 1900` carried `VAL014` although 1900 is
+  a Julian leap year, and read as `null`. The first now carries `VAL014`, naming
+  `31 APR`, and reads as `null`; the second carries nothing and reads as a
+  Julian date. GEDCOM 7 only: 5.5.1 has no `SCHMA`, and a document checked
+  against no dialect still resolves no alias (#448).
+
 ## 2.2.0
 
 - **The lexer's mode stack no longer grows with the document.** Each line left

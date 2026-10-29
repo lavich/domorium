@@ -125,12 +125,17 @@ function valueError(
 
 function impossibleDateErrors(
   scheme: GedcomScheme,
+  extensions: ExtensionContext,
   node: ASTNode,
   value: string,
   read: GedcomDateValue | null,
 ): GedcomError[] {
   return [
-    ...impossibleDays(scheme, value).map(({ day, month, length }) =>
+    ...impossibleDays(
+      scheme,
+      value,
+      extensions.requireDeclaration ? extensions : emptyExtensions(),
+    ).map(({ day, month, length }) =>
       valueError(
         node,
         `names ${day} ${month}, and ${month} has ${length} days`,
@@ -591,6 +596,7 @@ export class RuleNode {
         errors.push(
           ...impossibleDateErrors(
             this.scheme,
+            this.extensions,
             node,
             value,
             rule.read(value, this.scheme, this.extensions),

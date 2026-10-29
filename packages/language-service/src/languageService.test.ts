@@ -113,6 +113,26 @@ describe("GedcomLanguageService", () => {
     ]);
   });
 
+  it("reads a month or a calendar written as a SCHMA alias (#448)", () => {
+    const service = new GedcomLanguageService(
+      [
+        "0 HEAD",
+        "1 GEDC",
+        "2 VERS 7.0",
+        "1 SCHMA",
+        "2 TAG _APRX https://gedcom.io/terms/v7/month-APR",
+        "2 TAG _JUL https://gedcom.io/terms/v7/cal-JULIAN",
+        "0 TRLR",
+        "",
+      ].join("\n"),
+    );
+
+    expect(service.readDate("31 _APRX 2000")).toBeNull();
+    expect(service.readDate("_JUL 29 FEB 1900")?.dates).toStrictEqual([
+      { calendar: "JULIAN", day: 29, month: "FEB", year: 1900 },
+    ]);
+  });
+
   it("reads a year in a Personal Ancestral File", () => {
     const service = new GedcomLanguageService(
       "0 HEAD\n1 SYST PAF\n1 GEDC\n2 VERS 5.5\n0 TRLR\n",

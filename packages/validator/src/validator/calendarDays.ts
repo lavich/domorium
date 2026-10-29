@@ -16,6 +16,7 @@ import { GedcomScheme } from "../schemes/schema-types";
 import type { GedcomDate } from "../types/date";
 import { calendarNamed, dateTokens, DEFAULT_CALENDAR } from "./calendars";
 import { isEpoch } from "./epoch";
+import { emptyExtensions, ExtensionContext, resolveTag } from "./extensions";
 
 export const LENGTHS: Record<string, number> = {
   JAN: 31,
@@ -94,8 +95,11 @@ function withoutPhrases(value: string): string {
 export function impossibleDays(
   scheme: GedcomScheme,
   value: string,
+  extensions: ExtensionContext = emptyExtensions(),
 ): ImpossibleDay[] {
-  const tokens = dateTokens(withoutPhrases(value));
+  const tokens = dateTokens(withoutPhrases(value)).map((token) =>
+    resolveTag(extensions, token),
+  );
   const found: ImpossibleDay[] = [];
   let calendar: string = DEFAULT_CALENDAR;
 

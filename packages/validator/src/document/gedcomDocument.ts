@@ -53,9 +53,10 @@ function possibleDate(
   scheme: GedcomScheme,
   text: string,
   read: GedcomDateValue | null,
+  extensions: ExtensionContext = emptyExtensions(),
 ): GedcomDateValue | null {
   return read &&
-    impossibleDays(scheme, text).length === 0 &&
+    impossibleDays(scheme, text, extensions).length === 0 &&
     impossibleYears(read.dates).length === 0
     ? read
     : null;
@@ -349,6 +350,9 @@ export class GedcomDocument {
         this.validatedAs === "7.0"
           ? readDateValueV7(text, this.scheme, this.extensions)
           : readDateValue551(this.scheme, text),
+        this.extensions.requireDeclaration
+          ? this.extensions
+          : emptyExtensions(),
       );
     }
     const g551 = schemaForDialect("5.5.1").scheme;

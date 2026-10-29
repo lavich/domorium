@@ -8,6 +8,7 @@ const SCHMA = [
   "2 TAG _CAL https://example.com/calendar",
   "2 TAG _MON https://example.com/month",
   "2 TAG _EP https://example.com/epoch",
+  "2 TAG _JUL https://gedcom.io/terms/v7/cal-JULIAN",
 ];
 
 function dateErrors(version: string, payload: string) {
@@ -39,6 +40,12 @@ describe("a year the calendar does not number", () => {
 
   it("reports it once at the end of a range that names it", () => {
     expect(dateErrors("7.0", "BET JULIAN 0 AND 10")).toEqual([
+      "VAL016 error: Value for DATE names year 0, and JULIAN has no year 0",
+    ]);
+  });
+
+  it("reports it in a calendar written as an alias", () => {
+    expect(dateErrors("7.0", "_JUL 0")).toEqual([
       "VAL016 error: Value for DATE names year 0, and JULIAN has no year 0",
     ]);
   });
