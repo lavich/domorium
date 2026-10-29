@@ -58,6 +58,9 @@
   "dependencies": {
     "@domorium/language-service": "^2.3.0"
   },
+  "devDependencies": {
+    "@codemirror/search": "^6.7.2"
+  },
   "peerDependencies": {
     "@codemirror/autocomplete": "^6.6.1",
     "@codemirror/commands": "^6.0.0",
