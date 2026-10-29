@@ -8,7 +8,7 @@ import com.intellij.openapi.util.text.StringUtil
 /** The validator lexer's xref token (packages/validator/src/parser/lexer.ts). */
 private val XREF = Regex("@[A-Za-z0-9_]+@")
 
-/** The xref holding the character at [offset], matched left to right over its line. */
+/** Matched left to right over the line, so `a@@b@@c` holds `@b@`. */
 internal fun xrefAt(
     text: CharSequence,
     offset: Int,
@@ -22,7 +22,6 @@ internal fun xrefAt(
         .firstOrNull { offset in it.startOffset until it.endOffset }
 }
 
-/** The xref [offset] stands strictly inside, past its opening at-sign. */
 internal fun xrefAround(
     text: CharSequence,
     offset: Int,

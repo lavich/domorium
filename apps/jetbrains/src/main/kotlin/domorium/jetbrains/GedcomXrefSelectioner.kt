@@ -11,7 +11,7 @@ import com.intellij.psi.PsiElement
  * so double-click and Extend Selection go straight to the whole xref.
  */
 class GedcomXrefSelectioner : ExtendWordSelectionHandlerBase() {
-    override fun canSelect(e: PsiElement): Boolean = isGedcomFileType(e.containingFile?.virtualFile?.fileType)
+    override fun canSelect(e: PsiElement): Boolean = isGedcomFileType(e.containingFile?.fileType)
 
     override fun getMinimalTextRangeLength(
         element: PsiElement,
