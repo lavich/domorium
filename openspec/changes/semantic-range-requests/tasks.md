@@ -14,8 +14,8 @@
 
 ## 4. Documentation
 
-- [ ] 4.1 Add an `## Unreleased` section to `apps/vscode/CHANGELOG.md` with an entry naming #150: on a large file, colour and indentation hints are built for the visible lines rather than the whole file. No entry in the JetBrains `<change-notes>`, which keep no unreleased section and whose behaviour does not change. Check that `packages/language-server/README.md` says nothing this change makes untrue. Verify with `npm run check:docs`
+- [x] 4.1 Add an `## Unreleased` section to `apps/vscode/CHANGELOG.md` with an entry naming #150: on a large file, colour and indentation hints are built for the visible lines rather than the whole file. No entry in the JetBrains `<change-notes>`, which keep no unreleased section and whose behaviour does not change. Check that `packages/language-server/README.md` says nothing this change makes untrue. Verify with `npm run check:docs`
 
 ## 5. Gate
 
-- [ ] 5.1 Run `npm run check`; record whether `check:jetbrains` ran or was skipped for lack of a JDK
+- [x] 5.1 Run `npm run check`; record whether `check:jetbrains` ran or was skipped for lack of a JDK
