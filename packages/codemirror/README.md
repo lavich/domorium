@@ -72,6 +72,12 @@ view = new EditorView({ state, parent: document.body });
 callbacks for workspace edits and document links. It does not install general
 editor keymaps, gutters, history, or layout behavior.
 
+It declares `@` a word character, so an xref such as `@I1@` is one word to
+double-click, word movement and deletion, and word search. An at-sign in a value
+joins words too: `john@example.com` double-clicks as `john@example`. CodeMirror
+reads only the first `wordChars` it is given, so a host declaring its own ahead
+of the preset replaces this one.
+
 `recordPreviewHover` installs the gesture that previews the record a
 cross-reference names, and marks the pointer under the reader's attention. The
 host supplies `show` and `hide`, because what a preview is drawn on — a
