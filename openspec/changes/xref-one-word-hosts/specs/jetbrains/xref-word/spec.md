@@ -27,8 +27,9 @@ such as `)`, it SHALL NOT.
 
 - **WHEN** the word is selected with the caret just after the closing `@` in
   `1 NOTE (@I1@)`
-- **THEN** the selection is not `@I1@`: the caret is on `)`, and no range of the
-  xref is offered
+- **THEN** the plugin offers no range, as the caret is on `)`; the selection is
+  the platform's, as in a plain text file with the same line, where its
+  bracket selection takes `@I1@`
 
 ### Requirement: Double-click and Extend Selection take an xref whole
 
