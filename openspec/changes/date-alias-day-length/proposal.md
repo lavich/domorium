@@ -50,7 +50,8 @@ resolving `SCHMA` aliases, as the grammar already does. GEDCOM 7 only.
 - `readDate` in a document checked as GEDCOM 7 declines a date by the same
   resolved check, so `31 _APRX 2000` reads as `null` and `_JUL 29 FEB 1900` reads
   as one Julian date.
-- Unchanged: GEDCOM 5.5.1 (no `SCHMA`, and its grammar resolves no alias); a
+- Unchanged: GEDCOM 5.5.1, whose grammar reads no extension tag as a standard
+  month or calendar even where the file writes a `SCHMA`; a
   document checked against no dialect, whose GEDCOM 7 reading has no `SCHMA`
   context; an extension tag that is not an alias; the year check.
 - No breaking change. A diagnostic appears on files where it was missing and
@@ -87,5 +88,8 @@ resolving `SCHMA` aliases, as the grammar already does. GEDCOM 7 only.
   `getDiagnostics()` would reject it"; the 2.1.0 changelog says `readDate`
   "resolves a `SCHMA` alias of a month or a calendar"), so they change only if a
   re-read finds a sentence the fix makes untrue.
-- Release: `@domorium/validator` patch (a bug fix), and the language-service
-  release that picks it up, made later by a separate release PR.
+- Release: `@domorium/validator` patch (a bug fix), made later by a separate
+  release PR. npm consumers of `@domorium/language-service` get it without a
+  language-service release, through its `^2.2.0` range on the validator
+  (`packages/language-service/package.json:56`); the editor hosts bundle their
+  dependencies and see it only after their own releases.

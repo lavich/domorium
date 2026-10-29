@@ -53,20 +53,21 @@ sees `APR` for `_APRX`, and the `ImpossibleDay` it returns carries the standard
 month, so the `VAL014` message names `APR` — as `VAL016` names `JULIAN` for
 `_JUL 0` today.
 
-`impossibleDateErrors` takes the extensions and passes them;
-`possibleDate` takes them too, and `readDate` passes `this.extensions` on the
-checked path and nothing on the unchecked one, where the GEDCOM 7 reading already
-has no `SCHMA`.
+The extensions reach the scan only where the document requires `SCHMA`
+declarations, which is GEDCOM 7: `collectExtensions` runs for every dialect
+(`gedcomDocument.ts:223-228`) and could, for a 5.5.1 file that writes a
+`SCHMA`, build an alias the 5.5.1 grammar never applies. `impossibleDateErrors`
+in `rule-node.ts` passes `this.extensions` when `this.extensions.requireDeclaration`
+is set and `emptyExtensions()` otherwise; `possibleDate` takes an
+`ExtensionContext`, and `readDate` passes `this.extensions` when
+`this.requiresSchmaDeclaration` is set and nothing otherwise, including on the
+unchecked path, whose GEDCOM 7 reading already has no `SCHMA`. A 5.5.1 file
+declaring `_APRX` with the GEDCOM 7 month URI therefore reads `31 _APRX 2000`
+exactly as today: `VAL004` and no `VAL014` (reproduced).
 
-The 5.5.1 rules receive the same `this.extensions`. That is harmless rather than
-a second rule: no 5.5.1 alias can name a month or a calendar, because
-`g551validation.json`'s `tag` table names none, and the 5.5.1 grammar rejects
-an extension tag as a month (`31 _APRX 2000` is `VAL004` there, reproduced), so
-the check is never reached. A test in `calendarDays.test.ts`, beside the one
-binding `LENGTHS` to the schemas, holds that the 5.5.1 `tag` table names no
-calendar or month URI; it fails first if that assumption ever breaks. Passing extensions per rule
-instead (a field on `ValueRule`) was considered and rejected: it adds a
-per-dialect switch to guard a case the schema already rules out.
+Passing extensions per rule instead (a field on `ValueRule`) was considered and
+rejected: the flag already on the context says which dialect requires
+declarations, and a field per rule would restate it six times.
 
 Alternatives:
 
@@ -86,6 +87,13 @@ No ADR: this is a behaviour decision; the contract is the
 `validator/impossible-day` and `language-service/read-date` specs (ADR-0018).
 
 ## Risks / Trade-offs
+
+- [An extension epoch is judged inconsistently by the two checks] →
+  `29 FEB 1900 _EP`, `_EP` declared, carries `VAL014` today, as the scan reads
+  1900 as a Gregorian year whatever epoch follows, while `impossibleYears`
+  skips a year with an extension epoch (`calendarDays.ts:146-151`). Known and
+  out of scope: this change neither fixes nor states it, and it is left to a
+  follow-up issue.
 
 - [A file in the conformance corpora aliases a month or a calendar] → its
   `VAL014` count moves. `npm run check:conformance` shows it; re-record with
