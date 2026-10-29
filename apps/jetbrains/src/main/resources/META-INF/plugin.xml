@@ -19,6 +19,7 @@
       <li>Clickable web and local-file links</li>
       <li>Quick fixes for broken references and invalid levels</li>
       <li>Code folding for records and nested structures</li>
+      <li>An XREF such as <code>@I1@</code> is one word to double-click, Extend and Shrink Selection, and moving or deleting by word</li>
       <li>Media links that follow a file renamed or moved in the IDE</li>
       <li>Support for <code>.ged</code> and <code>.gedcom</code> files</li>
     </ul>
@@ -198,6 +199,31 @@
         <spellchecker.support language="TEXT"
                               implementationClass="domorium.jetbrains.GedcomSpellcheckingStrategy"
                               order="first"/>
+        <extendWordSelectionHandler implementation="domorium.jetbrains.GedcomXrefSelectioner"/>
+        <editorActionHandler action="EditorNextWord"
+                             implementationClass="domorium.jetbrains.GedcomNextWordHandler"/>
+        <editorActionHandler action="EditorNextWordWithSelection"
+                             implementationClass="domorium.jetbrains.GedcomNextWordWithSelectionHandler"/>
+        <editorActionHandler action="EditorNextWordInDifferentHumpsMode"
+                             implementationClass="domorium.jetbrains.GedcomNextWordInDifferentHumpsModeHandler"/>
+        <editorActionHandler action="EditorNextWordInDifferentHumpsModeWithSelection"
+                             implementationClass="domorium.jetbrains.GedcomNextWordInDifferentHumpsModeWithSelectionHandler"/>
+        <editorActionHandler action="EditorPreviousWord"
+                             implementationClass="domorium.jetbrains.GedcomPreviousWordHandler"/>
+        <editorActionHandler action="EditorPreviousWordWithSelection"
+                             implementationClass="domorium.jetbrains.GedcomPreviousWordWithSelectionHandler"/>
+        <editorActionHandler action="EditorPreviousWordInDifferentHumpsMode"
+                             implementationClass="domorium.jetbrains.GedcomPreviousWordInDifferentHumpsModeHandler"/>
+        <editorActionHandler action="EditorPreviousWordInDifferentHumpsModeWithSelection"
+                             implementationClass="domorium.jetbrains.GedcomPreviousWordInDifferentHumpsModeWithSelectionHandler"/>
+        <editorActionHandler action="EditorDeleteToWordStart"
+                             implementationClass="domorium.jetbrains.GedcomDeleteToWordStartHandler"/>
+        <editorActionHandler action="EditorDeleteToWordStartInDifferentHumpsMode"
+                             implementationClass="domorium.jetbrains.GedcomDeleteToWordStartInDifferentHumpsModeHandler"/>
+        <editorActionHandler action="EditorDeleteToWordEnd"
+                             implementationClass="domorium.jetbrains.GedcomDeleteToWordEndHandler"/>
+        <editorActionHandler action="EditorDeleteToWordEndInDifferentHumpsMode"
+                             implementationClass="domorium.jetbrains.GedcomDeleteToWordEndInDifferentHumpsModeHandler"/>
         <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
     </extensions>
 

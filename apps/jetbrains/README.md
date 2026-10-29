@@ -13,6 +13,8 @@ with confidence using structure-aware suggestions and diagnostics as you type.
 - Hover information for GEDCOM tags
 - Go to definition for cross-references
 - Code folding for records and nested structures
+- An XREF such as `@I1@` is one word to double-click, Extend and Shrink Selection,
+  and moving or deleting by word
 - Media links that follow a file renamed or moved in the IDE
 - Support for `.ged` and `.gedcom` files
 

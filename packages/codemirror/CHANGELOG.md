@@ -2,6 +2,16 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## Unreleased
+
+- **An xref is one word.** The preset declares `@` a word character, so
+  double-clicking `@I1@` selects all of it, and moving or deleting by word
+  crosses it in one step, as in VS Code (#467). An at-sign joins words wherever
+  it stands: `john@example.com` double-clicks as `john@example`, `@#DJULIAN@`
+  as `DJULIAN@`, and a whole-word search for `I1` no longer matches inside
+  `@I1@`, while select-next-occurrence takes `@I1@` whole. Completion is
+  unchanged.
+
 ## 2.2.0
 
 - **A completion writes one token.** The editor took the typed text back to the

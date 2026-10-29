@@ -627,6 +627,7 @@ export function createGedcomExtensions(
     navigation(language, options.actions),
     documentLinks(language),
     semanticFeatures(language, indentationHints),
+    gedcomWordCharacters,
     gedcomBaseTheme,
   ];
   if (diagnostics) {
@@ -657,6 +658,10 @@ export function createStandaloneEditorExtensions(
     keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
   ];
 }
+
+const gedcomWordCharacters = EditorState.languageData.of(() => [
+  { wordChars: "@" },
+]);
 
 const gedcomBaseTheme = EditorView.baseTheme({
   ".cm-tooltip-hover": {

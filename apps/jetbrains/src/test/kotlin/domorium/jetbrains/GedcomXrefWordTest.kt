@@ -1,0 +1,238 @@
+package domorium.jetbrains
+
+import com.intellij.openapi.actionSystem.IdeActions
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.testFramework.EditorTestUtil
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import com.redhat.devtools.lsp4ij.LanguageServiceAccessor
+
+class GedcomXrefWordTest : BasePlatformTestCase() {
+    private var fileCount = 0
+
+    fun testDoubleClickTakesAPointerWholeFromEveryCharacter() {
+        for (marked in listOf(
+            "1 HUSB <caret>@I1@",
+            "1 HUSB @<caret>I1@",
+            "1 HUSB @I<caret>1@",
+            "1 HUSB @I1<caret>@",
+            "1 HUSB @I1@<caret>",
+        )) {
+            assertEquals(marked, "1 HUSB <selection>@I1@</selection>", perform("ged", marked, ::doubleClick))
+            assertEquals(marked, "1 HUSB <selection>@I1@</selection>", perform("ged", marked, SELECT_WORD))
+        }
+    }
+
+    fun testDoubleClickTakesARecordXrefWhole() {
+        assertEquals("0 <selection>@F12@</selection> FAM", perform("ged", "0 @F<caret>12@ FAM", ::doubleClick))
+    }
+
+    fun testDoubleClickTakesAVoidPointerWhole() {
+        assertEquals("1 FAMC <selection>@VOID@</selection>", perform("ged", "1 FAMC @VO<caret>ID@", ::doubleClick))
+    }
+
+    fun testExtendSelectionFromInsideAnXrefTakesItWhole() {
+        assertEquals(
+            "1 HUSB <selection>@I1@</selection>",
+            perform("ged", "1 HUSB @<selection>I<caret></selection>1@", SELECT_WORD),
+        )
+    }
+
+    fun testShrinkSelectionFromAnXrefStopsAtNothingInsideIt() {
+        assertEquals(
+            "1 HUSB @I<caret>1@",
+            perform("ged", "1 HUSB <selection>@I<caret>1@</selection>", IdeActions.ACTION_EDITOR_UNSELECT_WORD_AT_CARET),
+        )
+    }
+
+    fun testExtendSelectionTakesTheXrefOfEachCaret() {
+        assertEquals(
+            "1 HUSB <selection>@I1@</selection>\n1 FAMS <selection>@F1@</selection>",
+            perform("ged", "1 HUSB @I<caret>1@\n1 FAMS @F<caret>1@", SELECT_WORD),
+        )
+    }
+
+    fun testEscapedAtSignsLeaveTheXrefTheyHold() {
+        assertEquals("1 NOTE a@<selection>@b@</selection>@c", perform("ged", "1 NOTE a@@<caret>b@@c", ::doubleClick))
+        assertEquals("1 NOTE @<selection>@I1@</selection>@", perform("ged", "1 NOTE @@<caret>I1@@", ::doubleClick))
+    }
+
+    fun testACaretBeforePunctuationIsNotOnTheXref() {
+        val line = "1 NOTE (@I1@)"
+        assertNull(xrefAt(line, line.indexOf(')')))
+        assertEquals(
+            perform("txt", "1 NOTE (@I1@<caret>)", ::doubleClick),
+            perform("ged", "1 NOTE (@I1@<caret>)", ::doubleClick),
+        )
+    }
+
+    fun testACalendarEscapeSelectsAsThePlatformSelectsIt() {
+        assertEquals(
+            "2 DATE @#<selection>DJULIAN</selection>@ 1 JAN 1700",
+            perform("ged", "2 DATE @#DJU<caret>LIAN@ 1 JAN 1700", ::doubleClick),
+        )
+    }
+
+    fun testAnEmailAddressSelectsAsThePlatformSelectsIt() {
+        assertEquals(
+            "1 EMAIL <selection>john</selection>@example.com",
+            perform("ged", "1 EMAIL jo<caret>hn@example.com", ::doubleClick),
+        )
+    }
+
+    fun testAPlainTextFileSplitsTheXref() {
+        assertEquals("1 HUSB @<selection>I1</selection>@", perform("txt", "1 HUSB @I<caret>1@", ::doubleClick))
+    }
+
+    fun testNextWordCrossesAnXref() {
+        assertEquals("1 HUSB @I1@<caret>", perform("ged", "1 HUSB <caret>@I1@", "EditorNextWord"))
+        assertEquals("1 HUSB @I1@<caret>", perform("ged", "1 HUSB @I<caret>1@", "EditorNextWord"))
+    }
+
+    fun testPreviousWordCrossesAnXref() {
+        assertEquals("1 HUSB <caret>@I1@", perform("ged", "1 HUSB @I1@<caret>", "EditorPreviousWord"))
+        assertEquals("1 HUSB <caret>@I1@", perform("ged", "1 HUSB @I<caret>1@", "EditorPreviousWord"))
+    }
+
+    fun testNextWordWithSelectionSelectsTheXref() {
+        assertEquals("1 HUSB <selection>@I1@</selection>", perform("ged", "1 HUSB <caret>@I1@", "EditorNextWordWithSelection"))
+    }
+
+    fun testMovingFromInsideAnXrefClearsOrExtendsTheSelection() {
+        val marked = "1 HUSB @<selection>I<caret></selection>1@"
+        assertEquals("1 HUSB @I1@<caret>", perform("ged", marked, "EditorNextWord"))
+        assertEquals("1 HUSB @<selection>I1@</selection>", perform("ged", marked, "EditorNextWordWithSelection"))
+    }
+
+    fun testNextWordInTheOtherHumpsModeCrossesAnXref() {
+        assertEquals("1 HUSB @I1@<caret>", perform("ged", "1 HUSB <caret>@I1@", "EditorNextWordInDifferentHumpsMode"))
+    }
+
+    fun testNextWordMovesEachCaretOverItsXref() {
+        assertEquals(
+            "1 HUSB @I1@<caret>\n1 FAMS @F1@<caret>",
+            perform("ged", "1 HUSB <caret>@I1@\n1 FAMS <caret>@F1@", "EditorNextWord"),
+        )
+    }
+
+    fun testWordMovementOverAnEmailAddressIsThePlatforms() {
+        val line = "1 EMAIL john@example.com"
+        for (actionId in listOf("EditorNextWord", "EditorPreviousWord")) {
+            for (offset in 0..line.length) {
+                val marked = line.substring(0, offset) + "<caret>" + line.substring(offset)
+                assertEquals("$actionId $marked", perform("txt", marked, actionId), perform("ged", marked, actionId))
+            }
+        }
+    }
+
+    fun testDeleteToWordStartDeletesTheXref() {
+        assertEquals("1 HUSB <caret>", perform("ged", "1 HUSB @I1@<caret>", "EditorDeleteToWordStart"))
+    }
+
+    fun testDeleteToWordEndDeletesTheXref() {
+        assertEquals("1 HUSB <caret>", perform("ged", "1 HUSB <caret>@I1@", "EditorDeleteToWordEnd"))
+    }
+
+    fun testDeleteToWordStartInsideAnXrefDeletesItsOpeningPart() {
+        assertEquals("1 HUSB <caret>1@", perform("ged", "1 HUSB @I<caret>1@", "EditorDeleteToWordStart"))
+    }
+
+    fun testDeletionInTheOtherHumpsModeDeletesTheXref() {
+        assertEquals("1 HUSB <caret>", perform("ged", "1 HUSB @I1@<caret>", "EditorDeleteToWordStartInDifferentHumpsMode"))
+        assertEquals("1 HUSB <caret>", perform("ged", "1 HUSB <caret>@I1@", "EditorDeleteToWordEndInDifferentHumpsMode"))
+    }
+
+    fun testDeletionWithASelectionDeletesTheSelection() {
+        assertEquals("1 <caret>1@", perform("ged", "1 <selection>HUSB @I<caret></selection>1@", "EditorDeleteToWordStart"))
+    }
+
+    fun testWordDeletionInAnEmailAddressIsThePlatforms() {
+        val line = "1 EMAIL john@example.com"
+        for (actionId in listOf("EditorDeleteToWordStart", "EditorDeleteToWordEnd")) {
+            for (offset in 0..line.length) {
+                val marked = line.substring(0, offset) + "<caret>" + line.substring(offset)
+                assertEquals("$actionId $marked", perform("txt", marked, actionId), perform("ged", marked, actionId))
+            }
+        }
+    }
+
+    fun testEveryWordActionCrossesAnXref() {
+        val forward = "1 HUSB <caret>@I1@"
+        val backward = "1 HUSB @I1@<caret>"
+        val expected =
+            listOf(
+                Triple("EditorNextWord", forward, "1 HUSB @I1@<caret>"),
+                Triple("EditorNextWordWithSelection", forward, "1 HUSB <selection>@I1@</selection>"),
+                Triple("EditorNextWordInDifferentHumpsMode", forward, "1 HUSB @I1@<caret>"),
+                Triple("EditorNextWordInDifferentHumpsModeWithSelection", forward, "1 HUSB <selection>@I1@</selection>"),
+                Triple("EditorPreviousWord", backward, "1 HUSB <caret>@I1@"),
+                Triple("EditorPreviousWordWithSelection", backward, "1 HUSB <selection>@I1@</selection>"),
+                Triple("EditorPreviousWordInDifferentHumpsMode", backward, "1 HUSB <caret>@I1@"),
+                Triple("EditorPreviousWordInDifferentHumpsModeWithSelection", backward, "1 HUSB <selection>@I1@</selection>"),
+                Triple("EditorDeleteToWordStart", backward, "1 HUSB <caret>"),
+                Triple("EditorDeleteToWordStartInDifferentHumpsMode", backward, "1 HUSB <caret>"),
+                Triple("EditorDeleteToWordEnd", forward, "1 HUSB <caret>"),
+                Triple("EditorDeleteToWordEndInDifferentHumpsMode", forward, "1 HUSB <caret>"),
+            )
+        for ((actionId, marked, result) in expected) {
+            assertEquals(actionId, result, perform("ged", marked, actionId))
+        }
+    }
+
+    private fun doubleClick(editor: Editor) = editor.caretModel.currentCaret.selectWordAtCaret(false)
+
+    private fun perform(
+        extension: String,
+        marked: String,
+        actionId: String,
+    ): String = perform(extension, marked) { EditorTestUtil.executeAction(it, actionId) }
+
+    private fun perform(
+        extension: String,
+        marked: String,
+        action: (Editor) -> Unit,
+    ): String {
+        val file = myFixture.addFileToProject("file${fileCount++}.$extension", "")
+        val document = checkNotNull(PsiDocumentManager.getInstance(project).getDocument(file))
+        val editor = EditorFactory.getInstance().createEditor(document, project)
+        try {
+            WriteCommandAction.runWriteCommandAction(project) { document.setText(marked) }
+            val markers = EditorTestUtil.extractCaretAndSelectionMarkers(document)
+            PsiDocumentManager.getInstance(project).commitAllDocuments()
+            EditorTestUtil.setCaretsAndSelection(editor, markers)
+            action(editor)
+            assertEmpty(LanguageServiceAccessor.getInstance(project).startedServers)
+            return render(editor)
+        } finally {
+            EditorFactory.getInstance().releaseEditor(editor)
+        }
+    }
+
+    private fun render(editor: Editor): String {
+        val markers =
+            editor.caretModel.allCarets.flatMap { caret ->
+                if (caret.hasSelection()) {
+                    listOf(caret.selectionStart to 0, caret.selectionEnd to 2)
+                } else {
+                    listOf(caret.offset to 1)
+                }
+            }
+        val names = listOf("<selection>", "<caret>", "</selection>")
+        val text = editor.document.text
+        return buildString {
+            var from = 0
+            for ((offset, kind) in markers.sortedWith(compareBy({ it.first }, { it.second }))) {
+                append(text, from, offset)
+                append(names[kind])
+                from = offset
+            }
+            append(text, from, text.length)
+        }
+    }
+
+    private companion object {
+        const val SELECT_WORD = IdeActions.ACTION_EDITOR_SELECT_WORD_AT_CARET
+    }
+}
