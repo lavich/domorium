@@ -16,6 +16,7 @@ import type {
   DocumentHighlightParams,
   PrepareRenameParams,
   Range,
+  SemanticTokens,
   RenameParams,
   DocumentLink,
   DocumentLinkParams,
@@ -62,11 +63,33 @@ const offsetRange = (document: TextDocument, range: Range): OffsetRange => ({
   to: document.offsetAt(range.end),
 });
 
+const semanticTokens = (
+  service: GedcomLanguageService,
+  range?: OffsetRange,
+): SemanticTokens => {
+  const builder = new SemanticTokensBuilder();
+  service
+    .getSemanticTokens(range)
+    .forEach((token) =>
+      builder.push(
+        token.line,
+        token.char,
+        token.length,
+        token.tokenType,
+        token.tokenModifiers,
+      ),
+    );
+  return {
+    data: builder.build().data,
+  };
+};
+
 export const createServer = (connection: Connection) => {
   const documents = new TextDocuments(TextDocument);
   const cache = new Map<string, GedcomLanguageService>();
   let workspaceFolders: WorkspaceFolder[] = [];
   let insertReplaceSupport = false;
+  let semanticTokensByRange = false;
 
   connection.onInitialize((params) => {
     workspaceFolders =
@@ -75,6 +98,9 @@ export const createServer = (connection: Connection) => {
     insertReplaceSupport =
       params.capabilities?.textDocument?.completion?.completionItem
         ?.insertReplaceSupport === true;
+    semanticTokensByRange = Boolean(
+      params.capabilities?.textDocument?.semanticTokens?.requests?.range,
+    );
     return {
       capabilities: {
         workspace: {
@@ -98,11 +124,9 @@ export const createServer = (connection: Connection) => {
         completionProvider: {
           triggerCharacters: [" "],
         },
-        semanticTokensProvider: {
-          legend: semanticTokenLegend,
-          range: false,
-          full: true,
-        },
+        semanticTokensProvider: semanticTokensByRange
+          ? { legend: semanticTokenLegend, range: true }
+          : { legend: semanticTokenLegend, range: false, full: true },
       },
     } satisfies InitializeResult;
   });
@@ -400,22 +424,16 @@ export const createServer = (connection: Connection) => {
     if (!service) {
       return { data: [] };
     }
+    return semanticTokens(service);
+  });
 
-    const tokens = service.getSemanticTokens();
-
-    const builder = new SemanticTokensBuilder();
-    tokens.forEach((token) =>
-      builder.push(
-        token.line,
-        token.char,
-        token.length,
-        token.tokenType,
-        token.tokenModifiers,
-      ),
-    );
-    return {
-      data: builder.build().data,
-    };
+  connection.languages.semanticTokens.onRange((params) => {
+    const service = cache.get(params.textDocument.uri);
+    const document = documents.get(params.textDocument.uri);
+    if (!service || !document) {
+      return { data: [] };
+    }
+    return semanticTokens(service, offsetRange(document, params.range));
   });
 
   connection.onCompletion((params: CompletionParams): CompletionItem[] => {
