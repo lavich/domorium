@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
-## Unreleased
+## 2.3.0
 
 - **An xref is one word.** The preset declares `@` a word character, so
   double-clicking `@I1@` selects all of it, and moving or deleting by word

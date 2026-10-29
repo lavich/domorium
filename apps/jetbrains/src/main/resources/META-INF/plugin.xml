@@ -33,6 +33,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.9.0</h2>
+    <ul>
+      <li><b>An xref is one word.</b> Double-click and Extend Selection take <code>@I1@</code> whole instead of stopping at <code>I1</code>, Shrink Selection does not stop inside it, and moving or deleting by word crosses it in one step. Only xrefs are affected: <code>john@example.com</code> and <code>@#DJULIAN@</code> select and move as before</li>
+      <li><b>A month or a calendar written as a <code>SCHMA</code> alias is read as the one it stands for when a day is judged.</b> With <code>_APRX</code> declared as <code>month-APR</code>, <code>31 _APRX 2000</code> passed; with <code>_JUL</code> declared as <code>cal-JULIAN</code>, <code>_JUL 29 FEB 1900</code> was marked although 1900 is a Julian leap year. The first is now marked, naming <code>31 APR</code>, and the second is not</li>
+    </ul>
+
     <h2>1.8.0</h2>
     <ul>
       <li><b>A photograph renamed or moved in the IDE is followed by the trees that name it.</b> Every open GEDCOM document that names the file by a relative path is rewritten. A GEDCOM 7 document cannot name a file above its own folder, so a move there leaves it unchanged and a warning names it. Files that are not open, folder renames, renames outside the IDE and absolute paths are not followed</li>
