@@ -56,3 +56,4 @@ Behaviour decision, not architecture: the contract lives in `language-server/ran
 - The VS Code changelog entry does not say the grammar colours what is off screen: above 20 MB, where the change matters, VS Code does not run the grammar at all.
 - `npm run check` passed with 1492 tests, and `check:jetbrains` ran with a JDK. One earlier run of `check:typescript` alone exited non-zero and was not reproduced in later runs or by the code reviews; its log was not kept.
 - Tasks 3.1 and 3.2 are left to a person: they need VS Code and a JetBrains IDE.
+- Tasks 3.1 and 3.2 were checked by hand by the user on 2026-10-29: the extension in a VS Code development host on `simpsons70.ged` and a 30 MB generated file, and the plugin in the JetBrains sandbox IDE on `simpsons70.ged`. The user reported both as passing.
