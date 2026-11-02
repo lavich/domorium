@@ -16,6 +16,18 @@ updates:
       # vsce refuses to package and the compiler stops enforcing it. The floor
       # moves when an API we want needs it — see #56, #128 and #195.
       - dependency-name: "@types/vscode"
+      # Peer ranges in packages/codemirror state what the editor needs, not what
+      # it was built against. Dependabot rewrites them to the latest release,
+      # and a host that ships an older CodeMirror — Obsidian — can no longer
+      # resolve the package. manifest.test.ts guards the ranges. Bump these by
+      # hand in apps/web-editor.
+      - dependency-name: "@codemirror/autocomplete"
+      - dependency-name: "@codemirror/commands"
+      - dependency-name: "@codemirror/language"
+      - dependency-name: "@codemirror/lint"
+      - dependency-name: "@codemirror/state"
+      - dependency-name: "@codemirror/view"
+      - dependency-name: "@lezer/highlight"
 
   - package-ecosystem: gradle
     directory: /apps/jetbrains
