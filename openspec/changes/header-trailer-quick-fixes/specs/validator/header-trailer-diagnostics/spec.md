@@ -44,6 +44,12 @@ first carries, in addition, the fact that the header is absent.
 - **WHEN** the document is empty
 - **THEN** the undetermined-version diagnostic carries that the header is missing
 
+#### Scenario: A fragment
+
+- **WHEN** a fragment is checked without a dialect
+- **THEN** the undetermined-version diagnostic does not carry that the header is missing,
+  because a fragment has no header to lack
+
 #### Scenario: A header without a version
 
 - **WHEN** the document has `0 HEAD` and no `HEAD.GEDC.VERS`

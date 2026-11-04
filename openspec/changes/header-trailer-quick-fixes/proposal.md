@@ -46,5 +46,5 @@ None.
   dependency direction still points down.
 - Hosts: VS Code, JetBrains, Obsidian and the web editor all gain the two actions through
   the shared service. The diagnostic for a missing `TRLR` moves from the first line to the
-  last, which every host shows, and the validator's conformance records change with it.
+  last, which every host shows.
 - No new dependency, no protocol change, no version of any package decided here.

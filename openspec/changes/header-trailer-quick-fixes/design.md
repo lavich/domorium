@@ -3,16 +3,16 @@
 See proposal.md — Why. Observed in the code:
 
 - A missing `TRLR` is `VAL002` pushed by `GedcomValidator.collect` with the range
-  `parent?.range ?? 0:0` (`validate.ts:245`), so at the root it is always `0:0`.
+  `parent?.range ?? 0:0`, so at the root it is always `0:0`.
 - A missing `HEAD` yields no `VAL002`: with no version the document stops at `VAL012`
-  (`gedcomDocument.ts:167`), whose range is `VERS`'s value, else `HEAD`'s, else the origin
-  (`versionRegistry.ts:122`). With no `HEAD` it is the origin.
-- `Diagnostic.data` (`types.ts:131`) and `GedcomError.data` (`errors.ts`) carry `xref`,
+  , whose range is `VERS`'s value, else `HEAD`'s, else the origin
+  . With no `HEAD` it is the origin.
+- `Diagnostic.data` and `GedcomError.data` (`errors.ts`) carry `xref`,
   `requiredRecordTag` and `expectedLevel`. The language server finds the current diagnostic
-  by code, message and range and so recovers `data` (`createServer.ts:328`); CodeMirror
+  by code, message and range and so recovers `data`; CodeMirror
   passes the diagnostic it was given.
 - `getCodeActions` keeps a diagnostic only where `overlaps(diagnostic.range, requested)`,
-  which compares ends strictly (`codeActions.ts:200`); a range of zero width never
+  which compares ends strictly; a range of zero width never
   overlaps anything.
 - `unresolvedXrefActions` already finds the `TRLR` line, and `terminatorOf` already reads
   the document's terminator.
@@ -38,7 +38,7 @@ Behaviour decision, not an architecture one (ADR-0018): the spec holds the contr
 **The validator marks, the service decides.** Diagnostics gain a `missingTag` field
 (`"TRLR"`) on `VAL002`, set only for a missing root `TRLR`, and `missingHeader: true` on
 `VAL012`. The latter needs a flag on `VersionResolution`, which `resolveGedcomVersion`
-(`versionRegistry.ts:118`) computes without one and which the package exports, so the
+computes without one and which the package exports, so the
 README of `validator` changes too. The service reads those and
 never parses messages or re-scans the document for the absence. Alternative: the service
 scans for `HEAD`/`TRLR` itself — rejected; two places would define "missing".
@@ -73,10 +73,9 @@ is written first when the last line has none. The terminator is `terminatorOf(te
 
 ## Risks / Trade-offs
 
-- [The `TRLR` diagnostic moves in every host] → a scenario in the spec, a test in
-  `validator`, and the conformance records and their digests are rewritten by
-  `check:conformance -- --update` (they sit in `scripts/vendor-corpus.json`); the diff is
-  read for position changes only.
+- [The `TRLR` diagnostic moves in every host] → a scenario in the spec and a test in
+  `validator`; `check:conformance` is run and any record it flags is read for position
+  changes only.
 - [JetBrains' client may treat a diagnostic at the end of the file differently] → checked by
   hand in a real IDE before the PR is merged, as no automated test reaches it.
 - [A fix applied to a 5.5.1 file turns it into a 7.0 file] → the title names the version;
@@ -88,3 +87,21 @@ is written first when the last line has none. The terminator is `terminatorOf(te
 
 None. No stored data, no protocol change. Releases are decided separately; the touched
 units are `validator`, `language-service` and, through them, the hosts.
+
+## Implementation
+
+- `check:conformance` passed without `--update`: the records and digests do not depend on
+  where a `VAL002` sits, so no corpus record changed. The risk entry above overstates it.
+- The changelogs of `validator`, `language-service` and the hosts are not touched: no
+  version is bumped here, and an entry belongs with the bump that releases them.
+- `terminatorOf` moved from `codeActions.ts` to `position/lineTerminators.ts` so the new
+  module and `codeActions.ts` share it without importing each other.
+- The one-line feature lists (`README.md`, `apps/vscode/README.md`, `plugin.xml`,
+  `abilities.ts`, `integrations.ts`) now say "a missing header or trailer".
+- No guard against an existing `TRLR` inside the trailer action: `getCodeActions` already
+  drops a diagnostic the document no longer has, which is what the spec scenario pins.
+- A fragment never carries `missingHeader`: it has no header to lack, so it is offered no
+  header action.
+- `lastGedcomLine` follows the last child of the last record rather than walking the whole
+  tree; a record with a hundred thousand children overflowed the argument limit when its
+  children were spread into a stack.

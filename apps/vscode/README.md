@@ -19,7 +19,7 @@ with confidence using structure-aware suggestions and diagnostics as you type.
 - An XREF such as `@I1@` is one word to double-click and word movement
 - Clickable web and local-file links
 - Media links that follow a file renamed or moved in the editor
-- Quick fixes for broken references and invalid levels
+- Quick fixes for broken references, invalid levels and a missing header or trailer
 - Code folding for records and nested structures
 - Support for `.ged` and `.gedcom` files
 
