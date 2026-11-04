@@ -11,7 +11,9 @@ commits, comments, documentation. Read them first; this skill only orders the wo
 
 Every edit, commit and push in this flow happens in an Orca worktree — the plan,
 the implementation, fixes after review. The main checkout stays on `main` and only
-pulls. To continue a branch that already exists on the remote:
+pulls. One change is one worktree, one branch and one PR: the OpenSpec artifacts and
+the code that implements them travel together. To continue a branch that already
+exists on the remote:
 `orca worktree create --name <name> --no-parent --setup run --base-branch origin/<branch> --json`,
 then push with `git push origin HEAD:<branch>` — Orca names the local branch
 differently.
@@ -28,7 +30,7 @@ an editor host sees — diagnostics, quick fixes, hover, the site — are the us
 
 ## 2. Plan: OpenSpec in an Orca worktree
 
-- Worktree from a fresh `main`:
+- Worktree from a fresh `main`, the one the implementation will use too:
   `orca worktree create --name <change> --no-parent --setup run --json`.
 - Create the change with the `openspec-propose` skill: `openspec new change <name>`,
   then proposal, design, specs and tasks, each from
@@ -55,13 +57,13 @@ an editor host sees — diagnostics, quick fixes, hover, the site — are the us
   with a failure scenario and a fix.
 - Verify the most surprising findings yourself. Take contested decisions to the
   user, fix the rest; review again if the fixes are large.
-- The plan may land on `main` as its own PR (only `openspec/changes/<name>`), and
-  only with the user's permission.
+- The plan is not merged on its own: it stays in the change's branch and reaches
+  `main` in the same PR as the implementation. Commit it there as the first commit.
 
 ## 4. Implementation
 
-- A fresh worktree from `main`; if `main` has moved on, `git rebase origin/main`
-  before starting.
+- The same worktree and branch as the plan, no new one; if `main` has moved on,
+  `git rebase origin/main` before starting.
 - Run the tests before touching anything. Work through `tasks.md` in order, a test
   with each task; record deviations from the design under an "Implementation"
   heading in `design.md`; tick `- [x]`.
