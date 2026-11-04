@@ -15,7 +15,7 @@ export const SHARED_ABILITIES = [
   "Semantic highlighting of levels, tags and cross-references",
   "Hover: what a tag means, and the record a cross-reference names",
   "Go to definition from a cross-reference to its record",
-  "Quick fixes for broken references and invalid levels",
+  "Quick fixes for broken references, invalid levels and a missing header or trailer",
   "Folding of records and nested structures",
   "Clickable web links and links to files beside the document",
 ];

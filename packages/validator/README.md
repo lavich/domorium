@@ -53,7 +53,13 @@ interface GedcomError {
   code: string;
   message: string;
   hint?: string;
-  data?: { xref?: string; requiredRecordTag?: string; expectedLevel?: number };
+  data?: {
+    xref?: string;
+    requiredRecordTag?: string;
+    expectedLevel?: number;
+    missingTag?: string;
+    missingHeader?: boolean;
+  };
   range: Range;
   level: "error" | "warning" | "info";
 }
@@ -70,7 +76,8 @@ interface GedcomError {
 
 `data` is what makes a fix offerable rather than merely reportable: an
 unresolved pointer reports the xref that failed and the record tag it needed, so
-a host can offer to create that record.
+a host can offer to create that record. A missing `TRLR` names the tag, and a
+document with no `HEAD` at all says so, which a header with no version does not.
 
 For this file, where `SEX` carries a value its schema does not permit and `FAMC`
 points at a record that is not there:
@@ -199,19 +206,19 @@ objects apiece. Read it freely at the edges, and use `startOffset` and
 Every method reads the document last given to `createDocument`, which returns
 the same instance so the two can be chained.
 
-| Method                               | Answers                                                                                                                                                                                                            |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `createDocument(text, options?)`     | Parses and validates, and returns the document itself.                                                                                                                                                             |
-| `getErrors()`                        | Every diagnostic, in the order found.                                                                                                                                                                              |
-| `getNodes()`                         | The records, each with its substructures.                                                                                                                                                                          |
-| `getVersion()`                       | The version read from `HEAD`.`GEDC`.`VERS`, as written.                                                                                                                                                            |
-| `getDialect()`                       | Which rules were applied: `"5.5.1"` or `"7.0"`.                                                                                                                                                                    |
-| `getVersionResolution()`             | How that was decided — `supported`, `substituted`, `unsupported`, `undetermined`, or `paf` for a file whose header names a writing program before its version.                                                     |
-| `getLabel(node)`                     | The specification's name for a structure, for a UI to show instead of the tag: `HEAD` answers `Header`.                                                                                                            |
-| `getPointerTargetTag(node)`          | The record tag a pointer line must name: `FAMC` answers `FAM`.                                                                                                                                                     |
-| `isRecordDeclaration(node)`          | Whether the node declares a record other lines can point at.                                                                                                                                                       |
-| `getCompletions(position, lineText)` | What may be written at a position — `{ label, kind: "tag" \| "enum" \| "pointer", detail? }`.                                                                                                                      |
-| `readDate(payload)`                  | What a date payload says, read in the document's dialect — or `null` where the diagnostics would reject it as a date value. A document checked against no dialect reads by 5.5.1, then 7.0. See `GedcomDateValue`. |
+| Method                               | Answers                                                                                                                                                                                                                  |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `createDocument(text, options?)`     | Parses and validates, and returns the document itself.                                                                                                                                                                   |
+| `getErrors()`                        | Every diagnostic, in the order found.                                                                                                                                                                                    |
+| `getNodes()`                         | The records, each with its substructures.                                                                                                                                                                                |
+| `getVersion()`                       | The version read from `HEAD`.`GEDC`.`VERS`, as written.                                                                                                                                                                  |
+| `getDialect()`                       | Which rules were applied: `"5.5.1"` or `"7.0"`.                                                                                                                                                                          |
+| `getVersionResolution()`             | How that was decided — `supported`, `substituted`, `unsupported`, `undetermined` (with `missingHeader` set when there is no `HEAD` at all), or `paf` for a file whose header names a writing program before its version. |
+| `getLabel(node)`                     | The specification's name for a structure, for a UI to show instead of the tag: `HEAD` answers `Header`.                                                                                                                  |
+| `getPointerTargetTag(node)`          | The record tag a pointer line must name: `FAMC` answers `FAM`.                                                                                                                                                           |
+| `isRecordDeclaration(node)`          | Whether the node declares a record other lines can point at.                                                                                                                                                             |
+| `getCompletions(position, lineText)` | What may be written at a position — `{ label, kind: "tag" \| "enum" \| "pointer", detail? }`.                                                                                                                            |
+| `readDate(payload)`                  | What a date payload says, read in the document's dialect — or `null` where the diagnostics would reject it as a date value. A document checked against no dialect reads by 5.5.1, then 7.0. See `GedcomDateValue`.       |
 
 ## Scripts
 

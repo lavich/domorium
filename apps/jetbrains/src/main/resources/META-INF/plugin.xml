@@ -17,7 +17,7 @@
       <li>Find all XREF references with read/write highlights</li>
       <li>Safe, atomic XREF rename</li>
       <li>Clickable web and local-file links</li>
-      <li>Quick fixes for broken references and invalid levels</li>
+      <li>Quick fixes for broken references, invalid levels and a missing header or trailer</li>
       <li>Code folding for records and nested structures</li>
       <li>An XREF such as <code>@I1@</code> is one word to double-click, Extend and Shrink Selection, and moving or deleting by word</li>
       <li>Media links that follow a file renamed or moved in the IDE</li>

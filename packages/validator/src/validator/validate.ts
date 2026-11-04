@@ -9,6 +9,7 @@ import g7validationJson from "../schemes/g7validation.json";
 import g551validationJson from "../schemes/g551validation.json";
 import { ASTNode } from "../parser";
 import { GedcomError, GedcomErrorCode } from "../types/errors";
+import type { Range } from "../types/position";
 import { getGedcomVersion } from "./getGedcomVersion";
 import { RuleNode } from "./rule-node";
 import {
@@ -97,6 +98,23 @@ function aliasedType(
   const uri = extensions.tags.get(tag);
   const type = uri ? GedcomType(uri) : undefined;
   return type && scheme.payload[type] ? type : undefined;
+}
+
+const TRAILER = GedcomTag("TRLR");
+
+/** A line without a level is always a root, so only roots need that check. */
+function lastGedcomLine(nodes: ASTNode[]): Range | undefined {
+  for (let index = nodes.length - 1; index >= 0; index--) {
+    let node = nodes[index];
+    if (node.tokens.LEVEL === undefined) {
+      continue;
+    }
+    while (node.children.length > 0) {
+      node = node.children[node.children.length - 1];
+    }
+    return node.range;
+  }
+  return undefined;
 }
 
 export function schemeFor(nodes: ASTNode[]): GedcomScheme {
@@ -236,6 +254,7 @@ export class GedcomValidator {
       this.collect(errors, node.children, rule.type, scheme, node);
     }
 
+    const atRoot = !parent;
     for (const [tag, rule] of rules) {
       if (this.fragment && parentType === GedcomType("")) {
         break;
@@ -244,10 +263,14 @@ export class GedcomValidator {
         errors.push({
           code: GedcomErrorCode.MissingTag,
           message: `Missing required tag ${tag} in ${parentTag || "root"}`,
-          range: parent?.range ?? {
-            start: { line: 0, character: 0 },
-            end: { line: 0, character: 0 },
-          },
+          ...(atRoot && tag === TRAILER
+            ? { data: { missingTag: TRAILER } }
+            : {}),
+          range: parent?.range ??
+            (tag === TRAILER ? lastGedcomLine(nodes) : undefined) ?? {
+              start: { line: 0, character: 0 },
+              end: { line: 0, character: 0 },
+            },
           level: "error",
         });
       }

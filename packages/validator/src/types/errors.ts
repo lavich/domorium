@@ -58,6 +58,10 @@ export interface GedcomError {
     xref?: string;
     requiredRecordTag?: string;
     expectedLevel?: number;
+    /** The root tag a document lacks, set only for a missing `TRLR`. */
+    missingTag?: string;
+    /** The document has no `HEAD` record at all, as against one without a version. */
+    missingHeader?: boolean;
   };
   range: Range;
   level: "error" | "warning" | "info";

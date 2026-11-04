@@ -658,6 +658,139 @@ describe("stdio entry point", () => {
     }
   }, 15000);
 
+  it("offers to add a missing header over the wire, to a request the client widened", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///tree/headless.ged";
+    const origin = {
+      start: { line: 0, character: 0 },
+      end: { line: 0, character: 0 },
+    };
+    const askOver = (id: number, range: typeof origin) =>
+      client.request(id, "textDocument/codeAction", {
+        textDocument: { uri },
+        range,
+        context: {
+          diagnostics: [
+            {
+              code: "VAL012",
+              message:
+                "No GEDCOM version in HEAD.GEDC.VERS, so the file cannot be checked against a specification",
+              range: origin,
+            },
+          ],
+        },
+      });
+    const addsHeader = {
+      result: [
+        expect.objectContaining({
+          title: "Add a GEDCOM 7.0 header",
+          kind: "quickfix",
+        }),
+      ],
+    };
+
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: "0 @I1@ INDI\n0 TRLR\n",
+        },
+      });
+
+      await expect(askOver(2, origin)).resolves.toMatchObject(addsHeader);
+      await expect(
+        askOver(3, { start: origin.start, end: { line: 0, character: 1 } }),
+      ).resolves.toMatchObject(addsHeader);
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
+  it("offers to add a missing trailer over the wire, and nothing for a diagnostic on a line that is not the last", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///tree/truncated.ged";
+    const lastLine = {
+      start: { line: 4, character: 0 },
+      end: { line: 4, character: 12 },
+    };
+    const askAbout = (id: number, range: typeof lastLine) =>
+      client.request(id, "textDocument/codeAction", {
+        textDocument: { uri },
+        range,
+        context: {
+          diagnostics: [
+            {
+              code: "VAL002",
+              message: "Missing required tag TRLR in root",
+              range,
+            },
+          ],
+        },
+      });
+
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME A /B/\n",
+        },
+      });
+
+      await expect(askAbout(2, lastLine)).resolves.toMatchObject({
+        result: [
+          expect.objectContaining({
+            title: "Add trailer",
+            kind: "quickfix",
+            edit: {
+              documentChanges: [
+                {
+                  textDocument: { uri, version: 1 },
+                  edits: [
+                    {
+                      range: {
+                        start: { line: 5, character: 0 },
+                        end: { line: 5, character: 0 },
+                      },
+                      newText: "0 TRLR\n",
+                    },
+                  ],
+                },
+              ],
+            },
+          }),
+        ],
+      });
+      await expect(
+        askAbout(3, {
+          start: { line: 3, character: 0 },
+          end: { line: 3, character: 11 },
+        }),
+      ).resolves.toMatchObject({ result: [] });
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
   it("rewrites the open documents that name a renamed file, and says which cannot follow", async () => {
     const bundlePath = await bundleStdio();
     const child = spawn("node", [bundlePath]);

@@ -45,7 +45,7 @@ export const INTEGRATIONS: Integration[] = [
       "GEDCOM highlighted inside a gedcom code block in Markdown",
       "Hover information for GEDCOM tags, and the record a cross-reference names",
       "Go to definition, find all references with read/write highlights, and safe atomic rename",
-      "Quick fixes for broken references and invalid levels",
+      "Quick fixes for broken references, invalid levels and a missing header or trailer",
       "Code folding for records and nested structures",
     ],
     requirement: null,

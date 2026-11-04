@@ -36,7 +36,7 @@ line that caused it, while you type, in the editor you already use.
 - Go to definition for cross-references, and find all references with read/write
   highlights
 - Safe, atomic cross-reference rename
-- Quick fixes for broken references and invalid levels
+- Quick fixes for broken references, invalid levels and a missing header or trailer
 - Code folding for records and nested structures
 - Clickable web and local-file links, where the editor platform permits them
 - Support for `.ged` and `.gedcom` files
