@@ -11,7 +11,8 @@ import type {
   Range,
 } from "../../types";
 import type { ReferenceIndex } from "../references/referenceIndex";
-import { lines } from "../position/lineTerminators";
+import { lines, terminatorOf } from "../position/lineTerminators";
+import { headerAction, trailerAction } from "./headerTrailer";
 import { recordLabel } from "../symbols/recordLabel";
 import { nearestXref } from "./nearestXref";
 
@@ -52,6 +53,12 @@ export function getCodeActions(
   return diagnostics.flatMap((diagnostic) => {
     if (diagnostic.code === "unresolved-xref") {
       return unresolvedXrefActions(context, diagnostic);
+    }
+    if (diagnostic.data?.missingTag === "TRLR") {
+      return trailerAction(context.text, context.version, diagnostic);
+    }
+    if (diagnostic.data?.missingHeader) {
+      return headerAction(context.text, context.version, diagnostic);
     }
     if (
       diagnostic.code === "invalid-level" &&
@@ -161,11 +168,6 @@ function labelOf(nodes: ASTNode[], xref: string): string | undefined {
   return record && recordLabel(record, (target) => byXref.get(target));
 }
 
-/** The four 5.5.1 allows, longest first, so a two-character form wins. See #251. */
-function terminatorOf(text: string): string {
-  return ["\r\n", "\n\r", "\r", "\n"].find((eol) => text.includes(eol)) ?? "\n";
-}
-
 function canCreateBareRecord(
   dialect: GedcomDialect | undefined,
   recordTag: string,
@@ -198,6 +200,11 @@ function sameDiagnostic(left: Diagnostic, right: Diagnostic): boolean {
 }
 
 function overlaps(left: Range, right: Range): boolean {
+  if (comparePosition(left.start, left.end) === 0) {
+    return (
+      right.start.line <= left.start.line && left.start.line <= right.end.line
+    );
+  }
   return (
     comparePosition(left.end, right.start) > 0 &&
     comparePosition(right.end, left.start) > 0

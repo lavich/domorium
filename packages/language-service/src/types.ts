@@ -132,6 +132,8 @@ export interface Diagnostic {
     xref?: string;
     requiredRecordTag?: string;
     expectedLevel?: number;
+    missingTag?: string;
+    missingHeader?: boolean;
   };
   range: Range;
   severity: DiagnosticSeverity;
