@@ -71,6 +71,28 @@ applying the wrong one attaches a record to an unrelated one and the document th
 validates clean. Every record of the required type is reachable through completion
 inside `@…@` instead, filtered as the reader types.
 
+## The quick fixes for a missing header or trailer
+
+A document with no `0 TRLR` is reported on its last GEDCOM line, and one with no `0 HEAD`
+at all on its first. `getCodeActions` answers each with the text that is missing:
+
+```typescript
+const truncated = new GedcomLanguageService(
+  "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n",
+);
+const [lacksTrailer] = truncated
+  .getDiagnostics()
+  .filter(({ data }) => data?.missingTag === "TRLR");
+
+truncated.getCodeActions(lacksTrailer.range, [lacksTrailer], 0);
+// "Add trailer" — inserts `0 TRLR` at the end of the text
+```
+
+"Add a GEDCOM 7.0 header" is the only header offered: a 5.5.1 one needs a submitter
+and a character set, which are the author's to choose. A header that exists but names
+no version gets no action. On an empty document the header action is offered first
+and the trailer action after it, which leaves a valid file.
+
 ## The record a pointer names
 
 `getRecordPreview` answers what an XREF points at, so a host can show it where

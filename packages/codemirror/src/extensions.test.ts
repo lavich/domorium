@@ -112,6 +112,21 @@ describe("GEDCOM editor extensions", () => {
     expect(apply).toHaveBeenCalledOnce();
   });
 
+  it("offers the trailer a document is missing as a lint action", () => {
+    const language = new EditorLanguageService();
+    language.update("0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n");
+    const diagnostic = language.service
+      .getDiagnostics()
+      .find(({ data }) => data?.missingTag === "TRLR")!;
+    const apply = vi.fn(() => true);
+
+    const actions = getDiagnosticActions(language, diagnostic, apply);
+
+    expect(actions.map(({ name }) => name)).toEqual(["Add trailer"]);
+    actions[0].apply();
+    expect(apply).toHaveBeenCalledOnce();
+  });
+
   it("contains platform callback failures inside lint actions", () => {
     const language = new EditorLanguageService();
     language.update(text);
