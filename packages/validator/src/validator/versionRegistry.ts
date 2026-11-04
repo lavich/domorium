@@ -24,7 +24,11 @@ export type VersionResolution =
   | { kind: "unsupported"; version: string; range: Range }
   /** The payload of HEAD.SYST, which is the program that wrote the file. */
   | { kind: "paf"; system: string; range: Range }
-  | ({ kind: "undetermined"; range: Range } & SchemaChoice);
+  | ({
+      kind: "undetermined";
+      range: Range;
+      missingHeader: boolean;
+    } & SchemaChoice);
 
 type Entry =
   | ({ kind: "supported"; version: string } & SchemaChoice)
@@ -141,6 +145,7 @@ export function resolveGedcomVersion(nodes: ASTNode[]): VersionResolution {
       dialect,
       requiresSchmaDeclaration,
       range,
+      missingHeader: HEAD === undefined,
     };
   }
 

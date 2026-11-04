@@ -167,6 +167,9 @@ export class GedcomDocument {
         code: GedcomErrorCode.UndeterminedVersion,
         message:
           "No GEDCOM version in HEAD.GEDC.VERS, so the file cannot be checked against a specification",
+        ...(resolution.missingHeader && !options.fragment
+          ? { data: { missingHeader: true } }
+          : {}),
         range: resolution.range,
         level: "error",
       });
