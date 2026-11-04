@@ -36,6 +36,6 @@
       the changelogs wait for the release bump; verify with `npm run check:docs`
 - [x] 3.3 Run `npm run check` and record whether `check:jetbrains` ran or was skipped for
       lack of a JDK
-- [ ] 3.4 Check both actions by hand in a JetBrains IDE and in VS Code on an empty file and
+- [x] 3.4 Check both actions by hand in a JetBrains IDE and in VS Code on an empty file and
       on a file without a trailer, and record the result in the PR; no automated test reaches
       how those clients treat a diagnostic at the end of a file
