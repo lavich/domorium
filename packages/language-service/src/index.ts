@@ -14,6 +14,7 @@ export {
   relativeFilePath,
   resolveFileTarget,
 } from "./libs/links/fileTargetPath";
+export { isFixAllable } from "./libs/codeActions/fixAll";
 export { mentionsFile } from "./libs/links/mentionsFile";
 export { drawnCrop } from "./libs/media/drawnCrop";
 export { ReferenceIndex } from "./libs/references/referenceIndex";

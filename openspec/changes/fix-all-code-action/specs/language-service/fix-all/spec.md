@@ -32,16 +32,21 @@ an unresolved pointer. The edit SHALL be at the document's current version.
 
 ### Requirement: The combined result is checked
 
-The service SHALL revalidate the text the edit produces and offer the action only if the
-number of diagnostics falls and no diagnostic code occurs more often than before. If the
-level fixes break that, the service SHALL offer the action without them. If nothing remains
-to fix, it SHALL offer none.
+The service SHALL revalidate the text the edit produces. It SHALL keep the level fixes only
+if every diagnostic they answer is gone and no new wrong-level diagnostic appears; otherwise
+it SHALL offer the action without them. It SHALL add the trailer when the header it inserts
+makes the missing trailer reportable, so that one action completes the file. If nothing
+remains to fix, it SHALL offer none.
 
 #### Scenario: Level fixes that do not hold together
 
-- **WHEN** applying every **Change level to N** edit would leave more diagnostics of one
-  code than there were
+- **WHEN** a line's level is wrong and fixing it makes the level of the next line wrong
 - **THEN** the action is offered without the level fixes, or not at all
+
+#### Scenario: A header that reveals the trailer
+
+- **WHEN** a document has no header and no trailer, and only the header is reported
+- **THEN** the action also inserts the trailer
 
 #### Scenario: Nothing to fix
 

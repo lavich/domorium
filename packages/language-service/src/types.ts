@@ -146,7 +146,7 @@ export interface CodeActionChoice {
 
 export interface CodeAction {
   title: string;
-  kind: "quickfix";
+  kind: "quickfix" | "source.fixAll";
   diagnostics: Diagnostic[];
   edit?: WorkspaceEdit;
   choices?: CodeActionChoice[];
