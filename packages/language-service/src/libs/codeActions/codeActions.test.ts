@@ -455,4 +455,39 @@ describe("code actions", () => {
         : actions,
     ).toEqual(["Replace with @I1@"]);
   });
+
+  // Guards the per-diagnostic rescans of #504, which only time can see.
+  it("answers every dangling pointer of a large document in one request", () => {
+    const lines = [
+      "0 HEAD",
+      "1 GEDC",
+      "2 VERS 7.0",
+      "0 @I1@ INDI",
+      "0 @N1@ NOTE",
+    ];
+    for (let i = 0; i < 60_000; i += 1) {
+      lines.push(`1 CONT line ${i}`);
+    }
+    for (let i = 1; i <= 6000; i += 1) {
+      lines.push(`0 @F${i}@ FAM`, `1 HUSB @J${i}@`);
+    }
+    const service = new GedcomLanguageService(lines.join("\n") + "\n", 1);
+    const diagnostics = service
+      .getDiagnostics()
+      .filter(
+        ({ code, data }) =>
+          code === "unresolved-xref" || data?.missingTag === "TRLR",
+      );
+    const everything = {
+      start: { line: 0, character: 0 },
+      end: { line: 1_000_000, character: 0 },
+    };
+
+    const started = performance.now();
+    const actions = service.getCodeActions(everything, diagnostics, 1);
+    const elapsed = performance.now() - started;
+
+    expect(Array.isArray(actions) && actions.length).toBeGreaterThan(6000);
+    expect(elapsed).toBeLessThan(2000);
+  }, 120_000);
 });
