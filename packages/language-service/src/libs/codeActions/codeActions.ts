@@ -42,17 +42,18 @@ export function getCodeActions(
     };
   }
 
-  const diagnostics = requestedDiagnostics.filter(
-    (requested) =>
-      overlaps(requested.range, range) &&
-      context.currentDiagnostics.some((current) =>
-        sameDiagnostic(current, requested),
-      ),
+  const overlapping = requestedDiagnostics.filter((requested) =>
+    overlaps(requested.range, range),
   );
+  const current = new Set(context.currentDiagnostics.map(diagnosticKey));
+  const diagnostics = overlapping.filter((requested) =>
+    current.has(diagnosticKey(requested)),
+  );
+  const shared = sharedLookups(context);
 
   return diagnostics.flatMap((diagnostic) => {
     if (diagnostic.code === "unresolved-xref") {
-      return unresolvedXrefActions(context, diagnostic);
+      return unresolvedXrefActions(context, shared, diagnostic);
     }
     if (diagnostic.data?.missingTag === "TRLR") {
       return trailerAction(context.text, context.version, diagnostic);
@@ -86,8 +87,49 @@ export function getCodeActions(
   });
 }
 
+interface SharedLookups {
+  trailerLine: () => number;
+  candidates: (recordTag: string) => string[];
+  byXref: () => Map<string, ASTNode>;
+}
+
+function sharedLookups(context: CodeActionContext): SharedLookups {
+  const trailerLine = once(() =>
+    lines(context.text).findIndex((line) => /^0\s+TRLR(?:\s|$)/u.test(line)),
+  );
+  const byXref = once(
+    () =>
+      new Map(
+        context.nodes.map((node) => [node.tokens.POINTER?.value ?? "", node]),
+      ),
+  );
+  const declared = once(() =>
+    Array.from(context.index.entries())
+      .filter(({ declarations }) => declarations.length === 1)
+      .map(({ declarations }) => declarations[0]),
+  );
+  const byTag = new Map<string, string[]>();
+  const candidates = (recordTag: string) => {
+    let ids = byTag.get(recordTag);
+    if (!ids) {
+      ids = declared()
+        .filter((declaration) => declaration.recordTag === recordTag)
+        .map((declaration) => declaration.id);
+      byTag.set(recordTag, ids);
+    }
+    return ids;
+  };
+  return { trailerLine, candidates, byXref };
+}
+
+function once<T>(compute: () => T): () => T {
+  let result: { value: T } | undefined;
+  return () => (result ??= { value: compute() }).value;
+}
+
 function unresolvedXrefActions(
   context: CodeActionContext,
+  shared: SharedLookups,
   diagnostic: Diagnostic,
 ): CodeAction[] {
   const xref = diagnostic.data?.xref;
@@ -100,9 +142,7 @@ function unresolvedXrefActions(
 
   // The author wrote an identifier for a record they mean to have, so this
   // reads their intent where a replacement can only guess at it. See #249.
-  const trailerLine = lines(context.text).findIndex((line) =>
-    /^0\s+TRLR(?:\s|$)/u.test(line),
-  );
+  const trailerLine = shared.trailerLine();
   if (
     trailerLine >= 0 &&
     !context.index.get(xref)?.declarations.length &&
@@ -128,14 +168,9 @@ function unresolvedXrefActions(
     });
   }
 
-  const candidates = Array.from(context.index.entries())
-    .filter(({ declarations }) => declarations.length === 1)
-    .map(({ declarations }) => declarations[0])
-    .filter((declaration) => declaration.recordTag === recordTag)
-    .map((declaration) => declaration.id);
-  const candidate = nearestXref(xref, candidates);
+  const candidate = nearestXref(xref, shared.candidates(recordTag));
   if (candidate) {
-    const label = labelOf(context.nodes, candidate);
+    const label = labelOf(shared.byXref(), candidate);
     actions.push({
       title: label
         ? `Replace with ${candidate} — ${label}`
@@ -159,11 +194,10 @@ function unresolvedXrefActions(
   return actions;
 }
 
-/** Reached only once a candidate is worth naming, so the map is built here. */
-function labelOf(nodes: ASTNode[], xref: string): string | undefined {
-  const byXref = new Map(
-    nodes.map((node) => [node.tokens.POINTER?.value ?? "", node]),
-  );
+function labelOf(
+  byXref: Map<string, ASTNode>,
+  xref: string,
+): string | undefined {
   const record = byXref.get(xref);
   return record && recordLabel(record, (target) => byXref.get(target));
 }
@@ -190,13 +224,13 @@ function replacementEdit(
   return { version, edits: [{ range, newText }] };
 }
 
-function sameDiagnostic(left: Diagnostic, right: Diagnostic): boolean {
-  return (
-    left.code === right.code &&
-    left.message === right.message &&
-    JSON.stringify(left.range) === JSON.stringify(right.range) &&
-    JSON.stringify(left.data) === JSON.stringify(right.data)
-  );
+function diagnosticKey(diagnostic: Diagnostic): string {
+  return JSON.stringify([
+    diagnostic.code,
+    diagnostic.message,
+    diagnostic.range,
+    diagnostic.data,
+  ]);
 }
 
 function overlaps(left: Range, right: Range): boolean {
