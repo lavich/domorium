@@ -20,7 +20,7 @@ that applies every unambiguous, safe fix in the document.
 - The language server declares `source.fixAll` and answers a request by the `only` filter
   of the request context: `quickfix` actions only when the filter allows `quickfix`, the
   fix-all action only when it allows `source.fixAll`. Without a filter the fix-all action
-  is added to the quick fixes only when the request names a diagnostic it would fix.
+  is added to the quick fixes only when the document has a problem it would fix in the requested range.
 - No fix that needs a choice is part of it: replacing, creating or voiding an unresolved
   pointer stay one-by-one quick fixes.
 

@@ -804,7 +804,9 @@ describe("stdio entry point", () => {
       expect(await titles(4, ["quickfix"], [missingHeader])).toEqual([
         "quickfix: Add a GEDCOM 7.0 header",
       ]);
-      expect(await titles(5, undefined, [])).toEqual([]);
+      expect(await titles(5, undefined, [])).toEqual([
+        "source.fixAll: Fix all safe problems",
+      ]);
       expect(await titles(6, undefined, [missingHeader])).toEqual([
         "quickfix: Add a GEDCOM 7.0 header",
         "source.fixAll: Fix all safe problems",
@@ -848,7 +850,7 @@ describe("stdio entry point", () => {
           uri,
           languageId: "gedcom",
           version: 1,
-          text: "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @F1@ FAM\n1 HUSB @I9@\n",
+          text: "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @F1@ FAM\n1 HUSB @I9@\n0 @I1@ INDI\n",
         },
       });
 
@@ -856,6 +858,58 @@ describe("stdio entry point", () => {
       expect(await kinds(3, ["quickfix"])).not.toContain("source.fixAll");
       expect(await kinds(4, ["source.fixAll"])).toEqual(["source.fixAll"]);
       expect(await kinds(5, [])).toEqual([]);
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
+  it("offers fix-all on a line with a fixable problem though the client's diagnostic no longer matches", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///tree/reworded.ged";
+    const lastLine = {
+      start: { line: 4, character: 0 },
+      end: { line: 4, character: 12 },
+    };
+    const kinds = async (id: number, line: number) =>
+      (
+        (await client.request(id, "textDocument/codeAction", {
+          textDocument: { uri },
+          range: {
+            start: { line, character: 0 },
+            end: { line, character: 1 },
+          },
+          context: {
+            diagnostics: [
+              {
+                code: "VAL002",
+                message: "A trailer is missing",
+                range: lastLine,
+              },
+            ],
+          },
+        })) as { result: { kind: string }[] }
+      ).result.map(({ kind }) => kind);
+
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME A /B/\n",
+        },
+      });
+
+      expect(await kinds(2, 4)).toEqual(["source.fixAll"]);
+      expect(await kinds(3, 1)).toEqual([]);
     } finally {
       child.kill();
     }

@@ -7,8 +7,8 @@ import {
 
 import { getCompletionItems } from "./libs/completion/completion";
 import { LINE_TERMINATOR } from "./libs/position/lineTerminators";
-import { getCodeActions } from "./libs/codeActions/codeActions";
-import { getFixAll } from "./libs/codeActions/fixAll";
+import { getCodeActions, overlaps } from "./libs/codeActions/codeActions";
+import { getFixAll, isFixAllable } from "./libs/codeActions/fixAll";
 import { levelFolding } from "./libs/folding/levelFolding";
 import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
@@ -248,6 +248,13 @@ export class GedcomLanguageService {
       range,
       diagnostics,
       expectedVersion,
+    );
+  }
+
+  fixAllableAt(range: Range): boolean {
+    return this.getDiagnostics().some(
+      (diagnostic) =>
+        isFixAllable(diagnostic) && overlaps(diagnostic.range, range),
     );
   }
 

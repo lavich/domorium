@@ -107,4 +107,26 @@ describe("fix all", () => {
     const text = "0 @I1@ INDI\n2 NAME A /B/\n";
     expect(fixAllOf(fixed(text))).toEqual([]);
   });
+
+  it("says whether a fixable problem lies in a range", () => {
+    const service = new GedcomLanguageService(
+      "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME A /B/\n",
+      1,
+    );
+    const on = (line: number) => ({
+      start: { line, character: 0 },
+      end: { line, character: 1 },
+    });
+    expect(service.fixAllableAt(on(4))).toBe(true);
+    expect(service.fixAllableAt(on(1))).toBe(false);
+  });
+
+  it("finds a missing header from a request on its first line", () => {
+    const service = new GedcomLanguageService("0 @I1@ INDI\n", 1);
+    const first = {
+      start: { line: 0, character: 3 },
+      end: { line: 0, character: 3 },
+    };
+    expect(service.fixAllableAt(first)).toBe(true);
+  });
 });

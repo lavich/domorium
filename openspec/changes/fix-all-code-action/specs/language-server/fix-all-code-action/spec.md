@@ -18,7 +18,8 @@ edit carries the document version, with no diagnostics attached.
 A kind in `context.only` SHALL match a kind equal to it or beginning with it and a dot.
 The server SHALL return `quickfix` actions only when `only` is absent or matches
 `quickfix`, and the fix-all action only when `only` matches `source.fixAll`, or when
-`only` is absent and the request's diagnostics include one that fix-all would fix.
+`only` is absent and the document has a problem that fix-all would fix inside the requested range, by the
+service's current diagnostics and not the client's.
 
 #### Scenario: Only quick fixes
 
@@ -32,10 +33,17 @@ The server SHALL return `quickfix` actions only when `only` is absent or matches
 
 #### Scenario: A lightbulb on a line with a fixable problem
 
-- **WHEN** the request has no `only` and names a missing-trailer diagnostic
+- **WHEN** the request has no `only`, its range is on the last line, and the document has
+  no trailer
 - **THEN** the quick fix **Add trailer** and the fix-all action are both returned
+
+#### Scenario: A client diagnostic that no longer matches
+
+- **WHEN** the request has no `only`, its range is on the line of a fixable problem, and
+  the diagnostic it carries differs from the current one in message
+- **THEN** the fix-all action is returned
 
 #### Scenario: A lightbulb elsewhere
 
-- **WHEN** the request has no `only` and names only an unresolved pointer
+- **WHEN** the request has no `only` and its range holds only an unresolved pointer
 - **THEN** no fix-all action is returned

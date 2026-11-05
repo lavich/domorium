@@ -108,7 +108,8 @@ rough.getFixAll(0);
 
 Level fixes are dropped as a set when one of them would make the next line's level wrong.
 A pointer that names nothing is never part of it: replacing, creating or voiding it is a
-choice. `isFixAllable` says whether a diagnostic is one the action would fix.
+choice. `fixAllableAt(range)` says whether the document has a problem the action would fix inside
+that range, so a host can decide whether to offer it beside a quick fix.
 
 ## The record a pointer names
 

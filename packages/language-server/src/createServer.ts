@@ -49,7 +49,6 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   GedcomLanguageService,
   decodeFileTarget,
-  isFixAllable,
   semanticTokenLegend,
   type Diagnostic as ServiceDiagnostic,
   type MediaReference,
@@ -351,7 +350,7 @@ export const createServer = (connection: Connection) => {
         ? quickFixes(params, service, document.version, diagnostics)
         : []),
       ...(kindWanted(only, CodeActionKind.SourceFixAll) &&
-      (only !== undefined || diagnostics.some(isFixAllable))
+      (only !== undefined || service.fixAllableAt(params.range))
         ? fixAllActions(params.textDocument.uri, service, document.version)
         : []),
     ];

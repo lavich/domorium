@@ -41,9 +41,13 @@ filter is absent or matches `quickfix`, and the fix-all action when it matches
 no longer computes quick fixes it discards.
 
 **Without a filter.** A lightbulb request has no filter and arrives on every cursor
-move. The fix-all action is then offered, and computed, only when the request's diagnostics
-include one of the three kinds it would fix, so a cursor on any other line costs nothing.
-With the filter it is computed whenever asked, whatever the request names.
+move. The fix-all action is then offered, and computed, only when the document's own
+current diagnostics include one it would fix inside the requested range, decided by the
+service (`fixAllableAt`) with the same overlap rule as the quick fixes. The request's own
+diagnostics are not read: the server has to rebuild them to recover their `data`, and a
+client whose diagnostic differs from the current one in message or range loses it. A cursor
+on a line with nothing fixable costs a diagnostic scan and no revalidation. With the filter
+the action is computed whenever asked, whatever the request names.
 
 **Kinds in the service.** `CodeAction.kind` widens from `"quickfix"` to
 `"quickfix" | "source.fixAll"`; the service declares it itself, not from the LSP package.
@@ -67,4 +71,4 @@ With the filter it is computed whenever asked, whatever the request names.
 - The header and trailer texts are exposed as `headerEdit` and `trailerEdit`, which the two
   quick fixes and fix-all share.
 - Existing stdio tests of the two quick fixes now send `only: ["quickfix"]`, since a request
-  without a filter that names a fixable diagnostic also returns the fix-all action.
+  without a filter whose range is on a fixable problem also returns the fix-all action.
