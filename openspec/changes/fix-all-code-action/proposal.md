@@ -15,9 +15,8 @@ that applies every unambiguous, safe fix in the document.
   problems**, whose single edit applies every fix that needs no choice by the author: the
   missing trailer, the missing 7.0 header, and a wrong level where the quick fix already
   considers the change safe.
-- The service revalidates the combined result and offers the action only if it removes
-  diagnostics and adds none; when the level fixes interact, it drops them and offers the
-  header and trailer alone.
+- The service revalidates the combined result and keeps the level fixes only if no wrong
+  level is left; when they interact, it drops them and offers the header and trailer alone.
 - The language server declares `source.fixAll` and answers a request by the `only` filter
   of the request context: `quickfix` actions only when the filter allows `quickfix`, the
   fix-all action only when it allows `source.fixAll`. Without a filter the fix-all action

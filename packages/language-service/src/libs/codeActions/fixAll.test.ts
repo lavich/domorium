@@ -55,12 +55,13 @@ describe("fix all", () => {
     expect(fixed(text)).toContain("1 NAME A /B/");
   });
 
-  it("uses the document's own terminator", () => {
-    const text = "0 @I1@ INDI\r\n1 NAME A /B/\r\n";
-    const [action] = fixAllOf(text);
-    for (const edit of action.edit!.edits) {
-      expect(edit.newText.replace(/\r\n/gu, "")).not.toMatch(/\n/u);
-    }
+  it("writes the document's own terminator and a bare level", () => {
+    const [action] = fixAllOf("0 @I1@ INDI\r\n2 NAME A /B/\r\n");
+    expect(action.edit!.edits.map((edit) => edit.newText)).toEqual([
+      "0 HEAD\r\n1 GEDC\r\n2 VERS 7.0\r\n",
+      "1",
+      "0 TRLR\r\n",
+    ]);
   });
 
   it("repairs a CRLF document completely", () => {

@@ -814,6 +814,53 @@ describe("stdio entry point", () => {
     }
   }, 15000);
 
+  it("does not offer fix-all for a request that names only a pointer, or when the filter excludes it", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///tree/dangling.ged";
+    const pointer = {
+      code: "unresolved-xref",
+      message: "No INDI record carries @I9@",
+      range: {
+        start: { line: 4, character: 7 },
+        end: { line: 4, character: 11 },
+      },
+    };
+    const kinds = async (id: number, only: string[] | undefined) =>
+      (
+        (await client.request(id, "textDocument/codeAction", {
+          textDocument: { uri },
+          range: pointer.range,
+          context: { diagnostics: [pointer], ...(only ? { only } : {}) },
+        })) as { result: { kind: string }[] }
+      ).result.map(({ kind }) => kind);
+
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @F1@ FAM\n1 HUSB @I9@\n",
+        },
+      });
+
+      expect(await kinds(2, undefined)).not.toContain("source.fixAll");
+      expect(await kinds(3, ["quickfix"])).not.toContain("source.fixAll");
+      expect(await kinds(4, ["source.fixAll"])).toEqual(["source.fixAll"]);
+      expect(await kinds(5, [])).toEqual([]);
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
   it("offers to add a missing trailer over the wire, and nothing for a diagnostic on a line that is not the last", async () => {
     const bundlePath = await bundleStdio();
     const child = spawn("node", [bundlePath]);

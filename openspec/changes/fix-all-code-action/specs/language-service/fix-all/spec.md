@@ -33,8 +33,8 @@ an unresolved pointer. The edit SHALL be at the document's current version.
 ### Requirement: The combined result is checked
 
 The service SHALL revalidate the text the edit produces. It SHALL keep the level fixes only
-if every diagnostic they answer is gone and no new wrong-level diagnostic appears; otherwise
-it SHALL offer the action without them. It SHALL add the trailer when the header it inserts
+if the wrong-level diagnostics left number the ones before less the fixes applied, so that
+the fixes leave none unanswered; otherwise it SHALL offer the action without them. It SHALL add the trailer when the header it inserts
 makes the missing trailer reportable, so that one action completes the file. If nothing
 remains to fix, it SHALL offer none.
 
