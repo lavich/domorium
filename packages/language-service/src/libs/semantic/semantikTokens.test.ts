@@ -217,6 +217,38 @@ function countingToken(onRead: () => void): ASTToken {
   };
 }
 
+describe("semanticTokens on a large document", () => {
+  // Catches only a gross regression such as a copy of the result per node;
+  // the counting tests above guard the twofold ones, which a clock cannot.
+  it("colours a document of a million tokens without quadratic slowdown", () => {
+    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
+    for (let i = 1; i <= 80_000; i += 1) {
+      lines.push(
+        `0 @I${i}@ INDI`,
+        `1 NAME Person${i} /Family/`,
+        `1 FAMS @F${i}@`,
+        "1 BIRT",
+        "2 DATE 2 JAN 1801",
+      );
+    }
+    lines.push("0 TRLR", "");
+    const document = new GedcomDocument();
+    document.createDocument(lines.join("\n"));
+
+    const started = performance.now();
+    const tokens = semanticTokens(document.getNodes());
+    let checksum = 0;
+    for (const token of tokens) {
+      checksum += token.startOffset + token.endOffset + token.length;
+    }
+    const elapsed = performance.now() - started;
+
+    expect(tokens.length).toBeGreaterThan(1_000_000);
+    expect(checksum).toBeGreaterThan(0);
+    expect(elapsed).toBeLessThan(5000);
+  }, 120_000);
+});
+
 function nodeOf(token: ASTToken): ASTNode {
   return {
     level: 0,
