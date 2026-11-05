@@ -190,6 +190,45 @@ describe("ReferenceIndex", () => {
     expect(reads).toBeLessThan(40);
   });
 
+  it("resolves the cursor on every edge of an xref on a CRLF line", () => {
+    const service = new GedcomLanguageService(
+      ["0 @I1@ INDI", "0 @F1@ FAM", "1 HUSB @I1@", "1 WIFE @I2@"].join("\r\n"),
+    );
+    const index = service.getReferenceIndex();
+
+    expect(index.at({ line: 2, character: 6 })).toBeUndefined();
+    expect(index.at({ line: 2, character: 7 })?.id).toBe("@I1@");
+    expect(index.at({ line: 2, character: 10 })?.id).toBe("@I1@");
+    expect(index.at({ line: 2, character: 11 })?.id).toBe("@I1@");
+    expect(index.at({ line: 2, character: 12 })).toBeUndefined();
+    expect(index.at({ line: 3, character: 7 })?.id).toBe("@I2@");
+  });
+
+  // Catches a scan in `at`: the counting test above misses one that reads
+  // something other than `range`.
+  it("finds the cursor in a document of 80,000 occurrences without a scan", () => {
+    const lines = ["0 HEAD", "1 GEDC", "2 VERS 7.0"];
+    for (let i = 1; i <= 20_000; i += 1) {
+      lines.push(`0 @I${i}@ INDI`, `1 FAMS @F${i}@`);
+    }
+    for (let i = 1; i <= 20_000; i += 1) {
+      lines.push(`0 @F${i}@ FAM`, `1 HUSB @I${i}@`);
+    }
+    const index = new GedcomLanguageService(
+      lines.join("\n") + "\n",
+    ).getReferenceIndex();
+
+    const started = performance.now();
+    const found: (string | undefined)[] = [];
+    for (let i = 0; i < 2000; i += 1) {
+      found.push(index.at({ line: 4 + i * 20, character: 8 })?.id);
+    }
+    const elapsed = performance.now() - started;
+
+    expect(found.every((id) => id !== undefined)).toBe(true);
+    expect(elapsed).toBeLessThan(1000);
+  }, 120_000);
+
   it("does not index HEAD or TRLR as XREF record declarations", () => {
     const service = new GedcomLanguageService(
       ["0 @H1@ HEAD", "1 GEDC", "2 VERS 7.0", "0 @T1@ TRLR"].join("\n"),
