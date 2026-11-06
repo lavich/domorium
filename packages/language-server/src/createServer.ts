@@ -50,6 +50,7 @@ import {
   GedcomLanguageService,
   decodeFileTarget,
   semanticTokenLegend,
+  type Diagnostic as ServiceDiagnostic,
   type MediaReference,
   type OffsetRange,
 } from "@domorium/language-service";
@@ -118,7 +119,12 @@ export const createServer = (connection: Connection) => {
         documentHighlightProvider: true,
         renameProvider: { prepareProvider: true },
         documentLinkProvider: { resolveProvider: false },
-        codeActionProvider: { codeActionKinds: [CodeActionKind.QuickFix] },
+        codeActionProvider: {
+          codeActionKinds: [
+            CodeActionKind.QuickFix,
+            CodeActionKind.SourceFixAll,
+          ],
+        },
         hoverProvider: true,
         documentSymbolProvider: true,
         completionProvider: {
@@ -315,6 +321,7 @@ export const createServer = (connection: Connection) => {
     if (!service || !document) {
       return [];
     }
+    const only = params.context.only;
     const currentDiagnostics = service.getDiagnostics();
     const diagnostics = params.context.diagnostics.map((diagnostic) => {
       const code = String(diagnostic.code ?? "");
@@ -338,35 +345,15 @@ export const createServer = (connection: Connection) => {
         }
       );
     });
-    const result = service.getCodeActions(
-      params.range,
-      diagnostics,
-      document.version,
-    );
-    if (!Array.isArray(result)) {
-      return [];
-    }
-    return result.flatMap((action) => {
-      const edits = action.edit
-        ? [
-            toCodeAction(
-              action.title,
-              params.textDocument.uri,
-              action.edit,
-              params.context.diagnostics,
-            ),
-          ]
-        : [];
-      const choices = (action.choices ?? []).map((choice) =>
-        toCodeAction(
-          choice.title,
-          params.textDocument.uri,
-          choice.edit,
-          params.context.diagnostics,
-        ),
-      );
-      return [...edits, ...choices];
-    });
+    return [
+      ...(kindWanted(only, CodeActionKind.QuickFix)
+        ? quickFixes(params, service, document.version, diagnostics)
+        : []),
+      ...(kindWanted(only, CodeActionKind.SourceFixAll) &&
+      (only !== undefined || service.fixAllableAt(params.range))
+        ? fixAllActions(params.textDocument.uri, service, document.version)
+        : []),
+    ];
   });
 
   connection.onHover((params: HoverParams): Hover | null => {
@@ -540,6 +527,70 @@ function resolveLinkTarget(
   }
 }
 
+function kindWanted(only: string[] | undefined, kind: string): boolean {
+  return (
+    only === undefined ||
+    only.some((wanted) => kind === wanted || kind.startsWith(`${wanted}.`))
+  );
+}
+
+function quickFixes(
+  params: CodeActionParams,
+  service: GedcomLanguageService,
+  version: number,
+  diagnostics: ServiceDiagnostic[],
+): CodeAction[] {
+  const result = service.getCodeActions(params.range, diagnostics, version);
+  if (!Array.isArray(result)) {
+    return [];
+  }
+  return result.flatMap((action) => {
+    const edits = action.edit
+      ? [
+          toCodeAction(
+            action.title,
+            params.textDocument.uri,
+            action.edit,
+            params.context.diagnostics,
+          ),
+        ]
+      : [];
+    const choices = (action.choices ?? []).map((choice) =>
+      toCodeAction(
+        choice.title,
+        params.textDocument.uri,
+        choice.edit,
+        params.context.diagnostics,
+      ),
+    );
+    return [...edits, ...choices];
+  });
+}
+
+function fixAllActions(
+  uri: string,
+  service: GedcomLanguageService,
+  version: number,
+): CodeAction[] {
+  const result = service.getFixAll(version);
+  if (!Array.isArray(result)) {
+    return [];
+  }
+  return result.flatMap((action) =>
+    action.edit
+      ? [
+          toCodeAction(
+            action.title,
+            uri,
+            action.edit,
+            [],
+            CodeActionKind.SourceFixAll,
+          ),
+        ]
+      : [],
+  );
+}
+
 function toCodeAction(
   title: string,
   uri: string,
@@ -548,10 +599,11 @@ function toCodeAction(
     edits: { range: import("vscode-languageserver").Range; newText: string }[];
   },
   diagnostics: import("vscode-languageserver").Diagnostic[],
+  kind: string = CodeActionKind.QuickFix,
 ): CodeAction {
   return {
     title,
-    kind: CodeActionKind.QuickFix,
+    kind,
     diagnostics,
     edit: {
       documentChanges: [

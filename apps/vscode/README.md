@@ -20,6 +20,7 @@ with confidence using structure-aware suggestions and diagnostics as you type.
 - Clickable web and local-file links
 - Media links that follow a file renamed or moved in the editor
 - Quick fixes for broken references, invalid levels and a missing header or trailer
+- A fix-all action for the problems that have one safe fix, also on save with `editor.codeActionsOnSave`
 - Code folding for records and nested structures
 - Support for `.ged` and `.gedcom` files
 

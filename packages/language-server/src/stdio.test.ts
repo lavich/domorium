@@ -226,7 +226,9 @@ describe("stdio entry point", () => {
           documentHighlightProvider: true,
           renameProvider: { prepareProvider: true },
           documentLinkProvider: { resolveProvider: false },
-          codeActionProvider: { codeActionKinds: ["quickfix"] },
+          codeActionProvider: {
+            codeActionKinds: ["quickfix", "source.fixAll"],
+          },
         },
       },
     });
@@ -672,6 +674,7 @@ describe("stdio entry point", () => {
         textDocument: { uri },
         range,
         context: {
+          only: ["quickfix"],
           diagnostics: [
             {
               code: "VAL012",
@@ -716,6 +719,202 @@ describe("stdio entry point", () => {
     }
   }, 15000);
 
+  it("offers fix-all as source.fixAll and honours the only filter over the wire", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///tree/rough.ged";
+    const origin = {
+      start: { line: 0, character: 0 },
+      end: { line: 0, character: 0 },
+    };
+    const missingHeader = {
+      code: "VAL012",
+      message:
+        "No GEDCOM version in HEAD.GEDC.VERS, so the file cannot be checked against a specification",
+      range: origin,
+    };
+    const ask = (
+      id: number,
+      only: string[] | undefined,
+      diagnostics: (typeof missingHeader)[],
+    ) =>
+      client.request(id, "textDocument/codeAction", {
+        textDocument: { uri },
+        range: origin,
+        context: { diagnostics, ...(only ? { only } : {}) },
+      });
+    const titles = async (
+      id: number,
+      only: string[] | undefined,
+      diagnostics: (typeof missingHeader)[],
+    ) =>
+      (
+        (await ask(id, only, diagnostics)) as {
+          result: { title: string; kind: string }[];
+        }
+      ).result.map(({ title, kind }) => `${kind}: ${title}`);
+
+    try {
+      const initialized = (await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      })) as {
+        result: {
+          capabilities: { codeActionProvider: { codeActionKinds: string[] } };
+        };
+      };
+      expect(
+        initialized.result.capabilities.codeActionProvider.codeActionKinds,
+      ).toEqual(["quickfix", "source.fixAll"]);
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: "0 @I1@ INDI\n2 NAME A /B/\n",
+        },
+      });
+
+      await expect(ask(2, ["source.fixAll"], [])).resolves.toMatchObject({
+        result: [
+          {
+            title: "Fix all safe problems",
+            kind: "source.fixAll",
+            edit: {
+              documentChanges: [
+                {
+                  textDocument: { uri, version: 1 },
+                  edits: [
+                    { newText: "0 HEAD\n1 GEDC\n2 VERS 7.0\n" },
+                    { newText: "1" },
+                    { newText: "0 TRLR\n" },
+                  ],
+                },
+              ],
+            },
+          },
+        ],
+      });
+      expect(await titles(3, ["source"], [])).toEqual([
+        "source.fixAll: Fix all safe problems",
+      ]);
+      expect(await titles(4, ["quickfix"], [missingHeader])).toEqual([
+        "quickfix: Add a GEDCOM 7.0 header",
+      ]);
+      expect(await titles(5, undefined, [])).toEqual([
+        "source.fixAll: Fix all safe problems",
+      ]);
+      expect(await titles(6, undefined, [missingHeader])).toEqual([
+        "quickfix: Add a GEDCOM 7.0 header",
+        "source.fixAll: Fix all safe problems",
+      ]);
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
+  it("does not offer fix-all for a request that names only a pointer, or when the filter excludes it", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///tree/dangling.ged";
+    const pointer = {
+      code: "unresolved-xref",
+      message: "No INDI record carries @I9@",
+      range: {
+        start: { line: 4, character: 7 },
+        end: { line: 4, character: 11 },
+      },
+    };
+    const kinds = async (id: number, only: string[] | undefined) =>
+      (
+        (await client.request(id, "textDocument/codeAction", {
+          textDocument: { uri },
+          range: pointer.range,
+          context: { diagnostics: [pointer], ...(only ? { only } : {}) },
+        })) as { result: { kind: string }[] }
+      ).result.map(({ kind }) => kind);
+
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @F1@ FAM\n1 HUSB @I9@\n0 @I1@ INDI\n",
+        },
+      });
+
+      expect(await kinds(2, undefined)).not.toContain("source.fixAll");
+      expect(await kinds(3, ["quickfix"])).not.toContain("source.fixAll");
+      expect(await kinds(4, ["source.fixAll"])).toEqual(["source.fixAll"]);
+      expect(await kinds(5, [])).toEqual([]);
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
+  it("offers fix-all on a line with a fixable problem though the client's diagnostic no longer matches", async () => {
+    const bundlePath = await bundleStdio();
+    const child = spawn("node", [bundlePath]);
+    const client = new LspTestClient(child);
+    const uri = "file:///tree/reworded.ged";
+    const lastLine = {
+      start: { line: 4, character: 0 },
+      end: { line: 4, character: 12 },
+    };
+    const kinds = async (id: number, line: number) =>
+      (
+        (await client.request(id, "textDocument/codeAction", {
+          textDocument: { uri },
+          range: {
+            start: { line, character: 0 },
+            end: { line, character: 1 },
+          },
+          context: {
+            diagnostics: [
+              {
+                code: "VAL002",
+                message: "A trailer is missing",
+                range: lastLine,
+              },
+            ],
+          },
+        })) as { result: { kind: string }[] }
+      ).result.map(({ kind }) => kind);
+
+    try {
+      await client.request(1, "initialize", {
+        processId: null,
+        rootUri: null,
+        capabilities: {},
+      });
+      client.notify("initialized", {});
+      client.notify("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: "gedcom",
+          version: 1,
+          text: "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME A /B/\n",
+        },
+      });
+
+      expect(await kinds(2, 4)).toEqual(["source.fixAll"]);
+      expect(await kinds(3, 1)).toEqual([]);
+    } finally {
+      child.kill();
+    }
+  }, 15000);
+
   it("offers to add a missing trailer over the wire, and nothing for a diagnostic on a line that is not the last", async () => {
     const bundlePath = await bundleStdio();
     const child = spawn("node", [bundlePath]);
@@ -730,6 +929,7 @@ describe("stdio entry point", () => {
         textDocument: { uri },
         range,
         context: {
+          only: ["quickfix"],
           diagnostics: [
             {
               code: "VAL002",

@@ -93,6 +93,24 @@ and a character set, which are the author's to choose. A header that exists but 
 no version gets no action. On an empty document the header action is offered first
 and the trailer action after it, which leaves a valid file.
 
+## Fixing every safe problem at once
+
+`getFixAll` answers with one `source.fixAll` action whose edit applies every fix that
+needs no choice: the header, the trailer and a wrong level. It is computed for the whole
+document, and revalidated once, so it costs the same on four hundred problems as on one.
+
+```typescript
+const rough = new GedcomLanguageService("0 @I1@ INDI\n2 NAME A /B/\n");
+
+rough.getFixAll(0);
+// "Fix all safe problems" — the header, `1` for the level, and the trailer in one edit
+```
+
+Level fixes are dropped as a set when one of them would make the next line's level wrong.
+A pointer that names nothing is never part of it: replacing, creating or voiding it is a
+choice. `fixAllableAt(range)` says whether the document has a problem the action would fix inside
+that range, so a host can decide whether to offer it beside a quick fix.
+
 ## The record a pointer names
 
 `getRecordPreview` answers what an XREF points at, so a host can show it where

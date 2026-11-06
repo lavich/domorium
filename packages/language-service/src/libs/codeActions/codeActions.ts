@@ -233,7 +233,7 @@ function diagnosticKey(diagnostic: Diagnostic): string {
   ]);
 }
 
-function overlaps(left: Range, right: Range): boolean {
+export function overlaps(left: Range, right: Range): boolean {
   if (comparePosition(left.start, left.end) === 0) {
     return (
       right.start.line <= left.start.line && left.start.line <= right.end.line
