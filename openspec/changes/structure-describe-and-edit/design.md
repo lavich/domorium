@@ -82,8 +82,10 @@ description reads `unescape(resolveValue(node))` for a text kind. The writer in
 only in 5.5.1 and only past 255 characters, never splitting an escaped `@`, a surrogate pair
 or leaving a piece that starts or ends with a space, since readers differ on trimming. The
 validator does not forbid `CONC` in 7.0 (it skips continuation lines in every dialect), so
-the writer is the only place that holds the rule. The 255 limit and the 7.0 rule for the
-leading `@` of a continuation line are read from the standards and tested in task 3.1.
+the writer is the only place that holds the rule. The 5.5.1 limit is 255 characters for the whole line, level, xref, tag, delimiters and
+terminator included, and 7.0 escapes the first character of every line, a `CONT` line among
+them; both were read from the standards (5.5.1 p.11 and its `any_char`, 7.0 "Escape" rule)
+and are tested in task 3.1.
 `input` for a 5.5.1 text-or-pointer field is `{ value }` or `{ pointer }`, so the writer
 never guesses which it was given. Line terminator and end-of-text come from the existing
 `terminatorOf` and `endOfText`, which choose `
@@ -103,12 +105,10 @@ built again, as fix-all does. Comparing the diagnostics by code and message is n
 third `GIVN` repeats the message of the second (`Too many occurrences of GIVN in parent
 NAME`), and the value messages do not carry the value. So a diagnostic on a line the edit
 writes is new, whatever was there before ("on a line" is the line where the diagnostic's
-range starts, so a missing required child, which is reported at the whole parent, belongs to
-the parent's first line and an old one does not count when an unrelated line is added inside
-it). Elsewhere it is new only when the count of that code in the parent of the touched
-structure has grown. The parent's place in the new text comes from the edit's own offsets: for
-an add or a set, the parent's range shifted by the edit, and for a remove, the parent's end
-moved back by the length removed. Two effects are accepted: setting an already-excess `GIVN`
+range starts), except a missing required child, which is judged by count alone. Elsewhere
+it is new only when the count of that code in the parent of the touched structure has
+grown. The parent's lines in the new text are its first line to its old last line moved by
+the change in the number of lines the edit makes. Two effects are accepted: setting an already-excess `GIVN`
 to another value refuses, because the `VAL007` sits on that line, and a policy that rewrites
 the `NAME` line makes an old error on that line count as new. A structure beneath `HEAD` is compared over the whole document,
 because a new `GEDC.VERS` or `SCHMA` changes what is valid elsewhere. A new error refuses,
@@ -228,3 +228,37 @@ later policy (a date beside a time, say) is one more entry.
 - Whether the second `NAME` of a person should be placed first when the author wants it as
   the preferred one. It changes placement only; the host can reorder with a remove and an
   add until a real use shows it needs an operation.
+
+## Implementation
+
+- `payloadShape` on `RuleNode` and `structureShape` map the payload table to a closed list of
+  kinds; a type the table does not name is the kind `none`, which the validator says nothing
+  about.
+- `checkPayload` lifts the unknown-tag and too-many-occurrences diagnostics out of
+  `GedcomValidator.collect` into `unknownTagError` and `tooManyError`, which the loop and the
+  check share, so a message and its code cannot drift. It builds one synthetic line and runs
+  `RuleNode.validate` on it; no document is parsed. It drops `EmptyEvent`, which is about
+  substructures a lone value cannot know. A fixed set of cases is compared with the
+  diagnostics of a document that holds the line.
+- The escape and unescape are plain functions of the dialect and the payload kind in
+  `validator/src/payload`; a 5.5.1 text-or-pointer is read as a pointer when the whole value
+  is an xref.
+- A missing required substructure is judged by the count of its code alone, never by the
+  line it is reported on: the validator reports a missing trailer at the last line of the
+  document, which an edit at the end of the text moves onto a written line, and an old
+  missing trailer would then refuse every edit there.
+- The 7.0 `TRAN` has no `NOTE`; its children are `GIVN`, `LANG`, `NICK`, `NPFX`, `NSFX`,
+  `SPFX` and `SURN`, so the scenario of a translation that already lacks `LANG` adds a
+  `NICK`.
+- A name payload is kept in step by `GIVN` and `SURN` being set, and the scenario of one
+  part changing is written on `NICK`, since changing `GIVN` or `SURN` rewrites the `NAME` line
+  too, as the name-payload requirement says.
+- The reciprocal pairs were read from both schemes: `INDI.FAMC` and `INDI.FAMS` with
+  `FAM.CHIL`, `FAM.HUSB` and `FAM.WIFE`, and the `FAMC` of the events that have one (`ADOP`,
+  `BIRT`, `CHR`, `SLGC`), the same in both dialects. Every other record-to-record pointer
+  (`ASSO`, `SOUR`, `OBJE`, `REPO`, `SNOTE`) is a reference that needs no answer on the other
+  record.
+- 5.5.1 limits a whole line to 255 characters, level, xref, tag, delimiters and terminator
+  included (the specification, p.11), and 7.0 escapes the first character of every line, a
+  `CONT` line among them (the 7.0 specification, "Escape"); both were read from the
+  published texts.

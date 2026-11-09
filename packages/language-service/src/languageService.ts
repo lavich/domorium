@@ -1,4 +1,5 @@
 import {
+  type ASTNode,
   GedcomDocument,
   type CreateDocumentOptions,
   type GedcomDateValue,
@@ -10,6 +11,16 @@ import { LINE_TERMINATOR } from "./libs/position/lineTerminators";
 import { getCodeActions, overlaps } from "./libs/codeActions/codeActions";
 import { getFixAll, isFixAllable } from "./libs/codeActions/fixAll";
 import { levelFolding } from "./libs/folding/levelFolding";
+import { validateValue } from "./libs/structure/validateValue";
+import { describe, refusal } from "./libs/structure/describe";
+import {
+  addStructure,
+  removeStructure,
+  setValue,
+  type EditContext,
+} from "./libs/structure/edit";
+import { structureAt, structurePath } from "./libs/structure/locate";
+import { recordLabel } from "./libs/symbols/recordLabel";
 import { getHover } from "./libs/hover/hover";
 import { levelIndent } from "./libs/indent/levelIndent";
 import { documentLinks } from "./libs/links/documentLinks";
@@ -44,11 +55,17 @@ import type {
   InlayHint,
   MediaReference,
   OffsetRange,
+  PointerCandidate,
   Position,
   PrepareRenameResult,
   Range,
   RecordPreview,
   RecordPreviewOptions,
+  StructureDescription,
+  StructureEditResult,
+  StructureInput,
+  StructureValueInput,
+  ValueCheckResult,
   ReferenceOptions,
   WorkspaceEdit,
   WorkspaceEditResult,
@@ -61,6 +78,7 @@ export class GedcomLanguageService {
   private version: DocumentVersion = 0;
   private foldingRanges: FoldingRange[] | undefined;
   private foldingByStartLine: Map<number, FoldingRange> | undefined;
+  private recordsByTag: Map<string, PointerCandidate[]> | undefined;
 
   // options describe the text, not one parse of it, so they outlive an update.
   constructor(
@@ -76,6 +94,7 @@ export class GedcomLanguageService {
     this.version = version;
     this.foldingRanges = undefined;
     this.foldingByStartLine = undefined;
+    this.recordsByTag = undefined;
     const document = new GedcomDocument();
     document.createDocument(text, this.options);
     this.document = document;
@@ -269,6 +288,141 @@ export class GedcomLanguageService {
       },
       expectedVersion,
     );
+  }
+
+  describeStructure(
+    position: Position,
+    tag?: string,
+  ): StructureDescription | EditRefusal {
+    const dialect = this.document.getValidatedDialect();
+    if (!dialect) {
+      return refusal(
+        "no-dialect",
+        "The document was checked against no dialect.",
+      );
+    }
+    const node = structureAt(this.document.getNodes(), position.line);
+    const shape = node && this.document.getStructureShape(node, tag);
+    if (!node || !shape) {
+      return refusal(
+        tag === undefined || !node ? "not-a-structure" : "unknown-path",
+        "There is no structure to describe there.",
+      );
+    }
+    const path = structurePath(node);
+    return describe(
+      this.describeContext(),
+      dialect,
+      shape,
+      tag === undefined ? path : [...path, tag],
+      tag === undefined ? node : undefined,
+    );
+  }
+
+  /** With `replacing`, the position is the occurrence a set would overwrite. */
+  validateValue(
+    position: Position,
+    tag: string,
+    value: StructureValueInput,
+    options: { replacing?: boolean } = {},
+  ): ValueCheckResult | EditRefusal {
+    return validateValue(
+      this.editContext(),
+      position,
+      tag,
+      value,
+      options.replacing === true,
+    );
+  }
+
+  addStructure(
+    position: Position,
+    tag: string,
+    input: StructureInput,
+    expectedVersion: DocumentVersion,
+  ): StructureEditResult | EditRefusal {
+    return addStructure(
+      this.editContext(),
+      position,
+      tag,
+      input,
+      expectedVersion,
+    );
+  }
+
+  setValue(
+    position: Position,
+    value: StructureValueInput,
+    expectedVersion: DocumentVersion,
+  ): StructureEditResult | EditRefusal {
+    return setValue(this.editContext(), position, value, expectedVersion);
+  }
+
+  removeStructure(
+    position: Position,
+    expectedVersion: DocumentVersion,
+  ): StructureEditResult | EditRefusal {
+    return removeStructure(this.editContext(), position, expectedVersion);
+  }
+
+  private editContext(): EditContext {
+    return {
+      text: this.text,
+      version: this.version,
+      document: this.document,
+      options: this.options,
+      diagnostics: () => this.getDiagnostics(),
+    };
+  }
+
+  /** `path` is tags from a record joined by dots, such as `INDI.NAME.TRAN`. */
+  describeSchemaPath(path: string): StructureDescription | EditRefusal {
+    const dialect = this.document.getValidatedDialect();
+    if (!dialect) {
+      return refusal(
+        "no-dialect",
+        "The document was checked against no dialect.",
+      );
+    }
+    const tags = path.split(".");
+    const shape = this.document.getStructureShapeAtPath(tags);
+    return shape
+      ? describe(this.describeContext(), dialect, shape, tags)
+      : refusal("unknown-path", `The dialect has no structure ${path}.`);
+  }
+
+  private describeContext() {
+    return {
+      document: this.document,
+      version: this.version,
+      candidates: (tag: string) => this.records().get(tag) ?? [],
+    };
+  }
+
+  private records(): Map<string, PointerCandidate[]> {
+    if (!this.recordsByTag) {
+      const byXref = new Map<string, ASTNode>();
+      const roots = this.document
+        .getNodes()
+        .filter((node) => this.document.isRecordDeclaration(node));
+      for (const node of roots) {
+        byXref.set(node.tokens.POINTER?.value ?? "", node);
+      }
+      const resolve = (xref: string) => byXref.get(xref);
+      const map = new Map<string, PointerCandidate[]>();
+      for (const node of roots) {
+        const tag = node.tokens.TAG?.value ?? "";
+        const label = recordLabel(node, resolve);
+        const list = map.get(tag) ?? [];
+        list.push({
+          xref: node.tokens.POINTER?.value ?? "",
+          ...(label ? { label } : {}),
+        });
+        map.set(tag, list);
+      }
+      this.recordsByTag = map;
+    }
+    return this.recordsByTag;
   }
 
   prepareRename(position: Position): PrepareRenameResult | EditRefusal {

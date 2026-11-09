@@ -111,6 +111,57 @@ A pointer that names nothing is never part of it: replacing, creating or voiding
 choice. `fixAllableAt(range)` says whether the document has a problem the action would fix inside
 that range, so a host can decide whether to offer it beside a quick fix.
 
+## Describing and editing a structure
+
+A form for the names of a person needs two things the standard and the dialect decide:
+which fields a structure may hold, and where a line goes. `describeStructure` answers the
+first for the line a position is on, and `addStructure`, `setValue` and `removeStructure`
+write the second, each returning an edit or a refusal with a code.
+
+```typescript
+const service = new GedcomLanguageService(
+  "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME Anna /Lee/\n2 GIVN Anna\n0 TRLR\n",
+);
+
+const name = service.describeStructure({ line: 4, character: 0 });
+// name.fields: INDI.NAME.GIVN (held once), INDI.NAME.SURN (empty), INDI.NAME.TYPE (an enum) …
+
+service.validateValue({ line: 4, character: 0 }, "TYPE", { value: "nonsense" });
+// { ok: true, problems: [{ code: "value-not-in-enum", … }] } — no edit built, no parse
+
+const result = service.addStructure(
+  { line: 4, character: 0 },
+  "SURN",
+  { value: "Lee" },
+  0,
+);
+// { ok: true, edit, warnings: [] } — a second GIVN of a 5.5.1 name would be
+// { ok: false, code: "cardinality-exceeded", … }
+```
+
+`validateValue` answers the same rules for one value without building the edit; pass
+`{ replacing: true }` and the position of an occurrence to check the value a set would
+write. A field id is the path of its tags, `INDI.NAME.GIVN`, the same in 5.5.1 and 7.0, so a host
+chooses its labels by id; the schema's own identifier comes beside it. `describeSchemaPath`
+answers for a structure that is not in the text yet, such as `INDI.NAME.TRAN`. A pointer
+field lists the records it may name, and says whether its pair on the other record exists:
+`FAMC`, `FAMS`, `CHIL`, `HUSB` and `WIFE`, and the `FAMC` of an event, are written on one side
+by no operation. Adding, setting or removing one, or removing a structure that holds one, is
+refused with `reciprocal-pointer-unsupported`.
+
+An edit touches only the lines it writes. The service chooses the level, the place among
+the siblings, the line terminator, `CONT` for a line break, `CONC` where 5.5.1 needs it, and
+the escape of an at sign. An error the edit would add is a refusal, and so is a tag the
+dialect does not define there, though the validator only warns; any other warning comes back in
+`warnings`, and a host that wants it to block treats a non-empty list as one. A problem the
+structure already had does not refuse an unrelated part. A whole record is not set or
+removed.
+
+Positions shift with every edit, so the order a caller keeps is: update the service with
+the current text, describe, edit with the version the description gave, and describe
+again. A live editor changes under an open form, so an edit made against text that has
+moved is refused with `stale-document`; read the description again and retry.
+
 ## The record a pointer names
 
 `getRecordPreview` answers what an XREF points at, so a host can show it where

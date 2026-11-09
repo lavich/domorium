@@ -31,7 +31,7 @@ extension tag among them.
 
 #### Scenario: Changing one part
 
-- **WHEN** the value of one `GIVN` is set
+- **WHEN** the value of one `NICK` is set
 - **THEN** the edit replaces only that value and no other line
 
 #### Scenario: Changing a value that has continuation lines
@@ -81,7 +81,8 @@ be used, and the edit SHALL begin on a fresh line where the text before it has n
 
 A value with line breaks SHALL be written as the line and `CONT` lines, the continuation
 lines directly beneath the line and before its other children. In 5.5.1 a value whose line
-would pass 255 characters SHALL be continued with `CONC` lines, split where no piece starts
+would pass 255 characters, counting the level, the tag, the delimiters and the terminator,
+SHALL be continued with `CONC` lines, split where no piece starts
 or ends with a space and never inside an escaped at sign or a surrogate pair; 7.0 has no
 `CONC`, and its lines SHALL NOT be split. A text value SHALL be escaped by the rules of
 `validator/structure-schema`, each line of it on its own; a pointer, a date and a date
@@ -114,7 +115,8 @@ written value back SHALL give the value that was set.
 #### Scenario: A long value in 5.5.1 and in 7.0
 
 - **WHEN** a text value of 300 characters is set in a 5.5.1 document and in a 7.0 document
-- **THEN** the 5.5.1 text is continued with `CONC` lines of at most 255 characters per line
+- **THEN** the 5.5.1 text is continued with `CONC` lines, none longer than 255 characters with its level, tag and
+  terminator
 - **AND** the 7.0 text is one line
 - **AND** the description reads the 300 characters back
 
@@ -155,12 +157,11 @@ refusal when it is new, and so SHALL an unknown tag, which the validator reports
 warning. A problem it reports as a warning or as information SHALL otherwise be returned
 beside the edit and SHALL NOT refuse it.
 
-A problem whose range starts on a line the edit writes is new. A problem elsewhere is new
+A problem whose range starts on a line the edit writes is new, except a missing required
+substructure, which is judged only by the count below. A problem elsewhere is new
 only when the parent of the touched structure, in the text after the edit, holds more of
 that kind than it did before, so that an old problem does not refuse an unrelated part, and
-one more occurrence than allowed is not hidden by an equal message already there. A problem
-reported at a whole structure, such as a missing required substructure, belongs to the line
-where that structure starts. A structure beneath `HEAD` is compared over the whole document,
+one more occurrence than allowed is not hidden by an equal message already there. A structure beneath `HEAD` is compared over the whole document,
 since a change to the version or the schema declaration reaches elsewhere.
 
 The refusal SHALL carry a code that names the rule, enough to choose a message without
@@ -234,7 +235,7 @@ failure of the same datatype.
 
 #### Scenario: A required field that was already missing
 
-- **WHEN** a `TRAN` of a 7.0 `NAME` has no `LANG` and a `NOTE` is added to the `TRAN`
+- **WHEN** a `TRAN` of a 7.0 `NAME` has no `LANG` and a `NICK` is added to the `TRAN`
 - **THEN** the edit is returned
 
 ### Requirement: A value can be checked without an edit

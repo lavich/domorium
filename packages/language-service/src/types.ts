@@ -1,3 +1,5 @@
+import type { PayloadKind } from "@domorium/validator";
+
 export interface Position {
   line: number;
   character: number;
@@ -58,6 +60,19 @@ export interface WorkspaceEdit {
 }
 
 export type EditRefusalCode =
+  | "unknown-field"
+  | "cardinality-exceeded"
+  | "value-not-in-enum"
+  | "payload-datatype"
+  | "value-required"
+  | "unresolved-pointer"
+  | "required-field-missing"
+  | "rule-violation"
+  | "record-edit-unsupported"
+  | "reciprocal-pointer-unsupported"
+  | "not-a-structure"
+  | "no-dialect"
+  | "unknown-path"
   | "not-xref"
   | "unresolved-declaration"
   | "duplicate-declaration"
@@ -72,6 +87,7 @@ export interface EditRefusal {
   ok: false;
   code: EditRefusalCode;
   message: string;
+  diagnosticCode?: string;
 }
 
 export interface PrepareRenameResult {
@@ -223,4 +239,76 @@ export interface DocumentSymbol {
   range: Range;
   selectionRange: Range;
   children: DocumentSymbol[];
+}
+
+export interface StructureOccurrence {
+  range: Range;
+  subtreeRange: Range;
+  value: string;
+}
+
+export interface PointerCandidate {
+  xref: string;
+  label?: string;
+}
+
+export interface StructureFieldDescription {
+  id: string;
+  schemaId: string;
+  tag: string;
+  required: boolean;
+  min: number;
+  max: number | null;
+  payload: PayloadKind;
+  payloadRequired: boolean;
+  reciprocal: boolean;
+  candidates?: PointerCandidate[];
+  occurrences: StructureOccurrence[];
+}
+
+export interface StructureDescription {
+  id: string;
+  tag: string;
+  schemaId: string;
+  version: DocumentVersion;
+  range?: Range;
+  subtreeRange?: Range;
+  value?: string;
+  payload: PayloadKind;
+  payloadRequired: boolean;
+  fields: StructureFieldDescription[];
+  undefinedOccurrences: (StructureOccurrence & { tag: string })[];
+}
+
+export type { PayloadKind };
+
+export interface StructureValueInput {
+  value?: string;
+  pointer?: string;
+}
+
+export interface StructureInput extends StructureValueInput {
+  children?: StructureChildInput[];
+}
+
+export interface StructureChildInput extends StructureInput {
+  tag: string;
+}
+
+export interface StructureEditResult {
+  ok: true;
+  edit: WorkspaceEdit;
+  warnings: Diagnostic[];
+}
+
+export interface ValueProblem {
+  code: EditRefusalCode;
+  diagnosticCode: string;
+  message: string;
+  severity: DiagnosticSeverity;
+}
+
+export interface ValueCheckResult {
+  ok: true;
+  problems: ValueProblem[];
 }

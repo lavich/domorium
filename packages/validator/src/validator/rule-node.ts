@@ -23,6 +23,7 @@ import {
   readDateValue551,
 } from "./date-551";
 import type { GedcomDateValue } from "../types/date";
+import type { PayloadKind } from "../types/structure";
 
 type FieldType =
   | "boolean"
@@ -273,6 +274,31 @@ export const PAYLOAD_FIELD_TYPES: Record<string, Exclude<FieldType, null>> = {
   "https://gedcom.io/terms/v5.5.1/type-AGE_AT_EVENT": "age",
 };
 
+const PAYLOAD_KINDS: Record<
+  Exclude<FieldType, null | "pointer" | "select" | "multiselect">,
+  Exclude<PayloadKind["kind"], "enum" | "pointer" | "text-or-pointer">
+> = {
+  boolean: "boolean",
+  string: "text",
+  nonNegativeInteger: "integer",
+  date: "date",
+  "date-v7": "date",
+  "date-period": "date-period",
+  "date-period-v7": "date-period",
+  "date-exact": "date-exact",
+  "date-exact-v7": "date-exact",
+  time: "time",
+  "time-v7": "time",
+  age: "age",
+  "age-v7": "age",
+  "personal-name": "personal-name",
+  latitude: "latitude",
+  longitude: "longitude",
+  "media-type": "media-type",
+  "language-tag": "language-tag",
+  "tag-def": "tag-definition",
+};
+
 interface ValueRule {
   test: (
     value: string,
@@ -450,6 +476,40 @@ export class RuleNode {
       type: PAYLOAD_FIELD_TYPES[payload?.type ?? ""] ?? null,
       to: undefined,
     };
+  }
+
+  payloadShape(tagType: GedcomType): {
+    payload: PayloadKind;
+    required: boolean;
+  } {
+    const { type, to } = this.getFieldType(tagType);
+    const none = { payload: { kind: "none" } as PayloadKind, required: false };
+    if (type === null) {
+      return none;
+    }
+    const required = type !== "boolean" && !this.mayOmitPayload(tagType);
+    switch (type) {
+      case "pointer":
+        return {
+          payload: {
+            kind: TEXT_OR_POINTER.has(tagType) ? "text-or-pointer" : "pointer",
+            to: to ? this.scheme.tag[to] : "",
+          },
+          required,
+        };
+      case "select":
+      case "multiselect":
+        return {
+          payload: {
+            kind: "enum",
+            values: this.getAvailableValues(tagType) ?? [],
+            multiple: type === "multiselect",
+          },
+          required,
+        };
+      default:
+        return { payload: { kind: PAYLOAD_KINDS[type] }, required };
+    }
   }
 
   private mayOmitPayload(tagType: GedcomType): boolean {
