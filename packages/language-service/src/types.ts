@@ -89,6 +89,7 @@ export interface EditRefusal {
   code: EditRefusalCode;
   message: string;
   diagnosticCode?: string;
+  data?: DiagnosticData;
 }
 
 export interface PrepareRenameResult {
@@ -141,17 +142,30 @@ export interface MediaReference extends DocumentLink {
 
 export type DiagnosticSeverity = "error" | "warning" | "info";
 
+/** The facts a message names, for a host that writes its own message. */
+export interface DiagnosticData {
+  xref?: string;
+  requiredRecordTag?: string;
+  expectedLevel?: number;
+  missingTag?: string;
+  /** Absent where the missing structure belongs at the root. */
+  parentTag?: string;
+  missingHeader?: boolean;
+  day?: number;
+  month?: string;
+  monthLength?: number;
+  year?: number;
+  calendar?: string;
+  /** Set only where the tag is a standard one written in the wrong case. */
+  meantTag?: string;
+  tag?: string;
+}
+
 export interface Diagnostic {
   code: string;
   message: string;
   hint?: string;
-  data?: {
-    xref?: string;
-    requiredRecordTag?: string;
-    expectedLevel?: number;
-    missingTag?: string;
-    missingHeader?: boolean;
-  };
+  data?: DiagnosticData;
   range: Range;
   severity: DiagnosticSeverity;
 }
@@ -311,6 +325,7 @@ export interface ValueProblem {
   code: EditRefusalCode;
   diagnosticCode: string;
   message: string;
+  data?: DiagnosticData;
   severity: DiagnosticSeverity;
 }
 

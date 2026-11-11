@@ -55,6 +55,7 @@ export function validateValue(
       code: refusalCodeOf(problem.code),
       diagnosticCode: problem.code,
       message: problem.message,
+      ...(problem.data ? { data: problem.data } : {}),
       severity: problem.level,
     })),
   };

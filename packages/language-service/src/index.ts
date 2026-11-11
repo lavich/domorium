@@ -29,6 +29,7 @@ export {
   type CompletionItem,
   type CompletionTextEdit,
   type Diagnostic,
+  type DiagnosticData,
   type DiagnosticSeverity,
   type DocumentVersion,
   type DocumentHighlight,

@@ -289,6 +289,7 @@ function verify(
     return {
       ...refusal(refusalCodeOf(blocking.code), blocking.message),
       diagnosticCode: blocking.code,
+      ...(blocking.data ? { data: blocking.data } : {}),
     };
   }
   return {

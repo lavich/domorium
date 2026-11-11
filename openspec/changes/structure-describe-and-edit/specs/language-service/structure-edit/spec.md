@@ -250,7 +250,7 @@ that a caller can write its own message from the facts rather than from the Engl
 
 #### Scenario: The facts of a pointer to nothing
 
-- **WHEN** a `SOUR` of `@S9@` is added to a `BIRT` in a document with no such record
+- **WHEN** a `SOUR` of `@S9@` is added to a 7.0 `NAME` in a document with no such record
 - **THEN** the service refuses with `unresolved-pointer`
 - **AND** its `data` is `{ xref: "@S9@", requiredRecordTag: "SOUR" }`
 

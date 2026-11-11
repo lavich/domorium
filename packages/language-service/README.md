@@ -161,6 +161,21 @@ dialect does not define there, though the validator only warns; any other warnin
 structure already had does not refuse an unrelated part. A whole record is not set or
 removed.
 
+A refusal that comes from a diagnostic, and each problem `validateValue` answers, carries the
+validator's code in `diagnosticCode` and the facts of the rule in `data`, so a host writes its
+own message in its reader's language instead of showing the English `message`:
+
+```typescript
+service.setValue(dateLine, { value: "31 FEB 1900" }, version);
+// { ok: false, code: "payload-datatype", diagnosticCode: "VAL014",
+//   data: { day: 31, month: "FEB", monthLength: 28 }, message: "…" }
+```
+
+`data` is a `DiagnosticData`, the same type a `Diagnostic` carries: `{ year, calendar }` for an
+impossible year, `{ missingTag, parentTag }` for a missing required field, `{ meantTag }` for a
+tag written in the wrong case, `{ tag }` for an undeclared extension tag, and
+`{ xref, requiredRecordTag }` for a pointer to nothing.
+
 Positions shift with every edit, so the order a caller keeps is: update the service with
 the current text, describe, edit with the version the description gave, and describe
 again. A live editor changes under an open form, so an edit made against text that has

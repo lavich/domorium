@@ -56,6 +56,15 @@ describe("checking a value without an edit", () => {
     });
   });
 
+  it("names the facts of the rule beside its code", () => {
+    expect(seven().validateValue(at(4), "nick", { value: "Bo" })).toMatchObject(
+      {
+        ok: true,
+        problems: [{ code: "unknown-field", data: { meantTag: "NICK" } }],
+      },
+    );
+  });
+
   it("finds no problem in a valid value", () => {
     expect(seven().validateValue(at(4), "GIVN", { value: "Anna" })).toEqual({
       ok: true,

@@ -112,6 +112,7 @@ describe("a value that breaks a rule is refused with the rule", () => {
 
       expect(result.code).toBe("payload-datatype");
       expect(result.diagnosticCode).toBe("VAL014");
+      expect(result.data).toEqual({ day: 31, month: "FEB", monthLength: 28 });
     },
   );
 
@@ -122,9 +123,12 @@ describe("a value that breaks a rule is refused with the rule", () => {
   });
 
   it("refuses a pointer to a record the document does not hold", () => {
-    expect(
-      refusal(seven().addStructure(at(4), "SOUR", { pointer: "@S9@" }, 0)).code,
-    ).toBe("unresolved-pointer");
+    const result = refusal(
+      seven().addStructure(at(4), "SOUR", { pointer: "@S9@" }, 0),
+    );
+
+    expect(result.code).toBe("unresolved-pointer");
+    expect(result.data).toEqual({ xref: "@S9@", requiredRecordTag: "SOUR" });
   });
 
   it("writes a pointer to a record the document holds as it is", () => {
@@ -175,9 +179,10 @@ describe("a value that breaks a rule is refused with the rule", () => {
       ]),
     );
 
-    expect(refusal(service.removeStructure(at(6), 0)).code).toBe(
-      "required-field-missing",
-    );
+    expect(refusal(service.removeStructure(at(6), 0))).toMatchObject({
+      code: "required-field-missing",
+      data: { missingTag: "LANG", parentTag: "TRAN" },
+    });
   });
 
   it("does not refuse for a required field that was already missing", () => {
