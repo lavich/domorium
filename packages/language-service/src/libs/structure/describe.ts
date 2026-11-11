@@ -63,6 +63,7 @@ export function describe(
   shape: StructureShape,
   path: readonly string[],
   node?: ASTNode,
+  extension = false,
 ): StructureDescription {
   const known = new Set(shape.fields.map((field) => field.tag));
   const fields: StructureFieldDescription[] = shape.fields.map((field) => {
@@ -80,6 +81,8 @@ export function describe(
       max: field.max,
       payload: field.payload,
       payloadRequired: field.payloadRequired,
+      lineBreaks: field.lineBreaks,
+      prose: field.prose,
       reciprocal: pointsTo !== undefined && hasReciprocal(path, field.tag),
       ...(pointsTo === undefined
         ? {}
@@ -117,9 +120,21 @@ export function describe(
       : {}),
     payload: shape.payload,
     payloadRequired: shape.payloadRequired,
+    lineBreaks: shape.lineBreaks,
+    prose: shape.prose,
+    extension,
     fields,
     undefinedOccurrences,
   };
 }
+
+export const EXTENSION_SHAPE: StructureShape = {
+  schemaId: "",
+  payload: { kind: "text" },
+  payloadRequired: false,
+  lineBreaks: true,
+  prose: false,
+  fields: [],
+};
 
 export { structurePath };

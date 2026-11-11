@@ -261,6 +261,8 @@ export interface StructureFieldDescription {
   max: number | null;
   payload: PayloadKind;
   payloadRequired: boolean;
+  lineBreaks: boolean;
+  prose: boolean;
   reciprocal: boolean;
   candidates?: PointerCandidate[];
   occurrences: StructureOccurrence[];
@@ -276,6 +278,9 @@ export interface StructureDescription {
   value?: string;
   payload: PayloadKind;
   payloadRequired: boolean;
+  lineBreaks: boolean;
+  prose: boolean;
+  extension: boolean;
   fields: StructureFieldDescription[];
   undefinedOccurrences: (StructureOccurrence & { tag: string })[];
 }

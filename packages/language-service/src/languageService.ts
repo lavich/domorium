@@ -12,7 +12,7 @@ import { getCodeActions, overlaps } from "./libs/codeActions/codeActions";
 import { getFixAll, isFixAllable } from "./libs/codeActions/fixAll";
 import { levelFolding } from "./libs/folding/levelFolding";
 import { validateValue } from "./libs/structure/validateValue";
-import { describe, refusal } from "./libs/structure/describe";
+import { describe, EXTENSION_SHAPE, refusal } from "./libs/structure/describe";
 import {
   addStructure,
   removeStructure,
@@ -303,18 +303,30 @@ export class GedcomLanguageService {
     }
     const node = structureAt(this.document.getNodes(), position.line);
     const shape = node && this.document.getStructureShape(node, tag);
+    const path = node
+      ? [...structurePath(node), ...(tag === undefined ? [] : [tag])]
+      : [];
+    if (node && !shape && path.some((step) => step.startsWith("_"))) {
+      return describe(
+        this.describeContext(),
+        dialect,
+        EXTENSION_SHAPE,
+        path,
+        tag === undefined ? node : undefined,
+        true,
+      );
+    }
     if (!node || !shape) {
       return refusal(
         tag === undefined || !node ? "not-a-structure" : "unknown-path",
         "There is no structure to describe there.",
       );
     }
-    const path = structurePath(node);
     return describe(
       this.describeContext(),
       dialect,
       shape,
-      tag === undefined ? path : [...path, tag],
+      path,
       tag === undefined ? node : undefined,
     );
   }

@@ -85,16 +85,16 @@
 
 ## 5. Revision after #524
 
-- [ ] 5.1 Report `lineBreaks` and `prose` for every field in `validator` (7.0 by the Text
+- [x] 5.1 Report `lineBreaks` and `prose` for every field in `validator` (7.0 by the Text
       datatype, 5.5.1 by the list of types its grammar continues), make `checkPayload`
       report a line break where `lineBreaks` is false as `VAL004`, and verify with the
       scenarios of the line-break requirement of `structure-schema` and a `checkPayload` test
-- [ ] 5.2 Pass both through the description, refuse a line break where the value may not
+- [x] 5.2 Pass both through the description, refuse a line break where the value may not
       hold one in `addStructure` (children included) and `setValue`, and verify with the
       scenarios of the line-break requirement of `structure-edit` in both dialects
-- [ ] 5.3 Take an emptied `GIVN` or `SURN` out of the `NAME` payload and verify with the two
+- [x] 5.3 Take an emptied `GIVN` or `SURN` out of the `NAME` payload and verify with the two
       scenarios of the name-payload requirement
-- [ ] 5.4 Describe an extension line and a line beneath it, and verify with the two
+- [x] 5.4 Describe an extension line and a line beneath it, and verify with the two
       scenarios of the extension requirement of `structure-description`
-- [ ] 5.5 Update both READMEs, rebuild, run `npm run check`, and record whether
+- [x] 5.5 Update both READMEs, rebuild, run `npm run check`, and record whether
       `check:jetbrains` ran

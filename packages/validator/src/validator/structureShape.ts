@@ -2,6 +2,7 @@ import type { GedcomScheme } from "../schemes/schema-types";
 import { GedcomTag, GedcomType } from "../schemes/schema-types";
 import type { StructureField, StructureShape } from "../types/structure";
 import type { RuleNode } from "./rule-node";
+import { lineBreaksOf } from "./lineBreaks";
 import { getRules } from "./validate";
 
 export function typeAtPath(
@@ -39,12 +40,14 @@ export function structureShape(
       max: Number.isFinite(rule.max) ? rule.max : null,
       payload: field.payload,
       payloadRequired: field.required,
+      ...lineBreaksOf(scheme, rule.type),
     });
   }
   return {
     schemaId: type,
     payload: own.payload,
     payloadRequired: own.required,
+    ...lineBreaksOf(scheme, type),
     fields,
   };
 }

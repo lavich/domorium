@@ -2,10 +2,11 @@ import type { ASTNode, ASTToken } from "../parser";
 import { TokenNames } from "../parser/lexer";
 import type { GedcomScheme, GedcomType } from "../schemes/schema-types";
 import { GedcomTag } from "../schemes/schema-types";
-import { GedcomErrorCode } from "../types/errors";
+import { GedcomErrorCode, type GedcomError } from "../types/errors";
 import type { PayloadProblem } from "../types/structure";
 import { emptyExtensions, isExtensionTag, undocumentedTag } from "./extensions";
 import type { ExtensionContext } from "./extensions";
+import { lineBreaksOf } from "./lineBreaks";
 import { RuleNode } from "./rule-node";
 import { getRules, tooManyError, unknownTagError } from "./validate";
 
@@ -58,7 +59,7 @@ export function checkPayload(
   if (!rules) {
     return [];
   }
-  const problems = [];
+  const problems: GedcomError[] = [];
   const gedcomTag = GedcomTag(tag);
   if (isExtensionTag(gedcomTag)) {
     if (extensions.requireDeclaration && !extensions.tags.has(gedcomTag)) {
@@ -72,6 +73,19 @@ export function checkPayload(
   }
   if (occurrences + 1 > rule.max) {
     problems.push(tooManyError(gedcomTag, scheme.tag[parentType], ORIGIN));
+  }
+  if (/[\r\n]/.test(value) && !lineBreaksOf(scheme, rule.type).lineBreaks) {
+    problems.push({
+      code: GedcomErrorCode.IncorrectValue,
+      message: `Value for ${tag} cannot span lines`,
+      range: ORIGIN,
+      level: "error",
+    });
+    return problems.map(({ code, message, level }) => ({
+      code,
+      message,
+      level,
+    }));
   }
   const ruleNode = new RuleNode(
     scheme,

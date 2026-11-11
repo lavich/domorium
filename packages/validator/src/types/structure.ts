@@ -27,12 +27,16 @@ export interface StructureField {
   max: number | null;
   payload: PayloadKind;
   payloadRequired: boolean;
+  lineBreaks: boolean;
+  prose: boolean;
 }
 
 export interface StructureShape {
   schemaId: string;
   payload: PayloadKind;
   payloadRequired: boolean;
+  lineBreaks: boolean;
+  prose: boolean;
   fields: StructureField[];
 }
 

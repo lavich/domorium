@@ -112,7 +112,8 @@ and pointer candidates as a described position.
 The service SHALL describe a line whose tag is an extension tag, or a line beneath one, as a
 structure marked as an extension: its id is the path of its tags, its payload is text, it
 lists no fields, and the lines beneath it are listed with the occurrences of undefined
-tags. A line the service can set or remove SHALL be one it can describe.
+tags. An extension line the service can set or remove SHALL be one it can describe, and a
+structure asked about beneath one by its tag SHALL be described the same way.
 
 #### Scenario: A custom line
 

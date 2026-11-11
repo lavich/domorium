@@ -163,3 +163,73 @@ describe("a structure by its schema path", () => {
     expect(document.getStructureShapeAtPath([])).toBeUndefined();
   });
 });
+
+describe("whether a value may span lines", () => {
+  it("lets a 7.0 note and given name hold a line break, and calls only the note prose", () => {
+    const { document, name } = open(`${G7}0 @I1@ INDI\n1 NAME A /B/\n0 TRLR\n`);
+    const shape = document.getStructureShape(name);
+
+    expect(field(shape, "NOTE")).toMatchObject({
+      lineBreaks: true,
+      prose: true,
+    });
+    expect(field(shape, "GIVN")).toMatchObject({
+      lineBreaks: true,
+      prose: false,
+    });
+    expect(field(shape, "TYPE")).toMatchObject({
+      lineBreaks: false,
+      prose: false,
+    });
+  });
+
+  it.each([
+    ["7.0", G7],
+    ["5.5.1", G551],
+  ])("keeps a date on one line in %s", (_dialect, header) => {
+    const { document, person } = open(`${header}0 @I1@ INDI\n0 TRLR\n`);
+
+    expect(
+      field(document.getStructureShape(person, "BIRT"), "DATE"),
+    ).toMatchObject({
+      lineBreaks: false,
+    });
+  });
+
+  it("follows the 5.5.1 grammar, which continues a note and not a given name", () => {
+    const { document, name } = open(
+      `${G551}0 @I1@ INDI\n1 NAME A /B/\n0 TRLR\n`,
+    );
+    const shape = document.getStructureShape(name);
+
+    expect(field(shape, "GIVN")).toMatchObject({
+      lineBreaks: false,
+      prose: false,
+    });
+    expect(field(shape, "NOTE")).toMatchObject({
+      lineBreaks: true,
+      prose: true,
+    });
+  });
+
+  it("reports a note's translation as prose in 7.0", () => {
+    const { document } = open(`${G7}0 @I1@ INDI\n0 TRLR\n`);
+
+    expect(
+      field(document.getStructureShapeAtPath(["INDI", "NOTE"]), "TRAN"),
+    ).toMatchObject({ lineBreaks: true, prose: true });
+  });
+
+  it("reports an address as prose in both dialects", () => {
+    for (const header of [G7, G551]) {
+      const { document, person } = open(`${header}0 @I1@ INDI\n0 TRLR\n`);
+
+      expect(
+        field(document.getStructureShape(person, "RESI"), "ADDR"),
+      ).toMatchObject({
+        lineBreaks: true,
+        prose: true,
+      });
+    }
+  });
+});

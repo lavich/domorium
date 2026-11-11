@@ -75,6 +75,7 @@ export function writeValueLines(
   kind: PayloadKind["kind"],
   dialect: GedcomDialect,
   terminator: string,
+  concatenate = true,
 ): string[] {
   const logical = value.replace(/\r\n|\n\r|\r/g, "\n").split("\n");
   const room = (prefix: string) =>
@@ -86,7 +87,7 @@ export function writeValueLines(
   logical.forEach((text, index) => {
     const prefix = index === 0 ? head : continuation;
     const pieces =
-      kind === "text"
+      kind === "text" && concatenate
         ? chunks(text, room(prefix), room(concatenation), dialect)
         : [text];
     pieces.forEach((piece, pieceIndex) => {

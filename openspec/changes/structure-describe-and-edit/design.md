@@ -287,3 +287,23 @@ a later change.
   included (the specification, p.11), and 7.0 escapes the first character of every line, a
   `CONT` line among them (the 7.0 specification, "Escape"); both were read from the
   published texts.
+- An extension line is described with the Text payload and `lineBreaks` true, since nothing
+  says what its value may hold; its children are listed as undefined occurrences, as the
+  children of a standard structure with an undefined tag already were.
+- An emptied part of a name takes one adjacent space with it, so `Dr. Maria /Curie/` with
+  `GIVN` emptied reads `Dr. /Curie/`; an emptied `GIVN` in 5.5.1 is refused as
+  `value-required` before the payload is touched, as its payload may not be empty there.
+- A 7.0 list of text (`PLAC`, `PLAC.FORM`) is single-line here, though the list grammar does
+  not exclude a line break inside an item: a place over two lines is never what a form means.
+  The Special datatype shares the Text URI, so `EMAIL`, `PHON` or `PAGE` report `lineBreaks`
+  true, as the standard allows.
+- A `NOTE.TRAN` is prose too.
+- `CONC` is written only for a value whose grammar continues it, and never under `ADDR`,
+  which 5.5.1 continues with `CONT` alone; a long `GIVN` stays one line.
+- The name policy leaves `NAME` alone when the part's new value holds a line break, or when
+  taking the part out would leave the payload empty, so `NAME Maria` with `GIVN` emptied is
+  not refused as an empty name. With two `GIVN` of the same value, emptying one takes the
+  word out of the payload; the policy cannot tell which of them the payload held.
+- An unknown standard tag in the wrong place, such as `FOO` under `INDI`, is not described,
+  and the spec's promise is narrowed to extension lines; it is removed like any line and
+  refused as `unknown-field` when set.

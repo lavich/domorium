@@ -51,6 +51,13 @@ function wordIndex(text: string, word: string): number {
 
 const SLASHED = /^([^/]*)\/([^/]*)\/(.*)$/s;
 
+function withoutPiece(left: string, right: string): string {
+  if (left.endsWith(" ") && (right.startsWith(" ") || right === "")) {
+    return left.slice(0, -1) + right;
+  }
+  return left === "" ? right.replace(/^ +/, "") : left + right;
+}
+
 function renamedPayload(
   payload: string,
   part: string,
@@ -59,18 +66,24 @@ function renamedPayload(
 ): string | undefined {
   const slashed = SLASHED.exec(payload);
   if (part === "SURN") {
-    return slashed && slashed[2] === oldValue
+    if (!slashed || slashed[2] !== oldValue) {
+      return undefined;
+    }
+    return newValue
       ? `${slashed[1]}/${newValue}/${slashed[3]}`
-      : undefined;
+      : withoutPiece(slashed[1], slashed[3]) || undefined;
   }
   const before = slashed ? slashed[1] : payload;
   const index = wordIndex(before, oldValue);
   if (index < 0) {
     return undefined;
   }
-  const given =
-    before.slice(0, index) + newValue + before.slice(index + oldValue.length);
-  return slashed ? `${given}/${slashed[2]}/${slashed[3]}` : given;
+  const after = before.slice(index + oldValue.length);
+  const rest = slashed ? `${after}/${slashed[2]}/${slashed[3]}` : after;
+  if (newValue) {
+    return before.slice(0, index) + newValue + rest;
+  }
+  return withoutPiece(before.slice(0, index), rest) || undefined;
 }
 
 const name: Policy = {
@@ -87,7 +100,7 @@ const name: Policy = {
     if ((part !== "GIVN" && part !== "SURN") || !token || hasContinuation) {
       return [];
     }
-    if (value.includes("/")) {
+    if (value.includes("/") || /[\r\n]/.test(value)) {
       return [];
     }
     const next = renamedPayload(

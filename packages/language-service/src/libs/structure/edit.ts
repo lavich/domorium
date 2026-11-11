@@ -4,6 +4,7 @@ import {
   type CreateDocumentOptions,
   type GedcomDialect,
   type PayloadKind,
+  type StructureField,
 } from "@domorium/validator";
 
 import type {
@@ -55,16 +56,56 @@ function gate(
   );
 }
 
+function fieldOf(
+  document: GedcomDocument,
+  parentPath: readonly string[],
+  tag: string,
+): StructureField | undefined {
+  return document
+    .getStructureShapeAtPath(parentPath)
+    ?.fields.find((field) => field.tag === tag);
+}
+
 export function fieldKind(
   document: GedcomDocument,
   parentPath: readonly string[],
   tag: string,
 ): PayloadKind["kind"] {
-  return (
-    document
-      .getStructureShapeAtPath(parentPath)
-      ?.fields.find((field) => field.tag === tag)?.payload.kind ?? "text"
-  );
+  return fieldOf(document, parentPath, tag)?.payload.kind ?? "text";
+}
+
+// 5.5.1 continues an address with CONT alone, and a value its grammar does not
+// continue with CONC at all.
+function concatenates(field: StructureField | undefined, tag: string): boolean {
+  return field?.lineBreaks !== false && tag !== "ADDR";
+}
+
+function lineBreakRefusal(
+  document: GedcomDocument,
+  parentPath: readonly string[],
+  tag: string,
+  input: StructureInput,
+): EditRefusal | undefined {
+  const field = fieldOf(document, parentPath, tag);
+  const { raw } = payloadOf(input, field?.payload.kind ?? "text");
+  if (field && !field.lineBreaks && /[\r\n]/.test(raw)) {
+    return {
+      ...refusal("payload-datatype", `Value for ${tag} cannot span lines`),
+      diagnosticCode: "VAL004",
+    };
+  }
+  for (const child of input.children ?? []) {
+    const refused = lineBreakRefusal(
+      document,
+      [...parentPath, tag],
+      child.tag,
+      child,
+    );
+    if (refused) {
+      return refused;
+    }
+  }
+  return undefined;
 }
 
 export function payloadOf(
@@ -91,12 +132,18 @@ function linesOf(
   input: StructureInput,
   terminator: string,
 ): string[] {
-  const { raw, kind } = payloadOf(
-    input,
-    fieldKind(context.document, parentPath, tag),
-  );
+  const field = fieldOf(context.document, parentPath, tag);
+  const { raw, kind } = payloadOf(input, field?.payload.kind ?? "text");
   return [
-    ...writeValueLines(level, tag, raw, kind, dialect, terminator),
+    ...writeValueLines(
+      level,
+      tag,
+      raw,
+      kind,
+      dialect,
+      terminator,
+      concatenates(field, tag),
+    ),
     ...(input.children ?? []).flatMap((child: StructureChildInput) =>
       linesOf(
         context,
@@ -270,6 +317,10 @@ export function addStructure(
   if (reciprocalIn(parentPath, tag, input)) {
     return reciprocalRefusal();
   }
+  const broken = lineBreakRefusal(context.document, parentPath, tag, input);
+  if (broken) {
+    return broken;
+  }
   const terminator = terminatorOf(context.text);
   const lines = linesOf(
     context,
@@ -316,11 +367,13 @@ export function setValue(
   if (hasReciprocal(path, tag)) {
     return reciprocalRefusal();
   }
+  const broken = lineBreakRefusal(context.document, path, tag, value);
+  if (broken) {
+    return broken;
+  }
   const terminator = terminatorOf(context.text);
-  const { raw, kind } = payloadOf(
-    value,
-    fieldKind(context.document, path, tag),
-  );
+  const field = fieldOf(context.document, path, tag);
+  const { raw, kind } = payloadOf(value, field?.payload.kind ?? "text");
   const lines = writeValueLines(
     node.level,
     tag,
@@ -328,6 +381,7 @@ export function setValue(
     kind,
     dialect,
     terminator,
+    concatenates(field, tag),
   );
 
   let leading = 0;

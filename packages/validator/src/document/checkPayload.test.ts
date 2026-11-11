@@ -109,6 +109,17 @@ describe("checking one value without an edit", () => {
     ).toEqual([GedcomErrorCode.IncorrectValue]);
   });
 
+  it("names a line break in a value that may not span lines", () => {
+    const { document } = open(`${G7}0 @I1@ INDI\n0 TRLR\n`);
+
+    expect(
+      codes(document.checkPayload(["INDI", "BIRT"], "DATE", "1 JAN\n1900")),
+    ).toEqual([GedcomErrorCode.IncorrectValue]);
+    expect(document.checkPayload(["INDI", "BIRT"], "NOTE", "one\ntwo")).toEqual(
+      [],
+    );
+  });
+
   it("answers nothing for a document checked against no dialect", () => {
     const { document, name } = open("0 @I1@ INDI\n1 NAME A /B/\n");
 
