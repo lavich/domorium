@@ -40,6 +40,11 @@ export enum GedcomErrorCode {
    * silent and held to it, as its calendars are the same ones.
    */
   ImpossibleYear = "VAL016",
+  /**
+   * A line break in a value whose datatype keeps to one line. Answered for a
+   * value about to be written; a file that already has one is not reported.
+   */
+  SpansLines = "VAL017",
   /** A pointer whose xref names no record of the required type. */
   UnresolvedXref = "unresolved-xref",
   /** A line whose level cannot follow the line above it. */
@@ -58,10 +63,19 @@ export interface GedcomError {
     xref?: string;
     requiredRecordTag?: string;
     expectedLevel?: number;
-    /** The root tag a document lacks, set only for a missing `TRLR`. */
     missingTag?: string;
+    /** Absent where the missing structure belongs at the root. */
+    parentTag?: string;
     /** The document has no `HEAD` record at all, as against one without a version. */
     missingHeader?: boolean;
+    day?: number;
+    month?: string;
+    monthLength?: number;
+    year?: number;
+    calendar?: string;
+    /** Set only where the tag is a standard one written in the wrong case. */
+    meantTag?: string;
+    tag?: string;
   };
   range: Range;
   level: "error" | "warning" | "info";

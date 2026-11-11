@@ -32,7 +32,7 @@ export function parseCardinality(
   return { min, max };
 }
 
-interface Rule {
+export interface Rule {
   min: number;
   max: number;
   type: GedcomType;
@@ -48,7 +48,7 @@ const ruleTables = new WeakMap<
   Map<GedcomType, Map<GedcomTag, Rule>>
 >();
 
-function getRules(
+export function getRules(
   scheme: GedcomScheme,
   parentType: GedcomType,
 ): Map<GedcomTag, Rule> | undefined {
@@ -87,6 +87,38 @@ function getRules(
   }
   byType.set(parentType, rules);
   return rules;
+}
+
+export function unknownTagError(
+  rules: Map<GedcomTag, Rule>,
+  tag: GedcomTag,
+  parentTag: string | undefined,
+  range: Range,
+): GedcomError {
+  const upperCased = GedcomTag(tag.toUpperCase());
+  const meant = upperCased !== tag && rules.has(upperCased) ? upperCased : null;
+  return {
+    code: GedcomErrorCode.UnknownTag,
+    message: meant
+      ? `A tag is written in upper case: ${meant}, not ${tag}`
+      : `Unknown tag ${tag} in parent ${parentTag || "root"}`,
+    ...(meant ? { data: { meantTag: meant } } : {}),
+    range,
+    level: "warning",
+  };
+}
+
+export function tooManyError(
+  tag: GedcomTag,
+  parentTag: string | undefined,
+  range: Range,
+): GedcomError {
+  return {
+    code: GedcomErrorCode.ManyOccurrences,
+    message: `Too many occurrences of ${tag} in parent ${parentTag}`,
+    range,
+    level: "error",
+  };
 }
 
 /** The structure type a tag definition names, when its URI is a standard one. */
@@ -224,29 +256,18 @@ export class GedcomValidator {
       const rule = rules.get(tag);
 
       if (!rule) {
-        const upperCased = GedcomTag(tag.toUpperCase());
-        const meant =
-          upperCased !== tag && rules.has(upperCased) ? upperCased : null;
-        errors.push({
-          code: GedcomErrorCode.UnknownTag,
-          message: meant
-            ? `A tag is written in upper case: ${meant}, not ${tag}`
-            : `Unknown tag ${tag} in parent ${parentTag || "root"}`,
-          range: tagToken?.range || node.range,
-          level: "warning",
-        });
+        errors.push(
+          unknownTagError(rules, tag, parentTag, tagToken?.range || node.range),
+        );
         continue;
       }
 
       const seen = (occurrences.get(tag) ?? 0) + 1;
       occurrences.set(tag, seen);
       if (seen > rule.max) {
-        errors.push({
-          code: GedcomErrorCode.ManyOccurrences,
-          message: `Too many occurrences of ${tag} in parent ${parentTag}`,
-          range: tagToken?.range || node.range,
-          level: "error",
-        });
+        errors.push(
+          tooManyError(tag, parentTag, tagToken?.range || node.range),
+        );
       }
 
       ruleNode.collect(errors, node, rule.type);
@@ -254,7 +275,6 @@ export class GedcomValidator {
       this.collect(errors, node.children, rule.type, scheme, node);
     }
 
-    const atRoot = !parent;
     for (const [tag, rule] of rules) {
       if (this.fragment && parentType === GedcomType("")) {
         break;
@@ -263,9 +283,9 @@ export class GedcomValidator {
         errors.push({
           code: GedcomErrorCode.MissingTag,
           message: `Missing required tag ${tag} in ${parentTag || "root"}`,
-          ...(atRoot && tag === TRAILER
-            ? { data: { missingTag: TRAILER } }
-            : {}),
+          data: parentTag
+            ? { missingTag: tag, parentTag }
+            : { missingTag: tag },
           range: parent?.range ??
             (tag === TRAILER ? lastGedcomLine(nodes) : undefined) ?? {
               start: { line: 0, character: 0 },

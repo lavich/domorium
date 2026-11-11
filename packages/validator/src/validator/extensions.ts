@@ -36,6 +36,7 @@ export function undocumentedTag(tag: GedcomTag, range: Range): GedcomError {
   return {
     code: GedcomErrorCode.UndocumentedTag,
     message: `Extension tag ${tag} is not declared in HEAD.SCHMA`,
+    data: { tag },
     range,
     level: "warning",
   };

@@ -62,7 +62,7 @@ describe("a document without a trailer", () => {
     expect(missingTrailer(`${HEADER}0 TRLR\n`)).toEqual([]);
   });
 
-  it("leaves another missing root tag where it was, without the tag name", () => {
+  it("leaves another missing root tag where it was, not named as the trailer", () => {
     const missing = errorsOf(
       "0 HEAD\n1 GEDC\n2 VERS 5.5.1\n2 FORM LINEAGE-LINKED\n1 CHAR UTF-8\n0 TRLR\n",
     ).filter((error) => error.code === GedcomErrorCode.MissingTag);
@@ -70,7 +70,7 @@ describe("a document without a trailer", () => {
     expect(missing.length).toBeGreaterThan(0);
     for (const error of missing) {
       expect(error.range.start).toEqual({ line: 0, character: 0 });
-      expect(error.data?.missingTag).toBeUndefined();
+      expect(error.data?.missingTag).not.toBe("TRLR");
     }
   });
 });

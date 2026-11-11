@@ -1,5 +1,7 @@
 export { TokenNames } from "./parser/lexer";
+export { escapePayload, unescapePayload } from "./payload/escape";
 export type { ASTNode, ASTToken } from "./parser";
+export { resolveValue } from "./parser";
 export {
   GedcomDocument,
   type CreateDocumentOptions,
@@ -13,3 +15,9 @@ export type {
   VersionResolution,
 } from "./validator/versionRegistry";
 export type { DateModifier, GedcomDate, GedcomDateValue } from "./types/date";
+export type {
+  PayloadKind,
+  PayloadProblem,
+  StructureField,
+  StructureShape,
+} from "./types/structure";

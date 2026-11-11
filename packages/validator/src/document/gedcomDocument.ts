@@ -27,6 +27,9 @@ import type { GedcomDateValue } from "../types/date";
 import { readDateValueV7 } from "../validator/date-v7";
 import { readDateValue551 } from "../validator/date-551";
 import { impossibleDays, impossibleYears } from "../validator/calendarDays";
+import { structureShape, typeAtPath } from "../validator/structureShape";
+import { checkPayload } from "../validator/checkPayload";
+import type { PayloadProblem, StructureShape } from "../types/structure";
 
 export interface CreateDocumentOptions {
   /** Text that is part of a document rather than one of its own. */
@@ -281,6 +284,70 @@ export class GedcomDocument {
     return this.scheme.label[type]?.["en-US"];
   }
 
+  getStructureShape(node: ASTNode, tag?: string): StructureShape | undefined {
+    if (!this.scheme || !this.validatedAs) {
+      return undefined;
+    }
+    const ruleNode = new RuleNode(this.scheme, this.pointers, this.extensions);
+    let type: GedcomType | undefined = ruleNode.getNodeType(node);
+    if (!type) {
+      return undefined;
+    }
+    if (tag !== undefined) {
+      type = this.scheme.substructure[type]?.[GedcomTag(tag)]?.type;
+    }
+    return type ? structureShape(this.scheme, ruleNode, type) : undefined;
+  }
+
+  getStructureShapeAtPath(path: readonly string[]): StructureShape | undefined {
+    if (!this.scheme || !this.validatedAs) {
+      return undefined;
+    }
+    const type = typeAtPath(this.scheme, path);
+    return type
+      ? structureShape(
+          this.scheme,
+          new RuleNode(this.scheme, this.pointers, this.extensions),
+          type,
+        )
+      : undefined;
+  }
+
+  /** `replacing` is the occurrence a set overwrites; it does not count against the maximum. */
+  checkPayload(
+    parent: ASTNode | readonly string[],
+    tag: string,
+    value: string,
+    replacing?: ASTNode,
+  ): PayloadProblem[] | undefined {
+    if (!this.scheme || !this.validatedAs) {
+      return undefined;
+    }
+    const isNode = !Array.isArray(parent);
+    const type = isNode
+      ? new RuleNode(this.scheme, this.pointers, this.extensions).getNodeType(
+          parent as ASTNode,
+        )
+      : typeAtPath(this.scheme, parent as readonly string[]);
+    if (!type) {
+      return undefined;
+    }
+    const occurrences = isNode
+      ? (parent as ASTNode).children.filter(
+          (child) => child.tokens.TAG?.value === tag && child !== replacing,
+        ).length
+      : 0;
+    return checkPayload(
+      this.scheme,
+      this.pointers,
+      this.extensions,
+      type,
+      tag,
+      value,
+      occurrences,
+    );
+  }
+
   getPointerTargetTag(node: ASTNode): string | undefined {
     if (!this.scheme) {
       return undefined;
@@ -314,6 +381,11 @@ export class GedcomDocument {
 
   getVersionResolution(): VersionResolution | undefined {
     return this.resolution;
+  }
+
+  /** The dialect the text was checked against, a fragment's own included. */
+  getValidatedDialect(): GedcomDialect | undefined {
+    return this.validatedAs;
   }
 
   getDialect(): GedcomDialect | undefined {

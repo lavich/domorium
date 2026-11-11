@@ -62,7 +62,8 @@ independent of any editor and of the Language Server Protocol runtime.
 
 `GedcomLanguageService` provides diagnostics, completion, hover, the record a
 pointer names, definitions, references, rename, folding ranges, document symbols,
-semantic tokens, document links, indentation hints, and code actions — one
+semantic tokens, document links, indentation hints, code actions, and describing and
+editing the structures of a record for a form — one
 directory per concern under `src/libs/`.
 
 The important constraint is `src/types.ts`. This package declares its own
