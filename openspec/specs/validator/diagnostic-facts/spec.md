@@ -21,6 +21,8 @@ each diagnostic SHALL stay as they are.
 | `VAL002`          | `missingTag`, and `parentTag` where the missing structure has a parent     |
 | `VAL001`          | `meantTag`, only where the tag is a standard tag written in the wrong case |
 | `VAL008`          | `tag`, the undeclared extension tag                                        |
+| `VAL018`          | `tag`, the structure that takes no value                                   |
+| `VAL019`          | `tag`, the record a 7.0 empty value would leave with nothing               |
 | `unresolved-xref` | `xref` and `requiredRecordTag`, as before                                  |
 
 A `VAL002` for a line that has no tag at all names nothing and SHALL carry no `data`.
@@ -60,3 +62,8 @@ A `VAL002` for a line that has no tag at all names nothing and SHALL carry no `d
 
 - **WHEN** `checkPayload` is asked about `31 FEB 1900` for a `DATE`
 - **THEN** the problem carries `{ day: 31, month: "FEB", monthLength: 28 }`
+
+#### Scenario: A value for a structure that takes none
+
+- **WHEN** `checkPayload` is asked about a value for a `MAP` beneath a `PLAC`
+- **THEN** its `VAL018` carries `{ tag: "MAP" }`
