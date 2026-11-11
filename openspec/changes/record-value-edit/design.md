@@ -39,9 +39,11 @@ own, so `validateValue` and the operations cannot drift apart:
 - `VAL018` (`ValueNotAllowed`, `{ tag }`) for a non-empty value where the payload type is
   `null` in the scheme, the standard's "no payload descriptor". It is keyed on that `null`,
   not on the kind `none`, which an unnamed type would also give (#112; none exists today, and
-  a test keeps it so). The 5.5.1 scheme gives the family `EVEN` a `null` type although its
-  grammar reads `[<EVENT_DESCRIPTOR> | <NULL>]`; that type is exempted by name here, and
-  correcting the scheme, which would add a diagnostic to existing files, is #528.
+  a test keeps it so). The 5.5.1 scheme gives `EVEN` a `null` type, of a family and of a
+  person, although the family's grammar reads `[<EVENT_DESCRIPTOR> | <NULL>]` and the
+  standard calls `EVENT_DESCRIPTOR` the value "usually assigned to the EVEN tag" of either;
+  both types are exempted by name here, and correcting the scheme, which would add a
+  diagnostic to existing files, is #528.
 - `VAL019` (`EmptyStructure`, `{ tag }`) for an empty value on a 7.0 record whose payload type
   is not `null` and whose children are only continuation lines. Only records: an emptied
   substructure keeps the behaviour #524 settled for the parts of a name, and an emptied event
@@ -61,3 +63,18 @@ and written as an extension, so a value for an aliased `INDI` is not refused.
   from #522, which no released version carries yet.
 - [The 5.5.1 family `EVEN` exemption is a name in code] → it stays until the scheme is
   corrected in its own issue, with a test that names it.
+
+## Implementation
+
+- `typeAtPath` keeps answering nothing for an empty path, since `getStructureShapeAtPath([])`
+  answering the root would be a new public answer; `GedcomDocument.checkPayload` takes the
+  root type itself when it is given the empty path, which is the only entry that needs it.
+- The line-break check of `addStructure` and `setValue` now comes from the same
+  `checkPayload` answer as `VAL018` and `VAL019`, so the separate test of #524 is gone and the
+  three refusals are made in one place.
+- A value of spaces counts as a value for `VAL018`, so `3 MAP` with `"  "` is refused
+  rather than written with trailing spaces; for `VAL019` it counts as empty.
+- `VAL018` and `VAL019` are added to the problems already found, so a `validateValue`
+  answer keeps a `VAL007` beside them.
+- The review of the code found that the 5.5.1 individual `EVEN` would be refused too; it is
+  exempted with the family one, and #528 is told.

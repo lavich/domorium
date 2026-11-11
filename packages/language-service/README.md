@@ -158,8 +158,17 @@ the siblings, the line terminator, `CONT` for a line break, `CONC` where 5.5.1 n
 the escape of an at sign. An error the edit would add is a refusal, and so is a tag the
 dialect does not define there, though the validator only warns; any other warning comes back in
 `warnings`, and a host that wants it to block treats a non-empty list as one. A problem the
-structure already had does not refuse an unrelated part. A whole record is not set or
-removed.
+structure already had does not refuse an unrelated part.
+
+`setValue` on a record's opening line writes the record's value where the standard gives it
+one: a 7.0 shared note (`0 @N1@ SNOTE …`), a 5.5.1 note record, a record of the file's own
+(`0 @P1@ _PLAN …`). The identifier and the tag stay, the old continuation lines are
+replaced, and every other line beneath the record stays; `validateValue` with
+`{ replacing: true }` checks that value too. A value for a structure the standard gives none,
+a record such as `INDI` or `HEAD` or a substructure such as `MAP`, is refused with
+`value-not-allowed`; emptying a 7.0 record that holds nothing else, or a 5.5.1 note, is
+refused with `value-required`. A whole record is not removed, and an extension tag that
+`SCHMA` declares as a standard record is still treated as an extension.
 
 A refusal that comes from a diagnostic, and each problem `validateValue` answers, carries the
 validator's code in `diagnosticCode` and the facts of the rule in `data`, so a host writes its

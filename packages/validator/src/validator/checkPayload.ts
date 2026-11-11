@@ -54,6 +54,7 @@ export function checkPayload(
   tag: string,
   value: string,
   occurrences: number,
+  replacing?: ASTNode,
 ): PayloadProblem[] {
   const rules = getRules(scheme, parentType);
   if (!rules) {
@@ -73,6 +74,23 @@ export function checkPayload(
   }
   if (occurrences + 1 > rule.max) {
     problems.push(tooManyError(gedcomTag, scheme.tag[parentType], ORIGIN));
+  }
+  if (
+    value !== "" &&
+    scheme.payload[rule.type]?.type === null &&
+    !TAKES_A_VALUE_DESPITE_THE_SCHEME.has(rule.type)
+  ) {
+    return [...problems.map(toPayloadProblem), valueNotAllowed(tag)];
+  }
+  if (
+    !value.trim() &&
+    parentType === "" &&
+    replacing &&
+    rule.type.startsWith(GEDCOM_7) &&
+    scheme.payload[rule.type]?.type !== null &&
+    replacing.children.every(isContinuation)
+  ) {
+    return [...problems.map(toPayloadProblem), emptyStructure(tag)];
   }
   if (/[\r\n]/.test(value) && !lineBreaksOf(scheme, rule.type).lineBreaks) {
     problems.push({
@@ -94,6 +112,39 @@ export function checkPayload(
     }
   }
   return problems.map(toPayloadProblem);
+}
+
+const GEDCOM_7 = "https://gedcom.io/terms/v7/";
+
+// 5.5.1 describes EVENT_DESCRIPTOR as the value "usually assigned to the EVEN
+// tag", of a person or a family, though only the family's grammar line shows it,
+// and the hand-kept scheme gives neither a payload.
+const TAKES_A_VALUE_DESPITE_THE_SCHEME = new Set([
+  "https://gedcom.io/terms/v5.5.1/FAM-EVEN",
+  "https://gedcom.io/terms/v5.5.1/INDI-EVEN",
+]);
+
+const isContinuation = (node: ASTNode): boolean => {
+  const tag = node.tokens.TAG?.value;
+  return tag === "CONT" || tag === "CONC";
+};
+
+function valueNotAllowed(tag: string): PayloadProblem {
+  return {
+    code: GedcomErrorCode.ValueNotAllowed,
+    message: `${tag} takes no value`,
+    data: { tag },
+    level: "error",
+  };
+}
+
+function emptyStructure(tag: string): PayloadProblem {
+  return {
+    code: GedcomErrorCode.EmptyStructure,
+    message: `${tag} needs a value or a substructure`,
+    data: { tag },
+    level: "error",
+  };
 }
 
 const toPayloadProblem = ({

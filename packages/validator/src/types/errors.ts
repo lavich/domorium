@@ -45,6 +45,17 @@ export enum GedcomErrorCode {
    * value about to be written; a file that already has one is not reported.
    */
   SpansLines = "VAL017",
+  /**
+   * A value for a structure the standard gives no payload descriptor. Answered
+   * for a value about to be written; a file that already has one is not reported.
+   */
+  ValueNotAllowed = "VAL018",
+  /**
+   * A GEDCOM 7 record an empty value would leave with neither a payload nor a
+   * substructure, which 7.0 forbids of every structure. Answered for a value
+   * about to be written only.
+   */
+  EmptyStructure = "VAL019",
   /** A pointer whose xref names no record of the required type. */
   UnresolvedXref = "unresolved-xref",
   /** A line whose level cannot follow the line above it. */

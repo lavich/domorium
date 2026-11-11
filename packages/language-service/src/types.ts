@@ -65,6 +65,7 @@ export type EditRefusalCode =
   | "value-not-in-enum"
   | "payload-datatype"
   | "value-spans-lines"
+  | "value-not-allowed"
   | "value-required"
   | "unresolved-pointer"
   | "required-field-missing"

@@ -156,3 +156,126 @@ describe("checking one value without an edit", () => {
     },
   );
 });
+
+describe("a value where the standard allows none, and an emptied record", () => {
+  const sevenNote = `${G7}0 @N1@ SNOTE First line\n0 @I1@ INDI\n1 BIRT\n2 PLAC Paris\n3 MAP\n4 LATI N1\n4 LONG E1\n0 TRLR\n`;
+
+  function nodeAt(document: GedcomDocument, line: number): ASTNode {
+    const walk = (nodes: ASTNode[]): ASTNode | undefined => {
+      for (const node of nodes) {
+        if (node.range.start.line === line) {
+          return node;
+        }
+        const found = walk(node.children);
+        if (found) {
+          return found;
+        }
+      }
+      return undefined;
+    };
+    return walk(document.getNodes()) as ASTNode;
+  }
+
+  it("names a value for a map, with the tag in data", () => {
+    const document = new GedcomDocument().createDocument(sevenNote);
+    const problems = document.checkPayload(
+      nodeAt(document, 6),
+      "MAP",
+      "oops",
+      nodeAt(document, 7),
+    );
+
+    expect(problems).toEqual([
+      expect.objectContaining({
+        code: GedcomErrorCode.ValueNotAllowed,
+        data: { tag: "MAP" },
+      }),
+    ]);
+  });
+
+  it("names a value for a person record and accepts one for a shared note", () => {
+    const document = new GedcomDocument().createDocument(sevenNote);
+
+    expect(
+      codes(document.checkPayload([], "INDI", "x", nodeAt(document, 4))),
+    ).toEqual([GedcomErrorCode.ValueNotAllowed]);
+    expect(
+      document.checkPayload([], "SNOTE", "Other", nodeAt(document, 3)),
+    ).toEqual([]);
+  });
+
+  it("accepts an empty value where none is allowed", () => {
+    const document = new GedcomDocument().createDocument(sevenNote);
+
+    expect(document.checkPayload([], "TRLR", "", nodeAt(document, 10))).toEqual(
+      [],
+    );
+  });
+
+  it("names an emptied 7.0 shared note that holds nothing, and not one that holds a source", () => {
+    const bare = new GedcomDocument().createDocument(sevenNote);
+    const sourced = new GedcomDocument().createDocument(
+      `${G7}0 @N1@ SNOTE First line\n1 SOUR @S1@\n0 @S1@ SOUR\n0 TRLR\n`,
+    );
+
+    expect(bare.checkPayload([], "SNOTE", "", nodeAt(bare, 3))).toEqual([
+      expect.objectContaining({
+        code: GedcomErrorCode.EmptyStructure,
+        data: { tag: "SNOTE" },
+      }),
+    ]);
+    expect(sourced.checkPayload([], "SNOTE", "", nodeAt(sourced, 3))).toEqual(
+      [],
+    );
+  });
+
+  it("names an emptied 5.5.1 note record as a missing value", () => {
+    const document = new GedcomDocument().createDocument(
+      `${G551}0 @N1@ NOTE a\n0 TRLR\n`,
+    );
+
+    expect(
+      codes(document.checkPayload([], "NOTE", "", nodeAt(document, 5))),
+    ).toEqual([GedcomErrorCode.MissingValue]);
+  });
+
+  it("lets a 5.5.1 family event carry a description", () => {
+    const document = new GedcomDocument().createDocument(
+      `${G551}0 @F1@ FAM\n0 TRLR\n`,
+    );
+
+    expect(document.checkPayload(["FAM"], "EVEN", "Common Law")).toEqual([]);
+  });
+
+  it("leaves the diagnostics of a file unchanged", () => {
+    const withValue = new GedcomDocument().createDocument(
+      `${G7}0 @I1@ INDI\n1 BIRT\n2 PLAC Paris\n3 MAP oops\n4 LATI N1\n4 LONG E1\n0 TRLR\n`,
+    );
+    const emptyNote = new GedcomDocument().createDocument(
+      `${G7}0 @N1@ SNOTE\n0 TRLR\n`,
+    );
+
+    expect(withValue.getErrors()).toEqual([]);
+    expect(emptyNote.getErrors()).toEqual([]);
+  });
+
+  it("lets a 5.5.1 individual event carry a description, as EVENT_DESCRIPTOR says", () => {
+    const document = new GedcomDocument().createDocument(
+      `${G551}0 @I1@ INDI\n0 TRLR\n`,
+    );
+
+    expect(
+      document.checkPayload(["INDI"], "EVEN", "Appointed Chairperson"),
+    ).toEqual([]);
+  });
+
+  it("names a value of spaces for a map and keeps a problem found before it", () => {
+    const document = new GedcomDocument().createDocument(sevenNote);
+    const place = nodeAt(document, 6);
+
+    expect(codes(document.checkPayload(place, "MAP", "  "))).toEqual([
+      GedcomErrorCode.ManyOccurrences,
+      GedcomErrorCode.ValueNotAllowed,
+    ]);
+  });
+});

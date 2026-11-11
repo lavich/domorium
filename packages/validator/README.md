@@ -90,14 +90,16 @@ document with no `HEAD` at all says so, which a header with no version does not.
 It also holds the facts the message names, so a host can say them in its own
 words and its reader's language without parsing the English:
 
-| Code              | `data`                                                               |
-| ----------------- | -------------------------------------------------------------------- |
-| `VAL014`          | `day`, `month`, `monthLength`: `31`, `"FEB"`, `28`                   |
-| `VAL016`          | `year`, `calendar`: `0`, `"GREGORIAN"`                               |
-| `VAL002`          | `missingTag`, and `parentTag` except at the root: `"LANG"`, `"TRAN"` |
-| `VAL001`          | `meantTag`, only for a standard tag in the wrong case: `"NICK"`      |
-| `VAL008`          | `tag`, the undeclared extension tag: `"_X"`                          |
-| `unresolved-xref` | `xref`, `requiredRecordTag`: `"@S9@"`, `"SOUR"`                      |
+| Code              | `data`                                                                  |
+| ----------------- | ----------------------------------------------------------------------- |
+| `VAL014`          | `day`, `month`, `monthLength`: `31`, `"FEB"`, `28`                      |
+| `VAL016`          | `year`, `calendar`: `0`, `"GREGORIAN"`                                  |
+| `VAL002`          | `missingTag`, and `parentTag` except at the root: `"LANG"`, `"TRAN"`    |
+| `VAL001`          | `meantTag`, only for a standard tag in the wrong case: `"NICK"`         |
+| `VAL008`          | `tag`, the undeclared extension tag: `"_X"`                             |
+| `VAL018`          | `tag`, the structure that takes no value: `"MAP"`                       |
+| `VAL019`          | `tag`, the record a 7.0 empty value would leave with nothing: `"SNOTE"` |
+| `unresolved-xref` | `xref`, `requiredRecordTag`: `"@S9@"`, `"SOUR"`                         |
 
 `checkPayload` keeps the same `data` on the problems it answers.
 
@@ -171,6 +173,8 @@ const unresolved = errors.filter(
 | `VAL015`          | `PersonalAncestralFile` | a header naming `SYST` before `GEDC`, so the file is a Personal Ancestral File |
 | `VAL016`          | `ImpossibleYear`        | a Gregorian or Julian date naming year 0, which neither calendar numbers       |
 | `VAL017`          | `SpansLines`            | a line break in a value about to be written whose datatype keeps to one line   |
+| `VAL018`          | `ValueNotAllowed`       | a value about to be written for a structure the standard gives no value        |
+| `VAL019`          | `EmptyStructure`        | an empty value about to be written that would leave a 7.0 record with nothing  |
 | `unresolved-xref` | `UnresolvedXref`        | an xref naming no record of the required type                                  |
 | `invalid-level`   | `InvalidLevel`          | a level that cannot follow the line above it                                   |
 | `LEXER`           | `Lexer`                 | the text could not be tokenized                                                |

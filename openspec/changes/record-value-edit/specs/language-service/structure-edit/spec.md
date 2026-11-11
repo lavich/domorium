@@ -46,8 +46,9 @@ Where the standard gives a structure no payload descriptor, a record such as an 
 `MAP` or a citation's `DATA`, `setValue` and `addStructure` SHALL refuse a non-empty value with
 `value-not-allowed`, carrying the check's code `VAL018` and `{ tag }` in `data`, and
 `validateValue` SHALL answer that code. The description of such a structure SHALL already say
-it, with the payload kind `none`. An empty value there SHALL NOT be refused. The 5.5.1 family
-`EVEN`, which its grammar gives an optional descriptor, SHALL take a value.
+it, with the payload kind `none`. An empty value there SHALL NOT be refused; a value of spaces
+SHALL be. The 5.5.1 `EVEN`, of a family or a person, SHALL take a value, as the standard's
+`EVENT_DESCRIPTOR` is "usually assigned to the EVEN tag".
 
 #### Scenario: A value for a person
 

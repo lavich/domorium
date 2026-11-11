@@ -324,12 +324,15 @@ export class GedcomDocument {
       return undefined;
     }
     const isNode = !Array.isArray(parent);
+    const path = parent as readonly string[];
     const type = isNode
       ? new RuleNode(this.scheme, this.pointers, this.extensions).getNodeType(
           parent as ASTNode,
-        )
-      : typeAtPath(this.scheme, parent as readonly string[]);
-    if (!type) {
+        ) || undefined
+      : path.length === 0
+        ? GedcomType("")
+        : typeAtPath(this.scheme, path);
+    if (type === undefined) {
       return undefined;
     }
     const occurrences = isNode
@@ -345,6 +348,7 @@ export class GedcomDocument {
       tag,
       value,
       occurrences,
+      replacing,
     );
   }
 

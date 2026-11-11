@@ -8,7 +8,7 @@ import type {
 } from "../../types";
 import { refusal } from "./describe";
 import type { EditContext } from "./edit";
-import { fieldKind, payloadOf } from "./edit";
+import { fieldKind, payloadOf, recordShape } from "./edit";
 import { structureAt, structurePath } from "./locate";
 import { refusalCodeOf } from "./refusalCodes";
 
@@ -31,20 +31,16 @@ export function validateValue(
     return refusal("not-a-structure", "There is no structure on that line.");
   }
   const parent = replacing ? found.parent : found;
-  if (!parent) {
-    return refusal(
-      "record-edit-unsupported",
-      "A whole record is not checked as a value.",
-    );
-  }
   const field = replacing ? (found.tokens.TAG?.value ?? tag) : tag;
   const { raw, kind } = payloadOf(
     value,
-    fieldKind(context.document, structurePath(parent), field),
+    parent
+      ? fieldKind(context.document, structurePath(parent), field)
+      : (recordShape(context.document, found)?.payload.kind ?? "text"),
   );
   const problems =
     context.document.checkPayload(
-      parent,
+      parent ?? [],
       field,
       escapePayload(raw, dialect, kind),
       replacing ? found : undefined,
