@@ -81,11 +81,7 @@ export function checkPayload(
       range: ORIGIN,
       level: "error",
     });
-    return problems.map(({ code, message, level }) => ({
-      code,
-      message,
-      level,
-    }));
+    return problems.map(toPayloadProblem);
   }
   const ruleNode = new RuleNode(
     scheme,
@@ -97,5 +93,17 @@ export function checkPayload(
       problems.push(error);
     }
   }
-  return problems.map(({ code, message, level }) => ({ code, message, level }));
+  return problems.map(toPayloadProblem);
 }
+
+const toPayloadProblem = ({
+  code,
+  message,
+  data,
+  level,
+}: GedcomError): PayloadProblem => ({
+  code,
+  message,
+  ...(data ? { data } : {}),
+  level,
+});

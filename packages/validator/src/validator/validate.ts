@@ -102,6 +102,7 @@ export function unknownTagError(
     message: meant
       ? `A tag is written in upper case: ${meant}, not ${tag}`
       : `Unknown tag ${tag} in parent ${parentTag || "root"}`,
+    ...(meant ? { data: { meantTag: meant } } : {}),
     range,
     level: "warning",
   };
@@ -274,7 +275,6 @@ export class GedcomValidator {
       this.collect(errors, node.children, rule.type, scheme, node);
     }
 
-    const atRoot = !parent;
     for (const [tag, rule] of rules) {
       if (this.fragment && parentType === GedcomType("")) {
         break;
@@ -283,9 +283,9 @@ export class GedcomValidator {
         errors.push({
           code: GedcomErrorCode.MissingTag,
           message: `Missing required tag ${tag} in ${parentTag || "root"}`,
-          ...(atRoot && tag === TRAILER
-            ? { data: { missingTag: TRAILER } }
-            : {}),
+          data: parentTag
+            ? { missingTag: tag, parentTag }
+            : { missingTag: tag },
           range: parent?.range ??
             (tag === TRAILER ? lastGedcomLine(nodes) : undefined) ?? {
               start: { line: 0, character: 0 },

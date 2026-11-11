@@ -1,3 +1,5 @@
+import type { GedcomError } from "./errors";
+
 export type PayloadKind =
   | {
       kind:
@@ -43,5 +45,6 @@ export interface StructureShape {
 export interface PayloadProblem {
   code: string;
   message: string;
+  data?: GedcomError["data"];
   level: "error" | "warning" | "info";
 }

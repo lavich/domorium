@@ -58,7 +58,15 @@ interface GedcomError {
     requiredRecordTag?: string;
     expectedLevel?: number;
     missingTag?: string;
+    parentTag?: string;
     missingHeader?: boolean;
+    day?: number;
+    month?: string;
+    monthLength?: number;
+    year?: number;
+    calendar?: string;
+    meantTag?: string;
+    tag?: string;
   };
   range: Range;
   level: "error" | "warning" | "info";
@@ -70,7 +78,7 @@ interface GedcomError {
 | `code`    | `string`, a `GedcomErrorCode`    | What kind of problem this is. Match on this.                                                                      |
 | `message` | `string`                         | Written for a person to read, and rewritten when a clearer wording is found. Do not match on it.                  |
 | `hint`    | `string?`                        | Declared for advice alongside the message. Nothing in this package sets it yet, so treat it as absent.            |
-| `data`    | object?                          | The structured facts a quick fix is built from, where the diagnostic has any.                                     |
+| `data`    | object?                          | The structured facts a quick fix or a message of your own is built from, where the diagnostic has any.            |
 | `range`   | `Range`                          | Zero-based line and character, `end` exclusive, over the smallest text that is wrong — the payload, not the line. |
 | `level`   | `"error" \| "warning" \| "info"` | How much it matters.                                                                                              |
 
@@ -78,6 +86,20 @@ interface GedcomError {
 unresolved pointer reports the xref that failed and the record tag it needed, so
 a host can offer to create that record. A missing `TRLR` names the tag, and a
 document with no `HEAD` at all says so, which a header with no version does not.
+
+It also holds the facts the message names, so a host can say them in its own
+words and its reader's language without parsing the English:
+
+| Code              | `data`                                                               |
+| ----------------- | -------------------------------------------------------------------- |
+| `VAL014`          | `day`, `month`, `monthLength`: `31`, `"FEB"`, `28`                   |
+| `VAL016`          | `year`, `calendar`: `0`, `"GREGORIAN"`                               |
+| `VAL002`          | `missingTag`, and `parentTag` except at the root: `"LANG"`, `"TRAN"` |
+| `VAL001`          | `meantTag`, only for a standard tag in the wrong case: `"NICK"`      |
+| `VAL008`          | `tag`, the undeclared extension tag: `"_X"`                          |
+| `unresolved-xref` | `xref`, `requiredRecordTag`: `"@S9@"`, `"SOUR"`                      |
+
+`checkPayload` keeps the same `data` on the problems it answers.
 
 For this file, where `SEX` carries a value its schema does not permit and `FAMC`
 points at a record that is not there:

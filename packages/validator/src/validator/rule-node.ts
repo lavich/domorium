@@ -115,10 +115,12 @@ function valueError(
   node: ASTNode,
   message: string,
   code: GedcomErrorCode = GedcomErrorCode.IncorrectValue,
+  data?: GedcomError["data"],
 ): GedcomError {
   return {
     code: resolveValue(node).trim() ? code : GedcomErrorCode.MissingValue,
     message: `Value for ${node.tokens.TAG?.value} ${message}`,
+    ...(data ? { data } : {}),
     range: node.tokens.VALUE?.range || node.range,
     level: "error",
   };
@@ -141,6 +143,7 @@ function impossibleDateErrors(
         node,
         `names ${day} ${month}, and ${month} has ${length} days`,
         GedcomErrorCode.ImpossibleDay,
+        { day, month, monthLength: length },
       ),
     ),
     ...impossibleYears(read?.dates ?? []).map(({ year, calendar }) =>
@@ -148,6 +151,7 @@ function impossibleDateErrors(
         node,
         `names year ${year}, and ${calendar} has no year ${year}`,
         GedcomErrorCode.ImpossibleYear,
+        { year, calendar },
       ),
     ),
   ];
