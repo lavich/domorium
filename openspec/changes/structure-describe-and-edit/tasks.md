@@ -101,11 +101,11 @@
 
 ## 6. Revision after #525
 
-- [ ] 6.1 Record the facts in `data` where `validator` raises `VAL014`, `VAL016`, `VAL002`,
+- [x] 6.1 Record the facts in `data` where `validator` raises `VAL014`, `VAL016`, `VAL002`,
       `VAL001` and `VAL008`, keep them through `checkPayload`, and verify with the scenarios
       of `diagnostic-facts`
-- [ ] 6.2 Declare `DiagnosticData` in the language service, pass `data` on in `EditRefusal`
+- [x] 6.2 Declare `DiagnosticData` in the language service, pass `data` on in `EditRefusal`
       and `ValueProblem`, and verify with the scenarios of the refusal and value-check
       requirements of `structure-edit`
-- [ ] 6.3 Update both READMEs, rebuild, run `npm run check` and `npm run check:conformance`,
+- [x] 6.3 Update both READMEs, rebuild, run `npm run check` and `npm run check:conformance`,
       and record whether `check:jetbrains` ran
