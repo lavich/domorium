@@ -127,7 +127,9 @@ payload as the given name and the surname between slashes. When `GIVN` or `SURN`
 existing `NAME` is set, the service SHALL replace the one piece of the payload that held
 the old value, the given name before the slashes or the surname between them, and no other
 character of it, so that a prefix, a suffix and an author's spacing stay. It SHALL leave the
-payload as written where the old value is not found in that place.
+payload as written where the old value is not found in that place. A part set to an empty
+value SHALL take its piece out of the payload with the space beside it: an empty given name
+leaves the surname between slashes, and an empty surname takes the slashes away.
 
 #### Scenario: A name added with both parts
 
@@ -143,6 +145,16 @@ payload as written where the old value is not found in that place.
 
 - **WHEN** `SURN` is set to `Poe` on a `NAME Dr. Anna /de Lee/ Jr.` holding `SURN de Lee`
 - **THEN** the payload becomes `Dr. Anna /Poe/ Jr.`
+
+#### Scenario: An emptied given name
+
+- **WHEN** `GIVN` is set to the empty value on a `NAME Maria /Curie/` holding `GIVN Maria`
+- **THEN** the payload becomes `/Curie/`
+
+#### Scenario: An emptied surname
+
+- **WHEN** `SURN` is set to the empty value on a `NAME Maria /Curie/` holding `SURN Curie`
+- **THEN** the payload becomes `Maria`
 
 #### Scenario: A payload the author wrote differently
 
@@ -237,6 +249,23 @@ failure of the same datatype.
 
 - **WHEN** a `TRAN` of a 7.0 `NAME` has no `LANG` and a `NICK` is added to the `TRAN`
 - **THEN** the edit is returned
+
+### Requirement: A line break is refused where the value may not span lines
+
+A value with a line break for a field whose value may not hold one SHALL be refused with
+`payload-datatype` by `addStructure`, `setValue` and `validateValue`, children given to
+`addStructure` included, and SHALL NOT be written as `CONT` lines.
+
+#### Scenario: A date over two lines
+
+- **WHEN** a `DATE` is set to `1 JAN` and `1900` on two lines
+- **THEN** the service refuses with `payload-datatype`
+- **AND** `validateValue` answers the same code for that value
+
+#### Scenario: A note over two lines
+
+- **WHEN** a `NOTE` is set to two lines
+- **THEN** the edit is returned with a `CONT` line
 
 ### Requirement: A value can be checked without an edit
 

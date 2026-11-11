@@ -61,6 +61,33 @@ checked against no dialect the document SHALL report nothing.
 - **WHEN** the document's version could not be resolved to a dialect
 - **THEN** no fields are reported
 
+### Requirement: Whether a value may span lines is readable
+
+For each field the document SHALL report whether its value may hold a line break, and
+whether a line break is the ordinary case for it. The first SHALL follow the standard: in
+7.0 a value of the Text datatype may hold one and a value of any other datatype may not;
+in 5.5.1 only a structure whose grammar continues it with `CONT` may. The second SHALL be
+true only for prose: a note, an inline or shared note's text, a citation's text and an
+address. A caller decides by the second where Enter starts a new line, and the service
+refuses by the first.
+
+#### Scenario: A note and a given name in 7.0
+
+- **WHEN** the node is an `INDI.NAME` of a 7.0 document
+- **THEN** `NOTE` may hold a line break and is prose
+- **AND** `GIVN` may hold a line break and is not prose
+
+#### Scenario: A date in either dialect
+
+- **WHEN** the node is an `INDI.BIRT` of a 7.0 or a 5.5.1 document
+- **THEN** `DATE` may not hold a line break
+
+#### Scenario: A given name in 5.5.1
+
+- **WHEN** the node is an `INDI.NAME` of a 5.5.1 document
+- **THEN** `GIVN` may not hold a line break, since its grammar has no `CONT`
+- **AND** `NOTE` may hold one and is prose
+
 ### Requirement: A payload is escaped and read back by the rules of its dialect
 
 The package SHALL escape a payload for writing and read it back, by the dialect and the

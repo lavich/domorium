@@ -34,10 +34,18 @@ names.
   language tag, an enumeration, a pointer with the records it may point to, whether the
   payload is required), and a structure can be described by its schema path before any of
   it exists in the document, so a form can draw `INDI.NAME.TRAN.LANG`.
+- A field says whether its value may span lines and whether that is its ordinary case, and a
+  line break where the value may not hold one is refused. An emptied part of a name takes its
+  piece out of the payload. An extension line is described as a structure with no known
+  fields, as it can already be set and removed (issue #524, found by the Obsidian plugin).
 - A pointer field that has a reciprocal on the other record is described, and writing it
   is refused until a policy writes both sides, so no edit breaks a reciprocal pointer.
 - A small registry of per-structure policies keeps related lines consistent. The first
   entry keeps the `/Surname/` of a `NAME` payload in step with its `SURN` and `GIVN`.
+
+The user's decision on #524, 2026-11-11: the four answers proposed for it are accepted
+("согласен. делай"), and a diagnostic for a `CONT` under a single-line value in an existing
+file is left to its own issue.
 
 ### Out of scope
 

@@ -193,6 +193,31 @@ which would drop `NPFX`, `NSFX` and `SPFX` that the payload carries, and 7.0 all
 `GIVN` and `SURN`. The registry keeps the general operations free of the name's rules, and a
 later policy (a date beside a time, say) is one more entry.
 
+**Line breaks (#524).** Two answers per field, read in `validator`: `lineBreaks`, what the
+standard allows, and `prose`, where a line break is the ordinary case. In 7.0 `CONT` encodes
+a line break in any payload, so `lineBreaks` is true for the Text datatype
+(`xsd:string`, not a list of text) and false for every datatype with its own grammar; the
+personal name says it should hold none. 5.5.1 allows `CONT` only where its grammar lists it,
+so there it is a list of type ids taken from the grammar: the notes, `TEXT`, `ADDR`, the
+source's `AUTH`, `TITL` and `PUBL`, `COPR`, `DSCR` and the text form of `SOUR`. `prose` is a
+shorter list in both: the notes, a shared note's text, `TEXT` and `ADDR`. A Text field such as
+`GIVN` in 7.0 may hold a line break and is not prose; that is the standard's answer, and a
+host that wants Enter to commit there reads `prose`. The refusal of a line break where
+`lineBreaks` is false is made in the language service before the edit is built, since the
+validator does not report a `CONT` under such a value, and in `checkPayload`, so that
+`validateValue` agrees. A diagnostic for that `CONT` in an existing file is a change every
+editor shows, and is left to its own issue.
+
+**An emptied part of a name (#524).** Setting `GIVN` or `SURN` to the empty value takes its
+piece out of the payload with one adjacent space, and an emptied surname takes its slashes.
+Recomposing the payload from the parts stays rejected for the reasons above.
+
+**Extension lines (#524).** A line with an extension tag, or one beneath it, has no schema
+shape, so the description is built without one: id from the tags, payload text, no fields,
+its children as undefined occurrences, and `extension: true`. A `SCHMA` alias of a standard
+structure is still described as an extension; reading it as the structure it stands for is
+a later change.
+
 ## Risks / Trade-offs
 
 - [Whole-document revalidation per edit costs a parse of the document] → the same order as

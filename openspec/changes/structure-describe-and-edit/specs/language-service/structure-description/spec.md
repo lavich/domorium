@@ -15,7 +15,8 @@ SHALL give the document's version, the range of the structure and its own field 
 Every field SHALL carry an id, a dialect-neutral path made of the tags from the record
 down to it, such as `INDI.NAME.GIVN`, the tag, whether it is required, the most
 occurrences it allows (none for unbounded), and its payload kind with whether the
-structure's own payload is required. A field SHALL also carry the identifier the dialect's
+structure's own payload is required, whether its value may hold a line break, and whether a
+line break is the ordinary case for it. A field SHALL also carry the identifier the dialect's
 schema gives it, as data beside the id and not in its place.
 
 A field whose payload is a pointer, or text or a pointer, SHALL list the records of the
@@ -105,3 +106,20 @@ and pointer candidates as a described position.
 
 - **WHEN** the path is `INDI.NAME.TRAN` in a 5.5.1 document
 - **THEN** the service refuses with `unknown-path`
+
+### Requirement: An extension line is described as a structure with no known fields
+
+The service SHALL describe a line whose tag is an extension tag, or a line beneath one, as a
+structure marked as an extension: its id is the path of its tags, its payload is text, it
+lists no fields, and the lines beneath it are listed with the occurrences of undefined
+tags. A line the service can set or remove SHALL be one it can describe.
+
+#### Scenario: A custom line
+
+- **WHEN** the position is on `1 _MILITARY Cavalry`
+- **THEN** the description is marked as an extension, with the value `Cavalry` and no fields
+
+#### Scenario: A line beneath a custom line
+
+- **WHEN** the position is on a `2 DATE` beneath `1 _MILITARY`
+- **THEN** the description is marked as an extension, with the id `INDI._MILITARY.DATE`
