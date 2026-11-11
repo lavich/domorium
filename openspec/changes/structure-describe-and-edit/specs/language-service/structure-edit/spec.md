@@ -188,6 +188,7 @@ failure of the same datatype.
 | `cardinality-exceeded`           | one more occurrence than the dialect allows                           |
 | `value-not-in-enum`              | a value outside the permitted values                                  |
 | `payload-datatype`               | a value that fails its datatype, an impossible day or year among them |
+| `value-spans-lines`              | a line break in a value that keeps to one line                        |
 | `value-required`                 | no value where one is required                                        |
 | `unresolved-pointer`             | a pointer to a record the document does not hold                      |
 | `required-field-missing`         | the edit would leave out a required substructure                      |
@@ -253,13 +254,13 @@ failure of the same datatype.
 ### Requirement: A line break is refused where the value may not span lines
 
 A value with a line break for a field whose value may not hold one SHALL be refused with
-`payload-datatype` by `addStructure`, `setValue` and `validateValue`, children given to
+`value-spans-lines` by `addStructure`, `setValue` and `validateValue`, children given to
 `addStructure` included, and SHALL NOT be written as `CONT` lines.
 
 #### Scenario: A date over two lines
 
 - **WHEN** a `DATE` is set to `1 JAN` and `1900` on two lines
-- **THEN** the service refuses with `payload-datatype`
+- **THEN** the service refuses with `value-spans-lines`, not with the code of a malformed date
 - **AND** `validateValue` answers the same code for that value
 
 #### Scenario: A note over two lines

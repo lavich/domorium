@@ -307,3 +307,8 @@ a later change.
 - An unknown standard tag in the wrong place, such as `FOO` under `INDI`, is not described,
   and the spec's promise is narrowed to extension lines; it is removed like any line and
   refused as `unknown-field` when set.
+- A line break where the value keeps to one line is refused with its own code,
+  `value-spans-lines` (`VAL017`), not with `payload-datatype`: a host that shows its own
+  message cannot otherwise tell it from a malformed value. `VAL017` is answered for a value
+  about to be written; reporting one already in a file is the separate diagnostic left to
+  its own issue.

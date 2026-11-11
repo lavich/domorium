@@ -144,7 +144,7 @@ const result = service.addStructure(
 write. A field also says whether its value may span lines (`lineBreaks`, by the standard)
 and whether a line break is its ordinary case (`prose`: notes and shared notes, a citation's text, an address),
 so a host knows where Enter starts a new line; a line break where `lineBreaks` is false is
-refused with `payload-datatype`. A custom line such as `1 _MILITARY Cavalry`, and any line
+refused with `value-spans-lines`. A custom line such as `1 _MILITARY Cavalry`, and any line
 beneath it, is described with `extension: true` and no known fields. A field id is the path of its tags, `INDI.NAME.GIVN`, the same in 5.5.1 and 7.0, so a host
 chooses its labels by id; the schema's own identifier comes beside it. `describeSchemaPath`
 answers for a structure that is not in the text yet, such as `INDI.NAME.TRAN`. A pointer

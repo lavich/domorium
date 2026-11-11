@@ -76,7 +76,7 @@ export function checkPayload(
   }
   if (/[\r\n]/.test(value) && !lineBreaksOf(scheme, rule.type).lineBreaks) {
     problems.push({
-      code: GedcomErrorCode.IncorrectValue,
+      code: GedcomErrorCode.SpansLines,
       message: `Value for ${tag} cannot span lines`,
       range: ORIGIN,
       level: "error",

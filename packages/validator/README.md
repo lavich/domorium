@@ -148,6 +148,7 @@ const unresolved = errors.filter(
 | `VAL014`          | `ImpossibleDay`         | a date naming a day its calendar does not have, such as `31 FEB`               |
 | `VAL015`          | `PersonalAncestralFile` | a header naming `SYST` before `GEDC`, so the file is a Personal Ancestral File |
 | `VAL016`          | `ImpossibleYear`        | a Gregorian or Julian date naming year 0, which neither calendar numbers       |
+| `VAL017`          | `SpansLines`            | a line break in a value about to be written whose datatype keeps to one line   |
 | `unresolved-xref` | `UnresolvedXref`        | an xref naming no record of the required type                                  |
 | `invalid-level`   | `InvalidLevel`          | a level that cannot follow the line above it                                   |
 | `LEXER`           | `Lexer`                 | the text could not be tokenized                                                |

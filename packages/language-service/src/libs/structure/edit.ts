@@ -90,8 +90,8 @@ function lineBreakRefusal(
   const { raw } = payloadOf(input, field?.payload.kind ?? "text");
   if (field && !field.lineBreaks && /[\r\n]/.test(raw)) {
     return {
-      ...refusal("payload-datatype", `Value for ${tag} cannot span lines`),
-      diagnosticCode: "VAL004",
+      ...refusal("value-spans-lines", `Value for ${tag} cannot span lines`),
+      diagnosticCode: "VAL017",
     };
   }
   for (const child of input.children ?? []) {

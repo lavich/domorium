@@ -10,6 +10,7 @@ const CODES: Record<string, EditRefusalCode> = {
   VAL007: "cardinality-exceeded",
   VAL014: "payload-datatype",
   VAL016: "payload-datatype",
+  VAL017: "value-spans-lines",
   "unresolved-xref": "unresolved-pointer",
 };
 

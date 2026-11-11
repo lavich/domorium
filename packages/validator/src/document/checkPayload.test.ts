@@ -114,7 +114,7 @@ describe("checking one value without an edit", () => {
 
     expect(
       codes(document.checkPayload(["INDI", "BIRT"], "DATE", "1 JAN\n1900")),
-    ).toEqual([GedcomErrorCode.IncorrectValue]);
+    ).toEqual([GedcomErrorCode.SpansLines]);
     expect(document.checkPayload(["INDI", "BIRT"], "NOTE", "one\ntwo")).toEqual(
       [],
     );

@@ -35,15 +35,19 @@ describe.each([
     "0 TRLR",
   ].join("\n");
 
-  it("is refused in a date by setValue and validateValue", () => {
+  it("is refused in a date by setValue and validateValue, apart from a malformed date", () => {
     const service = new GedcomLanguageService(text);
 
+    expect(service.setValue(at(base + 2), { value: "soon" }, 0)).toMatchObject({
+      ok: false,
+      code: "payload-datatype",
+    });
     expect(
       service.setValue(at(base + 2), { value: "1 JAN\n1900" }, 0),
     ).toMatchObject({
       ok: false,
-      code: "payload-datatype",
-      diagnosticCode: "VAL004",
+      code: "value-spans-lines",
+      diagnosticCode: "VAL017",
     });
     expect(
       service.validateValue(
@@ -52,7 +56,7 @@ describe.each([
         { value: "1 JAN\n1900" },
         { replacing: true },
       ),
-    ).toMatchObject({ ok: true, problems: [{ code: "payload-datatype" }] });
+    ).toMatchObject({ ok: true, problems: [{ code: "value-spans-lines" }] });
   });
 
   it("is refused in a child given to addStructure", () => {
@@ -65,7 +69,7 @@ describe.each([
         { value: "Y", children: [{ tag: "DATE", value: "2 FEB\n1950" }] },
         0,
       ),
-    ).toMatchObject({ ok: false, code: "payload-datatype" });
+    ).toMatchObject({ ok: false, code: "value-spans-lines" });
   });
 
   it("is written as CONT in a note", () => {

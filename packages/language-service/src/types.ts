@@ -64,6 +64,7 @@ export type EditRefusalCode =
   | "cardinality-exceeded"
   | "value-not-in-enum"
   | "payload-datatype"
+  | "value-spans-lines"
   | "value-required"
   | "unresolved-pointer"
   | "required-field-missing"
