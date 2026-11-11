@@ -76,33 +76,65 @@ export function fieldKind(
 
 // 5.5.1 continues an address with CONT alone, and a value its grammar does not
 // continue with CONC at all.
-function concatenates(field: StructureField | undefined, tag: string): boolean {
+function concatenates(
+  field: { lineBreaks: boolean } | undefined,
+  tag: string,
+): boolean {
   return field?.lineBreaks !== false && tag !== "ADDR";
 }
 
-function lineBreakRefusal(
+export function recordShape(
   document: GedcomDocument,
+  record: ASTNode,
+): { payload: PayloadKind; lineBreaks: boolean } | undefined {
+  const shape = document.getStructureShape(record);
+  if (shape) {
+    return shape;
+  }
+  return record.tokens.TAG?.value.startsWith("_")
+    ? { payload: { kind: "text" }, lineBreaks: true }
+    : undefined;
+}
+
+const CHECKED_BEFORE_WRITING = new Set(["VAL017", "VAL018", "VAL019"]);
+
+function checkRefusal(
+  document: GedcomDocument,
+  parent: ASTNode | readonly string[],
+  tag: string,
+  raw: string,
+  replacing?: ASTNode,
+): EditRefusal | undefined {
+  const problem = document
+    .checkPayload(parent, tag, raw, replacing)
+    ?.find((candidate) => CHECKED_BEFORE_WRITING.has(candidate.code));
+  return problem
+    ? {
+        ...refusal(refusalCodeOf(problem.code), problem.message),
+        diagnosticCode: problem.code,
+        ...(problem.data ? { data: problem.data } : {}),
+      }
+    : undefined;
+}
+
+function inputRefusal(
+  document: GedcomDocument,
+  parent: ASTNode | readonly string[],
   parentPath: readonly string[],
   tag: string,
   input: StructureInput,
 ): EditRefusal | undefined {
   const field = fieldOf(document, parentPath, tag);
   const { raw } = payloadOf(input, field?.payload.kind ?? "text");
-  if (field && !field.lineBreaks && /[\r\n]/.test(raw)) {
-    return {
-      ...refusal("value-spans-lines", `Value for ${tag} cannot span lines`),
-      diagnosticCode: "VAL017",
-    };
+  const refused = checkRefusal(document, parent, tag, raw);
+  if (refused) {
+    return refused;
   }
+  const path = [...parentPath, tag];
   for (const child of input.children ?? []) {
-    const refused = lineBreakRefusal(
-      document,
-      [...parentPath, tag],
-      child.tag,
-      child,
-    );
-    if (refused) {
-      return refused;
+    const childRefused = inputRefusal(document, path, path, child.tag, child);
+    if (childRefused) {
+      return childRefused;
     }
   }
   return undefined;
@@ -318,7 +350,7 @@ export function addStructure(
   if (reciprocalIn(parentPath, tag, input)) {
     return reciprocalRefusal();
   }
-  const broken = lineBreakRefusal(context.document, parentPath, tag, input);
+  const broken = inputRefusal(context.document, parent, parentPath, tag, input);
   if (broken) {
     return broken;
   }
@@ -356,28 +388,26 @@ export function setValue(
   if (!node) {
     return refusal("not-a-structure", "There is no structure on that line.");
   }
-  const parent = node.parent;
-  if (!parent) {
-    return refusal(
-      "record-edit-unsupported",
-      "A whole record is not set by a value.",
-    );
-  }
   const tag = node.tokens.TAG?.value ?? "";
-  const path = structurePath(parent);
-  if (hasReciprocal(path, tag)) {
+  const parent = node.parent;
+  const path = parent ? structurePath(parent) : [];
+  if (parent && hasReciprocal(path, tag)) {
     return reciprocalRefusal();
   }
-  const broken = lineBreakRefusal(context.document, path, tag, value);
-  if (broken) {
-    return broken;
+  const field = parent
+    ? fieldOf(context.document, path, tag)
+    : recordShape(context.document, node);
+  const { raw, kind } = payloadOf(value, field?.payload.kind ?? "text");
+  const refused = checkRefusal(context.document, parent ?? [], tag, raw, node);
+  if (refused) {
+    return refused;
   }
   const terminator = terminatorOf(context.text);
-  const field = fieldOf(context.document, path, tag);
-  const { raw, kind } = payloadOf(value, field?.payload.kind ?? "text");
+  const pointer = node.tokens.POINTER?.value;
+  const head = !parent && pointer ? `${pointer} ${tag}` : tag;
   const lines = writeValueLines(
     node.level,
-    tag,
+    head,
     raw,
     kind,
     dialect,
@@ -398,7 +428,7 @@ export function setValue(
       range: { start: node.range.start, end },
       newText: lines.join(terminator),
     },
-    ...(policyFor(path)?.onSet?.(parent, node, raw) ?? []),
+    ...(parent ? (policyFor(path)?.onSet?.(parent, node, raw) ?? []) : []),
     ...node.children
       .slice(leading)
       .filter(isContinuation)
@@ -410,7 +440,7 @@ export function setValue(
         ),
       ),
   ];
-  return verify(context, edits, parent);
+  return verify(context, edits, parent ?? node);
 }
 
 export function removeStructure(

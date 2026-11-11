@@ -11,6 +11,8 @@ const CODES: Record<string, EditRefusalCode> = {
   VAL014: "payload-datatype",
   VAL016: "payload-datatype",
   VAL017: "value-spans-lines",
+  VAL018: "value-not-allowed",
+  VAL019: "value-required",
   "unresolved-xref": "unresolved-pointer",
 };
 

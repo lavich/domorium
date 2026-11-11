@@ -261,14 +261,14 @@ describe.each(DIALECTS)("editing a structure in %s", (dialect, header) => {
     ).toBe("stale-document");
   });
 
-  it("refuses to set or remove a whole record", () => {
+  it("refuses to remove a whole record and to give a person a value", () => {
     const service = new GedcomLanguageService(textOf(named));
 
-    expect(refused(service.setValue(at(base), { value: "x" }, 0)).code).toBe(
-      "record-edit-unsupported",
-    );
     expect(refused(service.removeStructure(at(base), 0)).code).toBe(
       "record-edit-unsupported",
+    );
+    expect(refused(service.setValue(at(base), { value: "x" }, 0)).code).toBe(
+      "value-not-allowed",
     );
   });
 
