@@ -218,6 +218,18 @@ its children as undefined occurrences, and `extension: true`. A `SCHMA` alias of
 structure is still described as an extension; reading it as the structure it stands for is
 a later change.
 
+**The facts of a refusal (#525).** The validator records them in `data` where it raises the
+diagnostic, not in the language service, so an editor showing diagnostics can localize them
+too, and `checkPayload` keeps them. The names are the issue's: `{ day, month, monthLength }`,
+`{ year, calendar }`, `{ missingTag, parentTag }`, `{ meantTag }`, `{ tag }`. `missingTag`
+was set only for a missing `TRLR`; it is now set for every missing structure, with
+`parentTag` beside it except at the root, and the trailer's quick fix still matches its
+value. `VAL001` carries `meantTag` only for a case mistake: the tag itself is the caller's,
+and its absence is the answer that the tag is not defined here. The language service
+declares one `DiagnosticData` for `Diagnostic`, `EditRefusal` and `ValueProblem`, and passes
+the diagnostic's `data` on unchanged. Messages, codes and ranges are left as they are, so
+the conformance record does not move.
+
 ## Risks / Trade-offs
 
 - [Whole-document revalidation per edit costs a parse of the document] → the same order as

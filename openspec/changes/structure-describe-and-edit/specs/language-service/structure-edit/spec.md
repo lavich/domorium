@@ -180,7 +180,8 @@ The refusal SHALL carry a code that names the rule, enough to choose a message w
 reading text. A new error that no code below names SHALL be refused as `rule-violation`,
 with the validator's own code in `diagnosticCode`. Every refusal that comes from a
 diagnostic SHALL carry that code, so that a caller can tell an impossible day from another
-failure of the same datatype.
+failure of the same datatype, and SHALL carry the diagnostic's `data` where it has any, so
+that a caller can write its own message from the facts rather than from the English one.
 
 | Code                             | When                                                                  |
 | -------------------------------- | --------------------------------------------------------------------- |
@@ -240,6 +241,18 @@ failure of the same datatype.
 - **WHEN** a `DATE` of `31 FEB 1900` is set on a `BIRT`
 - **THEN** the service refuses with `payload-datatype`
 - **AND** its `diagnosticCode` is the validator's code for an impossible day
+- **AND** its `data` is `{ day: 31, month: "FEB", monthLength: 28 }`
+
+#### Scenario: The facts of a missing field
+
+- **WHEN** the only `LANG` of a `TRAN` of a 7.0 `NAME` is removed
+- **THEN** the refusal carries `{ missingTag: "LANG", parentTag: "TRAN" }` in `data`
+
+#### Scenario: The facts of a pointer to nothing
+
+- **WHEN** a `SOUR` of `@S9@` is added to a `BIRT` in a document with no such record
+- **THEN** the service refuses with `unresolved-pointer`
+- **AND** its `data` is `{ xref: "@S9@", requiredRecordTag: "SOUR" }`
 
 #### Scenario: Removing a required field
 
@@ -276,7 +289,8 @@ without taking a version. It SHALL name the rules that depend on the value alone
 unknown field, one more occurrence than allowed, a value outside an enumeration, a value
 that fails its datatype, a missing required value. The same value SHALL then be accepted or
 refused by the operation that writes it for those rules; the operation stays the authority
-and may refuse for a rule that depends on the rest of the document.
+and may refuse for a rule that depends on the rest of the document. Each problem SHALL
+carry the `data` of the diagnostic it comes from, as a refusal does.
 
 #### Scenario: A value outside an enumeration, asked while typing
 
@@ -292,6 +306,11 @@ and may refuse for a rule that depends on the rest of the document.
 
 - **WHEN** a value is checked for a `GIVN` of a 5.5.1 `NAME` that already holds one
 - **THEN** the answer carries `cardinality-exceeded`
+
+#### Scenario: A tag in the wrong case, asked while typing
+
+- **WHEN** a value is checked for the tag `nick` of a 7.0 `NAME`
+- **THEN** the answer carries `unknown-field` with `{ meantTag: "NICK" }` in `data`
 
 ### Requirement: A pointer with a reciprocal is not written one-sided
 

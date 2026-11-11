@@ -38,6 +38,10 @@ names.
   line break where the value may not hold one is refused. An emptied part of a name takes its
   piece out of the payload. An extension line is described as a structure with no known
   fields, as it can already be set and removed (issue #524, found by the Obsidian plugin).
+- A refusal and a problem of a value carry the facts of the rule as data beside the English
+  message, and the validator records them on its diagnostics, so a host writes its own
+  message in its reader's language: the day and the month's length, the year and the
+  calendar, the missing tag and its parent, the tag meant, the undeclared tag (issue #525).
 - A pointer field that has a reciprocal on the other record is described, and writing it
   is refused until a policy writes both sides, so no edit breaks a reciprocal pointer.
 - A small registry of per-structure policies keeps related lines consistent. The first
@@ -63,6 +67,7 @@ LSP hosts; no LSP host asks for it.
 - `language-service/structure-description`: the description of the structure at a
   position or at a schema path, its field ids, payload detail, occurrences and their
   ranges.
+- `validator/diagnostic-facts`: the facts a diagnostic carries in `data` beside its message.
 - `language-service/structure-edit`: add, set and remove a substructure, how the line is
   written and placed, the refusal codes, the warnings that pass, the check of a value
   without an edit, reciprocal pointers, and the stale-version refusal.
