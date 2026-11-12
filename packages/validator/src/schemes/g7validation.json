@@ -20,7 +20,9 @@
       "type": "https://gedcom.io/terms/v7/cal-FRENCH_R"
     },
     "GREGORIAN": {
-      "epochs": ["BCE"],
+      "epochs": [
+        "BCE"
+      ],
       "months": {
         "APR": "https://gedcom.io/terms/v7/month-APR",
         "AUG": "https://gedcom.io/terms/v7/month-AUG",
@@ -57,7 +59,9 @@
       "type": "https://gedcom.io/terms/v7/cal-HEBREW"
     },
     "JULIAN": {
-      "epochs": ["BCE"],
+      "epochs": [
+        "BCE"
+      ],
       "months": {
         "APR": "https://gedcom.io/terms/v7/month-APR",
         "AUG": "https://gedcom.io/terms/v7/month-AUG",
@@ -104,13 +108,13 @@
       "en-US": "Family child"
     },
     "https://gedcom.io/terms/v7/ADR1": {
-      "en-US": "Address Line 1"
+      "en-US": "(deprecated) Address Line 1"
     },
     "https://gedcom.io/terms/v7/ADR2": {
-      "en-US": "Address Line 2"
+      "en-US": "(deprecated) Address Line 2"
     },
     "https://gedcom.io/terms/v7/ADR3": {
-      "en-US": "Address Line 3"
+      "en-US": "(deprecated) Address Line 3"
     },
     "https://gedcom.io/terms/v7/AFN": {
       "en-US": "Ancestral File Number"
@@ -137,7 +141,7 @@
       "en-US": "Author"
     },
     "https://gedcom.io/terms/v7/BAPL": {
-      "en-US": "Baptism, Latter-Day Saint"
+      "en-US": "Baptism, Latter-day Saint"
     },
     "https://gedcom.io/terms/v7/BAPM": {
       "en-US": "Baptism"
@@ -185,7 +189,7 @@
       "en-US": "Confirmation"
     },
     "https://gedcom.io/terms/v7/CONL": {
-      "en-US": "Confirmation, Latter-Day Saint"
+      "en-US": "Confirmation, Latter-day Saint"
     },
     "https://gedcom.io/terms/v7/CONT": {
       "en-US": "Continued"
@@ -251,7 +255,7 @@
       "en-US": "Emigration"
     },
     "https://gedcom.io/terms/v7/ENDL": {
-      "en-US": "Endowment, Latter-Day Saint"
+      "en-US": "Endowment, Latter-day Saint"
     },
     "https://gedcom.io/terms/v7/ENGA": {
       "en-US": "Engagement"
@@ -341,7 +345,7 @@
       "en-US": "Source"
     },
     "https://gedcom.io/terms/v7/HEAD-SOUR-DATA": {
-      "en-US": "Data"
+      "en-US": "(deprecated) Data"
     },
     "https://gedcom.io/terms/v7/HEIGHT": {
       "en-US": "Height in pixels"
@@ -383,7 +387,7 @@
       "en-US": "Title"
     },
     "https://gedcom.io/terms/v7/INIL": {
-      "en-US": "Initiatory, Latter-Day Saint"
+      "en-US": "Initiatory, Latter-day Saint"
     },
     "https://gedcom.io/terms/v7/LANG": {
       "en-US": "Language"
@@ -765,6 +769,45 @@
     },
     "https://gedcom.io/terms/v7/record-SUBM": {
       "en-US": "Submitter"
+    },
+    "https://gedcom.io/terms/v7/type-Age": {
+      "en-US": "Age"
+    },
+    "https://gedcom.io/terms/v7/type-Date": {
+      "en-US": "Date"
+    },
+    "https://gedcom.io/terms/v7/type-Date#exact": {
+      "en-US": "Date"
+    },
+    "https://gedcom.io/terms/v7/type-Date#period": {
+      "en-US": "Date"
+    },
+    "https://gedcom.io/terms/v7/type-Enum": {
+      "en-US": "Enumeration"
+    },
+    "https://gedcom.io/terms/v7/type-FilePath": {
+      "en-US": "File Path"
+    },
+    "https://gedcom.io/terms/v7/type-Latitude": {
+      "en-US": "Latitude"
+    },
+    "https://gedcom.io/terms/v7/type-List#Enum": {
+      "en-US": "List"
+    },
+    "https://gedcom.io/terms/v7/type-List#Text": {
+      "en-US": "List"
+    },
+    "https://gedcom.io/terms/v7/type-Longitude": {
+      "en-US": "Longitude"
+    },
+    "https://gedcom.io/terms/v7/type-Name": {
+      "en-US": "Personal Name"
+    },
+    "https://gedcom.io/terms/v7/type-TagDef": {
+      "en-US": "Tag Definition"
+    },
+    "https://gedcom.io/terms/v7/type-Time": {
+      "en-US": "Time"
     },
     "https://github.com/dthaler/gedcom-citations/_DATE": {
       "en-US": "Date"

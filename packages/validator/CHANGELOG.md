@@ -2,6 +2,17 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
+## Unreleased
+
+- **GEDCOM 7 labels follow the specification.** The schema generator kept
+  whatever labels the schema already had, so the specification's later renames
+  never reached it. It now reads them from the specification's tag files: the
+  deprecated `ADR1`, `ADR2`, `ADR3` and `HEAD.SOUR.DATA` are labelled
+  `(deprecated) …`, the four Latter-day Saint ordinances are spelled as the
+  specification spells them, and the payload types gain labels. Labels the
+  specification does not give, such as `AFN` and the registered `EXID` types,
+  are kept.
+
 ## 2.2.1
 
 - **A month or a calendar written as a `SCHMA` alias is read as the one it
