@@ -1,4 +1,5 @@
 import type { ParsedGrammar } from "./parse-gedstruct.js";
+import { parseTagLabel } from "./parse-tag.js";
 import { parseTsv } from "./parse-tsv.js";
 
 interface PayloadEntry {
@@ -192,6 +193,29 @@ function buildTagMap(
   return result;
 }
 
+function buildLabels(
+  tags: string[],
+  existingLabel: Record<string, unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const yaml of tags) {
+    const tag = parseTagLabel(yaml);
+    if (tag) {
+      result[tag.uri] = { "en-US": tag.label };
+    }
+  }
+
+  for (const [type, label] of Object.entries(existingLabel)) {
+    if (!result[type]) {
+      result[type] = label;
+    }
+  }
+
+  return Object.fromEntries(
+    Object.entries(result).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+  );
+}
+
 export function assembleSchema(
   grammar: ParsedGrammar,
   upstream: {
@@ -199,6 +223,7 @@ export function assembleSchema(
     substructures: string;
     payloads: string;
     enumerations: string;
+    tags: string[];
   },
   existing: {
     calendar: Record<string, unknown>;
@@ -234,7 +259,7 @@ export function assembleSchema(
 
   return {
     calendar: existing.calendar,
-    label: existing.label,
+    label: buildLabels(upstream.tags, existing.label),
     payload,
     set: existing.set,
     substructure,
