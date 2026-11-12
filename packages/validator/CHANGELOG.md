@@ -4,6 +4,12 @@ All notable changes to `@domorium/validator` are documented here.
 
 ## Unreleased
 
+- **A 5.5.1 `EVEN` is described as taking an optional description.** The
+  scheme gave the individual and the family `EVEN` no payload, so
+  `getStructureShape` answered the kind `none` for a line on which
+  `checkPayload` accepted `1 EVEN Appointed Zoning Committee Chairperson`.
+  Both now carry the payload type `type-EVENT_DESCRIPTOR`, read as text that
+  may be left out (#528).
 - **GEDCOM 7 labels follow the specification.** The schema generator kept
   whatever labels the schema already had, so the specification's later renames
   never reached it. It now reads them from the specification's tag files: the

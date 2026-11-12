@@ -77,6 +77,13 @@ const OMITTABLE_PAYLOADS = new Set([
   "https://gedcom.io/terms/v7/type-Age",
 ]);
 
+// The family EVEN is written `[<EVENT_DESCRIPTOR> | <NULL>]`; the individual
+// one shows no payload, though EVENT_DESCRIPTOR is "usually assigned to the
+// EVEN tag" and the standard's example is an individual's.
+const OMITTABLE_PAYLOADS_551 = new Set([
+  "https://gedcom.io/terms/v5.5.1/type-EVENT_DESCRIPTOR",
+]);
+
 // 5.5.1 writes these two ways, and the schema names only the pointer form:
 //
 //   n NOTE @<XREF:NOTE>@   |  n NOTE [SUBMITTER_TEXT | NULL]
@@ -239,6 +246,7 @@ export const PAYLOAD_FIELD_TYPES: Record<string, Exclude<FieldType, null>> = {
   "http://www.w3.org/2001/XMLSchema#anyURI": "string",
   "https://gedcom.io/terms/v7/type-FilePath": "string",
   "https://gedcom.io/terms/v5.5.1/type-CHARACTER_SET": "string",
+  "https://gedcom.io/terms/v5.5.1/type-EVENT_DESCRIPTOR": "string",
   "https://gedcom.io/terms/v5.5.1/type-EVENTS_RECORDED": "string",
   "https://gedcom.io/terms/v5.5.1/type-GEDCOM_FORM": "string",
   "https://gedcom.io/terms/v5.5.1/type-LANGUAGE_ID": "string",
@@ -540,10 +548,10 @@ export class RuleNode {
   }
 
   private mayOmitPayload(tagType: GedcomType): boolean {
-    return (
-      tagType.startsWith(GEDCOM_7_TYPE_PREFIX) &&
-      OMITTABLE_PAYLOADS.has(this.scheme.payload[tagType]?.type ?? "")
-    );
+    const payload = this.scheme.payload[tagType]?.type ?? "";
+    return tagType.startsWith(GEDCOM_7_TYPE_PREFIX)
+      ? OMITTABLE_PAYLOADS.has(payload)
+      : OMITTABLE_PAYLOADS_551.has(payload);
   }
 
   // An enumeration may be extended with values matching extTag, but may not

@@ -76,11 +76,7 @@ export function checkPayload(
   if (occurrences + 1 > rule.max) {
     problems.push(tooManyError(gedcomTag, scheme.tag[parentType], ORIGIN));
   }
-  if (
-    value !== "" &&
-    scheme.payload[rule.type]?.type === null &&
-    !TAKES_A_VALUE_DESPITE_THE_SCHEME.has(rule.type)
-  ) {
+  if (value !== "" && scheme.payload[rule.type]?.type === null) {
     return [...problems.map(toPayloadProblem), valueNotAllowed(tag)];
   }
   if (
@@ -134,14 +130,6 @@ const URI_SCHEME = /^[A-Za-z][A-Za-z0-9+.-]+:/u;
 
 const localPathProblem = (value: string): FilePathProblem | undefined =>
   URI_SCHEME.test(value) ? undefined : filePathProblem(value);
-
-// 5.5.1 describes EVENT_DESCRIPTOR as the value "usually assigned to the EVEN
-// tag", of a person or a family, though only the family's grammar line shows it,
-// and the hand-kept scheme gives neither a payload.
-const TAKES_A_VALUE_DESPITE_THE_SCHEME = new Set([
-  "https://gedcom.io/terms/v5.5.1/FAM-EVEN",
-  "https://gedcom.io/terms/v5.5.1/INDI-EVEN",
-]);
 
 const isContinuation = (node: ASTNode): boolean => {
   const tag = node.tokens.TAG?.value;
