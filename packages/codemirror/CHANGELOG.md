@@ -2,7 +2,7 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
-## Unreleased
+## 2.3.1
 
 - **A document kept with `\r\n` line breaks reads as one version and takes
   edits in its own line breaks** (#541). `EditorLanguageService.update` read a

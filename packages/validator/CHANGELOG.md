@@ -2,8 +2,35 @@
 
 All notable changes to `@domorium/validator` are documented here.
 
-## Unreleased
+## 2.3.0
 
+- **What a structure may hold is answered without a document edit.**
+  `getStructureShape(node, tag?)` and `getStructureShapeAtPath(path)` give the
+  fields the dialect allows at a node or a schema path, with their cardinality
+  and payload kind; `checkPayload` judges one value without parsing the
+  document; `escapePayload` and `unescapePayload` write and read back a text
+  payload by dialect; `resolveValue` joins a value with its `CONT` and `CONC`
+  lines; `getValidatedDialect()` names the dialect the document was checked
+  against (#521).
+- **A diagnostic carries the facts its message names in `data`.** `VAL014`
+  `{ day, month, monthLength }`, `VAL016` `{ year, calendar }`, `VAL002`
+  `{ missingTag, parentTag }`, `VAL001` `{ meantTag }` for a tag in the wrong
+  case, `VAL008` `{ tag }`, and `VAL012` `{ missingHeader }` when there is no
+  `HEAD` record, so a host can word the message in its reader's language. No
+  code, message or range changed (#502, #525).
+- **A missing `TRLR` is reported on the last line**, where it is missing, not
+  on the first (#502).
+- **A value is checked before it is written.** `checkPayload` refuses a line
+  break where the value may not span lines (`VAL017`), a value on a structure
+  that takes none (`VAL018`), an emptied GEDCOM 7 record that holds nothing
+  else (`VAL019`), and a GEDCOM 7 `FILE` path naming no file beside the
+  document (`VAL020`). These are answered for a value about to be written; a
+  file that already holds one gets no new diagnostic (#524, #527, #531).
+- **A 5.5.1 `FORM` that is a known file extension is a warning.** `png`, `pdf`,
+  `mp4` and the like were the error `VAL005`, as any value outside
+  `[bmp gif jpg ole pcx tif wav]`; they are now the warning `VAL021`, and a
+  misspelling stays `VAL005`. `filePathProblem` and `KNOWN_FILE_EXTENSIONS` are
+  exported (#531).
 - **A 5.5.1 `EVEN` is described as taking an optional description.** The
   scheme gave the individual and the family `EVEN` no payload, so
   `getStructureShape` answered the kind `none` for a line on which
