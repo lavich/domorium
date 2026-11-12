@@ -18,14 +18,17 @@ export interface CodeMirrorChange {
 }
 
 export interface CodeMirrorEditTarget {
-  state: { doc: Text };
+  state: { doc: Text; lineBreak?: string };
   dispatch(spec: { changes: CodeMirrorChange[]; userEvent: string }): void;
 }
+
+const LINE_BREAK = /\r\n?|\n/g;
 
 export function toCodeMirrorChanges(
   document: Text,
   edit: WorkspaceEdit,
   version: number,
+  lineBreak = "\n",
 ): CodeMirrorChange[] | null {
   if (edit.version !== version) {
     return null;
@@ -43,7 +46,7 @@ export function toCodeMirrorChanges(
   const changes = edit.edits
     .map(({ range, newText }) => ({
       ...rangeToOffsets(document, range),
-      insert: newText,
+      insert: newText.replace(LINE_BREAK, lineBreak),
     }))
     .sort((left, right) => left.from - right.from || left.to - right.to);
   for (let index = 1; index < changes.length; index += 1) {
@@ -59,7 +62,12 @@ export function applyWorkspaceEdit(
   edit: WorkspaceEdit,
   version: number,
 ): boolean {
-  const changes = toCodeMirrorChanges(target.state.doc, edit, version);
+  const changes = toCodeMirrorChanges(
+    target.state.doc,
+    edit,
+    version,
+    target.state.lineBreak,
+  );
   if (!changes) {
     return false;
   }
@@ -95,6 +103,7 @@ export class EditorLanguageService {
       source = source.toString();
     } else {
       this.doc = undefined;
+      source = source.replace(LINE_BREAK, "\n");
     }
 
     if (source !== this.text) {
