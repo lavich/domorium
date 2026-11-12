@@ -19,7 +19,13 @@ export type PayloadKind =
         | "tag-definition"
         | "none";
     }
-  | { kind: "enum"; values: string[]; multiple: boolean }
+  | {
+      kind: "enum";
+      values: string[];
+      multiple: boolean;
+      /** Set where a value outside `values` that is a known file extension is a warning, not an error. */
+      tolerates?: "file-extension";
+    }
   | { kind: "pointer" | "text-or-pointer"; to: string };
 
 export interface StructureField {

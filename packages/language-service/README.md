@@ -170,6 +170,16 @@ a record such as `INDI` or `HEAD` or a substructure such as `MAP`, is refused wi
 refused with `value-required`. A whole record is not removed, and an extension tag that
 `SCHMA` declares as a standard record is still treated as an extension.
 
+A GEDCOM 7 `FILE`, and the `TRAN` beneath it, takes its value as GEDCOM spells it, a URI
+reference: a local path that starts at `/`, `\` or a drive letter, climbs with `..`, or holds
+an unescaped `\`, `?`, `#` or `:` names no file beside the document and is refused with
+`file-target-unsupported`, with `{ tag, pathProblem }` in `data`. A host holding a plain path
+relative to the document escapes it with `encodeFileTarget(path, dialect)` first — an absolute
+one escaped would read as a name; a URL, and any 5.5.1 path, is written
+as given. A 5.5.1 `FORM` outside the standard's list that is a known file extension, such as
+`png` or `pdf`, is written with the warning `VAL021` beside it, and its description says
+`tolerates: "file-extension"`; a misspelt one is refused with `value-not-in-enum`.
+
 A refusal that comes from a diagnostic, and each problem `validateValue` answers, carries the
 validator's code in `diagnosticCode` and the facts of the rule in `data`, so a host writes its
 own message in its reader's language instead of showing the English `message`:
@@ -182,8 +192,9 @@ service.setValue(dateLine, { value: "31 FEB 1900" }, version);
 
 `data` is a `DiagnosticData`, the same type a `Diagnostic` carries: `{ year, calendar }` for an
 impossible year, `{ missingTag, parentTag }` for a missing required field, `{ meantTag }` for a
-tag written in the wrong case, `{ tag }` for an undeclared extension tag, and
-`{ xref, requiredRecordTag }` for a pointer to nothing.
+tag written in the wrong case, `{ tag }` for an undeclared extension tag, a structure that takes
+no value, an emptied record or a tolerated form, `{ tag, pathProblem }` for a file path the
+dialect cannot carry, and `{ xref, requiredRecordTag }` for a pointer to nothing.
 
 Positions shift with every edit, so the order a caller keeps is: update the service with
 the current text, describe, edit with the version the description gave, and describe

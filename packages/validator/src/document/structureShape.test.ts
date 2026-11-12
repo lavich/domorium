@@ -52,6 +52,19 @@ describe("the fields of a structure", () => {
     expect(shape?.payloadRequired).toBe(true);
   });
 
+  it("says that a 5.5.1 multimedia format tolerates file extensions", () => {
+    const { document } = open(`${G551}0 @I1@ INDI\n0 TRLR\n`);
+
+    const file = document.getStructureShapeAtPath(["OBJE", "FILE"]);
+
+    expect(field(file, "FORM")?.payload).toEqual({
+      kind: "enum",
+      values: ["bmp", "gif", "jpg", "ole", "pcx", "tif", "wav"],
+      multiple: false,
+      tolerates: "file-extension",
+    });
+  });
+
   it("lists FONE and ROMN, no TRAN, and one GIVN at most in a 5.5.1 name", () => {
     const { document, name } = open(
       `${G551}0 @I1@ INDI\n1 NAME A /B/\n0 TRLR\n`,

@@ -24,7 +24,7 @@ export const GEDCOM_551_FORMAT_KINDS = lookupTable({
   wav: "audio",
 });
 
-const EXTENSION_KINDS = lookupTable({
+export const EXTENSION_KINDS = lookupTable({
   avi: "video",
   avif: "image",
   bmp: "image",

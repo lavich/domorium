@@ -90,16 +90,18 @@ document with no `HEAD` at all says so, which a header with no version does not.
 It also holds the facts the message names, so a host can say them in its own
 words and its reader's language without parsing the English:
 
-| Code              | `data`                                                                  |
-| ----------------- | ----------------------------------------------------------------------- |
-| `VAL014`          | `day`, `month`, `monthLength`: `31`, `"FEB"`, `28`                      |
-| `VAL016`          | `year`, `calendar`: `0`, `"GREGORIAN"`                                  |
-| `VAL002`          | `missingTag`, and `parentTag` except at the root: `"LANG"`, `"TRAN"`    |
-| `VAL001`          | `meantTag`, only for a standard tag in the wrong case: `"NICK"`         |
-| `VAL008`          | `tag`, the undeclared extension tag: `"_X"`                             |
-| `VAL018`          | `tag`, the structure that takes no value: `"MAP"`                       |
-| `VAL019`          | `tag`, the record a 7.0 empty value would leave with nothing: `"SNOTE"` |
-| `unresolved-xref` | `xref`, `requiredRecordTag`: `"@S9@"`, `"SOUR"`                         |
+| Code              | `data`                                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| `VAL014`          | `day`, `month`, `monthLength`: `31`, `"FEB"`, `28`                                                             |
+| `VAL016`          | `year`, `calendar`: `0`, `"GREGORIAN"`                                                                         |
+| `VAL002`          | `missingTag`, and `parentTag` except at the root: `"LANG"`, `"TRAN"`                                           |
+| `VAL001`          | `meantTag`, only for a standard tag in the wrong case: `"NICK"`                                                |
+| `VAL008`          | `tag`, the undeclared extension tag: `"_X"`                                                                    |
+| `VAL018`          | `tag`, the structure that takes no value: `"MAP"`                                                              |
+| `VAL019`          | `tag`, the record a 7.0 empty value would leave with nothing: `"SNOTE"`                                        |
+| `VAL020`          | `tag`, `pathProblem` — `"absolute"`, `"parent-folder"` or `"unescaped-character"`: `"FILE"`, `"parent-folder"` |
+| `VAL021`          | `tag`, the structure holding the form: `"FORM"`                                                                |
+| `unresolved-xref` | `xref`, `requiredRecordTag`: `"@S9@"`, `"SOUR"`                                                                |
 
 `checkPayload` keeps the same `data` on the problems it answers.
 
@@ -154,31 +156,33 @@ const unresolved = errors.filter(
 );
 ```
 
-| Code              | Member                  | Reported when                                                                  |
-| ----------------- | ----------------------- | ------------------------------------------------------------------------------ |
-| `VAL001`          | `UnknownTag`            | a tag the schema does not define in this position                              |
-| `VAL002`          | `MissingTag`            | a structure the schema requires is absent                                      |
-| `VAL003`          | `MissingValue`          | the payload is absent where one is required                                    |
-| `VAL004`          | `IncorrectValue`        | the payload does not match its data type                                       |
-| `VAL005`          | `ShouldBeSetValue`      | the payload is not one of the permitted values                                 |
-| `VAL006`          | `MissingRef`            | a pointer payload that is not written as a pointer                             |
-| `VAL007`          | `ManyOccurrences`       | more occurrences than the cardinality allows                                   |
-| `VAL008`          | `UndocumentedTag`       | a GEDCOM 7 extension tag with no `HEAD`.`SCHMA` declaration                    |
-| `VAL009`          | `DuplicateDeclaration`  | a tag declared more than once in `HEAD`.`SCHMA`                                |
-| `VAL010`          | `EmptyEvent`            | an event with neither a payload nor substructures                              |
-| `VAL011`          | `UnsupportedVersion`    | the version is one no schema in this package describes                         |
-| `VAL012`          | `UndeterminedVersion`   | no version could be read from `HEAD`.`GEDC`.`VERS`                             |
-| `VAL013`          | `SubstitutedVersion`    | a version checked against a different version's schema                         |
-| `VAL014`          | `ImpossibleDay`         | a date naming a day its calendar does not have, such as `31 FEB`               |
-| `VAL015`          | `PersonalAncestralFile` | a header naming `SYST` before `GEDC`, so the file is a Personal Ancestral File |
-| `VAL016`          | `ImpossibleYear`        | a Gregorian or Julian date naming year 0, which neither calendar numbers       |
-| `VAL017`          | `SpansLines`            | a line break in a value about to be written whose datatype keeps to one line   |
-| `VAL018`          | `ValueNotAllowed`       | a value about to be written for a structure the standard gives no value        |
-| `VAL019`          | `EmptyStructure`        | an empty value about to be written that would leave a 7.0 record with nothing  |
-| `unresolved-xref` | `UnresolvedXref`        | an xref naming no record of the required type                                  |
-| `invalid-level`   | `InvalidLevel`          | a level that cannot follow the line above it                                   |
-| `LEXER`           | `Lexer`                 | the text could not be tokenized                                                |
-| `PARSER`          | `Parser`                | the tokens could not be assembled into a tree                                  |
+| Code              | Member                  | Reported when                                                                                                  |
+| ----------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `VAL001`          | `UnknownTag`            | a tag the schema does not define in this position                                                              |
+| `VAL002`          | `MissingTag`            | a structure the schema requires is absent                                                                      |
+| `VAL003`          | `MissingValue`          | the payload is absent where one is required                                                                    |
+| `VAL004`          | `IncorrectValue`        | the payload does not match its data type                                                                       |
+| `VAL005`          | `ShouldBeSetValue`      | the payload is not one of the permitted values                                                                 |
+| `VAL006`          | `MissingRef`            | a pointer payload that is not written as a pointer                                                             |
+| `VAL007`          | `ManyOccurrences`       | more occurrences than the cardinality allows                                                                   |
+| `VAL008`          | `UndocumentedTag`       | a GEDCOM 7 extension tag with no `HEAD`.`SCHMA` declaration                                                    |
+| `VAL009`          | `DuplicateDeclaration`  | a tag declared more than once in `HEAD`.`SCHMA`                                                                |
+| `VAL010`          | `EmptyEvent`            | an event with neither a payload nor substructures                                                              |
+| `VAL011`          | `UnsupportedVersion`    | the version is one no schema in this package describes                                                         |
+| `VAL012`          | `UndeterminedVersion`   | no version could be read from `HEAD`.`GEDC`.`VERS`                                                             |
+| `VAL013`          | `SubstitutedVersion`    | a version checked against a different version's schema                                                         |
+| `VAL014`          | `ImpossibleDay`         | a date naming a day its calendar does not have, such as `31 FEB`                                               |
+| `VAL015`          | `PersonalAncestralFile` | a header naming `SYST` before `GEDC`, so the file is a Personal Ancestral File                                 |
+| `VAL016`          | `ImpossibleYear`        | a Gregorian or Julian date naming year 0, which neither calendar numbers                                       |
+| `VAL017`          | `SpansLines`            | a line break in a value about to be written whose datatype keeps to one line                                   |
+| `VAL018`          | `ValueNotAllowed`       | a value about to be written for a structure the standard gives no value                                        |
+| `VAL019`          | `EmptyStructure`        | an empty value about to be written that would leave a 7.0 record with nothing                                  |
+| `VAL020`          | `FileTargetUnsupported` | a 7.0 local file path about to be written that names no file beside the document                               |
+| `VAL021`          | `ToleratedForm`         | a warning: a 5.5.1 multimedia `FORM` outside the standard's list that is a known file extension, such as `png` |
+| `unresolved-xref` | `UnresolvedXref`        | an xref naming no record of the required type                                                                  |
+| `invalid-level`   | `InvalidLevel`          | a level that cannot follow the line above it                                                                   |
+| `LEXER`           | `Lexer`                 | the text could not be tokenized                                                                                |
+| `PARSER`          | `Parser`                | the tokens could not be assembled into a tree                                                                  |
 
 ## Reading the tree
 
@@ -233,27 +237,31 @@ objects apiece. Read it freely at the edges, and use `startOffset` and
 Every method reads the document last given to `createDocument`, which returns
 the same instance so the two can be chained.
 
-| Method                                         | Answers                                                                                                                                                                                                                                                                                             |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `createDocument(text, options?)`               | Parses and validates, and returns the document itself.                                                                                                                                                                                                                                              |
-| `getErrors()`                                  | Every diagnostic, in the order found.                                                                                                                                                                                                                                                               |
-| `getNodes()`                                   | The records, each with its substructures.                                                                                                                                                                                                                                                           |
-| `getVersion()`                                 | The version read from `HEAD`.`GEDC`.`VERS`, as written.                                                                                                                                                                                                                                             |
-| `getDialect()`                                 | Which rules were applied: `"5.5.1"` or `"7.0"`.                                                                                                                                                                                                                                                     |
-| `getVersionResolution()`                       | How that was decided — `supported`, `substituted`, `unsupported`, `undetermined` (with `missingHeader` set when there is no `HEAD` at all), or `paf` for a file whose header names a writing program before its version.                                                                            |
-| `getLabel(node)`                               | The specification's name for a structure, for a UI to show instead of the tag: `HEAD` answers `Header`.                                                                                                                                                                                             |
-| `getPointerTargetTag(node)`                    | The record tag a pointer line must name: `FAMC` answers `FAM`.                                                                                                                                                                                                                                      |
-| `getValidatedDialect()`                        | The dialect the text was checked against, a fragment given one by its options included — `getDialect()` answers nothing for that fragment.                                                                                                                                                          |
-| `getStructureShape(node, tag?)`                | What the dialect allows at a node, or beneath it under `tag` before it is in the text: its fields with their minimum, maximum, payload kind, whether a value may span lines and whether that is its ordinary case, and whether its own payload is required. Nothing for a document with no dialect. |
-| `getStructureShapeAtPath(path)`                | The same by a path of tags from a record, `["INDI", "NAME", "TRAN"]`, with no node at all.                                                                                                                                                                                                          |
-| `checkPayload(parent, tag, value, replacing?)` | The rules a single value breaks — an unknown tag, one more occurrence than allowed, a value outside an enumeration, a datatype failure — answered without parsing anything.                                                                                                                         |
-| `isRecordDeclaration(node)`                    | Whether the node declares a record other lines can point at.                                                                                                                                                                                                                                        |
-| `getCompletions(position, lineText)`           | What may be written at a position — `{ label, kind: "tag" \| "enum" \| "pointer", detail? }`.                                                                                                                                                                                                       |
-| `readDate(payload)`                            | What a date payload says, read in the document's dialect — or `null` where the diagnostics would reject it as a date value. A document checked against no dialect reads by 5.5.1, then 7.0. See `GedcomDateValue`.                                                                                  |
+| Method                                         | Answers                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createDocument(text, options?)`               | Parses and validates, and returns the document itself.                                                                                                                                                                                                                                                                                                                                                  |
+| `getErrors()`                                  | Every diagnostic, in the order found.                                                                                                                                                                                                                                                                                                                                                                   |
+| `getNodes()`                                   | The records, each with its substructures.                                                                                                                                                                                                                                                                                                                                                               |
+| `getVersion()`                                 | The version read from `HEAD`.`GEDC`.`VERS`, as written.                                                                                                                                                                                                                                                                                                                                                 |
+| `getDialect()`                                 | Which rules were applied: `"5.5.1"` or `"7.0"`.                                                                                                                                                                                                                                                                                                                                                         |
+| `getVersionResolution()`                       | How that was decided — `supported`, `substituted`, `unsupported`, `undetermined` (with `missingHeader` set when there is no `HEAD` at all), or `paf` for a file whose header names a writing program before its version.                                                                                                                                                                                |
+| `getLabel(node)`                               | The specification's name for a structure, for a UI to show instead of the tag: `HEAD` answers `Header`.                                                                                                                                                                                                                                                                                                 |
+| `getPointerTargetTag(node)`                    | The record tag a pointer line must name: `FAMC` answers `FAM`.                                                                                                                                                                                                                                                                                                                                          |
+| `getValidatedDialect()`                        | The dialect the text was checked against, a fragment given one by its options included — `getDialect()` answers nothing for that fragment.                                                                                                                                                                                                                                                              |
+| `getStructureShape(node, tag?)`                | What the dialect allows at a node, or beneath it under `tag` before it is in the text: its fields with their minimum, maximum, payload kind, whether a value may span lines and whether that is its ordinary case, and whether its own payload is required. An enumeration that takes a known file extension with a warning says `tolerates: "file-extension"`. Nothing for a document with no dialect. |
+| `getStructureShapeAtPath(path)`                | The same by a path of tags from a record, `["INDI", "NAME", "TRAN"]`, with no node at all.                                                                                                                                                                                                                                                                                                              |
+| `checkPayload(parent, tag, value, replacing?)` | The rules a single value breaks — an unknown tag, one more occurrence than allowed, a value outside an enumeration, a datatype failure, a 7.0 file path that names no file beside the document — answered without parsing anything.                                                                                                                                                                     |
+| `isRecordDeclaration(node)`                    | Whether the node declares a record other lines can point at.                                                                                                                                                                                                                                                                                                                                            |
+| `getCompletions(position, lineText)`           | What may be written at a position — `{ label, kind: "tag" \| "enum" \| "pointer", detail? }`.                                                                                                                                                                                                                                                                                                           |
+| `readDate(payload)`                            | What a date payload says, read in the document's dialect — or `null` where the diagnostics would reject it as a date value. A document checked against no dialect reads by 5.5.1, then 7.0. See `GedcomDateValue`.                                                                                                                                                                                      |
 
 `escapePayload(value, dialect, kind)` and `unescapePayload(...)` write and read the at sign of a text payload as
 the dialect does — every one in 5.5.1, the first of each line in 7.0 — and leave a pointer, a date and the
 other kinds as given.
+
+`filePathProblem(path)` answers why a GEDCOM 7 local file reference — a value with no URI scheme; a caller sets URLs aside first — names no file beside the document —
+`"absolute"`, `"parent-folder"` or `"unescaped-character"` — or nothing, and `KNOWN_FILE_EXTENSIONS` holds the
+extensions a 5.5.1 `FORM` may name with a warning rather than an error.
 
 ## Scripts
 

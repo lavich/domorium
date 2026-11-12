@@ -279,3 +279,54 @@ describe("a value where the standard allows none, and an emptied record", () => 
     ]);
   });
 });
+
+describe("checking a file path before it is written", () => {
+  const seven = new GedcomDocument().createDocument(`${G7}0 TRLR\n`);
+  const five = new GedcomDocument().createDocument(`${G551}0 TRLR\n`);
+  const file = (value: string) => seven.checkPayload(["OBJE"], "FILE", value);
+
+  it("names a path that leaves the file's folder, with its facts", () => {
+    expect(file("../x.jpg")).toEqual([
+      expect.objectContaining({
+        code: GedcomErrorCode.FileTargetUnsupported,
+        data: { tag: "FILE", pathProblem: "parent-folder" },
+        level: "error",
+      }),
+    ]);
+    expect(file("/x.jpg")?.[0].data?.pathProblem).toBe("absolute");
+    expect(file("C:\\photos\\x.jpg")?.[0].data?.pathProblem).toBe("absolute");
+    expect(file("a?b.jpg")?.[0].data?.pathProblem).toBe("unescaped-character");
+  });
+
+  it("judges the path as the links read it, without its surrounding spaces", () => {
+    expect(codes(file(" ../x.jpg"))).toEqual([
+      GedcomErrorCode.FileTargetUnsupported,
+    ]);
+    expect(file(" https://example.com/x.jpg")).toEqual([]);
+  });
+
+  it("accepts a path beside the document and a URL of any scheme", () => {
+    expect(file("media/x.jpg")).toEqual([]);
+    expect(file("media/a%3Fb.jpg")).toEqual([]);
+    expect(file("https://example.com/x.jpg")).toEqual([]);
+    expect(file("file:///home/x.jpg")).toEqual([]);
+  });
+
+  it("names the path of a translation of the file", () => {
+    expect(
+      seven.checkPayload(["OBJE", "FILE"], "TRAN", "../x.pdf")?.[0].data,
+    ).toEqual({ tag: "TRAN", pathProblem: "parent-folder" });
+  });
+
+  it("leaves a 5.5.1 path that climbs alone", () => {
+    expect(five.checkPayload(["OBJE"], "FILE", "../x.jpg")).toEqual([]);
+  });
+
+  it("reports nothing for a 7.0 file that already holds such a path", () => {
+    const held = new GedcomDocument().createDocument(
+      `${G7}0 @O1@ OBJE\n1 FILE ../x.jpg\n2 FORM image/jpeg\n0 TRLR\n`,
+    );
+
+    expect(held.getErrors()).toEqual([]);
+  });
+});

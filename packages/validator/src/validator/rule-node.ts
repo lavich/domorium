@@ -1,5 +1,6 @@
 import { GedcomScheme, GedcomTag, GedcomType } from "../schemes/schema-types";
 import { ASTNode, resolveValue } from "../parser";
+import { KNOWN_FILE_EXTENSIONS } from "../payload/fileExtensions";
 import { GedcomError, GedcomErrorCode } from "../types/errors";
 import {
   emptyExtensions,
@@ -96,6 +97,12 @@ const CASE_INSENSITIVE_SETS = new Set([
   "https://gedcom.io/terms/v5.5.1/enumset-MULTIMEDIA_FORMAT",
 ]);
 
+// Exports write png, jpeg or pdf where 5.5.1 lists none of them, in files
+// otherwise valid; a misspelling still names no file format at all.
+const TOLERATES_FILE_EXTENSIONS = new Set([
+  "https://gedcom.io/terms/v5.5.1/enumset-MULTIMEDIA_FORMAT",
+]);
+
 const GEDCOM_7_TYPE_PREFIX = "https://gedcom.io/terms/v7/";
 
 const MAX_LISTED_VALUES = 10;
@@ -123,6 +130,17 @@ function valueError(
     ...(data ? { data } : {}),
     range: node.tokens.VALUE?.range || node.range,
     level: "error",
+  };
+}
+
+function toleratedForm(node: ASTNode, values: string[] | null): GedcomError {
+  const tag = node.tokens.TAG?.value;
+  return {
+    code: GedcomErrorCode.ToleratedForm,
+    message: `Value for ${tag} is not in set [${formatValueSet(values)}] and is read as a file extension`,
+    ...(tag ? { data: { tag } } : {}),
+    range: node.tokens.VALUE?.range || node.range,
+    level: "warning",
   };
 }
 
@@ -502,15 +520,20 @@ export class RuleNode {
           required,
         };
       case "select":
-      case "multiselect":
+      case "multiselect": {
+        const set = this.scheme.payload[tagType]?.set;
         return {
           payload: {
             kind: "enum",
             values: this.getAvailableValues(tagType) ?? [],
             multiple: type === "multiselect",
+            ...(set !== undefined && TOLERATES_FILE_EXTENSIONS.has(set)
+              ? { tolerates: "file-extension" as const }
+              : {}),
           },
           required,
         };
+      }
       default:
         return { payload: { kind: PAYLOAD_KINDS[type] }, required };
     }
@@ -551,12 +574,18 @@ export class RuleNode {
     const permitted = fold
       ? availableValues?.map((value) => value.toLowerCase())
       : availableValues;
-    const borrowed = values.some(
+    const borrowed = values.filter(
       (value) =>
         !isExtensionTag(value) &&
         !permitted?.includes(fold ? value.toLowerCase() : value),
     );
-    if (borrowed) {
+    const tolerated =
+      set !== undefined &&
+      TOLERATES_FILE_EXTENSIONS.has(set) &&
+      borrowed.every((value) => KNOWN_FILE_EXTENSIONS.has(value.toLowerCase()));
+    if (borrowed.length > 0 && tolerated) {
+      errors.push(toleratedForm(node, availableValues));
+    } else if (borrowed.length > 0) {
       errors.push(
         valueError(
           node,

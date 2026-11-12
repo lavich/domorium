@@ -98,3 +98,15 @@ for another kind of tolerance without a second field.
 - [A file already holding `../x.jpg` gets no diagnostic, so `setValue` refuses to rewrite a
   value to the same text] → the refusal names the code; the user chose no diagnostic for
   existing files.
+
+## Implementation
+
+- The rule in `checkPayload` uses `filePathProblem`, exported from the validator, and
+  `KNOWN_FILE_EXTENSIONS` is a `ReadonlySet`; `language-service` exports its table as
+  `EXTENSION_KINDS` for the test that keeps the two equal.
+- `npm run check:conformance -- --update` also found `maximal70.ged` and `maximal70-lds.ged`
+  changed at gedcom.io; they were re-recorded on their own first (#532, #534).
+- `file-target-unsupported` stays apart from `moveFileLinks`'s `unwritable-file-target`, as
+  #531 asked: the first refuses a payload as given, the second a plain path it escapes, and
+  the two refuse different values (`a?b.jpg` is escaped by one and refused by the other).
+- `npm run check` passed with `check:jetbrains` run.

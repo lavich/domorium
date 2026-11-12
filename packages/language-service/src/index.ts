@@ -38,6 +38,7 @@ export {
   type EditRefusal,
   type EditRefusalCode,
   type DocumentSymbol,
+  type FilePathProblem,
   type FoldingRange,
   type Hover,
   type InlayHint,

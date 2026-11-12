@@ -1,3 +1,4 @@
+import type { FilePathProblem } from "../payload/filePath";
 import { Range } from "./position";
 
 /**
@@ -56,6 +57,13 @@ export enum GedcomErrorCode {
    * about to be written only.
    */
   EmptyStructure = "VAL019",
+  /**
+   * A GEDCOM 7 local file path that names no file beside the document. Answered
+   * for a value about to be written; a file that already has one is not reported.
+   */
+  FileTargetUnsupported = "VAL020",
+  /** A 5.5.1 multimedia format outside the standard's list that is a known file extension. */
+  ToleratedForm = "VAL021",
   /** A pointer whose xref names no record of the required type. */
   UnresolvedXref = "unresolved-xref",
   /** A line whose level cannot follow the line above it. */
@@ -87,6 +95,7 @@ export interface GedcomError {
     /** Set only where the tag is a standard one written in the wrong case. */
     meantTag?: string;
     tag?: string;
+    pathProblem?: FilePathProblem;
   };
   range: Range;
   level: "error" | "warning" | "info";
