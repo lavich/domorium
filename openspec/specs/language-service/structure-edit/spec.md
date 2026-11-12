@@ -420,7 +420,8 @@ Where the standard gives a structure no payload descriptor, a record such as an 
 `validateValue` SHALL answer that code. The description of such a structure SHALL already say
 it, with the payload kind `none`. An empty value there SHALL NOT be refused; a value of spaces
 SHALL be. The 5.5.1 `EVEN`, of a family or a person, SHALL take a value, as the standard's
-`EVENT_DESCRIPTOR` is "usually assigned to the EVEN tag".
+`EVENT_DESCRIPTOR` is "usually assigned to the EVEN tag", and its description SHALL say so,
+with the payload kind `text` and the payload not required.
 
 #### Scenario: A value for a person
 
@@ -441,6 +442,11 @@ SHALL be. The 5.5.1 `EVEN`, of a family or a person, SHALL take a value, as the 
 
 - **WHEN** `1 EVEN Common Law` is added to a 5.5.1 `FAM`
 - **THEN** the edit is returned
+
+#### Scenario: A 5.5.1 person's event described
+
+- **WHEN** a 5.5.1 `1 EVEN` under an `INDI` is described
+- **THEN** its payload is of the kind `text` and is not required
 
 #### Scenario: A structure added with no value where it takes none
 

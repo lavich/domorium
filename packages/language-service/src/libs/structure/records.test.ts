@@ -291,6 +291,17 @@ describe("a value where the standard allows none", () => {
       ),
     ).toMatchObject({ ok: true });
   });
+
+  it.each(["FAM", "INDI"])(
+    "describes a 5.5.1 %s event's description as text it may leave out",
+    (record) => {
+      const text = [...G551, `0 @X1@ ${record}`, "1 EVEN", "0 TRLR"].join("\n");
+
+      expect(
+        new GedcomLanguageService(text).describeStructure(at(G551.length + 1)),
+      ).toMatchObject({ payload: { kind: "text" }, payloadRequired: false });
+    },
+  );
 });
 
 describe("an emptied record", () => {

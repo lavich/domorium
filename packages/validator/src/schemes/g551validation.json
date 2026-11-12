@@ -839,7 +839,7 @@
       "type": null
     },
     "https://gedcom.io/terms/v5.5.1/FAM-EVEN": {
-      "type": null
+      "type": "https://gedcom.io/terms/v5.5.1/type-EVENT_DESCRIPTOR"
     },
     "https://gedcom.io/terms/v5.5.1/FAM-HUSB": {
       "to": "https://gedcom.io/terms/v5.5.1/record-INDI",
@@ -947,7 +947,7 @@
       "type": null
     },
     "https://gedcom.io/terms/v5.5.1/INDI-EVEN": {
-      "type": null
+      "type": "https://gedcom.io/terms/v5.5.1/type-EVENT_DESCRIPTOR"
     },
     "https://gedcom.io/terms/v5.5.1/INDI-FAMC": {
       "to": "https://gedcom.io/terms/v5.5.1/record-FAM",
