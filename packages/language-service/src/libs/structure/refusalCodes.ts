@@ -13,6 +13,8 @@ const CODES: Record<string, EditRefusalCode> = {
   VAL017: "value-spans-lines",
   VAL018: "value-not-allowed",
   VAL019: "value-required",
+  VAL020: "file-target-unsupported",
+  VAL021: "value-not-in-enum",
   "unresolved-xref": "unresolved-pointer",
 };
 

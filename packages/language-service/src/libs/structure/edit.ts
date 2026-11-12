@@ -96,7 +96,12 @@ export function recordShape(
     : undefined;
 }
 
-const CHECKED_BEFORE_WRITING = new Set(["VAL017", "VAL018", "VAL019"]);
+const CHECKED_BEFORE_WRITING = new Set([
+  "VAL017",
+  "VAL018",
+  "VAL019",
+  "VAL020",
+]);
 
 function checkRefusal(
   document: GedcomDocument,

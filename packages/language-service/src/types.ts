@@ -1,4 +1,4 @@
-import type { PayloadKind } from "@domorium/validator";
+import type { FilePathProblem, PayloadKind } from "@domorium/validator";
 
 export interface Position {
   line: number;
@@ -66,6 +66,7 @@ export type EditRefusalCode =
   | "payload-datatype"
   | "value-spans-lines"
   | "value-not-allowed"
+  | "file-target-unsupported"
   | "value-required"
   | "unresolved-pointer"
   | "required-field-missing"
@@ -160,6 +161,7 @@ export interface DiagnosticData {
   /** Set only where the tag is a standard one written in the wrong case. */
   meantTag?: string;
   tag?: string;
+  pathProblem?: FilePathProblem;
 }
 
 export interface Diagnostic {
@@ -301,7 +303,7 @@ export interface StructureDescription {
   undefinedOccurrences: (StructureOccurrence & { tag: string })[];
 }
 
-export type { PayloadKind };
+export type { FilePathProblem, PayloadKind };
 
 export interface StructureValueInput {
   value?: string;

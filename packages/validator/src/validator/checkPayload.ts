@@ -1,5 +1,6 @@
 import type { ASTNode, ASTToken } from "../parser";
 import { TokenNames } from "../parser/lexer";
+import { filePathProblem, type FilePathProblem } from "../payload/filePath";
 import type { GedcomScheme, GedcomType } from "../schemes/schema-types";
 import { GedcomTag } from "../schemes/schema-types";
 import { GedcomErrorCode, type GedcomError } from "../types/errors";
@@ -101,6 +102,16 @@ export function checkPayload(
     });
     return problems.map(toPayloadProblem);
   }
+  const pathProblem =
+    scheme.payload[rule.type]?.type === FILE_PATH
+      ? localPathProblem(value.trim())
+      : undefined;
+  if (pathProblem) {
+    return [
+      ...problems.map(toPayloadProblem),
+      fileTargetUnsupported(tag, pathProblem),
+    ];
+  }
   const ruleNode = new RuleNode(
     scheme,
     pointers,
@@ -115,6 +126,14 @@ export function checkPayload(
 }
 
 const GEDCOM_7 = "https://gedcom.io/terms/v7/";
+
+const FILE_PATH = "https://gedcom.io/terms/v7/type-FilePath";
+
+// A one-letter scheme is a drive letter, which makes a path, not a URL.
+const URI_SCHEME = /^[A-Za-z][A-Za-z0-9+.-]+:/u;
+
+const localPathProblem = (value: string): FilePathProblem | undefined =>
+  URI_SCHEME.test(value) ? undefined : filePathProblem(value);
 
 // 5.5.1 describes EVENT_DESCRIPTOR as the value "usually assigned to the EVEN
 // tag", of a person or a family, though only the family's grammar line shows it,
@@ -134,6 +153,18 @@ function valueNotAllowed(tag: string): PayloadProblem {
     code: GedcomErrorCode.ValueNotAllowed,
     message: `${tag} takes no value`,
     data: { tag },
+    level: "error",
+  };
+}
+
+function fileTargetUnsupported(
+  tag: string,
+  pathProblem: FilePathProblem,
+): PayloadProblem {
+  return {
+    code: GedcomErrorCode.FileTargetUnsupported,
+    message: `Value for ${tag} names no file beside the document (${pathProblem})`,
+    data: { tag, pathProblem },
     level: "error",
   };
 }

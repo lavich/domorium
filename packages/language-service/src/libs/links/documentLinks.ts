@@ -1,4 +1,5 @@
 import {
+  filePathProblem,
   TokenNames,
   type ASTNode,
   type GedcomDialect,
@@ -83,15 +84,7 @@ function supportedUrlKind(
 function gedcom7LocalFileKind(
   targetText: string,
 ): DocumentLink["kind"] | undefined {
-  const segments = targetText.split("/");
-  const isPortableLocalPath =
-    !targetText.startsWith("/") &&
-    !targetText.includes("\\") &&
-    !targetText.includes("?") &&
-    !targetText.includes("#") &&
-    !targetText.includes(":") &&
-    !segments.includes("..");
-  return isPortableLocalPath ? "file-relative" : undefined;
+  return filePathProblem(targetText) ? undefined : "file-relative";
 }
 
 function gedcom551FileKind(

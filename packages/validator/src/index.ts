@@ -1,5 +1,7 @@
 export { TokenNames } from "./parser/lexer";
 export { escapePayload, unescapePayload } from "./payload/escape";
+export { filePathProblem, type FilePathProblem } from "./payload/filePath";
+export { KNOWN_FILE_EXTENSIONS } from "./payload/fileExtensions";
 export type { ASTNode, ASTToken } from "./parser";
 export { resolveValue } from "./parser";
 export {

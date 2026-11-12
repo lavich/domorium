@@ -1,9 +1,14 @@
+import { KNOWN_FILE_EXTENSIONS } from "@domorium/validator";
 import { describe, expect, it } from "vitest";
 
 // The closed list is the 5.5.1 schema's, not ours: read it here so adding a
 // format to the schema fails this test rather than passing in silence.
 import g551validation from "../../../../validator/src/schemes/g551validation.json";
-import { GEDCOM_551_FORMAT_KINDS, mediaKind } from "./mediaKind";
+import {
+  EXTENSION_KINDS,
+  GEDCOM_551_FORMAT_KINDS,
+  mediaKind,
+} from "./mediaKind";
 
 const PERMITTED_551_FORMATS = Object.keys(
   g551validation.set[
@@ -93,5 +98,13 @@ describe("what the format says a file is", () => {
 
   it("carries no inherited member in the 5.5.1 table it exports", () => {
     expect(GEDCOM_551_FORMAT_KINDS["constructor"]).toBeUndefined();
+  });
+});
+
+describe("the extensions a kind is known for", () => {
+  it("are the ones the validator tolerates as a 5.5.1 form", () => {
+    expect(new Set(Object.keys(EXTENSION_KINDS))).toEqual(
+      KNOWN_FILE_EXTENSIONS,
+    );
   });
 });
