@@ -18,7 +18,9 @@ integer, a boolean, an enumeration with its permitted values, an enumeration tha
 several, a pointer with the tag of the record it points to, text or a pointer (as a
 5.5.1 `NOTE` or `SOUR` may be written), a structure with no payload, a date, a date period, an
 exact date, a time, an age, a language tag, a media type, a latitude, a longitude, a
-personal name, or a tag definition. It SHALL also report whether the structure's own
+personal name, or a tag definition. An enumeration whose values outside its permitted ones the validator
+tolerates as file extensions, with a warning rather than an error, SHALL say so beside its
+permitted values; no other enumeration SHALL. It SHALL also report whether the structure's own
 payload is required, which it is when the dialect does not admit an empty payload.
 
 The document SHALL report the kind and nothing of the rule behind it: the grammar of a
@@ -62,6 +64,13 @@ checked against no dialect the document SHALL report nothing.
 
 - **WHEN** the document's version could not be resolved to a dialect
 - **THEN** no fields are reported
+
+#### Scenario: An enumeration that tolerates file extensions
+
+- **WHEN** the node is an `OBJE.FILE` of a 5.5.1 document
+- **THEN** `FORM` is an enumeration that lists `bmp`, `gif`, `jpg`, `ole`, `pcx`, `tif` and
+  `wav` and says that it tolerates file extensions
+- **AND** the `TYPE` of a 7.0 `NAME` does not say so
 
 ### Requirement: Whether a value may span lines is readable
 
