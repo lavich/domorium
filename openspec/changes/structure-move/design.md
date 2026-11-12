@@ -18,8 +18,8 @@ moving across parents.
 ## Decisions
 
 **A new module beside the edits.** `libs/structure/move.ts` holds `moveStructure` and
-`describeMove`; `edit.ts` exports `gate`, `removeLines` and `insertAfter` for it.
-The rule both share is one function, `slotsOf(node)`: the children of the parent that
+`describeMove`; `edit.ts` exports `gate`, `removeLines` and `isContinuation` for it.
+The rule both share is one function, `slotsOf`: the children of the parent that
 `structureAt` would answer for their own line — a level and a tag, not `CONT` or `CONC` — in
 order, each as a slot before it, then the end, with `changesOrder` false for the
 structure itself, the sibling after it, and the end when it is the last. `moveStructure`
@@ -40,21 +40,20 @@ after it, and a line with a level and no tag, such as `1`, adopts the deeper lin
 so a structure's parent can be a line `structureAt` would not answer for. Such a
 parent refuses the move with `not-a-structure`, as a position on it would.
 
-**Two text edits, no rewrite.** The block is the text from the start of the structure's line to
-the start of the line after its subtree, sliced from the document so that each line keeps its
-own terminator in a file that mixes them; a block that ends the text has no final terminator.
-One edit removes those lines (`removeLines`, which already handles the last line of a text with
-no final terminator). The other inserts, at a position, a text built from the block, so that the
-inserted text always ends with a terminator unless it ends the document:
+**Two text edits, no rewrite.** The block runs from the structure's line to its subtree's last
+line, extended over the following lines that hold no node and are not blank — a line the lexer
+could not read belongs to the subtree it stands in, a blank line may only separate records —
+up to the next node. It is sliced from the document, so each line keeps its own terminator in
+a file that mixes them. One edit removes those lines (`removeLines`, which already handles the
+last line of a text with no final terminator). The other inserts the block:
 
-- before a sibling: at the start of the sibling's line, the block, given the document's
-  terminator if it has none (it ended the text);
-- at the end, when the last sibling's subtree is followed by a line: at the start of that line,
-  the block, completed the same way;
-- at the end, when the last sibling's subtree ends the text: at the end of the text, the
-  document's terminator and then the block without its final terminator.
+- before a sibling, at the start of the sibling's line;
+- at the end, when a line follows the last sibling's block, at the start of that line;
+- at the end, when the last sibling's block ends the text, at the end of the text, as the
+  block's own last terminator followed by the block without it.
 
-`insertAfter` is not reused: it joins lines and adds terminators itself.
+A block that ended the text has no terminator of its own; it takes the one `removeLines`
+removed, the terminator of the line before it.
 The two never overlap: a target that would touch the removed span is one of the slots
 that keep the order. Rewriting the span between the two places as one edit was rejected: it
 would touch lines the move does not change, against the structure-edit rule an editor's undo
@@ -67,10 +66,15 @@ comparison inside the parent's scope misses the other way a move goes wrong: ins
 first `SYST`, `GEDC`, `VERS` or `SCHMA.TAG` wins (proposal), so a move can drop the dialect or
 lower a count and pass. A move therefore does not use `verify`. `moveStructure` builds the
 moved document with the same options and compares it with the current one:
-`getVersionResolution().kind`, `getValidatedDialect()`, and `getErrors()` of each, the whole
-document, as a multiset of `code` and `message`. Any difference refuses with `reading-changed`,
-carrying the first added or lost diagnostic's code as `diagnosticCode` when there is one;
-equality answers the edit with no warnings. The validator's messages hold no line numbers
+`getErrors()` of each, the whole document, as a multiset of `code` and `message`;
+`getVersionResolution().kind` and `getValidatedDialect()`; and, for every line with an
+extension tag, the tag with the URI `getLabel` reads for it, as a multiset. Any difference
+refuses with `reading-changed`, carrying the first added or lost diagnostic's code as
+`diagnosticCode` when there is one; equality answers the edit with no warnings. Every
+resolution or dialect change found so far also changes a diagnostic, so those two checks hold
+for a document clean in both readings rather than for a tested case of their own; a `SCHMA`
+swap of two unknown URIs changes no diagnostic, which is what the extension comparison is
+for. The validator's messages hold no line numbers
 (checked: none interpolates a position), so a moved diagnostic compares equal. A full parse
 is what every structure edit already pays in `verify`. Alternative: keep `verify` with a
 `moved` flag that skips the written-line rule; rejected because the count comparison in the
@@ -98,3 +102,11 @@ beside `StructureEditResult`. `EditRefusalCode` gains `not-a-sibling` and `readi
   of reading; a test moving every slot of a fixture with diagnostics catches it.
 - [Moving `GEDC` away from the first place in a 7.0 `HEAD` is allowed] → the standard
   recommends, not requires, that place (proposal); the user chose option A.
+
+## Implementation
+
+- `insertAfter` stays private: the move builds its insertions itself, from the block.
+- The cross-review of the code added the lexer-unreadable and blank-line rules of the block,
+  the terminator a block that ended the text takes, the extension-URI comparison, and the
+  refusal of a continuation beneath a continuation (`structureAt` answers the outer one).
+- `npm run check` passed with `check:jetbrains` run.

@@ -35,12 +35,12 @@ export interface EditContext {
   diagnostics: () => Diagnostic[];
 }
 
-const isContinuation = (node: ASTNode): boolean => {
+export const isContinuation = (node: ASTNode): boolean => {
   const tag = node.tokens.TAG?.value;
   return tag === "CONT" || tag === "CONC";
 };
 
-function gate(
+export function gate(
   context: EditContext,
   expectedVersion: DocumentVersion,
 ): GedcomDialect | EditRefusal {
@@ -244,7 +244,7 @@ function insertAfter(
       };
 }
 
-function removeLines(
+export function removeLines(
   text: string,
   startLine: number,
   endLine: number,

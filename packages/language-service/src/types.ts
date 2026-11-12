@@ -84,7 +84,9 @@ export type EditRefusalCode =
   | "stale-document"
   | "ambiguous-fix"
   | "unsupported-fix"
-  | "unwritable-file-target";
+  | "unwritable-file-target"
+  | "not-a-sibling"
+  | "reading-changed";
 
 export interface EditRefusal {
   ok: false;
@@ -322,6 +324,21 @@ export interface StructureEditResult {
   ok: true;
   edit: WorkspaceEdit;
   warnings: Diagnostic[];
+}
+
+export type MoveTarget = { before: Position } | { end: true };
+
+export interface MoveSlot {
+  target: MoveTarget;
+  changesOrder: boolean;
+}
+
+export interface MoveDescription {
+  ok: true;
+  version: DocumentVersion;
+  range: Range;
+  subtreeRange: Range;
+  slots: MoveSlot[];
 }
 
 export interface ValueProblem {

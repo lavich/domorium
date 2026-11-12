@@ -15,11 +15,13 @@ sibling or of one of the sibling's continuation lines SHALL name that sibling.
 
 The move SHALL take the version the caller read and return either an edit at the document's
 current version, with no warnings, or a refusal with a code. The structure's
-own line, every line beneath it and its continuation lines SHALL move together, keep their
+own line, every line beneath it, a line beneath it that holds no readable structure among
+them, and its continuation lines SHALL move together, keep their
 order and their text, their own line terminators included, and keep their level. The edit SHALL touch no other line: the lines
 between the old place and the new one, undefined and extension tags among them, SHALL be
-left as written. The document's line terminator SHALL be used, and a text that ended with no
-final terminator SHALL still end with none.
+left as written, and so SHALL a blank line after the structure. A moved line SHALL keep its
+own terminator; a block that ended the text SHALL take the terminator of the line it followed,
+and a text that ended with no final terminator SHALL still end with none.
 
 #### Scenario: The second name becomes the preferred one
 
@@ -64,6 +66,23 @@ final terminator SHALL still end with none.
 - **WHEN** a structure of a document written with `\r\n` is moved
 - **THEN** every terminator the edit inserts is `\r\n`
 
+#### Scenario: A block that ended a text with `\r\n`
+
+- **WHEN** the last structure of a text written with `\r\n` and no final terminator is moved
+  before its sibling, or its sibling is moved to the end after it
+- **THEN** the text is still written with `\r\n` only and still ends with no terminator
+
+#### Scenario: A line the lexer could not read
+
+- **WHEN** a `NAME` whose last line beneath it cannot be read is moved to the end
+- **THEN** that line moves with the `NAME`
+
+#### Scenario: A blank line before the next record
+
+- **WHEN** the last substructure of a record followed by a blank line is moved before its
+  sibling
+- **THEN** the blank line stays before the next record
+
 #### Scenario: A pointer with a reciprocal
 
 - **WHEN** the second `FAMC` of a person, or a `CHIL` of a family, is moved before its first
@@ -90,7 +109,8 @@ an edit holding no text edits and no warnings, not with a refusal.
 
 The service SHALL refuse a move, and change nothing, with:
 
-- `not-a-structure` when the position's line holds no structure, or its parent is a line with
+- `not-a-structure` when the position's line holds no structure, is a continuation line beneath
+  a continuation line, or its parent is a line with
   no level or no tag;
 - `record-edit-unsupported` when the position is a record's opening line;
 - `not-a-sibling` when the target's line is not a line of a substructure of the same parent,
@@ -134,8 +154,9 @@ order.
 
 A move SHALL be revalidated over the whole document. When the document after the move would
 be read otherwise than before it, with another version resolution (a file read as a Personal
-Ancestral File, or no longer read as one), another dialect, or diagnostics that differ as a
-multiset of code and message, the move SHALL be refused with `reading-changed` and change
+Ancestral File, or no longer read as one), another dialect, diagnostics that differ as a
+multiset of code and message, or an extension tag in the text that names another URI, the
+move SHALL be refused with `reading-changed` and change
 nothing. Otherwise the edit SHALL carry no warnings. A problem the moved structure or its
 siblings already had SHALL neither refuse the move nor be reported.
 
@@ -167,6 +188,12 @@ siblings already had SHALL neither refuse the move nor be reported.
 - **WHEN** a 7.0 `SCHMA` declares `_X` first as an unknown URI and then as the standard
   `DATE`, the document holds `1 _X nonsense`, and the second declaration is moved before the
   first
+- **THEN** the service refuses with `reading-changed`
+
+#### Scenario: A tag that comes to name another URI
+
+- **WHEN** a 7.0 `SCHMA` declares `_X` first as one URI and then as another, the document holds
+  `1 _X 1 JAN 1900`, and the second declaration is moved before the first
 - **THEN** the service refuses with `reading-changed`
 
 #### Scenario: Siblings at a wrong level
