@@ -2,12 +2,12 @@
   "source": "https://gedcom.io/testfiles/gedcom70/",
   "known": [
     {
-      "note": "Twenty of the twenty-three files are diagnostic-free. Nine diagnostics remain and eight of them are correct."
+      "note": "Nineteen of the twenty-three files are diagnostic-free. Twelve diagnostics remain, and all of them are correct."
     },
     {
       "correct": true,
-      "where": "extension-record.ged 10, 11, 15, extensions.ged 61, 62, 77, 82 and warnings70.ged 60",
-      "what": "VAL008 is right here: those tags really are undocumented, and the specification recommends against that. Line 61 is an enumerated value rather than a tag, which the specification counts as an extension tag all the same. Not everything recorded below is a bug."
+      "where": "extension-record.ged 10, 11, 15, extensions.ged 61, 62, 77, 82, maximal70.ged 863, 864, 879, 884 and warnings70.ged 60",
+      "what": "VAL008 is right here: those tags really are undocumented, and the specification recommends against that. maximal70.ged carries the extension content of extensions.ged since GEDCOM.io#428, so its four are the same ones. Line 61 is an enumerated value rather than a tag, which the specification counts as an extension tag all the same. Not everything recorded below is a bug."
     },
     {
       "issue": 192,
@@ -58,7 +58,7 @@
       "expected": []
     },
     "maximal70-lds.ged": {
-      "sha256": "bfd497b95651da440e1524bf8fe08daa0b23e8a3f81d6799954fc1e0c38bb48f",
+      "sha256": "240f3b3d7aa040755fe951980d54c2dd3de7d9eb245dec6718cf7c25b6e8f7d3",
       "expected": []
     },
     "maximal70-memories1.ged": {
@@ -78,8 +78,13 @@
       "expected": []
     },
     "maximal70.ged": {
-      "sha256": "c7af0efc36d2630be965d8c17ecbbcf6b64c6cde9bca3bebed661a06226d43e8",
-      "expected": []
+      "sha256": "13348ce3a66d0968d77f05957f9163bc6eee75d08bd4204125ae0b3c5568cdc8",
+      "expected": [
+        "863 warning VAL008",
+        "864 warning VAL008",
+        "879 warning VAL008",
+        "884 warning VAL008"
+      ]
     },
     "minimal70.ged": {
       "sha256": "c29a542c38668265a2424d962e2f159641252125607c2f9c06ff90b9d99c69f1",
