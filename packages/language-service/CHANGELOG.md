@@ -2,6 +2,43 @@
 
 All notable changes to `@domorium/language-service` are documented here.
 
+## 2.4.0
+
+- **Quick fixes for a missing trailer and a missing header.** _Add trailer_
+  writes `0 TRLR` at the end of the text in the document's own line terminator;
+  _Add a GEDCOM 7.0 header_ writes `0 HEAD`, `1 GEDC`, `2 VERS 7.0` before the
+  first record. No 5.5.1 header is offered: its submitter and character set are
+  the author's to give (#502).
+- **_Fix all safe problems_ (`source.fixAll`).** One edit applies every fix
+  that needs no choice: the missing header, the missing trailer and a wrong
+  level. It is revalidated once, and level fixes that would leave or add a wrong
+  level are dropped. `getFixAll` returns it, and `fixAllableAt` says whether a
+  range holds a problem it fixes (#505).
+- **Code actions read the document once per request**, not once per
+  diagnostic: 6,000 dangling pointers in a 60,000-line file took 21.6 s and take
+  about 0.1 s (#504).
+- **The structures of a record can be described and edited.**
+  `describeStructure` and `describeSchemaPath` give the fields a structure may
+  hold, with requiredness, cardinality, payload kind, pointer candidates and the
+  occurrences held; `validateValue` checks a value without building an edit;
+  `addStructure`, `setValue` and `removeStructure` return an edit or an
+  `EditRefusal` whose code names the rule. Level, line terminator, `CONT`,
+  `CONC` and `@@` are written by dialect, and a `NAME` payload is kept in step
+  with its `GIVN` and `SURN`. No editor host in this repository calls them yet
+  (#521, #524).
+- **`setValue` writes the value of a record's opening line** where the standard
+  gives the record one — a shared note, a 5.5.1 note record, an extension
+  record — and refuses a value where it gives none (`value-not-allowed`) (#527).
+- **A structure can be moved among its siblings.** `describeMove` lists the
+  places it may go and `moveStructure` moves it with every line beneath it. A
+  move after which the document would read differently — a `SYST` before
+  `GEDC`, a second `VERS` first — is refused with `reading-changed` (#523).
+- **A GEDCOM 7 `FILE` path the dialect cannot carry is refused on edit** with
+  `file-target-unsupported` (#531).
+- **A refusal and a diagnostic carry their facts in `data`**, declared as
+  `DiagnosticData`, for a message in the reader's language (#525).
+- Requires `@domorium/validator` 2.3.0 or newer.
+
 ## 2.3.1
 
 - **`readDate` reads a month or a calendar written as a `SCHMA` alias as the

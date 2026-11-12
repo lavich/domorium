@@ -2,6 +2,25 @@
 
 All notable changes to the GEDCOM extension by Domorium are documented here.
 
+## 1.9.0
+
+- **A missing trailer or header can be added from the light bulb.** _Add
+  trailer_ writes `0 TRLR` at the end of the file; _Add a GEDCOM 7.0 header_
+  writes `0 HEAD`, `1 GEDC`, `2 VERS 7.0` before the first record. The missing
+  trailer is now marked on the last line rather than the first (#502).
+- **_Fix all safe problems_.** One action applies every fix that needs no
+  choice — the missing header, the missing trailer, a wrong level. It answers
+  _Fix All_ and `"editor.codeActionsOnSave": { "source.fixAll": "explicit" }`
+  (#505).
+- **The light bulb answers quickly in a file with thousands of problems.** It
+  read the whole file once per problem (#504).
+- **A 5.5.1 `FORM` such as `png` or `pdf` is a warning, not an error.** The
+  standard lists only `bmp gif jpg ole pcx tif wav`, but a known file extension
+  is read as what it says; a misspelling is still an error (#531).
+- **Hover labels follow the GEDCOM 7 specification**: `ADR1`–`ADR3` and the
+  header's source `DATA` read `(deprecated) …`, and the Latter-day Saint
+  ordinances are spelled as the specification spells them (#533).
+
 ## 1.8.1
 
 - **Colour and indentation hints are built for what is on screen.** The

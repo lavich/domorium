@@ -33,6 +33,15 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h2>1.10.0</h2>
+    <ul>
+      <li><b>A missing trailer or header can be added with Alt+Enter.</b> <i>Add trailer</i> writes <code>0 TRLR</code> at the end of the file; <i>Add a GEDCOM 7.0 header</i> writes <code>0 HEAD</code>, <code>1 GEDC</code>, <code>2 VERS 7.0</code> before the first record. The missing trailer is now marked on the last line rather than the first</li>
+      <li><b>Fix all safe problems.</b> On a problem it can fix, one action applies every fix that needs no choice: the missing header, the missing trailer, a wrong level</li>
+      <li><b>Quick fixes answer quickly in a file with thousands of problems.</b> The whole file was read once per problem</li>
+      <li><b>A 5.5.1 <code>FORM</code> such as <code>png</code> or <code>pdf</code> is a warning, not an error.</b> The standard lists only <code>bmp gif jpg ole pcx tif wav</code>, but a known file extension is read as what it says; a misspelling is still an error</li>
+      <li><b>Quick documentation follows the GEDCOM 7 specification:</b> <code>ADR1</code>&ndash;<code>ADR3</code> and the header&rsquo;s source <code>DATA</code> read <i>(deprecated) &hellip;</i>, and the Latter-day Saint ordinances are spelled as the specification spells them</li>
+    </ul>
+
     <h2>1.9.0</h2>
     <ul>
       <li><b>An xref is one word.</b> Double-click and Extend Selection take <code>@I1@</code> whole instead of stopping at <code>I1</code>, Shrink Selection does not stop inside it, and moving or deleting by word crosses it in one step. Only xrefs are affected: <code>john@example.com</code> and <code>@#DJULIAN@</code> select and move as before</li>
