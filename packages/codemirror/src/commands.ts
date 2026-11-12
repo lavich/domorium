@@ -88,6 +88,7 @@ export function renameReference(
     target.state.doc,
     result.edit,
     language.getVersion(),
+    target.state.lineBreak,
   );
   if (!changes) {
     return false;

@@ -2,6 +2,18 @@
 
 All notable changes to `@domorium/codemirror` are documented here.
 
+## Unreleased
+
+- **A document kept with `\r\n` line breaks reads as one version and takes
+  edits in its own line breaks** (#541). `EditorLanguageService.update` read a
+  `Text` joined with `\n` but kept a string as given, so `state.doc` and
+  `state.sliceDoc()` of a state with `EditorState.lineSeparator.of("\r\n")`
+  counted as two versions and an edit asked at the first was refused as stale.
+  A string's `\r\n` and `\r` are now read as `\n`. `applyWorkspaceEdit`,
+  `toCodeMirrorChanges` and `renameReference` write the edit's line breaks as
+  the target's `state.lineBreak`, where they wrote `\n` into the middle of a
+  `\r\n` line; `CodeMirrorEditTarget.state` gains an optional `lineBreak`.
+
 ## 2.3.0
 
 - **An xref is one word.** The preset declares `@` a word character, so

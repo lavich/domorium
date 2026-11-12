@@ -1,7 +1,11 @@
-import { Text } from "@codemirror/state";
+import { EditorState, Text } from "@codemirror/state";
 import { describe, expect, it, vi } from "vitest";
 
-import { EditorLanguageService, toCodeMirrorChanges } from "./service";
+import {
+  applyWorkspaceEdit,
+  EditorLanguageService,
+  toCodeMirrorChanges,
+} from "./service";
 
 describe("EditorLanguageService", () => {
   // Every hover, completion and highlight asks the service to update. Reading
@@ -55,6 +59,21 @@ describe("EditorLanguageService", () => {
 
     language.update("0 HEAD");
     expect(language.getVersion()).toBe(version + 1);
+  });
+
+  it("reads a document joined with \\r\\n as the same version as its Text", () => {
+    const language = new EditorLanguageService();
+    const state = EditorState.create({
+      doc: "0 HEAD\r\n0 TRLR\r\n",
+      extensions: EditorState.lineSeparator.of("\r\n"),
+    });
+    language.update(state.doc);
+    const version = language.getVersion();
+
+    language.update(state.sliceDoc());
+    language.update("0 HEAD\r0 TRLR\r");
+
+    expect(language.getVersion()).toBe(version);
   });
 });
 
@@ -165,5 +184,45 @@ describe("text that is part of a document rather than one of its own", () => {
     expect(codes).toContain("VAL001");
     expect(codes).not.toContain("VAL002");
     expect(codes).not.toContain("VAL012");
+  });
+});
+
+describe("applyWorkspaceEdit", () => {
+  it("writes an inserted line break as the target's state breaks lines", () => {
+    let state = EditorState.create({
+      doc: "0 HEAD\r\n0 @I1@ INDI\r\n0 TRLR\r\n",
+      extensions: EditorState.lineSeparator.of("\r\n"),
+    });
+    const target = {
+      get state() {
+        return state;
+      },
+      dispatch(spec: Parameters<EditorState["update"]>[0]) {
+        state = state.update(spec).state;
+      },
+    };
+
+    const applied = applyWorkspaceEdit(
+      target,
+      {
+        version: 1,
+        edits: [
+          {
+            range: {
+              start: { line: 2, character: 0 },
+              end: { line: 2, character: 0 },
+            },
+            newText: "1 NOTE x\n2 CONT y\n",
+          },
+        ],
+      },
+      1,
+    );
+
+    expect(applied).toBe(true);
+    expect(state.sliceDoc()).toBe(
+      "0 HEAD\r\n0 @I1@ INDI\r\n1 NOTE x\r\n2 CONT y\r\n0 TRLR\r\n",
+    );
+    expect(state.doc.lines).toBe(6);
   });
 });
