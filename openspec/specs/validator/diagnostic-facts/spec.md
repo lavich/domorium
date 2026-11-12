@@ -14,18 +14,22 @@ names, wherever it raises them, in documents checked as GEDCOM 7 and as GEDCOM 5
 in the problems `checkPayload` answers. The code, the message, the level and the range of
 each diagnostic SHALL stay as they are.
 
-| Code              | `data`                                                                     |
-| ----------------- | -------------------------------------------------------------------------- |
-| `VAL014`          | `day`, `month`, and `monthLength`, the days that month has                 |
-| `VAL016`          | `year` and `calendar`                                                      |
-| `VAL002`          | `missingTag`, and `parentTag` where the missing structure has a parent     |
-| `VAL001`          | `meantTag`, only where the tag is a standard tag written in the wrong case |
-| `VAL008`          | `tag`, the undeclared extension tag                                        |
-| `VAL018`          | `tag`, the structure that takes no value                                   |
-| `VAL019`          | `tag`, the record a 7.0 empty value would leave with nothing               |
-| `unresolved-xref` | `xref` and `requiredRecordTag`, as before                                  |
+| Code              | `data`                                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| `VAL014`          | `day`, `month`, and `monthLength`, the days that month has                                                     |
+| `VAL016`          | `year` and `calendar`                                                                                          |
+| `VAL002`          | `missingTag`, and `parentTag` where the missing structure has a parent                                         |
+| `VAL001`          | `meantTag`, only where the tag is a standard tag written in the wrong case                                     |
+| `VAL008`          | `tag`, the undeclared extension tag                                                                            |
+| `VAL018`          | `tag`, the structure that takes no value                                                                       |
+| `VAL019`          | `tag`, the record a 7.0 empty value would leave with nothing                                                   |
+| `VAL020`          | `tag`, the structure holding the path, and `pathProblem`: `absolute`, `parent-folder` or `unescaped-character` |
+| `VAL021`          | `tag`, the structure holding the form                                                                          |
+| `unresolved-xref` | `xref` and `requiredRecordTag`, as before                                                                      |
 
 A `VAL002` for a line that has no tag at all names nothing and SHALL carry no `data`.
+`pathProblem` SHALL be `absolute` for a path that starts with `/`, `\` or a drive letter,
+otherwise `parent-folder` for a path with a `..` segment, otherwise `unescaped-character`, for a path holding `\`, `?`, `#` or `:`.
 
 #### Scenario: An impossible day
 
@@ -67,3 +71,14 @@ A `VAL002` for a line that has no tag at all names nothing and SHALL carry no `d
 
 - **WHEN** `checkPayload` is asked about a value for a `MAP` beneath a `PLAC`
 - **THEN** its `VAL018` carries `{ tag: "MAP" }`
+
+#### Scenario: A file path that leaves the folder
+
+- **WHEN** `checkPayload` is asked about `../x.jpg` for a 7.0 `FILE`
+- **THEN** its `VAL020` carries `{ tag: "FILE", pathProblem: "parent-folder" }`
+- **AND** for `/x.jpg` it carries `pathProblem` `absolute`, and for `a?b.jpg` `unescaped-character`
+
+#### Scenario: A tolerated form
+
+- **WHEN** a 5.5.1 document has `2 FORM png` beneath an `OBJE`'s `FILE`
+- **THEN** its `VAL021` carries `{ tag: "FORM" }`
