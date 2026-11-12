@@ -19,6 +19,7 @@ import {
   setValue,
   type EditContext,
 } from "./libs/structure/edit";
+import { describeMove, moveStructure } from "./libs/structure/move";
 import { structureAt, structurePath } from "./libs/structure/locate";
 import { recordLabel } from "./libs/symbols/recordLabel";
 import { getHover } from "./libs/hover/hover";
@@ -54,6 +55,8 @@ import type {
   Hover,
   InlayHint,
   MediaReference,
+  MoveDescription,
+  MoveTarget,
   OffsetRange,
   PointerCandidate,
   Position,
@@ -375,6 +378,18 @@ export class GedcomLanguageService {
     expectedVersion: DocumentVersion,
   ): StructureEditResult | EditRefusal {
     return removeStructure(this.editContext(), position, expectedVersion);
+  }
+
+  describeMove(position: Position): MoveDescription | EditRefusal {
+    return describeMove(this.editContext(), position);
+  }
+
+  moveStructure(
+    position: Position,
+    target: MoveTarget,
+    expectedVersion: DocumentVersion,
+  ): StructureEditResult | EditRefusal {
+    return moveStructure(this.editContext(), position, target, expectedVersion);
   }
 
   private editContext(): EditContext {

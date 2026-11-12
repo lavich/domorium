@@ -196,6 +196,39 @@ tag written in the wrong case, `{ tag }` for an undeclared extension tag, a stru
 no value, an emptied record or a tolerated form, `{ tag, pathProblem }` for a file path the
 dialect cannot carry, and `{ xref, requiredRecordTag }` for a pointer to nothing.
 
+The order of lines carries meaning — the first `NAME` is the preferred one — so a form that
+lets its reader drag a row asks `describeMove` where the row may land, and `moveStructure`
+writes the drop. A structure moves among the siblings beneath the same parent, with every
+line beneath it and its `CONT` / `CONC` lines, and no line is rewritten:
+
+```typescript
+const person = new GedcomLanguageService(
+  "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME Anna /Lee/\n1 NAME Ann /Lee/\n0 TRLR\n",
+);
+
+person.describeMove({ line: 5, character: 0 });
+// { ok: true, version: 0, range, subtreeRange, slots: [
+//   { target: { before: { line: 4, character: 0 } }, changesOrder: true },
+//   { target: { before: { line: 5, character: 0 } }, changesOrder: false },
+//   { target: { end: true }, changesOrder: false } ] }
+
+person.moveStructure(
+  { line: 5, character: 0 },
+  { before: { line: 4, character: 0 } },
+  0,
+);
+// { ok: true, edit, warnings: [] } — the second name is now the first
+```
+
+A slot that keeps the order answers an empty edit. A target that is not a sibling is refused
+with `not-a-sibling`; both calls refuse a line that holds no structure with `not-a-structure`,
+a record with `record-edit-unsupported`, and a document checked against no dialect with
+`no-dialect`. No order is refused for its own sake, but a move after which the document would
+be read otherwise — another version, dialect or diagnostic, or an extension tag naming another
+URI — is refused with `reading-changed`: inside `HEAD` the first `SYST`, `GEDC`, `VERS`, or
+`TAG` declaring a tag in `SCHMA`, wins, and a line written at a wrong level changes parent when
+its neighbours move. So a listed slot can still be refused that way.
+
 Positions shift with every edit, so the order a caller keeps is: update the service with
 the current text, describe, edit with the version the description gave, and describe
 again. A live editor changes under an open form, so an edit made against text that has
