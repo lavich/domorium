@@ -49,18 +49,18 @@ const SHOTS: Record<string, Shot[]> = {
     {
       name: "obsidian-1",
       motion: true,
-      caption: "A link in a note, and the record behind it",
-      alt: "A note about Marie Skłodowska-Curie in an Obsidian vault. Resting on the link to her record shows the whole record without opening anything; following it opens curie.ged at that record.",
+      caption: "A family graph, and the branch of one person",
+      alt: "curie.ged open in Obsidian as a family graph, its cards tinted by surname. Resting on Marie Skłodowska-Curie fades everyone outside her branch; choosing her opens her record card in the sidebar, and Branch narrows the graph to her parents, her husband, her daughters and their families.",
     },
     {
       name: "obsidian-2",
-      caption: "The photograph, cropped to the part the record asks for",
-      alt: "The lines 1 OBJE @O5@ and 2 CROP with TOP 40, LEFT 30, HEIGHT 240 and WIDTH 130, beside a preview of the family photograph cropped to that rectangle and captioned “Marie, on the left”.",
+      caption: "Lives on a timeline, and the links of one",
+      alt: "The Curie family as a timeline from 1820 to 2040, each person a bar from birth to death. Marie Skłodowska-Curie's bar is selected, with arrows falling from her parents' bars to her birth and from her to the births of Irène and Ève.",
     },
     {
       name: "obsidian-3",
-      caption: "The tree edited in the vault, not converted to it",
-      alt: "curie.ged open in Obsidian's file explorer beside the vault's notes, Marie Skłodowska-Curie's record indented by level, and a status bar reading “GEDCOM 7.0 · no problems”.",
+      caption: "A record edited in its card, not only in the source",
+      alt: "The people of curie.ged as a list with years, places and sources, beside Pierre Curie's record card: his birth unfolded to its date and place, and his occupation open in a field with buttons to remove the line, add a field and drag it into place.",
     },
   ],
   [PATHS.jetbrains]: [
@@ -94,7 +94,7 @@ const CARDS: Record<string, Card> = {
   },
   [PATHS.obsidian]: {
     name: "obsidian-card",
-    alt: "A photograph previewed in Obsidian, cropped to one person and captioned “Marie, on the left”, beside the CROP lines of the record that asks for that rectangle.",
+    alt: "Marie Skłodowska-Curie selected in Obsidian's family graph, between Pierre Curie and her daughters, beside her record card listing her names, birth, death, occupation and families.",
   },
   [PATHS.jetbrains]: {
     name: "jetbrains-card",

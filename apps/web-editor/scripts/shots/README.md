@@ -56,8 +56,8 @@ holding the desktop, or `osascript` answers `-25211`.
   half its size, so anything smaller stops being readable there. Change it before
   shooting and change it back after.
 - **The example the site already serves**, `public/simpsons70.ged`, except in
-  Obsidian, which is photographed in the plugin's own demo vault — its notes, its
-  media and its cropped photograph are the thing being shown.
+  Obsidian, which is photographed in the plugin's own demo vault — `curie.ged`
+  is the family its graph, timeline and record cards are shown on.
 
 ## Taking one
 
