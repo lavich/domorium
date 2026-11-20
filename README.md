@@ -43,12 +43,12 @@ line that caused it, while you type, in the editor you already use.
 
 ## Where it runs
 
-| Host                                                                               | Notes                                                                     |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [Browser](https://domorium.com/editor/)                                            | No install, no upload — the editor runs on your machine                   |
-| [Obsidian](https://community.obsidian.md/plugins/domorium)                         | Desktop and mobile; edits vault files without converting them to Markdown |
-| [VS Code](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom)     | Web extension — works in vscode.dev with no local runtime                 |
-| [JetBrains IDEs](https://plugins.jetbrains.com/plugin/index?xmlId=domorium.gedcom) | Any IntelliJ-platform IDE; requires Node.js on `PATH`                     |
+| Host                                                                               | Notes                                                                                                         |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| [Browser](https://domorium.com/editor/)                                            | No install, no upload — the editor runs on your machine                                                       |
+| [Obsidian](https://community.obsidian.md/plugins/domorium)                         | Desktop and mobile; a family graph, a timeline and record cards over vault files, never converted to Markdown |
+| [VS Code](https://marketplace.visualstudio.com/items?itemName=domorium.gedcom)     | Web extension — works in vscode.dev with no local runtime                                                     |
+| [JetBrains IDEs](https://plugins.jetbrains.com/plugin/index?xmlId=domorium.gedcom) | Any IntelliJ-platform IDE; requires Node.js on `PATH`                                                         |
 
 ![GEDCOM editor in Obsidian](https://raw.githubusercontent.com/lavich/domorium-obsidian/main/images/gedcom-obsidian.png)
 

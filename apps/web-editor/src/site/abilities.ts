@@ -85,6 +85,16 @@ export const DISTINCT_ABILITIES: Ability[] = [
     where: { [PATHS.obsidian]: true, [PATHS.editor]: true },
   },
   {
+    label: "A family graph and a timeline of the whole file",
+    chip: "Graph and timeline",
+    where: { [PATHS.obsidian]: true },
+  },
+  {
+    label: "A record edited in a card of its own lines, not only in the source",
+    chip: "Record cards",
+    where: { [PATHS.obsidian]: true },
+  },
+  {
     label: "A link from a note straight to a record",
     chip: "Note to record links",
     where: { [PATHS.obsidian]: "vault link or obsidian:// URL" },
